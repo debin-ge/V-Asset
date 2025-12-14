@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package asset;
+
+option go_package = "vasset/api-gateway/proto;pb";
+
+service AssetService {
+  // 获取下载历史
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  
+  // 删除历史记录
+  rpc DeleteHistory(DeleteHistoryRequest) returns (DeleteHistoryResponse);
+  
+  // 检查配额
+  rpc CheckQuota(CheckQuotaRequest) returns (CheckQuotaResponse);
+  
+  // 消费配额
+  rpc ConsumeQuota(ConsumeQuotaRequest) returns (ConsumeQuotaResponse);
+  
+  // 获取用户统计
+  rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
+  
+  // 获取文件信息(用于下载)
+  rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
+
+  // 创建下载历史
+  rpc CreateHistory(CreateHistoryRequest) returns (CreateHistoryResponse);
+}
+
+// 获取历史请求
+message GetHistoryRequest {
+  string user_id = 1;
+  int32 status = 2;        // 可选:状态过滤 (0=不过滤)
+  string platform = 3;     // 可选:平台过滤
+  string start_date = 4;   // 可选:YYYY-MM-DD
+  string end_date = 5;     // 可选:YYYY-MM-DD
+  int32 page = 6;
+  int32 page_size = 7;
+  string sort_by = 8;      // created_at, file_size
+  string sort_order = 9;   // asc, desc
+}
+
+message GetHistoryResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated HistoryItem items = 4;
+}
+
+message HistoryItem {
+  int64 history_id = 1;
+  string task_id = 2;
+  string url = 3;
+  string platform = 4;
+  string title = 5;
+  string mode = 6;
+  string quality = 7;
+  int64 file_size = 8;
+  int32 status = 9;
+  string file_path = 10;
+  string file_name = 11;
+  string created_at = 12;
+  string completed_at = 13;
+  string thumbnail = 14;
+  int64 duration = 15;
+  string author = 16;
+}
+
+// 删除历史请求
+message DeleteHistoryRequest {
+  int64 history_id = 1;
+  string user_id = 2;
+}
+
+message DeleteHistoryResponse {
+  bool success = 1;
+}
+
+// 检查配额请求
+message CheckQuotaRequest {
+  string user_id = 1;
+}
+
+message CheckQuotaResponse {
+  int32 daily_limit = 1;
+  int32 daily_used = 2;
+  int32 remaining = 3;
+  string reset_at = 4;
+}
+
+// 消费配额请求
+message ConsumeQuotaRequest {
+  string user_id = 1;
+}
+
+message ConsumeQuotaResponse {
+  bool success = 1;
+  int32 remaining = 2;
+}
+
+// 获取统计请求
+message GetUserStatsRequest {
+  string user_id = 1;
+}
+
+message GetUserStatsResponse {
+  int64 total_downloads = 1;
+  int64 success_downloads = 2;
+  int64 failed_downloads = 3;
+  int64 total_size_bytes = 4;
+  repeated PlatformStat top_platforms = 5;
+  repeated DailyActivity recent_activity = 6;
+}
+
+message PlatformStat {
+  string platform = 1;
+  int64 count = 2;
+}
+
+message DailyActivity {
+  string date = 1;
+  int64 count = 2;
+}
+
+// 获取文件信息请求
+message GetFileInfoRequest {
+  int64 history_id = 1;
+  string user_id = 2;
+}
+
+message GetFileInfoResponse {
+  string file_path = 1;
+  string file_name = 2;
+  int64 file_size = 3;
+  string file_hash = 4;
+}
+
+// 创建历史请求
+message CreateHistoryRequest {
+  string user_id = 1;
+  string task_id = 2;
+  string url = 3;
+  string platform = 4;
+  string title = 5;
+  string mode = 6;
+  string quality = 7;
+  string thumbnail = 8;
+  int64 duration = 9;
+  string author = 10;
+}
+
+message CreateHistoryResponse {
+  int64 history_id = 1;
+}

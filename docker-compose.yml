@@ -1,0 +1,202 @@
+# ================================================
+# V-Asset 后端服务统一 Docker Compose 配置
+# 快速启动: docker-compose up -d
+# ================================================
+
+services:
+  # ==================== 基础设施 ====================
+  
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: vasset-postgres
+    environment:
+      POSTGRES_USER: vasset
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vasset
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vasset"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: vasset-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: vasset-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # 管理界面
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== 微服务 ====================
+  
+  # Auth Service - 认证服务
+  auth-service:
+    build: ./auth-service
+    container_name: vasset-auth
+    ports:
+      - "9001:9001"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=vasset
+      - DB_PASSWORD=password
+      - DB_NAME=vasset
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+      - JWT_SECRET=your-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Parser Service - 解析服务
+  parser-service:
+    build: ./parser-service
+    container_name: vasset-parser
+    ports:
+      - "9002:9002"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+    volumes:
+      - cookies-data:/etc/vasset/cookies
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Downloader Service - 下载服务
+  downloader-service:
+    build: ./downloader-service
+    container_name: vasset-downloader
+    ports:
+      - "9003:9003"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=vasset
+      - DB_PASSWORD=password
+      - DB_NAME=vasset
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PROXY_API_KEY=
+    volumes:
+      - vasset-data:/data/vasset
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Asset Service - 资产服务
+  asset-service:
+    build: ./asset-service
+    container_name: vasset-asset
+    ports:
+      - "9004:9004"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=vasset
+      - DB_PASSWORD=password
+      - DB_NAME=vasset
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+    volumes:
+      - vasset-data:/data/vasset
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # API Gateway - API 网关
+  api-gateway:
+    build: ./api-gateway
+    container_name: vasset-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_ADDR=auth-service:9001
+      - PARSER_SERVICE_ADDR=parser-service:9002
+      - ASSET_SERVICE_ADDR=asset-service:9004
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - auth-service
+      - parser-service
+      - asset-service
+      - downloader-service
+    restart: unless-stopped
+
+  # Frontend Service - 前端服务
+  frontend-service:
+    build: ./frontend-service
+    container_name: vasset-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://api-gateway:8080
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+# ==================== 数据卷 ====================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  vasset-data:
+    driver: local
+  cookies-data:
+    driver: local
+
+# ==================== 网络 ====================
+networks:
+  default:
+    name: vasset-network

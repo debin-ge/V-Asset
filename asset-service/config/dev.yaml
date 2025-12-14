@@ -1,0 +1,25 @@
+server:
+  port: 9004
+  
+database:
+  host: localhost
+  port: 5432
+  user: vasset
+  password: password
+  dbname: vasset
+  sslmode: disable
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: 3600s
+  
+quota:
+  default_daily_limit: 10    # 普通用户每日限制
+  vip_daily_limit: 100       # VIP用户每日限制
+  reset_hour: 0              # 每日重置时间(0点)
+  
+pagination:
+  default_page_size: 20
+  max_page_size: 100
+
+storage:
+  base_path: /data/downloads  # 下载文件存储路径

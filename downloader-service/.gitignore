@@ -1,0 +1,13 @@
+# Binaries
+bin/
+*.exe
+
+# Config overrides
+config/local.yaml
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store

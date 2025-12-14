@@ -1,0 +1,36 @@
+server:
+  port: 9001
+  
+database:
+  host: localhost
+  port: 5432
+  user: vasset
+  password: password
+  dbname: vasset
+  sslmode: disable
+  max_open_conns: 100
+  max_idle_conns: 10
+  conn_max_lifetime: 3600s
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  pool_size: 50
+  
+jwt:
+  secret: "your-secret-key-change-in-production"
+  access_token_ttl: 86400    # 24小时
+  refresh_token_ttl: 604800  # 7天
+  
+password:
+  bcrypt_cost: 10
+  min_length: 8
+  require_uppercase: true
+  require_lowercase: true
+  require_number: true
+  require_special: false
+
+session:
+  max_sessions_per_user: 5  # 每个用户最多5个并发会话
+  cleanup_interval: 3600     # 每小时清理过期会话

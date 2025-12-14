@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  parser-service:
+    build: .
+    container_name: vasset-parser-service
+    ports:
+      - "9002:9002"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    volumes:
+      - ./config:/root/config
+      - ./cookies:/etc/vasset/cookies
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: vasset-parser-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  redis_data:

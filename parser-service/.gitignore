@@ -1,0 +1,6 @@
+.DS_Store
+bin/
+*.pb.go
+*.log
+.env
+config/prod.yaml

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  downloader-service:
+    build: .
+    ports:
+      - "9003:9003"
+    environment:
+      - DB_PASSWORD=password
+      - REDIS_PASSWORD=
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PROXY_API_KEY=
+    volumes:
+      - vasset-data:/data/vasset
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: vasset
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vasset
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  vasset-data:

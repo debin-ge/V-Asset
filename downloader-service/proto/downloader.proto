@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package downloader;
+
+option go_package = "vasset/downloader-service/proto;pb";
+
+service DownloaderService {
+  // 获取任务状态
+  rpc GetTaskStatus(GetTaskStatusRequest) returns (GetTaskStatusResponse);
+  
+  // 获取用户下载历史
+  rpc GetDownloadHistory(GetDownloadHistoryRequest) returns (GetDownloadHistoryResponse);
+  
+  // 取消下载任务
+  rpc CancelTask(CancelTaskRequest) returns (CancelTaskResponse);
+}
+
+// 获取任务状态请求
+message GetTaskStatusRequest {
+  string task_id = 1;
+}
+
+message GetTaskStatusResponse {
+  string task_id = 1;
+  int32 status = 2;           // 0:待处理, 1:下载中, 2:完成, 3:失败, 4:待清理, 5:已过期
+  string status_text = 3;
+  double percent = 4;
+  int64 downloaded_bytes = 5;
+  int64 total_bytes = 6;
+  string speed = 7;
+  string eta = 8;
+  string file_path = 9;
+  string error_message = 10;
+  string created_at = 11;
+  string completed_at = 12;
+}
+
+// 获取下载历史请求
+message GetDownloadHistoryRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 status = 4;           // 可选,筛选状态
+}
+
+message GetDownloadHistoryResponse {
+  repeated DownloadRecord records = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message DownloadRecord {
+  int64 id = 1;
+  string task_id = 2;
+  string user_id = 3;
+  string url = 4;
+  string platform = 5;
+  string title = 6;
+  string mode = 7;            // quick_download, archive
+  string quality = 8;
+  string file_path = 9;
+  string file_name = 10;
+  int64 file_size = 11;
+  string file_hash = 12;
+  int32 status = 13;
+  string error_message = 14;
+  string created_at = 15;
+  string completed_at = 16;
+  string expire_at = 17;
+}
+
+// 取消任务请求
+message CancelTaskRequest {
+  string task_id = 1;
+  string user_id = 2;          // 用于验证权限
+}
+
+message CancelTaskResponse {
+  bool success = 1;
+  string message = 2;
+}

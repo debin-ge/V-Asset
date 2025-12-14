@@ -1,0 +1,85 @@
+server:
+  port: 9003
+  
+database:
+  host: localhost
+  port: 5432
+  user: vasset
+  password: password
+  dbname: vasset
+  sslmode: disable
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: 3600s
+
+rabbitmq:
+  url: "amqp://guest:guest@localhost:5672/"
+  queue: "vasset.download.queue"
+  prefetch_count: 5
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  pool_size: 50
+
+worker:
+  pool_size: 10
+  max_concurrent: 10
+
+ytdlp:
+  binary_path: "/usr/local/bin/yt-dlp"
+  timeout: 1800                    # 下载超时30分钟
+  concurrent_fragments: 3          # 并发分片下载数
+  cookies_dir: "/etc/vasset/cookies"
+  # 默认参数 (应用于所有下载)
+  default_args:
+    - "--no-playlist"
+    - "--no-warnings"
+    - "--no-check-certificates"
+    - "--retries"
+    - "10"
+    - "--fragment-retries"
+    - "10"
+    - "--retry-sleep"
+    - "linear=1::2"
+    # JavaScript 运行时配置
+    - "--js-runtimes"
+    - "node"
+  # 平台特定参数
+  platform_args:
+    youtube:
+      - "--extractor-args"
+      - "youtube:player_client=web"
+      - "--impersonate"
+      - "chrome"
+    bilibili:
+      - "--extractor-args"
+      - "bilibili:referer=https://www.bilibili.com"
+    tiktok:
+      - "--extractor-args"
+      - "tiktok:api_hostname=api22-normal-c-alisg.tiktokv.com"
+
+proxy:
+  provider: "your-proxy-provider"
+  api_endpoint: "https://api.proxy-provider.com/get"
+  api_key: "your-api-key"
+  timeout: 5                       # 获取代理超时5秒
+  retry_count: 3
+  # 静态代理 (如果不使用API)
+  static_url: ""                   # 例如: "socks5://127.0.0.1:1080"
+
+storage:
+  base_path: "/data/vasset"
+  tmp_ttl: 86400                   # 临时文件TTL 24小时
+
+cleanup:
+  enabled: true
+  interval: 3600                   # 每小时执行一次清理
+  batch_size: 100                  # 每次清理100个文件
+
+retry:
+  max_attempts: 3
+  initial_interval: 60             # 首次重试等待60秒
+  max_interval: 3600               # 最大重试间隔1小时
+

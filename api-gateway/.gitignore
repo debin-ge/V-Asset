@@ -1,0 +1,18 @@
+# Binaries
+bin/
+
+# Generated protobuf files
+# proto/*.pb.go
+
+# IDE configs
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# Environment files
+.env

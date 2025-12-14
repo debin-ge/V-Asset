@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "vasset/auth-service/proto;pb";
+
+service AuthService {
+  // 用户注册
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  
+  // 用户登录
+  rpc Login(LoginRequest) returns (LoginResponse);
+  
+  // Token验证
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  
+  // Token刷新
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  
+  // 登出
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // 获取用户信息
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+
+  // 更新用户信息
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+
+  // 修改密码
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+}
+
+// 注册请求
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string nickname = 3;
+}
+
+message RegisterResponse {
+  string user_id = 1;
+  string email = 2;
+  string nickname = 3;
+}
+
+// 登录请求
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+  string device_info = 3;  // 可选:设备信息
+  string ip_address = 4;   // 可选:IP地址
+}
+
+message LoginResponse {
+  string token = 1;           // Access Token
+  string refresh_token = 2;   // Refresh Token
+  int64 expires_in = 3;       // Token有效期(秒)
+  User user = 4;
+}
+
+// Token验证请求
+message VerifyTokenRequest {
+  string token = 1;
+}
+
+message VerifyTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string email = 3;
+  string role = 4;
+}
+
+// Token刷新请求
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string token = 1;
+  int64 expires_in = 2;
+}
+
+// 登出请求
+message LogoutRequest {
+  string token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+// 获取用户信息请求
+message GetUserInfoRequest {
+  string user_id = 1;
+}
+
+message GetUserInfoResponse {
+  User user = 1;
+}
+
+// 更新用户信息请求
+message UpdateProfileRequest {
+  string user_id = 1;
+  string nickname = 2;
+}
+
+message UpdateProfileResponse {
+  User user = 1;
+}
+
+// 修改密码请求
+message ChangePasswordRequest {
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+}
+
+// 用户信息
+message User {
+  string user_id = 1;
+  string email = 2;
+  string nickname = 3;
+  string avatar_url = 4;
+  int32 role = 5;
+  string created_at = 6;
+}

@@ -1,0 +1,58 @@
+server:
+  port: 9002
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  pool_size: 50
+  
+ytdlp:
+  binary_path: "yt-dlp"
+  timeout: 60                    # 解析超时(秒)
+  max_concurrent: 10             # 最大并发解析数
+  cookies_dir: "/etc/vasset/cookies"
+  # 代理配置 (支持 http/https/socks5)
+  proxy: ""                      # 例如: "socks5://127.0.0.1:1080" 或 "http://127.0.0.1:7890"
+  # 默认参数 (应用于所有平台)
+  default_args:
+    - "--no-playlist"
+    - "--no-warnings"
+    - "--ignore-errors"
+    - "--no-check-certificates"
+    # JavaScript 运行时配置 (解析 YouTube 需要)
+    - "--js-runtimes"
+    - "node"
+  
+cache:
+  ttl: 3600                      # 缓存1小时
+  max_size: 10000                # 最多缓存10000个URL
+  
+platforms:
+  youtube:
+    enabled: true
+    cookie_file: "/etc/vasset/cookies/youtube.txt"
+    extra_args:
+      - "--extractor-args"
+      - "youtube:player_client=web"
+      # 处理年龄限制视频
+      - "--extractor-args"
+      - "youtube:skip=dash,hls"
+  
+  bilibili:
+    enabled: true
+    cookie_file: "/etc/vasset/cookies/bilibili.txt"
+    extra_args:
+      - "--extractor-args"
+      - "bilibili:referer=https://www.bilibili.com"
+  
+  tiktok:
+    enabled: true
+    cookie_file: "/etc/vasset/cookies/tiktok.txt"
+    extra_args:
+      - "--extractor-args"
+      - "tiktok:api_hostname=api22-normal-c-alisg.tiktokv.com"
+  
+  generic:
+    enabled: true
+

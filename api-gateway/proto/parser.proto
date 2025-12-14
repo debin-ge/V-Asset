@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package parser;
+
+option go_package = "vasset/api-gateway/proto;pb";
+
+service ParserService {
+  // 解析URL获取元数据
+  rpc ParseURL(ParseURLRequest) returns (ParseURLResponse);
+  
+  // 验证URL是否有效
+  rpc ValidateURL(ValidateURLRequest) returns (ValidateURLResponse);
+}
+
+message ParseURLRequest {
+  string url = 1;
+  bool skip_cache = 2;  // 可选:跳过缓存强制重新解析
+}
+
+message ParseURLResponse {
+  string video_id = 1;
+  string platform = 2;
+  string title = 3;
+  string description = 4;
+  int64 duration = 5;           // 秒
+  string thumbnail = 6;
+  string author = 7;
+  string upload_date = 8;
+  int64 view_count = 9;
+  repeated VideoFormat formats = 10;
+}
+
+message VideoFormat {
+  string format_id = 1;
+  string quality = 2;         // 1080p, 720p, etc.
+  string extension = 3;       // mp4, webm
+  int64 filesize = 4;         // 字节
+  int32 height = 5;           // 分辨率高度
+  double fps = 6;
+  string video_codec = 7;
+  string audio_codec = 8;
+}
+
+message ValidateURLRequest {
+  string url = 1;
+}
+
+message ValidateURLResponse {
+  bool valid = 1;
+  string platform = 2;
+  string message = 3;        // 错误信息(如果invalid)
+}
