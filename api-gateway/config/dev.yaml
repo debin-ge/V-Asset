@@ -24,9 +24,7 @@ rabbitmq:
   routing_key: "download.quick"
 
 cors:
-  allowed_origins:
-    - "http://localhost:3000"
-    - "https://vasset.com"
+  allowed_origins: []
   allowed_methods:
     - "GET"
     - "POST"
