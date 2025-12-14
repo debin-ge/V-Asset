@@ -26,7 +26,8 @@ rabbitmq:
 cors:
   allowed_origins:
     - "http://localhost:3000"
-    - "https://vasset.com"
+    - "http://ytdlp.obstream.com:3000"
+    - "https://ytdlp.obstream.com"
   allowed_methods:
     - "GET"
     - "POST"
