@@ -20,3 +20,13 @@ func NewGenericAdapter(wrapper *ytdlp.Wrapper) *GenericAdapter {
 func (a *GenericAdapter) Parse(url string) (*ytdlp.VideoInfo, error) {
 	return a.ytdlp.ExtractInfo(url, "")
 }
+
+// ParseWithCookie 解析视频（使用动态 cookie）
+func (a *GenericAdapter) ParseWithCookie(url string, cookieFile string) (*ytdlp.VideoInfo, error) {
+	return a.ytdlp.ExtractInfo(url, cookieFile)
+}
+
+// ParseWithProxyAndCookie 解析视频（使用动态 proxy 和 cookie）
+func (a *GenericAdapter) ParseWithProxyAndCookie(url, proxyURL, cookieFile string) (*ytdlp.VideoInfo, error) {
+	return a.ytdlp.ExtractInfoWithProxy(url, proxyURL, cookieFile)
+}

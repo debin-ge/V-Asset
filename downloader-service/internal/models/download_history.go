@@ -57,6 +57,8 @@ type DownloadTask struct {
 	Quality  string   `json:"quality"` // 1080p, 720p, etc.
 	Format   string   `json:"format"`  // mp4, webm
 	Metadata Metadata `json:"metadata"`
+	CookieID int64    `json:"cookie_id"` // parser 使用的 cookie ID
+	ProxyURL string   `json:"proxy_url"` // parser 使用的 proxy URL
 }
 
 // Metadata 视频元数据

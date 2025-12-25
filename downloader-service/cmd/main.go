@@ -9,12 +9,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
 	"vasset/downloader-service/internal/cleanup"
+	"vasset/downloader-service/internal/client"
 	"vasset/downloader-service/internal/config"
 	"vasset/downloader-service/internal/database"
 	"vasset/downloader-service/internal/handler"
@@ -66,20 +68,10 @@ func main() {
 	// 4. 初始化 Repository
 	downloadRepo := repository.NewDownloadRepository(db)
 
-	// 5. 初始化代理提供者
-	var proxyProvider worker.ProxyProviderInterface
-	if cfg.Proxy.APIKey != "" && cfg.Proxy.APIKey != "your-api-key" {
-		proxyProvider = proxy.NewProvider(&cfg.Proxy)
-		log.Println("✓ Using proxy provider")
-	} else {
-		proxyProvider = proxy.NewMockProvider()
-		log.Println("✓ Using direct connection (no proxy)")
-	}
-
-	// 6. 初始化 yt-dlp 执行器
+	// 5. 初始化 yt-dlp 执行器
 	executor := ytdlp.NewExecutor(&cfg.YtDLP)
 
-	// 7. 初始化存储管理
+	// 6. 初始化存储管理
 	pathGenerator := storage.NewPathGenerator(&cfg.Storage)
 	fileManager := storage.NewFileManager(cfg.Storage.BasePath)
 
@@ -88,8 +80,33 @@ func main() {
 		log.Fatalf("Failed to create storage directory: %v", err)
 	}
 
-	// 8. 初始化进度发布器
+	// 7. 初始化进度发布器
 	progressPublisher := worker.NewProgressPublisher(redisClient)
+
+	// 8. 初始化 Asset 客户端（用于获取 Cookie 和 Proxy）
+	var assetClient *client.AssetClient
+	var proxyProvider worker.ProxyProviderInterface
+	if cfg.AssetService.Addr != "" {
+		timeout := time.Duration(cfg.AssetService.Timeout) * time.Second
+		if timeout == 0 {
+			timeout = 30 * time.Second
+		}
+		ac, err := client.NewAssetClient(cfg.AssetService.Addr, timeout, cfg.AssetService.CookieTempDir)
+		if err != nil {
+			log.Printf("Warning: Failed to connect to Asset Service: %v", err)
+			log.Println("  Cookie and Proxy features disabled")
+			proxyProvider = proxy.NewMockProvider()
+		} else {
+			assetClient = ac
+			// AssetClient 同时作为代理提供者使用
+			proxyProvider = ac
+			log.Println("✓ Connected to Asset Service (cookie and proxy support enabled)")
+		}
+	} else {
+		// 无 Asset Service 配置时使用 Mock 代理
+		proxyProvider = proxy.NewMockProvider()
+		log.Println("✓ Using direct connection (no Asset Service configured)")
+	}
 
 	// 9. 初始化 Worker 池
 	workerPool := worker.NewPool(
@@ -102,6 +119,7 @@ func main() {
 		pathGenerator,
 		fileManager,
 		progressPublisher,
+		assetClient, // 用于 cookie 功能
 	)
 
 	// 10. 启动 Worker 池

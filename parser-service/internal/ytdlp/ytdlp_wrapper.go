@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"vasset/parser-service/internal/config"
@@ -86,23 +88,39 @@ func (w *Wrapper) ExtractInfo(url string, cookieFile string, extraArgs ...string
 
 	cmd := exec.CommandContext(ctx, w.binaryPath, args...)
 
+	// 记录完整命令
+	log.Printf("[YT-DLP] Executing command: %s %s", w.binaryPath, strings.Join(args, " "))
+	log.Printf("[YT-DLP] URL: %s", url)
+	if cookieFile != "" {
+		log.Printf("[YT-DLP] Cookie file: %s", cookieFile)
+	}
+
 	// 执行命令
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		// 解析错误类型
 		if ctx.Err() == context.DeadlineExceeded {
+			log.Printf("[YT-DLP] ERROR: Timeout after %v", w.timeout)
 			return nil, utils.ErrTimeout
 		}
+		// 记录详细错误
+		log.Printf("[YT-DLP] ERROR: Command failed: %v", err)
+		log.Printf("[YT-DLP] Output: %s", string(output))
 		// 映射yt-dlp错误
 		return nil, fmt.Errorf("%w: %s", utils.MapYTDLPError(string(output)), string(output))
 	}
 
+	log.Printf("[YT-DLP] Success, output length: %d bytes", len(output))
+
 	// 解析JSON输出
 	var info VideoInfo
 	if err := json.Unmarshal(output, &info); err != nil {
+		log.Printf("[YT-DLP] ERROR: Failed to parse JSON: %v", err)
+		log.Printf("[YT-DLP] Raw output: %s", string(output))
 		return nil, fmt.Errorf("failed to parse yt-dlp output: %w", err)
 	}
 
+	log.Printf("[YT-DLP] Parsed video: ID=%s, Title=%s, Formats=%d", info.ID, info.Title, len(info.Formats))
 	return &info, nil
 }
 
@@ -138,6 +156,13 @@ func (w *Wrapper) ExtractInfoWithProxy(url, proxyURL, cookieFile string, extraAr
 	args = append(args, extraArgs...)
 	args = append(args, url)
 
+	// 记录完整命令
+	log.Printf("[YT-DLP-PROXY] Executing command: %s %s", w.binaryPath, strings.Join(args, " "))
+	log.Printf("[YT-DLP-PROXY] URL: %s, Proxy: %s", url, proxyURL)
+	if cookieFile != "" {
+		log.Printf("[YT-DLP-PROXY] Cookie file: %s", cookieFile)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
 	defer cancel()
 
@@ -145,16 +170,24 @@ func (w *Wrapper) ExtractInfoWithProxy(url, proxyURL, cookieFile string, extraAr
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
+			log.Printf("[YT-DLP-PROXY] ERROR: Timeout after %v", w.timeout)
 			return nil, utils.ErrTimeout
 		}
+		log.Printf("[YT-DLP-PROXY] ERROR: Command failed: %v", err)
+		log.Printf("[YT-DLP-PROXY] Output: %s", string(output))
 		return nil, fmt.Errorf("%w: %s", utils.MapYTDLPError(string(output)), string(output))
 	}
 
+	log.Printf("[YT-DLP-PROXY] Success, output length: %d bytes", len(output))
+
 	var info VideoInfo
 	if err := json.Unmarshal(output, &info); err != nil {
+		log.Printf("[YT-DLP-PROXY] ERROR: Failed to parse JSON: %v", err)
+		log.Printf("[YT-DLP-PROXY] Raw output: %s", string(output))
 		return nil, fmt.Errorf("failed to parse yt-dlp output: %w", err)
 	}
 
+	log.Printf("[YT-DLP-PROXY] Parsed video: ID=%s, Title=%s, Formats=%d", info.ID, info.Title, len(info.Formats))
 	return &info, nil
 }
 

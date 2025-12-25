@@ -24,6 +24,8 @@ type DownloadTask struct {
 	Format    string `json:"format"`  // mp4, webm
 	Platform  string `json:"platform"`
 	Title     string `json:"title"`
+	CookieID  int64  `json:"cookie_id"` // parser 使用的 cookie ID
+	ProxyURL  string `json:"proxy_url"` // parser 使用的 proxy URL
 }
 
 // Publisher RabbitMQ 发布器

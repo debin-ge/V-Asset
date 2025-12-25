@@ -25,6 +25,42 @@ service AssetService {
 
   // 创建下载历史
   rpc CreateHistory(CreateHistoryRequest) returns (CreateHistoryResponse);
+
+  // ========== 代理管理 ==========
+  // 创建代理
+  rpc CreateProxy(CreateProxyRequest) returns (CreateProxyResponse);
+  // 更新代理
+  rpc UpdateProxy(UpdateProxyRequest) returns (UpdateProxyResponse);
+  // 删除代理
+  rpc DeleteProxy(DeleteProxyRequest) returns (DeleteProxyResponse);
+  // 获取代理
+  rpc GetProxy(GetProxyRequest) returns (GetProxyResponse);
+  // 列表代理
+  rpc ListProxies(ListProxiesRequest) returns (ListProxiesResponse);
+  // 检查代理健康
+  rpc CheckProxyHealth(CheckProxyHealthRequest) returns (CheckProxyHealthResponse);
+  // 获取可用代理（供其他服务调用）
+  rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
+  // 报告代理使用结果
+  rpc ReportProxyUsage(ReportProxyUsageRequest) returns (ReportProxyUsageResponse);
+
+  // ========== Cookie 管理 ==========
+  // 创建 Cookie
+  rpc CreateCookie(CreateCookieRequest) returns (CreateCookieResponse);
+  // 更新 Cookie
+  rpc UpdateCookie(UpdateCookieRequest) returns (UpdateCookieResponse);
+  // 删除 Cookie
+  rpc DeleteCookie(DeleteCookieRequest) returns (DeleteCookieResponse);
+  // 获取 Cookie
+  rpc GetCookie(GetCookieRequest) returns (GetCookieResponse);
+  // 列表 Cookie
+  rpc ListCookies(ListCookiesRequest) returns (ListCookiesResponse);
+  // 获取可用 Cookie（考虑过期和冷冻）
+  rpc GetAvailableCookie(GetAvailableCookieRequest) returns (GetAvailableCookieResponse);
+  // 报告 Cookie 使用结果
+  rpc ReportCookieUsage(ReportCookieUsageRequest) returns (ReportCookieUsageResponse);
+  // 手动冷冻 Cookie  
+  rpc FreezeCookie(FreezeCookieRequest) returns (FreezeCookieResponse);
 }
 
 // 获取历史请求
@@ -151,4 +187,231 @@ message CreateHistoryRequest {
 
 message CreateHistoryResponse {
   int64 history_id = 1;
+}
+
+// ========== 代理管理消息 ==========
+
+// 代理信息
+message ProxyInfo {
+  int64 id = 1;
+  string ip = 2;
+  int32 port = 3;
+  string username = 4;
+  string password = 5;
+  string protocol = 6;      // http/https/socks5
+  string region = 7;
+  int32 status = 8;         // 0=active, 1=inactive, 2=checking
+  string last_check_at = 9;
+  string last_check_result = 10;
+  int32 success_count = 11;
+  int32 fail_count = 12;
+  string last_used_at = 13;
+  string created_at = 14;
+  string updated_at = 15;
+}
+
+// 创建代理
+message CreateProxyRequest {
+  string ip = 1;
+  int32 port = 2;
+  string username = 3;      // 可选
+  string password = 4;      // 可选
+  string protocol = 5;      // 可选，默认 http
+  string region = 6;        // 可选
+  bool check_health = 7;    // 是否立即检查健康状态
+}
+
+message CreateProxyResponse {
+  int64 id = 1;
+  bool health_check_passed = 2;  // 健康检查是否通过
+  string health_check_error = 3; // 健康检查错误信息
+}
+
+// 更新代理
+message UpdateProxyRequest {
+  int64 id = 1;
+  string username = 2;
+  string password = 3;
+  string protocol = 4;
+  string region = 5;
+}
+
+message UpdateProxyResponse {
+  bool success = 1;
+}
+
+// 删除代理
+message DeleteProxyRequest {
+  int64 id = 1;
+}
+
+message DeleteProxyResponse {
+  bool success = 1;
+}
+
+// 获取代理
+message GetProxyRequest {
+  int64 id = 1;
+}
+
+message GetProxyResponse {
+  ProxyInfo proxy = 1;
+}
+
+// 列表代理
+message ListProxiesRequest {
+  int32 status = 1;         // 可选：状态过滤
+  string protocol = 2;      // 可选：协议过滤
+  string region = 3;        // 可选：地区过滤
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message ListProxiesResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated ProxyInfo items = 4;
+}
+
+// 健康检查
+message CheckProxyHealthRequest {
+  int64 id = 1;
+}
+
+message CheckProxyHealthResponse {
+  bool healthy = 1;
+  string error = 2;
+  int64 latency_ms = 3;     // 延迟毫秒
+}
+
+// 获取可用代理
+message GetAvailableProxyRequest {
+  string protocol = 1;      // 可选：协议过滤
+  string region = 2;        // 可选：地区过滤
+}
+
+message GetAvailableProxyResponse {
+  string proxy_url = 1;     // 代理完整 URL
+  int64 proxy_id = 2;       // 代理 ID（用于上报）
+}
+
+// 报告代理使用结果
+message ReportProxyUsageRequest {
+  int64 proxy_id = 1;
+  bool success = 2;
+}
+
+message ReportProxyUsageResponse {
+  bool success = 1;
+}
+
+// ========== Cookie 管理消息 ==========
+
+// Cookie 信息
+message CookieInfo {
+  int64 id = 1;
+  string platform = 2;       // youtube/bilibili/tiktok
+  string name = 3;
+  string content = 4;
+  int32 status = 5;          // 0=active, 1=expired, 2=frozen
+  string expire_at = 6;
+  string frozen_until = 7;
+  int32 freeze_seconds = 8;
+  string last_used_at = 9;
+  int32 use_count = 10;
+  int32 success_count = 11;
+  int32 fail_count = 12;
+  string created_at = 13;
+  string updated_at = 14;
+}
+
+// 创建 Cookie
+message CreateCookieRequest {
+  string platform = 1;
+  string name = 2;
+  string content = 3;        // Netscape 格式
+  string expire_at = 4;      // 可选：YYYY-MM-DD HH:MM:SS
+  int32 freeze_seconds = 5;  // 可选：使用后冷冻秒数
+}
+
+message CreateCookieResponse {
+  int64 id = 1;
+}
+
+// 更新 Cookie
+message UpdateCookieRequest {
+  int64 id = 1;
+  string name = 2;
+  string content = 3;
+  string expire_at = 4;
+  int32 freeze_seconds = 5;
+}
+
+message UpdateCookieResponse {
+  bool success = 1;
+}
+
+// 删除 Cookie
+message DeleteCookieRequest {
+  int64 id = 1;
+}
+
+message DeleteCookieResponse {
+  bool success = 1;
+}
+
+// 获取 Cookie
+message GetCookieRequest {
+  int64 id = 1;
+}
+
+message GetCookieResponse {
+  CookieInfo cookie = 1;
+}
+
+// 列表 Cookie
+message ListCookiesRequest {
+  string platform = 1;       // 可选：平台过滤
+  int32 status = 2;          // 可选：状态过滤
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListCookiesResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated CookieInfo items = 4;
+}
+
+// 获取可用 Cookie
+message GetAvailableCookieRequest {
+  string platform = 1;       // 必须：平台
+}
+
+message GetAvailableCookieResponse {
+  int64 cookie_id = 1;
+  string content = 2;        // Cookie 内容
+}
+
+// 报告 Cookie 使用结果
+message ReportCookieUsageRequest {
+  int64 cookie_id = 1;
+  bool success = 2;
+}
+
+message ReportCookieUsageResponse {
+  bool success = 1;
+}
+
+// 冷冻 Cookie
+message FreezeCookieRequest {
+  int64 cookie_id = 1;
+  int32 freeze_seconds = 2;  // 冷冻时长，0 表示使用默认值
+}
+
+message FreezeCookieResponse {
+  bool success = 1;
+  string frozen_until = 2;   // 冷冻结束时间
 }

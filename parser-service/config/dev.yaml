@@ -31,24 +31,25 @@ cache:
 platforms:
   youtube:
     enabled: true
-    cookie_file: "/etc/vasset/cookies/youtube.txt"
+    cookie_file: ""  # 留空，使用动态获取的 cookie
     extra_args:
-      - "--extractor-args"
-      - "youtube:player_client=web"
-      # 处理年龄限制视频
-      - "--extractor-args"
-      - "youtube:skip=dash,hls"
+      - "--user-agent"
+      - "\'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\'"
+      - "--sleep-requests"
+      - "1"
+      - "--sleep-interval"
+      - "5"
   
   bilibili:
     enabled: true
-    cookie_file: "/etc/vasset/cookies/bilibili.txt"
+    cookie_file: ""
     extra_args:
       - "--extractor-args"
       - "bilibili:referer=https://www.bilibili.com"
   
   tiktok:
     enabled: true
-    cookie_file: "/etc/vasset/cookies/tiktok.txt"
+    cookie_file: ""
     extra_args:
       - "--extractor-args"
       - "tiktok:api_hostname=api22-normal-c-alisg.tiktokv.com"
@@ -56,3 +57,9 @@ platforms:
   generic:
     enabled: true
 
+# Asset 服务配置
+asset_service:
+  addr: "vasset-asset:9004"           # Asset 服务地址（修正端口）
+  timeout: 5                          # gRPC 超时（秒）
+  enable_cookies: true                # 启用 Cookie 获取
+  cookie_temp_dir: "/tmp/parser-cookies"  # Cookie 临时文件目录

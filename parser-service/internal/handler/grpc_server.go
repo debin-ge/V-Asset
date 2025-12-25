@@ -64,6 +64,8 @@ func (s *GRPCServer) ParseURL(ctx context.Context, req *pb.ParseURLRequest) (*pb
 		UploadDate:  result.UploadDate,
 		ViewCount:   result.ViewCount,
 		Formats:     formats,
+		CookieId:    result.CookieID, // 添加 cookie ID
+		ProxyUrl:    result.ProxyURL, // 添加 proxy URL（目前为空）
 	}, nil
 }
 

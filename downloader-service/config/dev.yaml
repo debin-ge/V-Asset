@@ -49,10 +49,10 @@ ytdlp:
   # 平台特定参数
   platform_args:
     youtube:
-      - "--extractor-args"
-      - "youtube:player_client=web"
-      - "--impersonate"
-      - "chrome"
+      - "--user-agent"
+      - "\'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\'"
+      - "--sleep-requests"
+      - "1"
     bilibili:
       - "--extractor-args"
       - "bilibili:referer=https://www.bilibili.com"
@@ -83,3 +83,7 @@ retry:
   initial_interval: 60             # 首次重试等待60秒
   max_interval: 3600               # 最大重试间隔1小时
 
+asset_service:
+  addr: "vasset-asset:9004"        # Asset Service 地址
+  timeout: 30                      # 超时秒数
+  cookie_temp_dir: "/tmp/downloader-cookies"  # Cookie 临时目录

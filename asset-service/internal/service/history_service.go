@@ -28,6 +28,12 @@ func (s *HistoryService) GetHistory(ctx context.Context, filter *models.HistoryF
 	return s.historyRepo.Query(ctx, filter)
 }
 
+// CreateHistory 创建历史记录
+func (s *HistoryService) CreateHistory(ctx context.Context, history *models.DownloadHistory) (int64, error) {
+	log.Printf("[HistoryService] Creating history for task %s, user %s", history.TaskID, history.UserID)
+	return s.historyRepo.Create(ctx, history)
+}
+
 // DeleteHistory 删除历史记录
 func (s *HistoryService) DeleteHistory(ctx context.Context, historyID int64, userID string) error {
 	// 1. 获取记录信息

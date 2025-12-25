@@ -11,16 +11,17 @@ import (
 
 // Config 应用配置
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	RabbitMQ RabbitMQConfig `yaml:"rabbitmq"`
-	Redis    RedisConfig    `yaml:"redis"`
-	Worker   WorkerConfig   `yaml:"worker"`
-	YtDLP    YtDLPConfig    `yaml:"ytdlp"`
-	Proxy    ProxyConfig    `yaml:"proxy"`
-	Storage  StorageConfig  `yaml:"storage"`
-	Cleanup  CleanupConfig  `yaml:"cleanup"`
-	Retry    RetryConfig    `yaml:"retry"`
+	Server       ServerConfig       `yaml:"server"`
+	Database     DatabaseConfig     `yaml:"database"`
+	RabbitMQ     RabbitMQConfig     `yaml:"rabbitmq"`
+	Redis        RedisConfig        `yaml:"redis"`
+	Worker       WorkerConfig       `yaml:"worker"`
+	YtDLP        YtDLPConfig        `yaml:"ytdlp"`
+	Proxy        ProxyConfig        `yaml:"proxy"`
+	Storage      StorageConfig      `yaml:"storage"`
+	Cleanup      CleanupConfig      `yaml:"cleanup"`
+	Retry        RetryConfig        `yaml:"retry"`
+	AssetService AssetServiceConfig `yaml:"asset_service"`
 }
 
 // ServerConfig 服务器配置
@@ -116,6 +117,13 @@ type RetryConfig struct {
 	MaxAttempts     int `yaml:"max_attempts"`
 	InitialInterval int `yaml:"initial_interval"` // 秒
 	MaxInterval     int `yaml:"max_interval"`     // 秒
+}
+
+// AssetServiceConfig Asset 服务配置
+type AssetServiceConfig struct {
+	Addr          string `yaml:"addr"`            // Asset Service 地址
+	Timeout       int    `yaml:"timeout"`         // 超时秒数
+	CookieTempDir string `yaml:"cookie_temp_dir"` // Cookie 临时目录
 }
 
 // LoadConfig 加载配置文件

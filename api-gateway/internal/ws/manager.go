@@ -52,22 +52,21 @@ func NewManager(rdb *redis.Client) *Manager {
 
 // HandleConnection 处理 WebSocket 连接
 func (m *Manager) HandleConnection(c *gin.Context) {
-	// 获取任务 ID
-	taskID := c.Query("task_id")
-	if taskID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "task_id is required",
-		})
-		return
-	}
-
-	// 验证 Token (从查询参数或头获取)
+	// 获取 Token (从查询参数或头获取)
 	token := c.Query("token")
 	if token == "" {
 		token = c.GetHeader("Authorization")
 	}
-	// 注意: 实际场景中需要验证 token，这里简化处理
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code":    401,
+			"message": "token is required",
+		})
+		return
+	}
+
+	// 可选: 获取特定任务 ID (如果为空，则监听用户所有任务)
+	taskID := c.Query("task_id")
 
 	// 升级到 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -75,15 +74,17 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 		log.Printf("[WS] Failed to upgrade connection: %v", err)
 		return
 	}
+
+	connID := fmt.Sprintf("conn_%d", time.Now().UnixNano())
 	defer func() {
 		conn.Close()
-		m.connections.Delete(taskID)
-		log.Printf("[WS] Connection closed: %s", taskID)
+		m.connections.Delete(connID)
+		log.Printf("[WS] Connection closed: %s", connID)
 	}()
 
 	// 保存连接
-	m.connections.Store(taskID, conn)
-	log.Printf("[WS] Connection established: %s", taskID)
+	m.connections.Store(connID, conn)
+	log.Printf("[WS] Connection established: %s (taskID: %s)", connID, taskID)
 
 	// 设置 Pong 处理
 	conn.SetPongHandler(func(string) error {
@@ -92,33 +93,54 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	})
 
 	// 启动心跳
-	go m.heartbeat(taskID, conn)
+	go m.heartbeat(connID, conn)
 
-	// 订阅 Redis 频道
 	ctx := context.Background()
-	channelName := fmt.Sprintf("progress:%s", taskID)
-	pubsub := m.rdb.Subscribe(ctx, channelName)
-	defer pubsub.Close()
 
-	// 监听 Redis 消息
-	ch := pubsub.Channel()
-	for msg := range ch {
-		// 解析消息
-		var progress ProgressMessage
-		if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
-			log.Printf("[WS] Failed to parse message: %v", err)
-			continue
+	if taskID != "" {
+		// 模式1: 监听特定任务
+		channelName := fmt.Sprintf("progress:%s", taskID)
+		pubsub := m.rdb.Subscribe(ctx, channelName)
+		defer pubsub.Close()
+
+		log.Printf("[WS] Subscribed to channel: %s", channelName)
+
+		ch := pubsub.Channel()
+		for msg := range ch {
+			var progress ProgressMessage
+			if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
+				log.Printf("[WS] Failed to parse message: %v", err)
+				continue
+			}
+
+			if err := conn.WriteJSON(progress); err != nil {
+				log.Printf("[WS] Failed to send message: %v", err)
+				return
+			}
+
+			if progress.Status == "completed" || progress.Status == "failed" {
+				return
+			}
 		}
+	} else {
+		// 模式2: 使用 pattern 订阅所有进度消息
+		pubsub := m.rdb.PSubscribe(ctx, "progress:*")
+		defer pubsub.Close()
 
-		// 发送给客户端
-		if err := conn.WriteJSON(progress); err != nil {
-			log.Printf("[WS] Failed to send message: %v", err)
-			return
-		}
+		log.Printf("[WS] Subscribed to pattern: progress:*")
 
-		// 如果任务完成或失败，关闭连接
-		if progress.Status == "completed" || progress.Status == "failed" {
-			return
+		ch := pubsub.Channel()
+		for msg := range ch {
+			var progress ProgressMessage
+			if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
+				log.Printf("[WS] Failed to parse message: %v", err)
+				continue
+			}
+
+			if err := conn.WriteJSON(progress); err != nil {
+				log.Printf("[WS] Failed to send message: %v", err)
+				return
+			}
 		}
 	}
 }

@@ -154,3 +154,127 @@ type DailyActivity struct {
 	Date  string `json:"date"`
 	Count int64  `json:"count"`
 }
+
+// ==================== 代理管理 ====================
+
+// CreateProxyRequest 创建代理请求
+type CreateProxyRequest struct {
+	IP          string `json:"ip" binding:"required"`
+	Port        int32  `json:"port" binding:"required"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	Protocol    string `json:"protocol"`
+	Region      string `json:"region"`
+	CheckHealth bool   `json:"check_health"`
+}
+
+// CreateProxyResponse 创建代理响应
+type CreateProxyResponse struct {
+	ID                int64  `json:"id"`
+	HealthCheckPassed bool   `json:"health_check_passed"`
+	HealthCheckError  string `json:"health_check_error,omitempty"`
+}
+
+// UpdateProxyRequest 更新代理请求
+type UpdateProxyRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Protocol string `json:"protocol"`
+	Region   string `json:"region"`
+}
+
+// ListProxiesRequest 列出代理请求
+type ListProxiesRequest struct {
+	Status   int32  `form:"status"`
+	Protocol string `form:"protocol"`
+	Region   string `form:"region"`
+	Page     int    `form:"page,default=1"`
+	PageSize int    `form:"page_size,default=20"`
+}
+
+// ProxyInfo 代理信息
+type ProxyInfo struct {
+	ID              int64  `json:"id"`
+	IP              string `json:"ip"`
+	Port            int32  `json:"port"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	Protocol        string `json:"protocol"`
+	Region          string `json:"region"`
+	Status          int32  `json:"status"`
+	LastCheckAt     string `json:"last_check_at,omitempty"`
+	LastCheckResult string `json:"last_check_result,omitempty"`
+	SuccessCount    int64  `json:"success_count"`
+	FailCount       int64  `json:"fail_count"`
+	LastUsedAt      string `json:"last_used_at,omitempty"`
+	CreatedAt       string `json:"created_at"`
+	UpdatedAt       string `json:"updated_at"`
+}
+
+// ProxyHealthCheckResponse 代理健康检查响应
+type ProxyHealthCheckResponse struct {
+	Healthy   bool   `json:"healthy"`
+	Error     string `json:"error,omitempty"`
+	LatencyMs int64  `json:"latency_ms"`
+}
+
+// ==================== Cookie 管理 ====================
+
+// CreateCookieRequest 创建 Cookie 请求
+type CreateCookieRequest struct {
+	Platform      string `json:"platform" binding:"required"`
+	Name          string `json:"name" binding:"required"`
+	Content       string `json:"content" binding:"required"`
+	ExpireAt      string `json:"expire_at"`
+	FreezeSeconds int32  `json:"freeze_seconds"`
+}
+
+// CreateCookieResponse 创建 Cookie 响应
+type CreateCookieResponse struct {
+	ID int64 `json:"id"`
+}
+
+// UpdateCookieRequest 更新 Cookie 请求
+type UpdateCookieRequest struct {
+	Name          string `json:"name"`
+	Content       string `json:"content"`
+	ExpireAt      string `json:"expire_at"`
+	FreezeSeconds int32  `json:"freeze_seconds"`
+}
+
+// ListCookiesRequest 列出 Cookie 请求
+type ListCookiesRequest struct {
+	Platform string `form:"platform"`
+	Status   int32  `form:"status"`
+	Page     int    `form:"page,default=1"`
+	PageSize int    `form:"page_size,default=20"`
+}
+
+// CookieInfo Cookie 信息
+type CookieInfo struct {
+	ID            int64  `json:"id"`
+	Platform      string `json:"platform"`
+	Name          string `json:"name"`
+	Content       string `json:"content"`
+	Status        int32  `json:"status"`
+	ExpireAt      string `json:"expire_at,omitempty"`
+	FrozenUntil   string `json:"frozen_until,omitempty"`
+	FreezeSeconds int32  `json:"freeze_seconds"`
+	LastUsedAt    string `json:"last_used_at,omitempty"`
+	UseCount      int64  `json:"use_count"`
+	SuccessCount  int64  `json:"success_count"`
+	FailCount     int64  `json:"fail_count"`
+	CreatedAt     string `json:"created_at"`
+	UpdatedAt     string `json:"updated_at"`
+}
+
+// FreezeCookieRequest 冷冻 Cookie 请求
+type FreezeCookieRequest struct {
+	FreezeSeconds int32 `json:"freeze_seconds"`
+}
+
+// FreezeCookieResponse 冷冻 Cookie 响应
+type FreezeCookieResponse struct {
+	Success     bool   `json:"success"`
+	FrozenUntil string `json:"frozen_until"`
+}

@@ -23,3 +23,10 @@ pagination:
 
 storage:
   base_path: /data/downloads  # 下载文件存储路径
+
+proxy:
+  health_check_timeout: 10    # 健康检查超时（秒）
+  test_url: "https://www.google.com"  # 测试 URL
+
+cookie:
+  default_freeze_seconds: 60  # 使用后默认冷冻时间（秒）

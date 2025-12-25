@@ -28,6 +28,8 @@ message ParseURLResponse {
   string upload_date = 8;
   int64 view_count = 9;
   repeated VideoFormat formats = 10;
+  int64 cookie_id = 11;         // parser使用的cookie ID(用于downloader复用)
+  string proxy_url = 12;        // parser使用的proxy URL(用于downloader复用)
 }
 
 message VideoFormat {

@@ -80,6 +80,31 @@ func (r *HistoryRepository) GetByIDAndUserID(ctx context.Context, id int64, user
 	return &h, nil
 }
 
+// Create 创建历史记录
+func (r *HistoryRepository) Create(ctx context.Context, history *models.DownloadHistory) (int64, error) {
+	query := `
+		INSERT INTO download_history (
+			task_id, user_id, url, platform, title, mode, quality, 
+			thumbnail, duration, author, status, created_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+		) RETURNING id
+	`
+
+	var id int64
+	err := r.db.QueryRowContext(ctx, query,
+		history.TaskID, history.UserID, history.URL, history.Platform,
+		history.Title, history.Mode, history.Quality, history.Thumbnail,
+		history.Duration, history.Author, history.Status, time.Now(),
+	).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to create history: %w", err)
+	}
+
+	return id, nil
+}
+
 // Query 查询历史记录(支持过滤、分页、排序)
 func (r *HistoryRepository) Query(ctx context.Context, filter *models.HistoryFilter) (*models.HistoryResult, error) {
 	// 构建WHERE子句

@@ -24,6 +24,8 @@ type ParseResult struct {
 	UploadDate  string                   `json:"upload_date"`
 	ViewCount   int64                    `json:"view_count"`
 	Formats     []utils.NormalizedFormat `json:"formats"`
+	CookieID    int64                    `json:"cookie_id,omitempty"` // 不缓存，仅用于传递
+	ProxyURL    string                   `json:"proxy_url,omitempty"` // 不缓存，仅用于传递
 }
 
 // Service 缓存服务

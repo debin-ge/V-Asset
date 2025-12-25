@@ -21,10 +21,6 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Asia/Shanghai
 
-# 使用清华镜像源加速（针对 ARM64）
-RUN sed -i 's|ports.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && \
-    sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list
-
 # 安装 yt-dlp 和 ffmpeg
 RUN apt-get update && apt-get install -y \
     curl \

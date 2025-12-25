@@ -19,13 +19,29 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AssetService_GetHistory_FullMethodName    = "/asset.AssetService/GetHistory"
-	AssetService_DeleteHistory_FullMethodName = "/asset.AssetService/DeleteHistory"
-	AssetService_CheckQuota_FullMethodName    = "/asset.AssetService/CheckQuota"
-	AssetService_ConsumeQuota_FullMethodName  = "/asset.AssetService/ConsumeQuota"
-	AssetService_GetUserStats_FullMethodName  = "/asset.AssetService/GetUserStats"
-	AssetService_GetFileInfo_FullMethodName   = "/asset.AssetService/GetFileInfo"
-	AssetService_CreateHistory_FullMethodName = "/asset.AssetService/CreateHistory"
+	AssetService_GetHistory_FullMethodName         = "/asset.AssetService/GetHistory"
+	AssetService_DeleteHistory_FullMethodName      = "/asset.AssetService/DeleteHistory"
+	AssetService_CheckQuota_FullMethodName         = "/asset.AssetService/CheckQuota"
+	AssetService_ConsumeQuota_FullMethodName       = "/asset.AssetService/ConsumeQuota"
+	AssetService_GetUserStats_FullMethodName       = "/asset.AssetService/GetUserStats"
+	AssetService_GetFileInfo_FullMethodName        = "/asset.AssetService/GetFileInfo"
+	AssetService_CreateHistory_FullMethodName      = "/asset.AssetService/CreateHistory"
+	AssetService_CreateProxy_FullMethodName        = "/asset.AssetService/CreateProxy"
+	AssetService_UpdateProxy_FullMethodName        = "/asset.AssetService/UpdateProxy"
+	AssetService_DeleteProxy_FullMethodName        = "/asset.AssetService/DeleteProxy"
+	AssetService_GetProxy_FullMethodName           = "/asset.AssetService/GetProxy"
+	AssetService_ListProxies_FullMethodName        = "/asset.AssetService/ListProxies"
+	AssetService_CheckProxyHealth_FullMethodName   = "/asset.AssetService/CheckProxyHealth"
+	AssetService_GetAvailableProxy_FullMethodName  = "/asset.AssetService/GetAvailableProxy"
+	AssetService_ReportProxyUsage_FullMethodName   = "/asset.AssetService/ReportProxyUsage"
+	AssetService_CreateCookie_FullMethodName       = "/asset.AssetService/CreateCookie"
+	AssetService_UpdateCookie_FullMethodName       = "/asset.AssetService/UpdateCookie"
+	AssetService_DeleteCookie_FullMethodName       = "/asset.AssetService/DeleteCookie"
+	AssetService_GetCookie_FullMethodName          = "/asset.AssetService/GetCookie"
+	AssetService_ListCookies_FullMethodName        = "/asset.AssetService/ListCookies"
+	AssetService_GetAvailableCookie_FullMethodName = "/asset.AssetService/GetAvailableCookie"
+	AssetService_ReportCookieUsage_FullMethodName  = "/asset.AssetService/ReportCookieUsage"
+	AssetService_FreezeCookie_FullMethodName       = "/asset.AssetService/FreezeCookie"
 )
 
 // AssetServiceClient is the client API for AssetService service.
@@ -46,6 +62,40 @@ type AssetServiceClient interface {
 	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 	// 创建下载历史
 	CreateHistory(ctx context.Context, in *CreateHistoryRequest, opts ...grpc.CallOption) (*CreateHistoryResponse, error)
+	// ========== 代理管理 ==========
+	// 创建代理
+	CreateProxy(ctx context.Context, in *CreateProxyRequest, opts ...grpc.CallOption) (*CreateProxyResponse, error)
+	// 更新代理
+	UpdateProxy(ctx context.Context, in *UpdateProxyRequest, opts ...grpc.CallOption) (*UpdateProxyResponse, error)
+	// 删除代理
+	DeleteProxy(ctx context.Context, in *DeleteProxyRequest, opts ...grpc.CallOption) (*DeleteProxyResponse, error)
+	// 获取代理
+	GetProxy(ctx context.Context, in *GetProxyRequest, opts ...grpc.CallOption) (*GetProxyResponse, error)
+	// 列表代理
+	ListProxies(ctx context.Context, in *ListProxiesRequest, opts ...grpc.CallOption) (*ListProxiesResponse, error)
+	// 检查代理健康
+	CheckProxyHealth(ctx context.Context, in *CheckProxyHealthRequest, opts ...grpc.CallOption) (*CheckProxyHealthResponse, error)
+	// 获取可用代理（供其他服务调用）
+	GetAvailableProxy(ctx context.Context, in *GetAvailableProxyRequest, opts ...grpc.CallOption) (*GetAvailableProxyResponse, error)
+	// 报告代理使用结果
+	ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error)
+	// ========== Cookie 管理 ==========
+	// 创建 Cookie
+	CreateCookie(ctx context.Context, in *CreateCookieRequest, opts ...grpc.CallOption) (*CreateCookieResponse, error)
+	// 更新 Cookie
+	UpdateCookie(ctx context.Context, in *UpdateCookieRequest, opts ...grpc.CallOption) (*UpdateCookieResponse, error)
+	// 删除 Cookie
+	DeleteCookie(ctx context.Context, in *DeleteCookieRequest, opts ...grpc.CallOption) (*DeleteCookieResponse, error)
+	// 获取 Cookie
+	GetCookie(ctx context.Context, in *GetCookieRequest, opts ...grpc.CallOption) (*GetCookieResponse, error)
+	// 列表 Cookie
+	ListCookies(ctx context.Context, in *ListCookiesRequest, opts ...grpc.CallOption) (*ListCookiesResponse, error)
+	// 获取可用 Cookie（考虑过期和冷冻）
+	GetAvailableCookie(ctx context.Context, in *GetAvailableCookieRequest, opts ...grpc.CallOption) (*GetAvailableCookieResponse, error)
+	// 报告 Cookie 使用结果
+	ReportCookieUsage(ctx context.Context, in *ReportCookieUsageRequest, opts ...grpc.CallOption) (*ReportCookieUsageResponse, error)
+	// 手动冷冻 Cookie
+	FreezeCookie(ctx context.Context, in *FreezeCookieRequest, opts ...grpc.CallOption) (*FreezeCookieResponse, error)
 }
 
 type assetServiceClient struct {
@@ -126,6 +176,166 @@ func (c *assetServiceClient) CreateHistory(ctx context.Context, in *CreateHistor
 	return out, nil
 }
 
+func (c *assetServiceClient) CreateProxy(ctx context.Context, in *CreateProxyRequest, opts ...grpc.CallOption) (*CreateProxyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateProxyResponse)
+	err := c.cc.Invoke(ctx, AssetService_CreateProxy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateProxy(ctx context.Context, in *UpdateProxyRequest, opts ...grpc.CallOption) (*UpdateProxyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateProxyResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateProxy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) DeleteProxy(ctx context.Context, in *DeleteProxyRequest, opts ...grpc.CallOption) (*DeleteProxyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProxyResponse)
+	err := c.cc.Invoke(ctx, AssetService_DeleteProxy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetProxy(ctx context.Context, in *GetProxyRequest, opts ...grpc.CallOption) (*GetProxyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProxyResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetProxy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListProxies(ctx context.Context, in *ListProxiesRequest, opts ...grpc.CallOption) (*ListProxiesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProxiesResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListProxies_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) CheckProxyHealth(ctx context.Context, in *CheckProxyHealthRequest, opts ...grpc.CallOption) (*CheckProxyHealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckProxyHealthResponse)
+	err := c.cc.Invoke(ctx, AssetService_CheckProxyHealth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetAvailableProxy(ctx context.Context, in *GetAvailableProxyRequest, opts ...grpc.CallOption) (*GetAvailableProxyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAvailableProxyResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetAvailableProxy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportProxyUsageResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReportProxyUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) CreateCookie(ctx context.Context, in *CreateCookieRequest, opts ...grpc.CallOption) (*CreateCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_CreateCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateCookie(ctx context.Context, in *UpdateCookieRequest, opts ...grpc.CallOption) (*UpdateCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) DeleteCookie(ctx context.Context, in *DeleteCookieRequest, opts ...grpc.CallOption) (*DeleteCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_DeleteCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetCookie(ctx context.Context, in *GetCookieRequest, opts ...grpc.CallOption) (*GetCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListCookies(ctx context.Context, in *ListCookiesRequest, opts ...grpc.CallOption) (*ListCookiesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListCookiesResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListCookies_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetAvailableCookie(ctx context.Context, in *GetAvailableCookieRequest, opts ...grpc.CallOption) (*GetAvailableCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAvailableCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetAvailableCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReportCookieUsage(ctx context.Context, in *ReportCookieUsageRequest, opts ...grpc.CallOption) (*ReportCookieUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportCookieUsageResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReportCookieUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) FreezeCookie(ctx context.Context, in *FreezeCookieRequest, opts ...grpc.CallOption) (*FreezeCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FreezeCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_FreezeCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AssetServiceServer is the server API for AssetService service.
 // All implementations must embed UnimplementedAssetServiceServer
 // for forward compatibility.
@@ -144,6 +354,40 @@ type AssetServiceServer interface {
 	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	// 创建下载历史
 	CreateHistory(context.Context, *CreateHistoryRequest) (*CreateHistoryResponse, error)
+	// ========== 代理管理 ==========
+	// 创建代理
+	CreateProxy(context.Context, *CreateProxyRequest) (*CreateProxyResponse, error)
+	// 更新代理
+	UpdateProxy(context.Context, *UpdateProxyRequest) (*UpdateProxyResponse, error)
+	// 删除代理
+	DeleteProxy(context.Context, *DeleteProxyRequest) (*DeleteProxyResponse, error)
+	// 获取代理
+	GetProxy(context.Context, *GetProxyRequest) (*GetProxyResponse, error)
+	// 列表代理
+	ListProxies(context.Context, *ListProxiesRequest) (*ListProxiesResponse, error)
+	// 检查代理健康
+	CheckProxyHealth(context.Context, *CheckProxyHealthRequest) (*CheckProxyHealthResponse, error)
+	// 获取可用代理（供其他服务调用）
+	GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error)
+	// 报告代理使用结果
+	ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error)
+	// ========== Cookie 管理 ==========
+	// 创建 Cookie
+	CreateCookie(context.Context, *CreateCookieRequest) (*CreateCookieResponse, error)
+	// 更新 Cookie
+	UpdateCookie(context.Context, *UpdateCookieRequest) (*UpdateCookieResponse, error)
+	// 删除 Cookie
+	DeleteCookie(context.Context, *DeleteCookieRequest) (*DeleteCookieResponse, error)
+	// 获取 Cookie
+	GetCookie(context.Context, *GetCookieRequest) (*GetCookieResponse, error)
+	// 列表 Cookie
+	ListCookies(context.Context, *ListCookiesRequest) (*ListCookiesResponse, error)
+	// 获取可用 Cookie（考虑过期和冷冻）
+	GetAvailableCookie(context.Context, *GetAvailableCookieRequest) (*GetAvailableCookieResponse, error)
+	// 报告 Cookie 使用结果
+	ReportCookieUsage(context.Context, *ReportCookieUsageRequest) (*ReportCookieUsageResponse, error)
+	// 手动冷冻 Cookie
+	FreezeCookie(context.Context, *FreezeCookieRequest) (*FreezeCookieResponse, error)
 	mustEmbedUnimplementedAssetServiceServer()
 }
 
@@ -174,6 +418,54 @@ func (UnimplementedAssetServiceServer) GetFileInfo(context.Context, *GetFileInfo
 }
 func (UnimplementedAssetServiceServer) CreateHistory(context.Context, *CreateHistoryRequest) (*CreateHistoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateHistory not implemented")
+}
+func (UnimplementedAssetServiceServer) CreateProxy(context.Context, *CreateProxyRequest) (*CreateProxyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateProxy not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateProxy(context.Context, *UpdateProxyRequest) (*UpdateProxyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateProxy not implemented")
+}
+func (UnimplementedAssetServiceServer) DeleteProxy(context.Context, *DeleteProxyRequest) (*DeleteProxyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteProxy not implemented")
+}
+func (UnimplementedAssetServiceServer) GetProxy(context.Context, *GetProxyRequest) (*GetProxyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProxy not implemented")
+}
+func (UnimplementedAssetServiceServer) ListProxies(context.Context, *ListProxiesRequest) (*ListProxiesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListProxies not implemented")
+}
+func (UnimplementedAssetServiceServer) CheckProxyHealth(context.Context, *CheckProxyHealthRequest) (*CheckProxyHealthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckProxyHealth not implemented")
+}
+func (UnimplementedAssetServiceServer) GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAvailableProxy not implemented")
+}
+func (UnimplementedAssetServiceServer) ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportProxyUsage not implemented")
+}
+func (UnimplementedAssetServiceServer) CreateCookie(context.Context, *CreateCookieRequest) (*CreateCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateCookie not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateCookie(context.Context, *UpdateCookieRequest) (*UpdateCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateCookie not implemented")
+}
+func (UnimplementedAssetServiceServer) DeleteCookie(context.Context, *DeleteCookieRequest) (*DeleteCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteCookie not implemented")
+}
+func (UnimplementedAssetServiceServer) GetCookie(context.Context, *GetCookieRequest) (*GetCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCookie not implemented")
+}
+func (UnimplementedAssetServiceServer) ListCookies(context.Context, *ListCookiesRequest) (*ListCookiesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListCookies not implemented")
+}
+func (UnimplementedAssetServiceServer) GetAvailableCookie(context.Context, *GetAvailableCookieRequest) (*GetAvailableCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAvailableCookie not implemented")
+}
+func (UnimplementedAssetServiceServer) ReportCookieUsage(context.Context, *ReportCookieUsageRequest) (*ReportCookieUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportCookieUsage not implemented")
+}
+func (UnimplementedAssetServiceServer) FreezeCookie(context.Context, *FreezeCookieRequest) (*FreezeCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FreezeCookie not implemented")
 }
 func (UnimplementedAssetServiceServer) mustEmbedUnimplementedAssetServiceServer() {}
 func (UnimplementedAssetServiceServer) testEmbeddedByValue()                      {}
@@ -322,6 +614,294 @@ func _AssetService_CreateHistory_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_CreateProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProxyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CreateProxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CreateProxy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CreateProxy(ctx, req.(*CreateProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProxyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateProxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateProxy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateProxy(ctx, req.(*UpdateProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_DeleteProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProxyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).DeleteProxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_DeleteProxy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).DeleteProxy(ctx, req.(*DeleteProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProxyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetProxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetProxy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetProxy(ctx, req.(*GetProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListProxies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProxiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListProxies(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListProxies_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListProxies(ctx, req.(*ListProxiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_CheckProxyHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckProxyHealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CheckProxyHealth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CheckProxyHealth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CheckProxyHealth(ctx, req.(*CheckProxyHealthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetAvailableProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAvailableProxyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetAvailableProxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetAvailableProxy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetAvailableProxy(ctx, req.(*GetAvailableProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReportProxyUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportProxyUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReportProxyUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReportProxyUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReportProxyUsage(ctx, req.(*ReportProxyUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_CreateCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CreateCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CreateCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CreateCookie(ctx, req.(*CreateCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateCookie(ctx, req.(*UpdateCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_DeleteCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).DeleteCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_DeleteCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).DeleteCookie(ctx, req.(*DeleteCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetCookie(ctx, req.(*GetCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListCookies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCookiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListCookies(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListCookies_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListCookies(ctx, req.(*ListCookiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetAvailableCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAvailableCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetAvailableCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetAvailableCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetAvailableCookie(ctx, req.(*GetAvailableCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReportCookieUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportCookieUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReportCookieUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReportCookieUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReportCookieUsage(ctx, req.(*ReportCookieUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_FreezeCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FreezeCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).FreezeCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_FreezeCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).FreezeCookie(ctx, req.(*FreezeCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AssetService_ServiceDesc is the grpc.ServiceDesc for AssetService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -356,6 +936,70 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateHistory",
 			Handler:    _AssetService_CreateHistory_Handler,
+		},
+		{
+			MethodName: "CreateProxy",
+			Handler:    _AssetService_CreateProxy_Handler,
+		},
+		{
+			MethodName: "UpdateProxy",
+			Handler:    _AssetService_UpdateProxy_Handler,
+		},
+		{
+			MethodName: "DeleteProxy",
+			Handler:    _AssetService_DeleteProxy_Handler,
+		},
+		{
+			MethodName: "GetProxy",
+			Handler:    _AssetService_GetProxy_Handler,
+		},
+		{
+			MethodName: "ListProxies",
+			Handler:    _AssetService_ListProxies_Handler,
+		},
+		{
+			MethodName: "CheckProxyHealth",
+			Handler:    _AssetService_CheckProxyHealth_Handler,
+		},
+		{
+			MethodName: "GetAvailableProxy",
+			Handler:    _AssetService_GetAvailableProxy_Handler,
+		},
+		{
+			MethodName: "ReportProxyUsage",
+			Handler:    _AssetService_ReportProxyUsage_Handler,
+		},
+		{
+			MethodName: "CreateCookie",
+			Handler:    _AssetService_CreateCookie_Handler,
+		},
+		{
+			MethodName: "UpdateCookie",
+			Handler:    _AssetService_UpdateCookie_Handler,
+		},
+		{
+			MethodName: "DeleteCookie",
+			Handler:    _AssetService_DeleteCookie_Handler,
+		},
+		{
+			MethodName: "GetCookie",
+			Handler:    _AssetService_GetCookie_Handler,
+		},
+		{
+			MethodName: "ListCookies",
+			Handler:    _AssetService_ListCookies_Handler,
+		},
+		{
+			MethodName: "GetAvailableCookie",
+			Handler:    _AssetService_GetAvailableCookie_Handler,
+		},
+		{
+			MethodName: "ReportCookieUsage",
+			Handler:    _AssetService_ReportCookieUsage_Handler,
+		},
+		{
+			MethodName: "FreezeCookie",
+			Handler:    _AssetService_FreezeCookie_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

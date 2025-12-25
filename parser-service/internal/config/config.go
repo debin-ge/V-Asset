@@ -10,11 +10,12 @@ import (
 
 // Config 应用配置
 type Config struct {
-	Server    ServerConfig              `yaml:"server"`
-	Redis     RedisConfig               `yaml:"redis"`
-	YTDLP     YTDLPConfig               `yaml:"ytdlp"`
-	Cache     CacheConfig               `yaml:"cache"`
-	Platforms map[string]PlatformConfig `yaml:"platforms"`
+	Server       ServerConfig              `yaml:"server"`
+	Redis        RedisConfig               `yaml:"redis"`
+	YTDLP        YTDLPConfig               `yaml:"ytdlp"`
+	Cache        CacheConfig               `yaml:"cache"`
+	Platforms    map[string]PlatformConfig `yaml:"platforms"`
+	AssetService AssetServiceConfig        `yaml:"asset_service"`
 }
 
 // ServerConfig 服务器配置
@@ -53,6 +54,14 @@ type PlatformConfig struct {
 	CookieFile string   `yaml:"cookie_file"`
 }
 
+// AssetServiceConfig Asset服务配置
+type AssetServiceConfig struct {
+	Addr          string `yaml:"addr"`            // Asset服务地址
+	Timeout       int    `yaml:"timeout"`         // gRPC超时(秒)
+	EnableCookies bool   `yaml:"enable_cookies"`  // 是否启用Cookie获取
+	CookieTempDir string `yaml:"cookie_temp_dir"` // Cookie临时文件目录
+}
+
 // LoadConfig 加载配置文件
 func LoadConfig(configPath string) (*Config, error) {
 	data, err := os.ReadFile(configPath)
@@ -86,6 +95,12 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.Cache.TTL == 0 {
 		cfg.Cache.TTL = 3600
+	}
+	if cfg.AssetService.Timeout == 0 {
+		cfg.AssetService.Timeout = 5
+	}
+	if cfg.AssetService.CookieTempDir == "" {
+		cfg.AssetService.CookieTempDir = "/tmp/parser-cookies"
 	}
 
 	return &cfg, nil

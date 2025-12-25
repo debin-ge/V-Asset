@@ -16,6 +16,8 @@ type Config struct {
 	Quota      QuotaConfig      `yaml:"quota"`
 	Pagination PaginationConfig `yaml:"pagination"`
 	Storage    StorageConfig    `yaml:"storage"`
+	Proxy      ProxyConfig      `yaml:"proxy"`
+	Cookie     CookieConfig     `yaml:"cookie"`
 }
 
 // ServerConfig 服务器配置
@@ -52,6 +54,17 @@ type PaginationConfig struct {
 // StorageConfig 存储配置
 type StorageConfig struct {
 	BasePath string `yaml:"base_path"`
+}
+
+// ProxyConfig 代理配置
+type ProxyConfig struct {
+	HealthCheckTimeout int    `yaml:"health_check_timeout"` // 健康检查超时（秒）
+	TestURL            string `yaml:"test_url"`             // 测试 URL
+}
+
+// CookieConfig Cookie 配置
+type CookieConfig struct {
+	DefaultFreezeSeconds int `yaml:"default_freeze_seconds"` // 默认冷冻时间（秒）
 }
 
 // LoadConfig 加载配置文件
@@ -98,6 +111,19 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.Quota.VIPDailyLimit == 0 {
 		cfg.Quota.VIPDailyLimit = 100
+	}
+
+	// 代理默认值
+	if cfg.Proxy.HealthCheckTimeout == 0 {
+		cfg.Proxy.HealthCheckTimeout = 10
+	}
+	if cfg.Proxy.TestURL == "" {
+		cfg.Proxy.TestURL = "https://www.google.com"
+	}
+
+	// Cookie 默认值
+	if cfg.Cookie.DefaultFreezeSeconds == 0 {
+		cfg.Cookie.DefaultFreezeSeconds = 60
 	}
 
 	return &cfg, nil

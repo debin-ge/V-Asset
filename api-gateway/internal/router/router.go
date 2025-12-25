@@ -70,6 +70,14 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		"1.0.0",
 	)
 	wsHandler := handler.NewWebSocketHandler(deps.WSManager)
+	proxyHandler := handler.NewProxyHandler(
+		deps.GRPCClients.AssetClient,
+		deps.Config.GRPC.Timeout,
+	)
+	cookieHandler := handler.NewCookieHandler(
+		deps.GRPCClients.AssetClient,
+		deps.Config.GRPC.Timeout,
+	)
 
 	// ==================== 公开路由 ====================
 	// 健康检查 (无需认证)
@@ -112,6 +120,22 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 
 		// 文件下载
 		protectedV1.GET("/download/file", fileHandler.DownloadFile)
+
+		// 管理后台 - 代理管理
+		protectedV1.POST("/admin/proxies", proxyHandler.CreateProxy)
+		protectedV1.PUT("/admin/proxies/:id", proxyHandler.UpdateProxy)
+		protectedV1.DELETE("/admin/proxies/:id", proxyHandler.DeleteProxy)
+		protectedV1.GET("/admin/proxies/:id", proxyHandler.GetProxy)
+		protectedV1.GET("/admin/proxies", proxyHandler.ListProxies)
+		protectedV1.POST("/admin/proxies/:id/health-check", proxyHandler.CheckProxyHealth)
+
+		// 管理后台 - Cookie 管理
+		protectedV1.POST("/admin/cookies", cookieHandler.CreateCookie)
+		protectedV1.PUT("/admin/cookies/:id", cookieHandler.UpdateCookie)
+		protectedV1.DELETE("/admin/cookies/:id", cookieHandler.DeleteCookie)
+		protectedV1.GET("/admin/cookies/:id", cookieHandler.GetCookie)
+		protectedV1.GET("/admin/cookies", cookieHandler.ListCookies)
+		protectedV1.POST("/admin/cookies/:id/freeze", cookieHandler.FreezeCookie)
 	}
 
 	// ==================== WebSocket 路由 ====================

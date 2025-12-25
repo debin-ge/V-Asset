@@ -20,6 +20,8 @@ type GRPCServer struct {
 	historyService *service.HistoryService
 	quotaService   *service.QuotaService
 	statsService   *service.StatsService
+	proxyHandler   *ProxyHandler
+	cookieHandler  *CookieHandler
 	cfg            *config.Config
 }
 
@@ -28,12 +30,16 @@ func NewGRPCServer(
 	historyService *service.HistoryService,
 	quotaService *service.QuotaService,
 	statsService *service.StatsService,
+	proxyHandler *ProxyHandler,
+	cookieHandler *CookieHandler,
 	cfg *config.Config,
 ) *GRPCServer {
 	return &GRPCServer{
 		historyService: historyService,
 		quotaService:   quotaService,
 		statsService:   statsService,
+		proxyHandler:   proxyHandler,
+		cookieHandler:  cookieHandler,
 		cfg:            cfg,
 	}
 }
@@ -143,6 +149,44 @@ func (s *GRPCServer) DeleteHistory(ctx context.Context, req *pb.DeleteHistoryReq
 	}
 
 	return &pb.DeleteHistoryResponse{Success: true}, nil
+}
+
+// CreateHistory 创建历史记录
+func (s *GRPCServer) CreateHistory(ctx context.Context, req *pb.CreateHistoryRequest) (*pb.CreateHistoryResponse, error) {
+	log.Printf("[GRPCServer] CreateHistory called for user %s, task %s", req.UserId, req.TaskId)
+
+	// 参数验证
+	if req.UserId == "" || req.TaskId == "" || req.Url == "" {
+		log.Printf("[GRPCServer] CreateHistory validation failed: missing required fields")
+		return nil, status.Error(codes.InvalidArgument, "用户ID、任务ID和URL不能为空")
+	}
+
+	// 构建历史记录
+	history := &models.DownloadHistory{
+		UserID:    req.UserId,
+		TaskID:    req.TaskId,
+		URL:       req.Url,
+		Platform:  req.Platform,
+		Title:     req.Title,
+		Mode:      req.Mode,
+		Quality:   req.Quality,
+		Thumbnail: req.Thumbnail,
+		Duration:  req.Duration,
+		Author:    req.Author,
+		Status:    models.StatusPending, // 初始状态为待处理
+	}
+
+	// 调用服务层创建
+	historyID, err := s.historyService.CreateHistory(ctx, history)
+	if err != nil {
+		log.Printf("[GRPCServer] CreateHistory error: %v", err)
+		return nil, status.Error(codes.Internal, "创建历史记录失败")
+	}
+
+	log.Printf("[GRPCServer] CreateHistory success: historyID=%d", historyID)
+	return &pb.CreateHistoryResponse{
+		HistoryId: historyID,
+	}, nil
 }
 
 // CheckQuota 检查配额
@@ -257,4 +301,72 @@ func (s *GRPCServer) GetFileInfo(ctx context.Context, req *pb.GetFileInfoRequest
 		FileSize: fileInfo.FileSize,
 		FileHash: fileInfo.FileHash,
 	}, nil
+}
+
+// ========== 代理管理 ==========
+
+func (s *GRPCServer) CreateProxy(ctx context.Context, req *pb.CreateProxyRequest) (*pb.CreateProxyResponse, error) {
+	return s.proxyHandler.CreateProxy(ctx, req)
+}
+
+func (s *GRPCServer) UpdateProxy(ctx context.Context, req *pb.UpdateProxyRequest) (*pb.UpdateProxyResponse, error) {
+	return s.proxyHandler.UpdateProxy(ctx, req)
+}
+
+func (s *GRPCServer) DeleteProxy(ctx context.Context, req *pb.DeleteProxyRequest) (*pb.DeleteProxyResponse, error) {
+	return s.proxyHandler.DeleteProxy(ctx, req)
+}
+
+func (s *GRPCServer) GetProxy(ctx context.Context, req *pb.GetProxyRequest) (*pb.GetProxyResponse, error) {
+	return s.proxyHandler.GetProxy(ctx, req)
+}
+
+func (s *GRPCServer) ListProxies(ctx context.Context, req *pb.ListProxiesRequest) (*pb.ListProxiesResponse, error) {
+	return s.proxyHandler.ListProxies(ctx, req)
+}
+
+func (s *GRPCServer) CheckProxyHealth(ctx context.Context, req *pb.CheckProxyHealthRequest) (*pb.CheckProxyHealthResponse, error) {
+	return s.proxyHandler.CheckProxyHealth(ctx, req)
+}
+
+func (s *GRPCServer) GetAvailableProxy(ctx context.Context, req *pb.GetAvailableProxyRequest) (*pb.GetAvailableProxyResponse, error) {
+	return s.proxyHandler.GetAvailableProxy(ctx, req)
+}
+
+func (s *GRPCServer) ReportProxyUsage(ctx context.Context, req *pb.ReportProxyUsageRequest) (*pb.ReportProxyUsageResponse, error) {
+	return s.proxyHandler.ReportProxyUsage(ctx, req)
+}
+
+// ========== Cookie 管理 ==========
+
+func (s *GRPCServer) CreateCookie(ctx context.Context, req *pb.CreateCookieRequest) (*pb.CreateCookieResponse, error) {
+	return s.cookieHandler.CreateCookie(ctx, req)
+}
+
+func (s *GRPCServer) UpdateCookie(ctx context.Context, req *pb.UpdateCookieRequest) (*pb.UpdateCookieResponse, error) {
+	return s.cookieHandler.UpdateCookie(ctx, req)
+}
+
+func (s *GRPCServer) DeleteCookie(ctx context.Context, req *pb.DeleteCookieRequest) (*pb.DeleteCookieResponse, error) {
+	return s.cookieHandler.DeleteCookie(ctx, req)
+}
+
+func (s *GRPCServer) GetCookie(ctx context.Context, req *pb.GetCookieRequest) (*pb.GetCookieResponse, error) {
+	return s.cookieHandler.GetCookie(ctx, req)
+}
+
+func (s *GRPCServer) ListCookies(ctx context.Context, req *pb.ListCookiesRequest) (*pb.ListCookiesResponse, error) {
+	return s.cookieHandler.ListCookies(ctx, req)
+}
+
+func (s *GRPCServer) GetAvailableCookie(ctx context.Context, req *pb.GetAvailableCookieRequest) (*pb.GetAvailableCookieResponse, error) {
+	return s.cookieHandler.GetAvailableCookie(ctx, req)
+}
+
+func (s *GRPCServer) ReportCookieUsage(ctx context.Context, req *pb.ReportCookieUsageRequest) (*pb.ReportCookieUsageResponse, error) {
+	return s.cookieHandler.ReportCookieUsage(ctx, req)
+}
+
+func (s *GRPCServer) FreezeCookie(ctx context.Context, req *pb.FreezeCookieRequest) (*pb.FreezeCookieResponse, error) {
+	return s.cookieHandler.FreezeCookie(ctx, req)
 }
