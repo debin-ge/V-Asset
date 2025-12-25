@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 // HistoryStatus 下载状态枚举
 type HistoryStatus int
@@ -14,26 +17,26 @@ const (
 
 // DownloadHistory 下载历史记录
 type DownloadHistory struct {
-	ID           int64         `db:"id"`
-	TaskID       string        `db:"task_id"`
-	UserID       string        `db:"user_id"`
-	URL          string        `db:"url"`
-	Platform     string        `db:"platform"`
-	Title        string        `db:"title"`
-	Mode         string        `db:"mode"`      // video, audio, both
-	Quality      string        `db:"quality"`   // best, 1080p, 720p, etc.
-	FileSize     int64         `db:"file_size"` // 文件大小(字节)
-	FilePath     string        `db:"file_path"` // 文件存储路径
-	FileName     string        `db:"file_name"` // 文件名
-	FileHash     string        `db:"file_hash"` // 文件哈希
-	Status       HistoryStatus `db:"status"`
-	ErrorMessage string        `db:"error_message"` // 错误信息
-	CreatedAt    time.Time     `db:"created_at"`
-	StartedAt    *time.Time    `db:"started_at"`
-	CompletedAt  *time.Time    `db:"completed_at"`
-	Thumbnail    string        `db:"thumbnail"` // 缩略图URL
-	Duration     int64         `db:"duration"`  // 视频时长(秒)
-	Author       string        `db:"author"`    // 作者/上传者
+	ID           int64          `db:"id"`
+	TaskID       string         `db:"task_id"`
+	UserID       string         `db:"user_id"`
+	URL          string         `db:"url"`
+	Platform     string         `db:"platform"`
+	Title        string         `db:"title"`
+	Mode         string         `db:"mode"`      // video, audio, both
+	Quality      string         `db:"quality"`   // best, 1080p, 720p, etc.
+	FileSize     sql.NullInt64  `db:"file_size"` // 文件大小(字节)
+	FilePath     sql.NullString `db:"file_path"` // 文件存储路径
+	FileName     sql.NullString `db:"file_name"` // 文件名
+	FileHash     sql.NullString `db:"file_hash"` // 文件哈希
+	Status       HistoryStatus  `db:"status"`
+	ErrorMessage sql.NullString `db:"error_message"` // 错误信息
+	CreatedAt    time.Time      `db:"created_at"`
+	StartedAt    *time.Time     `db:"started_at"`
+	CompletedAt  *time.Time     `db:"completed_at"`
+	Thumbnail    string         `db:"thumbnail"` // 缩略图URL
+	Duration     int64          `db:"duration"`  // 视频时长(秒)
+	Author       string         `db:"author"`    // 作者/上传者
 }
 
 // UserQuota 用户配额

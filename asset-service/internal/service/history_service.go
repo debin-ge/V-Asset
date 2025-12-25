@@ -46,9 +46,9 @@ func (s *HistoryService) DeleteHistory(ctx context.Context, historyID int64, use
 	}
 
 	// 2. 如果文件存在,尝试删除物理文件
-	if record.FilePath != "" && record.Status == models.StatusCompleted {
-		if err := os.Remove(record.FilePath); err != nil && !os.IsNotExist(err) {
-			log.Printf("Warning: failed to delete file %s: %v", record.FilePath, err)
+	if record.FilePath.Valid && record.FilePath.String != "" && record.Status == models.StatusCompleted {
+		if err := os.Remove(record.FilePath.String); err != nil && !os.IsNotExist(err) {
+			log.Printf("Warning: failed to delete file %s: %v", record.FilePath.String, err)
 		}
 	}
 
@@ -73,14 +73,17 @@ func (s *HistoryService) GetFileInfo(ctx context.Context, historyID int64, userI
 	}
 
 	// 3. 检查文件是否存在
-	if _, err := os.Stat(record.FilePath); os.IsNotExist(err) {
+	if !record.FilePath.Valid || record.FilePath.String == "" {
+		return nil, errors.New("file not found")
+	}
+	if _, err := os.Stat(record.FilePath.String); os.IsNotExist(err) {
 		return nil, errors.New("file not found")
 	}
 
 	return &models.FileInfo{
-		FilePath: record.FilePath,
-		FileName: record.FileName,
-		FileSize: record.FileSize,
-		FileHash: record.FileHash,
+		FilePath: record.FilePath.String,
+		FileName: record.FileName.String,
+		FileSize: record.FileSize.Int64,
+		FileHash: record.FileHash.String,
 	}, nil
 }

@@ -113,11 +113,17 @@ func (s *GRPCServer) GetHistory(ctx context.Context, req *pb.GetHistoryRequest) 
 			Title:     h.Title,
 			Mode:      h.Mode,
 			Quality:   h.Quality,
-			FileSize:  h.FileSize,
 			Status:    int32(h.Status),
-			FilePath:  h.FilePath,
-			FileName:  h.FileName,
 			CreatedAt: h.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		if h.FileSize.Valid {
+			item.FileSize = h.FileSize.Int64
+		}
+		if h.FilePath.Valid {
+			item.FilePath = h.FilePath.String
+		}
+		if h.FileName.Valid {
+			item.FileName = h.FileName.String
 		}
 		if h.CompletedAt != nil {
 			item.CompletedAt = h.CompletedAt.Format("2006-01-02 15:04:05")
