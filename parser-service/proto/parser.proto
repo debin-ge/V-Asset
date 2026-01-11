@@ -41,6 +41,10 @@ message VideoFormat {
   double fps = 6;
   string video_codec = 7;
   string audio_codec = 8;
+  int32 width = 9;            // 分辨率宽度
+  double vbr = 10;            // 视频码率 kbps
+  double abr = 11;            // 音频码率 kbps
+  int32 asr = 12;             // 音频采样率 Hz
 }
 
 message ValidateURLRequest {

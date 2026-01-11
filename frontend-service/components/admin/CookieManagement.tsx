@@ -31,8 +31,6 @@ import {
     Cookie as CookieIcon,
     CheckCircle,
     XCircle,
-    Loader2,
-    Snowflake,
     Clock
 } from "lucide-react"
 
@@ -42,20 +40,19 @@ export function CookieManagement() {
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [freezingId, setFreezingId] = useState<number | null>(null)
+
     const [filterPlatform, setFilterPlatform] = useState<string>("")
 
-    // 表单状态
+    // Form state
     const [formData, setFormData] = useState<CreateCookieRequest>({
         platform: "youtube",
         name: "",
         content: "",
         expire_at: "",
-        freeze_seconds: 60,
     })
     const [submitting, setSubmitting] = useState(false)
 
-    // 加载 Cookie 列表
+    // Load cookie list
     const loadCookies = async () => {
         setLoading(true)
         try {
@@ -70,7 +67,7 @@ export function CookieManagement() {
             setCookies(response.items || [])
             setTotal(response.total)
         } catch (error) {
-            toast.error("加载 Cookie 列表失败")
+            toast.error("Failed to load cookie list")
             console.error(error)
         } finally {
             setLoading(false)
@@ -81,16 +78,16 @@ export function CookieManagement() {
         loadCookies()
     }, [page, filterPlatform])
 
-    // 创建 Cookie
+    // Create cookie
     const handleCreate = async () => {
         if (!formData.platform || !formData.name || !formData.content) {
-            toast.error("平台、名称和内容不能为空")
+            toast.error("Platform, name, and content cannot be empty")
             return
         }
 
         setSubmitting(true)
         try {
-            // 格式化过期时间：从 YYYY-MM-DDTHH:MM 转换为 YYYY-MM-DD HH:MM:SS
+            // Format expire time: convert from YYYY-MM-DDTHH:MM to YYYY-MM-DD HH:MM:SS
             const requestData = {
                 ...formData,
                 expire_at: formData.expire_at
@@ -98,54 +95,57 @@ export function CookieManagement() {
                     : "",
             }
             await cookieApi.create(requestData)
-            toast.success("Cookie 添加成功")
+            toast.success("Cookie added successfully")
             setIsDialogOpen(false)
             setFormData({
                 platform: "youtube",
                 name: "",
                 content: "",
                 expire_at: "",
-                freeze_seconds: 60,
             })
             loadCookies()
         } catch (error) {
-            toast.error("添加 Cookie 失败")
+            toast.error("Failed to add cookie")
             console.error(error)
         } finally {
             setSubmitting(false)
         }
     }
 
-    // 删除 Cookie
+    // Delete cookie
     const handleDelete = async (id: number) => {
-        if (!confirm("确定要删除这个 Cookie 吗？")) return
+        if (!confirm("Are you sure you want to delete this cookie?")) return
 
         try {
             await cookieApi.delete(id)
-            toast.success("Cookie 已删除")
+            toast.success("Cookie deleted")
             loadCookies()
         } catch (error) {
-            toast.error("删除失败")
+            toast.error("Failed to delete")
             console.error(error)
         }
     }
 
-    // 冷冻 Cookie
-    const handleFreeze = async (id: number) => {
-        setFreezingId(id)
-        try {
-            const result = await cookieApi.freeze(id)
-            toast.success(`Cookie 已冷冻至 ${result.frozen_until}`)
-            loadCookies()
-        } catch (error) {
-            toast.error("冷冻失败")
-            console.error(error)
-        } finally {
-            setFreezingId(null)
-        }
+    // Calculate remaining time
+    const getTimeRemaining = (expireAt: string | null) => {
+        if (!expireAt) return "Never expires"
+
+        const now = new Date()
+        const expire = new Date(expireAt)
+        const diff = expire.getTime() - now.getTime()
+
+        if (diff < 0) return "Expired"
+
+        const minutes = Math.floor(diff / 60000)
+        const hours = Math.floor(minutes / 60)
+        const days = Math.floor(hours / 24)
+
+        if (days > 0) return `${days} days`
+        if (hours > 0) return `${hours} hours`
+        return `${minutes} minutes`
     }
 
-    // 获取状态样式
+    // Get status style
     const getStatusStyle = (status: number) => {
         switch (status) {
             case CookieStatus.ACTIVE:
@@ -159,201 +159,161 @@ export function CookieManagement() {
         }
     }
 
-    // 获取平台标签
-    const getPlatformLabel = (platform: string) => {
-        const option = PlatformOptions.find(p => p.value === platform)
-        return option?.label || platform
-    }
-
-    // 获取平台样式
-    const getPlatformStyle = (platform: string) => {
-        switch (platform) {
-            case "youtube":
-                return "bg-red-100 text-red-700"
-            case "bilibili":
-                return "bg-pink-100 text-pink-700"
-            case "tiktok":
-                return "bg-gray-900 text-white"
-            case "twitter":
-                return "bg-blue-100 text-blue-700"
-            default:
-                return "bg-gray-100 text-gray-700"
-        }
-    }
-
     return (
         <div className="space-y-6">
-            {/* 工具栏 */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-2">
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
                     <Button variant="outline" size="sm" onClick={loadCookies} disabled={loading}>
                         <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                        刷新
+                        Refresh
                     </Button>
                     <select
-                        className="px-3 py-1.5 border rounded-md text-sm"
+                        className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background"
                         value={filterPlatform}
-                        onChange={(e) => setFilterPlatform(e.target.value)}
+                        onChange={(e) => {
+                            setFilterPlatform(e.target.value)
+                            setPage(1)
+                        }}
                     >
-                        <option value="">全部平台</option>
-                        {PlatformOptions.map(p => (
-                            <option key={p.value} value={p.value}>{p.label}</option>
+                        <option value="">All platforms</option>
+                        {PlatformOptions.map((platform) => (
+                            <option key={platform.value} value={platform.value}>
+                                {platform.label}
+                            </option>
                         ))}
                     </select>
-                    <span className="text-sm text-gray-500">共 {total} 个 Cookie</span>
+                    <span className="text-sm text-gray-500">Total: {total} cookies</span>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
                             <Plus className="w-4 h-4 mr-2" />
-                            添加 Cookie
+                            Add Cookie
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                            <DialogTitle>添加 Cookie</DialogTitle>
+                            <DialogTitle>Add Cookie</DialogTitle>
                             <DialogDescription>
-                                添加一个新的平台 Cookie。内容应为 Netscape 格式。
+                                Add a new platform cookie. Expiration time defaults to 10 minutes from now, or you can customize it.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">平台 *</label>
+                                    <label className="text-sm font-medium">Platform *</label>
                                     <select
-                                        className="w-full px-3 py-2 border rounded-md"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                                         value={formData.platform}
                                         onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
                                     >
-                                        {PlatformOptions.map(p => (
-                                            <option key={p.value} value={p.value}>{p.label}</option>
+                                        {PlatformOptions.map((platform) => (
+                                            <option key={platform.value} value={platform.value}>
+                                                {platform.label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">名称 *</label>
+                                    <label className="text-sm font-medium">Name *</label>
                                     <Input
-                                        placeholder="如: 账号1"
+                                        placeholder="e.g., session_cookie"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Cookie 内容 *</label>
+                                <label className="text-sm font-medium">Content *</label>
                                 <textarea
-                                    className="w-full px-3 py-2 border rounded-md min-h-[120px] font-mono text-sm"
-                                    placeholder="粘贴 Netscape 格式的 Cookie 内容..."
+                                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    placeholder="Paste cookie content here..."
                                     value={formData.content}
                                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">过期时间</label>
-                                    <Input
-                                        type="datetime-local"
-                                        value={formData.expire_at ? formData.expire_at.replace(" ", "T").slice(0, 16) : ""}
-                                        onChange={(e) => setFormData({ ...formData, expire_at: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">使用后冷冻时间 (秒)</label>
-                                    <Input
-                                        type="number"
-                                        placeholder="60"
-                                        value={formData.freeze_seconds || ""}
-                                        onChange={(e) => setFormData({ ...formData, freeze_seconds: parseInt(e.target.value) || 0 })}
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Expiration Time</label>
+                                <Input
+                                    type="datetime-local"
+                                    value={formData.expire_at}
+                                    onChange={(e) => setFormData({ ...formData, expire_at: e.target.value })}
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Leave empty to default to 10 minutes from now
+                                </p>
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                取消
-                            </Button>
                             <Button onClick={handleCreate} disabled={submitting}>
-                                {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                添加
+                                {submitting ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                ) : (
+                                    "Add"
+                                )}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {/* Cookie 列表 */}
+            {/* Cookie list */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
                 </div>
             ) : cookies.length === 0 ? (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
                         <CookieIcon className="w-12 h-12 text-gray-300 mb-4" />
-                        <p className="text-gray-500">暂无 Cookie</p>
-                        <p className="text-sm text-gray-400">点击上方按钮添加 Cookie</p>
+                        <p className="text-gray-500">No cookies yet</p>
+                        <p className="text-sm text-gray-400">Click the button above to add a cookie</p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4">
                     {cookies.map((cookie) => (
                         <Card key={cookie.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-lg ${cookie.status === CookieStatus.ACTIVE ? "bg-green-100" : cookie.status === CookieStatus.FROZEN ? "bg-blue-100" : "bg-gray-100"}`}>
-                                            <CookieIcon className={`w-5 h-5 ${cookie.status === CookieStatus.ACTIVE ? "text-green-600" : cookie.status === CookieStatus.FROZEN ? "text-blue-600" : "text-gray-400"}`} />
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <CookieIcon className="w-5 h-5 text-gray-600" />
+                                                <h3 className="font-semibold text-lg">{cookie.name}</h3>
+                                            </div>
+                                            <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
+                                                {cookie.platform}
+                                            </span>
+                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusStyle(cookie.status)}`}>
+                                                {CookieStatusLabel[cookie.status as keyof typeof CookieStatusLabel]}
+                                            </span>
                                         </div>
-                                        <div>
-                                            <div className="font-medium flex items-center gap-2">
-                                                {cookie.name}
-                                                <span className={`px-2 py-0.5 text-xs rounded-full ${getPlatformStyle(cookie.platform)}`}>
-                                                    {getPlatformLabel(cookie.platform)}
-                                                </span>
-                                                <span className={`px-2 py-0.5 text-xs rounded-full ${getStatusStyle(cookie.status)}`}>
-                                                    {CookieStatusLabel[cookie.status]}
-                                                </span>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                                            <div>
+                                                <span className="text-gray-500">Use count:</span> {cookie.use_count}
                                             </div>
-                                            <div className="text-sm text-gray-500 mt-1 flex items-center gap-4 flex-wrap">
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    使用 {cookie.use_count}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <CheckCircle className="w-3 h-3 text-green-500" />
-                                                    成功 {cookie.success_count}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <XCircle className="w-3 h-3 text-red-500" />
-                                                    失败 {cookie.fail_count}
-                                                </span>
-                                                {cookie.frozen_until && cookie.status === CookieStatus.FROZEN && (
-                                                    <span className="flex items-center gap-1 text-blue-600">
-                                                        <Snowflake className="w-3 h-3" />
-                                                        冷冻至 {cookie.frozen_until}
-                                                    </span>
-                                                )}
-                                                {cookie.expire_at && (
-                                                    <span>过期: {cookie.expire_at}</span>
-                                                )}
+                                            <div>
+                                                <span className="text-gray-500">Success:</span> {cookie.success_count}
                                             </div>
+                                            <div>
+                                                <span className="text-gray-500">Failed:</span> {cookie.fail_count}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                <span>{getTimeRemaining(cookie.expire_at)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs text-gray-500 space-y-1">
+                                            {cookie.last_used_at && (
+                                                <div>Last used: {cookie.last_used_at}</div>
+                                            )}
+                                            <div>Created: {cookie.created_at}</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleFreeze(cookie.id)}
-                                            disabled={freezingId === cookie.id}
-                                            title="手动冷冻"
-                                        >
-                                            {freezingId === cookie.id ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Snowflake className="w-4 h-4" />
-                                            )}
-                                        </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"

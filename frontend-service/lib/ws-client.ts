@@ -4,7 +4,7 @@ const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
 
 export interface ProgressData {
     task_id: string;
-    status: number;           // 0=待处理, 1=下载中, 2=完成, 3=失败
+    status: number | string;   // 0=待处理, 1=下载中, 2=完成, 3=失败 或 "pending"/"downloading"/"completed"/"failed"
     status_text: string;
     percent: number;
     downloaded_bytes: number;

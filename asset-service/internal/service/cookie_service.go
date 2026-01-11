@@ -26,10 +26,14 @@ func NewCookieService(repo *repository.CookieRepository, cfg *config.Config) *Co
 
 // Create 创建 Cookie
 func (s *CookieService) Create(ctx context.Context, cookie *models.Cookie) (int64, error) {
-	// 设置默认冷冻时间
-	if cookie.FreezeSeconds == 0 {
-		cookie.FreezeSeconds = s.cfg.Cookie.DefaultFreezeSeconds
+	// 自动设置过期时间为 10 分钟后
+	if cookie.ExpireAt == nil {
+		expireAt := time.Now().Add(10 * time.Minute)
+		cookie.ExpireAt = &expireAt
 	}
+
+	// 冷冻时间固定为 0（不冷冻）
+	cookie.FreezeSeconds = 0
 
 	return s.repo.Create(ctx, cookie)
 }
@@ -78,7 +82,7 @@ func (s *CookieService) GetAvailableCookie(ctx context.Context, platform string)
 	return cookie.ID, cookie.Content, nil
 }
 
-// ReportUsage 报告 Cookie 使用结果（成功或失败后冷冻）
+// ReportUsage 报告 Cookie 使用结果（更新统计但不冷冻）
 func (s *CookieService) ReportUsage(ctx context.Context, id int64, success bool) error {
 	cookie, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -88,12 +92,8 @@ func (s *CookieService) ReportUsage(ctx context.Context, id int64, success bool)
 		return errors.New("cookie not found")
 	}
 
-	freezeSeconds := cookie.FreezeSeconds
-	if freezeSeconds == 0 {
-		freezeSeconds = s.cfg.Cookie.DefaultFreezeSeconds
-	}
-
-	return s.repo.UpdateUsage(ctx, id, success, freezeSeconds)
+	// 传入 freezeSeconds = 0，不设置冷冻时间
+	return s.repo.UpdateUsage(ctx, id, success, 0)
 }
 
 // Freeze 手动冷冻 Cookie

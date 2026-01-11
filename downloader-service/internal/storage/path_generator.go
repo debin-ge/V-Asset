@@ -31,6 +31,12 @@ func (g *PathGenerator) GeneratePath(task *models.DownloadTask) (string, error) 
 		safeTitle = task.TaskID
 	}
 
+	// 确保 format 有默认值
+	format := task.Format
+	if format == "" {
+		format = "mp4"
+	}
+
 	var filePath string
 
 	switch task.Mode {
@@ -38,7 +44,7 @@ func (g *PathGenerator) GeneratePath(task *models.DownloadTask) (string, error) 
 		// 临时文件: /data/vasset/tmp/{task_id}/video.mp4
 		filePath = filepath.Join(
 			g.basePath, "tmp", task.TaskID,
-			fmt.Sprintf("%s.%s", safeTitle, task.Format),
+			fmt.Sprintf("%s.%s", safeTitle, format),
 		)
 
 	case "archive":
@@ -50,14 +56,14 @@ func (g *PathGenerator) GeneratePath(task *models.DownloadTask) (string, error) 
 			g.basePath, "archive",
 			fmt.Sprintf("%d", task.UserID),
 			date,
-			fmt.Sprintf("%s_%d.%s", safeTitle, timestamp, task.Format),
+			fmt.Sprintf("%s_%d.%s", safeTitle, timestamp, format),
 		)
 
 	default:
 		// 默认使用临时路径
 		filePath = filepath.Join(
 			g.basePath, "tmp", task.TaskID,
-			fmt.Sprintf("%s.%s", safeTitle, task.Format),
+			fmt.Sprintf("%s.%s", safeTitle, format),
 		)
 	}
 

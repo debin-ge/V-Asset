@@ -67,8 +67,8 @@ func (s *HistoryService) GetFileInfo(ctx context.Context, historyID int64, userI
 		return nil, err
 	}
 
-	// 2. 检查状态
-	if record.Status != models.StatusCompleted {
+	// 2. 检查状态 - 允许 StatusCompleted 和 StatusPendingCleanup (quick_download 完成后)
+	if record.Status != models.StatusCompleted && record.Status != models.StatusPendingCleanup {
 		return nil, errors.New("download not completed")
 	}
 

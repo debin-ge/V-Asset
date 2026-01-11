@@ -19,7 +19,13 @@ export function useDownload() {
     const [currentTaskId, setCurrentTaskId] = React.useState<string | null>(null)
     const [historyId, setHistoryId] = React.useState<number | null>(null)
 
-    // 清理WebSocket订阅
+    // Use ref to store historyId for access in callbacks
+    const historyIdRef = React.useRef<number | null>(null)
+    React.useEffect(() => {
+        historyIdRef.current = historyId
+    }, [historyId])
+
+    // Cleanup WebSocket subscription
     React.useEffect(() => {
         return () => {
             if (currentTaskId) {
@@ -28,28 +34,52 @@ export function useDownload() {
         }
     }, [currentTaskId])
 
-    // 处理进度更新
+    // Auto download file to browser
+    const triggerFileDownload = React.useCallback(async (hId: number) => {
+        try {
+            await downloadApi.downloadFile(hId)
+            toast.success("文件下载已开始")
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "文件下载失败"
+            toast.error(message)
+        }
+    }, [])
+
+    // Handle progress update
     const handleProgress = React.useCallback((data: ProgressData) => {
         setProgress(data.percent)
         setSpeed(data.speed || "0 MB/s")
         setTimeLeft(data.eta || "")
 
-        if (data.status === 2) { // 完成
+        // 支持字符串和数字两种 status 格式
+        const isCompleted = data.status === 2 || data.status === "completed" || data.status_text === "completed"
+        const isFailed = data.status === 3 || data.status === "failed" || data.status_text === "failed"
+
+        if (isCompleted) {
             setStatus("completed")
-            toast.success("下载完成！")
+            toast.success("服务端下载完成！正在传输到本地...")
             if (currentTaskId) {
                 wsClient.unsubscribe(currentTaskId)
             }
-        } else if (data.status === 3) { // 失败
+            // Auto trigger file download to browser
+            const hId = historyIdRef.current
+            console.log('[Download] Triggering file download, historyId:', hId)
+            if (hId) {
+                triggerFileDownload(hId)
+            } else {
+                console.error('[Download] historyId is null, cannot trigger download')
+                toast.error("无法获取下载文件信息，请在历史记录中手动下载")
+            }
+        } else if (isFailed) {
             setStatus("error")
-            toast.error(data.error_message || "下载失败")
+            toast.error(data.error_message || "Download failed")
             if (currentTaskId) {
                 wsClient.unsubscribe(currentTaskId)
             }
         }
-    }, [currentTaskId])
+    }, [currentTaskId, triggerFileDownload])
 
-    // 解析URL
+    // Parse URL
     const handleParse = async (inputUrl: string) => {
         if (!inputUrl) return
         setStatus("parsing")
@@ -60,56 +90,64 @@ export function useDownload() {
             setStatus("parsed")
         } catch (error) {
             setStatus("error")
-            const message = error instanceof Error ? error.message : "解析失败，请检查链接"
+            const message = error instanceof Error ? error.message : "Parse failed, please check the link"
             toast.error(message)
         }
     }
 
-    // 开始下载
-    const startDownload = async (type: 'video' | 'audio') => {
+    // Start download
+    const startDownload = async (type: 'video' | 'audio', formatId?: string) => {
         if (!videoInfo) return
 
         setStatus("downloading")
         setProgress(0)
 
         try {
-            const response = await downloadApi.submitDownload({
+            const downloadParams: any = {
                 url: videoInfo.url,
                 mode: mapDownloadType(type),
                 quality: "best",
-            })
+                format: "mp4", // 默认使用 mp4 格式
+            }
+
+            // Add format_id to request params if specified
+            if (formatId) {
+                downloadParams.format_id = formatId
+            }
+
+            const response = await downloadApi.submitDownload(downloadParams)
 
             setCurrentTaskId(response.task_id)
             setHistoryId(response.history_id)
 
-            // 订阅进度
+            // Subscribe to progress
             wsClient.subscribe(response.task_id, handleProgress)
 
-            toast.info(`下载任务已提交，预计耗时 ${response.estimated_time} 秒`)
+            toast.info(`Download task submitted, estimated time: ${response.estimated_time}s`)
         } catch (error) {
             setStatus("error")
-            const message = error instanceof Error ? error.message : "提交下载任务失败"
+            const message = error instanceof Error ? error.message : "Failed to submit download task"
             toast.error(message)
         }
     }
 
-    // 下载文件到本地
+    // Download file locally
     const downloadFile = async () => {
         if (!historyId) {
-            toast.error("没有可下载的文件")
+            toast.error("No file available for download")
             return
         }
 
         try {
             await downloadApi.downloadFile(historyId)
-            toast.success("文件下载已开始")
+            toast.success("File download started")
         } catch (error) {
-            const message = error instanceof Error ? error.message : "文件下载失败"
+            const message = error instanceof Error ? error.message : "File download failed"
             toast.error(message)
         }
     }
 
-    // 重置状态
+    // Reset state
     const reset = () => {
         if (currentTaskId) {
             wsClient.unsubscribe(currentTaskId)

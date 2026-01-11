@@ -15,12 +15,22 @@ function AdminPageContent() {
     const router = useRouter()
     const tab = searchParams.get("tab") || "proxies"
 
-    // 检查登录和权限
+    // Check if user is admin (RoleAdmin = 99)
+    const isAdmin = user?.role === 99
+
+    // Check login and permissions
     React.useEffect(() => {
         if (!isLoading && !user) {
             router.push("/")
         }
     }, [user, isLoading, router])
+
+    // Non-admin users default to cookies tab
+    React.useEffect(() => {
+        if (!isLoading && user && !isAdmin && tab === "proxies") {
+            router.push("/admin?tab=cookies")
+        }
+    }, [user, isLoading, isAdmin, tab, router])
 
     if (isLoading || !user) {
         return null
@@ -40,26 +50,28 @@ function AdminPageContent() {
                                 <Shield className="w-6 h-6" />
                             </div>
                             <div className="overflow-hidden">
-                                <h2 className="font-bold">管理后台</h2>
-                                <p className="text-xs text-gray-500">资源管理</p>
+                                <h2 className="font-bold">Admin Panel</h2>
+                                <p className="text-xs text-gray-500">Resource Management</p>
                             </div>
                         </div>
 
                         <Tabs value={tab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
                             <TabsList className="flex flex-col h-auto bg-transparent space-y-1 p-0">
-                                <TabsTrigger
-                                    value="proxies"
-                                    className="w-full justify-start px-4 py-3 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 hover:bg-gray-50 transition-colors"
-                                >
-                                    <Server className="w-4 h-4 mr-3" />
-                                    代理管理
-                                </TabsTrigger>
+                                {isAdmin && (
+                                    <TabsTrigger
+                                        value="proxies"
+                                        className="w-full justify-start px-4 py-3 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 hover:bg-gray-50 transition-colors"
+                                    >
+                                        <Server className="w-4 h-4 mr-3" />
+                                        Proxy Management
+                                    </TabsTrigger>
+                                )}
                                 <TabsTrigger
                                     value="cookies"
                                     className="w-full justify-start px-4 py-3 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 hover:bg-gray-50 transition-colors"
                                 >
                                     <Cookie className="w-4 h-4 mr-3" />
-                                    Cookie 管理
+                                    Cookie Management
                                 </TabsTrigger>
                             </TabsList>
                         </Tabs>
@@ -69,19 +81,21 @@ function AdminPageContent() {
                 <main className="flex-1 min-w-0">
                     <div className="mb-6">
                         <h1 className="text-2xl font-bold">
-                            {tab === "proxies" ? "代理管理" : "Cookie 管理"}
+                            {tab === "proxies" && isAdmin ? "Proxy Management" : "Cookie Management"}
                         </h1>
                         <p className="text-gray-500">
-                            {tab === "proxies"
-                                ? "管理代理服务器，支持添加、删除和健康检查。"
-                                : "管理平台 Cookie，支持添加、删除和冷冻操作。"}
+                            {tab === "proxies" && isAdmin
+                                ? "Manage proxy servers with add, delete, and health check capabilities."
+                                : "Manage platform cookies with add and delete operations."}
                         </p>
                     </div>
 
                     <Tabs value={tab} className="w-full">
-                        <TabsContent value="proxies" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <ProxyManagement />
-                        </TabsContent>
+                        {isAdmin && (
+                            <TabsContent value="proxies" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <ProxyManagement />
+                            </TabsContent>
+                        )}
                         <TabsContent value="cookies" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <CookieManagement />
                         </TabsContent>

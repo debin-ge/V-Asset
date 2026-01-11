@@ -17,7 +17,7 @@ services:
       TZ: Asia/Shanghai
       PGTZ: Asia/Shanghai
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -32,7 +32,7 @@ services:
     image: redis:7-alpine
     container_name: vasset-redis
     ports:
-      - "6379"
+      - "6379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -47,8 +47,8 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: vasset-rabbitmq
     ports:
-      - "5672" # AMQP
-      - "15672" # 管理界面
+      - "5672:5672" # AMQP
+      - "15672:15672" # 管理界面
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -166,6 +166,8 @@ services:
       - REDIS_ADDR=redis:6379
       - REDIS_PASSWORD=
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    volumes:
+      - vasset-data:/data/vasset:ro # 只读挂载，用于提供文件下载
     depends_on:
       - auth-service
       - parser-service
@@ -181,7 +183,7 @@ services:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
     container_name: vasset-frontend
     ports:
-      - "3000:3000"
+      - "80:3000"
     depends_on:
       - api-gateway
     restart: unless-stopped

@@ -47,9 +47,13 @@ func (s *GRPCServer) ParseURL(ctx context.Context, req *pb.ParseURLRequest) (*pb
 			Extension:  f.Extension,
 			Filesize:   f.Filesize,
 			Height:     int32(f.Height),
+			Width:      int32(f.Width),
 			Fps:        f.FPS,
 			VideoCodec: f.VideoCodec,
 			AudioCodec: f.AudioCodec,
+			Vbr:        f.VBR,
+			Abr:        f.ABR,
+			Asr:        int32(f.ASR),
 		}
 	}
 

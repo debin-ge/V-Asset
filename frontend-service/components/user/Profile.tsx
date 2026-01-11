@@ -27,16 +27,16 @@ export function Profile() {
 
     const handleSaveProfile = async () => {
         if (!nickname.trim()) {
-            toast.error("昵称不能为空")
+            toast.error("Nickname cannot be empty")
             return
         }
         setIsSavingProfile(true)
         try {
             const updatedUser = await authApi.updateProfile(nickname)
             setUser({ ...user!, nickname: updatedUser.nickname })
-            toast.success("个人信息更新成功")
+            toast.success("Profile updated successfully")
         } catch (error) {
-            toast.error("更新失败，请重试")
+            toast.error("Update failed, please try again")
         } finally {
             setIsSavingProfile(false)
         }
@@ -44,11 +44,11 @@ export function Profile() {
 
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword) {
-            toast.error("请填写完整的密码信息")
+            toast.error("Please fill in all password fields")
             return
         }
         if (newPassword.length < 6) {
-            toast.error("新密码长度至少6位")
+            toast.error("New password must be at least 6 characters")
             return
         }
         setIsSavingPassword(true)
@@ -56,9 +56,9 @@ export function Profile() {
             await authApi.changePassword(oldPassword, newPassword)
             setOldPassword("")
             setNewPassword("")
-            toast.success("密码修改成功")
+            toast.success("Password changed successfully")
         } catch (error) {
-            const message = error instanceof Error ? error.message : "密码修改失败"
+            const message = error instanceof Error ? error.message : "Password change failed"
             toast.error(message)
         } finally {
             setIsSavingPassword(false)
@@ -71,8 +71,8 @@ export function Profile() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>个人信息</CardTitle>
-                    <CardDescription>更新您的账户资料和设置。</CardDescription>
+                    <CardTitle>Profile Information</CardTitle>
+                    <CardDescription>Update your account details and settings.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
@@ -80,12 +80,12 @@ export function Profile() {
                             <AvatarImage src={user.avatar_url} />
                             <AvatarFallback className="text-lg">{user.nickname[0].toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <Button variant="outline" disabled>更换头像</Button>
+                        <Button variant="outline" disabled>Change Avatar</Button>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="nickname">昵称</Label>
+                            <Label htmlFor="nickname">Nickname</Label>
                             <Input
                                 id="nickname"
                                 value={nickname}
@@ -93,26 +93,26 @@ export function Profile() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">邮箱</Label>
+                            <Label htmlFor="email">Email</Label>
                             <Input id="email" defaultValue={user.email} disabled className="bg-gray-50" />
                         </div>
                     </div>
 
                     <Button onClick={handleSaveProfile} disabled={isSavingProfile}>
                         {isSavingProfile && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        保存更改
+                        Save Changes
                     </Button>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>安全设置</CardTitle>
-                    <CardDescription>管理您的密码和账户安全。</CardDescription>
+                    <CardTitle>Security Settings</CardTitle>
+                    <CardDescription>Manage your password and account security.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="current-password">当前密码</Label>
+                        <Label htmlFor="current-password">Current Password</Label>
                         <Input
                             id="current-password"
                             type="password"
@@ -121,18 +121,18 @@ export function Profile() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="new-password">新密码</Label>
+                        <Label htmlFor="new-password">New Password</Label>
                         <Input
                             id="new-password"
                             type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="至少6位字符"
+                            placeholder="At least 6 characters"
                         />
                     </div>
                     <Button variant="outline" onClick={handleChangePassword} disabled={isSavingPassword}>
                         {isSavingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        修改密码
+                        Change Password
                     </Button>
                 </CardContent>
             </Card>

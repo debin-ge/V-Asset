@@ -53,6 +53,9 @@ func CORS(cfg *config.CORSConfig) gin.HandlerFunc {
 		// 允许携带凭证
 		c.Header("Access-Control-Allow-Credentials", "true")
 
+		// 暴露响应头给前端（用于文件下载获取文件名等）
+		c.Header("Access-Control-Expose-Headers", "Content-Disposition, Content-Length, Content-Type")
+
 		// 设置预检请求缓存时间
 		if cfg.MaxAge > 0 {
 			c.Header("Access-Control-Max-Age", strconv.Itoa(cfg.MaxAge))

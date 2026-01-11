@@ -110,7 +110,7 @@ func (w *Wrapper) ExtractInfo(url string, cookieFile string, extraArgs ...string
 		return nil, fmt.Errorf("%w: %s", utils.MapYTDLPError(string(output)), string(output))
 	}
 
-	log.Printf("[YT-DLP] Success, output length: %d bytes", len(output))
+	log.Printf("[YT-DLP] Success, output length: %d bytes, %s", len(output), string(output))
 
 	// 解析JSON输出
 	var info VideoInfo
@@ -178,7 +178,7 @@ func (w *Wrapper) ExtractInfoWithProxy(url, proxyURL, cookieFile string, extraAr
 		return nil, fmt.Errorf("%w: %s", utils.MapYTDLPError(string(output)), string(output))
 	}
 
-	log.Printf("[YT-DLP-PROXY] Success, output length: %d bytes", len(output))
+	log.Printf("[YT-DLP-PROXY] Success, output length: %d bytes, %s", len(output), string(output))
 
 	var info VideoInfo
 	if err := json.Unmarshal(output, &info); err != nil {

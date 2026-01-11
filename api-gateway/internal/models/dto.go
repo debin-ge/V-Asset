@@ -66,12 +66,16 @@ type ParseResponse struct {
 type VideoFormat struct {
 	FormatID   string  `json:"format_id"`
 	Quality    string  `json:"quality"`
-	Extension  string  `json:"ext"`
+	Extension  string  `json:"extension"`
 	Filesize   int64   `json:"filesize"`
 	Height     int32   `json:"height,omitempty"`
+	Width      int32   `json:"width,omitempty"`
 	FPS        float64 `json:"fps,omitempty"`
 	VideoCodec string  `json:"video_codec,omitempty"`
 	AudioCodec string  `json:"audio_codec,omitempty"`
+	VBR        float64 `json:"vbr,omitempty"`
+	ABR        float64 `json:"abr,omitempty"`
+	ASR        int32   `json:"asr,omitempty"`
 }
 
 // DownloadRequest 下载请求

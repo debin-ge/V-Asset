@@ -34,7 +34,7 @@ platforms:
     cookie_file: ""  # 留空，使用动态获取的 cookie
     extra_args:
       - "--user-agent"
-      - "\'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\'"
+      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
       - "--sleep-requests"
       - "1"
       - "--sleep-interval"

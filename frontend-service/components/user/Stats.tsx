@@ -24,7 +24,7 @@ export function Stats() {
                 setQuota(quotaData)
             } catch (err) {
                 console.error("Failed to load stats", err)
-                setError("加载统计数据失败")
+                setError("Failed to load statistics")
             } finally {
                 setIsLoading(false)
             }
@@ -36,7 +36,7 @@ export function Stats() {
         return (
             <div className="flex items-center justify-center py-12 text-gray-500">
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                加载中...
+                Loading...
             </div>
         )
     }
@@ -49,22 +49,22 @@ export function Stats() {
         )
     }
 
-    // 转换图表数据
+    // Transform chart data
     const chartData = stats?.recent_activity?.map(a => ({
         name: a.date.slice(5), // MM-DD
         downloads: a.count
     })) ?? []
 
-    // 计算配额重置时间
+    // Calculate quota reset time
     const getResetTimeText = () => {
-        if (!quota?.reset_at) return "明日重置"
+        if (!quota?.reset_at) return "Resets tomorrow"
         try {
             const resetDate = new Date(quota.reset_at)
             const now = new Date()
             const diffHours = Math.max(0, Math.floor((resetDate.getTime() - now.getTime()) / (1000 * 60 * 60)))
-            return `${diffHours}小时后重置`
+            return `Resets in ${diffHours}h`
         } catch {
-            return "明日重置"
+            return "Resets tomorrow"
         }
     }
 
@@ -73,19 +73,19 @@ export function Stats() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">总下载次数</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Downloads</CardTitle>
                         <Download className="w-4 h-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats?.total_downloads ?? 0}</div>
                         <p className="text-xs text-muted-foreground">
-                            成功 {stats?.success_downloads ?? 0} · 失败 {stats?.failed_downloads ?? 0}
+                            Success {stats?.success_downloads ?? 0} · Failed {stats?.failed_downloads ?? 0}
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">今日配额</CardTitle>
+                        <CardTitle className="text-sm font-medium">Today's Quota</CardTitle>
                         <Zap className="w-4 h-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -97,30 +97,30 @@ export function Stats() {
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">总下载大小</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Download Size</CardTitle>
                         <Database className="w-4 h-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
                             {formatFileSize(stats?.total_size_bytes ?? 0)}
                         </div>
-                        <p className="text-xs text-muted-foreground">累计下载文件大小</p>
+                        <p className="text-xs text-muted-foreground">Cumulative file size</p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* 平台分布 */}
+            {/* Platform distribution */}
             {stats?.top_platforms && stats.top_platforms.length > 0 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>平台分布</CardTitle>
+                        <CardTitle>Platform Distribution</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-3">
                             {stats.top_platforms.map(p => (
                                 <div key={p.platform} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
                                     <span className="font-medium">{p.platform}</span>
-                                    <span className="text-sm text-gray-500">{p.count} 次</span>
+                                    <span className="text-sm text-gray-500">{p.count} times</span>
                                 </div>
                             ))}
                         </div>
@@ -128,11 +128,11 @@ export function Stats() {
                 </Card>
             )}
 
-            {/* 下载活动图表 */}
+            {/* Download activity chart */}
             {chartData.length > 0 && (
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>近期下载活动</CardTitle>
+                        <CardTitle>Recent Download Activity</CardTitle>
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px]">

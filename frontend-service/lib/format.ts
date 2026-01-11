@@ -1,5 +1,5 @@
 /**
- * 格式化时长（秒数 → MM:SS 或 HH:MM:SS）
+ * Format duration (seconds → MM:SS or HH:MM:SS)
  */
 export function formatDuration(seconds: number): string {
     if (!seconds || seconds < 0) return '00:00';
@@ -15,12 +15,12 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
- * 格式化日期时间
+ * Format date time
  */
 export function formatDate(isoString: string): string {
     if (!isoString) return '';
     try {
-        return new Date(isoString).toLocaleString('zh-CN', {
+        return new Date(isoString).toLocaleString('en-US', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -33,7 +33,7 @@ export function formatDate(isoString: string): string {
 }
 
 /**
- * 格式化文件大小
+ * Format file size
  */
 export function formatFileSize(bytes: number): string {
     if (!bytes || bytes === 0) return '0 B';
@@ -46,44 +46,47 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
- * 格式化观看次数
+ * Format view count
  */
 export function formatViewCount(count: number): string {
     if (!count) return '0';
 
     if (count >= 100000000) {
-        return `${(count / 100000000).toFixed(1)}亿`;
+        return `${(count / 100000000).toFixed(1)}B`;
     }
-    if (count >= 10000) {
-        return `${(count / 10000).toFixed(1)}万`;
+    if (count >= 1000000) {
+        return `${(count / 1000000).toFixed(1)}M`;
+    }
+    if (count >= 1000) {
+        return `${(count / 1000).toFixed(1)}K`;
     }
     return count.toLocaleString();
 }
 
 /**
- * 下载类型映射（前端type → 后端mode）
+ * Download type mapping (frontend type → backend mode)
  */
 export function mapDownloadType(type: 'video' | 'audio'): string {
     return type === 'video' ? 'quick_download' : 'audio_only';
 }
 
 /**
- * 下载状态码映射
+ * Download status code mapping
  */
 export function getStatusText(status: number): string {
     const statusMap: Record<number, string> = {
-        0: '等待中',
-        1: '下载中',
-        2: '已完成',
-        3: '失败',
-        4: '待清理',
-        5: '已过期',
+        0: 'Pending',
+        1: 'Downloading',
+        2: 'Completed',
+        3: 'Failed',
+        4: 'Cleanup',
+        5: 'Expired',
     };
-    return statusMap[status] || '未知';
+    return statusMap[status] || 'Unknown';
 }
 
 /**
- * 平台名称标准化
+ * Normalize platform name
  */
 export function normalizePlatform(platform: string): string {
     const platformMap: Record<string, string> = {

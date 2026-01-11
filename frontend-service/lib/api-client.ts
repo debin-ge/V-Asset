@@ -30,6 +30,11 @@ apiClient.interceptors.request.use(
 // 响应拦截器 - 统一错误处理
 apiClient.interceptors.response.use(
     (response) => {
+        // 跳过 blob 类型响应（如文件下载），直接返回原始响应
+        if (response.config.responseType === 'blob') {
+            return response;
+        }
+
         // 后端响应格式: { code, message, data }
         const { code, message, data } = response.data;
         if (code !== 0) {

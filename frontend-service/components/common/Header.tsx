@@ -74,7 +74,7 @@ export function Header() {
                                 <DropdownMenuItem asChild>
                                     <Link href="/admin?tab=proxies" className="cursor-pointer">
                                         <Shield className="mr-2 h-4 w-4" />
-                                        <span>管理后台</span>
+                                        <span>Admin Panel</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />

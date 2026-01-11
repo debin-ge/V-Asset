@@ -9,10 +9,11 @@ import (
 type HistoryStatus int
 
 const (
-	StatusPending    HistoryStatus = 0 // 等待中
-	StatusProcessing HistoryStatus = 1 // 处理中
-	StatusCompleted  HistoryStatus = 2 // 已完成
-	StatusFailed     HistoryStatus = 3 // 失败
+	StatusPending        HistoryStatus = 0 // 等待中
+	StatusProcessing     HistoryStatus = 1 // 处理中
+	StatusCompleted      HistoryStatus = 2 // 已完成
+	StatusFailed         HistoryStatus = 3 // 失败
+	StatusPendingCleanup HistoryStatus = 4 // 待清理(quick_download完成后)
 )
 
 // DownloadHistory 下载历史记录

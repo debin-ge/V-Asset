@@ -28,14 +28,14 @@ export function AuthModal() {
         e.preventDefault()
         setError("")
         if (!email || !password) {
-            setError("请填写邮箱和密码")
+            setError("Please enter email and password")
             return
         }
         try {
             await login(email, password)
-            toast.success("登录成功！")
+            toast.success("Login successful!")
         } catch (err) {
-            const message = err instanceof Error ? err.message : "登录失败"
+            const message = err instanceof Error ? err.message : "Login failed"
             setError(message)
             toast.error(message)
         }
@@ -45,22 +45,22 @@ export function AuthModal() {
         e.preventDefault()
         setError("")
         if (!email || !password || !nickname) {
-            setError("请填写所有必填字段")
+            setError("Please fill in all required fields")
             return
         }
         if (password !== confirmPassword) {
-            setError("两次输入的密码不一致")
+            setError("Passwords do not match")
             return
         }
         if (password.length < 6) {
-            setError("密码长度至少6位")
+            setError("Password must be at least 6 characters")
             return
         }
         try {
             await register(email, password, nickname)
-            toast.success("注册成功！")
+            toast.success("Registration successful!")
         } catch (err) {
-            const message = err instanceof Error ? err.message : "注册失败"
+            const message = err instanceof Error ? err.message : "Registration failed"
             setError(message)
             toast.error(message)
         }
@@ -80,13 +80,13 @@ export function AuthModal() {
                 <DialogHeader>
                     <DialogTitle className="text-center text-2xl font-bold">V-Asset</DialogTitle>
                     <DialogDescription className="text-center text-gray-400">
-                        登录以访问您的下载和历史记录
+                        Sign in to access your downloads and history
                     </DialogDescription>
                 </DialogHeader>
                 <Tabs defaultValue="login" className="w-full" onValueChange={() => setError("")}>
                     <TabsList className="grid w-full grid-cols-2 bg-gray-800">
-                        <TabsTrigger value="login">登录</TabsTrigger>
-                        <TabsTrigger value="register">注册</TabsTrigger>
+                        <TabsTrigger value="login">Login</TabsTrigger>
+                        <TabsTrigger value="register">Register</TabsTrigger>
                     </TabsList>
                     <TabsContent value="login">
                         <form onSubmit={handleLogin} className="space-y-4 py-4">
@@ -96,7 +96,7 @@ export function AuthModal() {
                                 </div>
                             )}
                             <div className="space-y-2">
-                                <Label htmlFor="email">邮箱</Label>
+                                <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -108,7 +108,7 @@ export function AuthModal() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="password">密码</Label>
+                                <Label htmlFor="password">Password</Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -119,7 +119,7 @@ export function AuthModal() {
                                 />
                             </div>
                             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                                {isLoading ? "登录中..." : "登录"}
+                                {isLoading ? "Signing in..." : "Sign In"}
                             </Button>
                         </form>
                     </TabsContent>
@@ -131,11 +131,11 @@ export function AuthModal() {
                                 </div>
                             )}
                             <div className="space-y-2">
-                                <Label htmlFor="reg-nickname">昵称</Label>
+                                <Label htmlFor="reg-nickname">Nickname</Label>
                                 <Input
                                     id="reg-nickname"
                                     type="text"
-                                    placeholder="您的昵称"
+                                    placeholder="Your nickname"
                                     className="bg-gray-900 border-gray-700 text-white"
                                     value={nickname}
                                     onChange={(e) => setNickname(e.target.value)}
@@ -143,7 +143,7 @@ export function AuthModal() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="reg-email">邮箱</Label>
+                                <Label htmlFor="reg-email">Email</Label>
                                 <Input
                                     id="reg-email"
                                     type="email"
@@ -155,11 +155,11 @@ export function AuthModal() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="reg-password">密码</Label>
+                                <Label htmlFor="reg-password">Password</Label>
                                 <Input
                                     id="reg-password"
                                     type="password"
-                                    placeholder="至少6位"
+                                    placeholder="At least 6 characters"
                                     className="bg-gray-900 border-gray-700 text-white"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -167,7 +167,7 @@ export function AuthModal() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="reg-confirm-password">确认密码</Label>
+                                <Label htmlFor="reg-confirm-password">Confirm Password</Label>
                                 <Input
                                     id="reg-confirm-password"
                                     type="password"
@@ -178,7 +178,7 @@ export function AuthModal() {
                                 />
                             </div>
                             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                                {isLoading ? "注册中..." : "创建账号"}
+                                {isLoading ? "Creating..." : "Create Account"}
                             </Button>
                         </form>
                     </TabsContent>
@@ -188,7 +188,7 @@ export function AuthModal() {
                         <span className="w-full border-t border-gray-700" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-[#1A1A1A] px-2 text-gray-400">或通过以下方式</span>
+                        <span className="bg-[#1A1A1A] px-2 text-gray-400">Or continue with</span>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

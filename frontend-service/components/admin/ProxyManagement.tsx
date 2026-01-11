@@ -42,7 +42,7 @@ export function ProxyManagement() {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [checkingId, setCheckingId] = useState<number | null>(null)
 
-    // 表单状态
+    // Form state
     const [formData, setFormData] = useState<CreateProxyRequest>({
         ip: "",
         port: 0,
@@ -54,7 +54,7 @@ export function ProxyManagement() {
     })
     const [submitting, setSubmitting] = useState(false)
 
-    // 加载代理列表
+    // Load proxy list
     const loadProxies = async () => {
         setLoading(true)
         try {
@@ -62,7 +62,7 @@ export function ProxyManagement() {
             setProxies(response.items || [])
             setTotal(response.total)
         } catch (error) {
-            toast.error("加载代理列表失败")
+            toast.error("Failed to load proxy list")
             console.error(error)
         } finally {
             setLoading(false)
@@ -73,10 +73,10 @@ export function ProxyManagement() {
         loadProxies()
     }, [page])
 
-    // 创建代理
+    // Create proxy
     const handleCreate = async () => {
         if (!formData.ip || !formData.port) {
-            toast.error("IP 和端口不能为空")
+            toast.error("IP and port cannot be empty")
             return
         }
 
@@ -84,9 +84,9 @@ export function ProxyManagement() {
         try {
             const result = await proxyApi.create(formData)
             if (formData.check_health && !result.health_check_passed) {
-                toast.warning(`代理已添加，但健康检查失败：${result.health_check_error}`)
+                toast.warning(`Proxy added, but health check failed: ${result.health_check_error}`)
             } else {
-                toast.success("代理添加成功")
+                toast.success("Proxy added successfully")
             }
             setIsDialogOpen(false)
             setFormData({
@@ -100,47 +100,47 @@ export function ProxyManagement() {
             })
             loadProxies()
         } catch (error) {
-            toast.error("添加代理失败")
+            toast.error("Failed to add proxy")
             console.error(error)
         } finally {
             setSubmitting(false)
         }
     }
 
-    // 删除代理
+    // Delete proxy
     const handleDelete = async (id: number) => {
-        if (!confirm("确定要删除这个代理吗？")) return
+        if (!confirm("Are you sure you want to delete this proxy?")) return
 
         try {
             await proxyApi.delete(id)
-            toast.success("代理已删除")
+            toast.success("Proxy deleted")
             loadProxies()
         } catch (error) {
-            toast.error("删除失败")
+            toast.error("Failed to delete")
             console.error(error)
         }
     }
 
-    // 健康检查
+    // Health check
     const handleHealthCheck = async (id: number) => {
         setCheckingId(id)
         try {
             const result = await proxyApi.checkHealth(id)
             if (result.healthy) {
-                toast.success(`检查通过，延迟: ${result.latency_ms}ms`)
+                toast.success(`Check passed, latency: ${result.latency_ms}ms`)
             } else {
-                toast.error(`检查失败: ${result.error}`)
+                toast.error(`Check failed: ${result.error}`)
             }
             loadProxies()
         } catch (error) {
-            toast.error("健康检查失败")
+            toast.error("Health check failed")
             console.error(error)
         } finally {
             setCheckingId(null)
         }
     }
 
-    // 获取状态样式
+    // Get status style
     const getStatusStyle = (status: number) => {
         switch (status) {
             case ProxyStatus.ACTIVE:
@@ -156,34 +156,34 @@ export function ProxyManagement() {
 
     return (
         <div className="space-y-6">
-            {/* 工具栏 */}
+            {/* Toolbar */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={loadProxies} disabled={loading}>
                         <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                        刷新
+                        Refresh
                     </Button>
-                    <span className="text-sm text-gray-500">共 {total} 个代理</span>
+                    <span className="text-sm text-gray-500">Total: {total} proxies</span>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
                             <Plus className="w-4 h-4 mr-2" />
-                            添加代理
+                            Add Proxy
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>添加代理</DialogTitle>
+                            <DialogTitle>Add Proxy</DialogTitle>
                             <DialogDescription>
-                                添加一个新的代理服务器。可选择是否进行健康检查。
+                                Add a new proxy server. You can optionally perform a health check.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">IP 地址 *</label>
+                                    <label className="text-sm font-medium">IP Address *</label>
                                     <Input
                                         placeholder="192.168.1.1"
                                         value={formData.ip}
@@ -191,7 +191,7 @@ export function ProxyManagement() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">端口 *</label>
+                                    <label className="text-sm font-medium">Port *</label>
                                     <Input
                                         type="number"
                                         placeholder="8080"
@@ -202,18 +202,18 @@ export function ProxyManagement() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">用户名</label>
+                                    <label className="text-sm font-medium">Username</label>
                                     <Input
-                                        placeholder="可选"
+                                        placeholder="Optional"
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">密码</label>
+                                    <label className="text-sm font-medium">Password</label>
                                     <Input
                                         type="password"
-                                        placeholder="可选"
+                                        placeholder="Optional"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     />
@@ -221,11 +221,11 @@ export function ProxyManagement() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">协议</label>
+                                    <label className="text-sm font-medium">Protocol</label>
                                     <select
-                                        className="w-full px-3 py-2 border rounded-md"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                                         value={formData.protocol}
-                                        onChange={(e) => setFormData({ ...formData, protocol: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, protocol: e.target.value as "http" | "https" | "socks5" })}
                                     >
                                         <option value="http">HTTP</option>
                                         <option value="https">HTTPS</option>
@@ -233,9 +233,9 @@ export function ProxyManagement() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">地区</label>
+                                    <label className="text-sm font-medium">Region</label>
                                     <Input
-                                        placeholder="如: US, CN"
+                                        placeholder="e.g., US, EU"
                                         value={formData.region}
                                         onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                                     />
@@ -247,74 +247,69 @@ export function ProxyManagement() {
                                     id="check_health"
                                     checked={formData.check_health}
                                     onChange={(e) => setFormData({ ...formData, check_health: e.target.checked })}
+                                    className="h-4 w-4 rounded border-gray-300"
                                 />
-                                <label htmlFor="check_health" className="text-sm">添加时进行健康检查</label>
+                                <label htmlFor="check_health" className="text-sm">Perform health check on add</label>
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                取消
-                            </Button>
                             <Button onClick={handleCreate} disabled={submitting}>
-                                {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                添加
+                                Add
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {/* 代理列表 */}
+            {/* Proxy list */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
                 </div>
             ) : proxies.length === 0 ? (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
                         <Server className="w-12 h-12 text-gray-300 mb-4" />
-                        <p className="text-gray-500">暂无代理</p>
-                        <p className="text-sm text-gray-400">点击上方按钮添加代理</p>
+                        <p className="text-gray-500">No proxies yet</p>
+                        <p className="text-sm text-gray-400">Click the button above to add a proxy</p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4">
                     {proxies.map((proxy) => (
                         <Card key={proxy.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-lg ${proxy.status === ProxyStatus.ACTIVE ? "bg-green-100" : "bg-gray-100"}`}>
-                                            <Server className={`w-5 h-5 ${proxy.status === ProxyStatus.ACTIVE ? "text-green-600" : "text-gray-400"}`} />
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <Server className="w-5 h-5 text-gray-600" />
+                                                <h3 className="font-semibold text-lg">
+                                                    {proxy.protocol}://{proxy.ip}:{proxy.port}
+                                                </h3>
+                                            </div>
+                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusStyle(proxy.status)}`}>
+                                                {ProxyStatusLabel[proxy.status as keyof typeof ProxyStatusLabel]}
+                                            </span>
                                         </div>
-                                        <div>
-                                            <div className="font-medium">
-                                                {proxy.ip}:{proxy.port}
-                                                <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${getStatusStyle(proxy.status)}`}>
-                                                    {ProxyStatusLabel[proxy.status]}
-                                                </span>
-                                                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
-                                                    {proxy.protocol.toUpperCase()}
-                                                </span>
-                                                {proxy.region && (
-                                                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
-                                                        {proxy.region}
-                                                    </span>
-                                                )}
+                                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                            <div>
+                                                <span className="text-gray-500">Region:</span> {proxy.region || "N/A"}
                                             </div>
-                                            <div className="text-sm text-gray-500 mt-1 flex items-center gap-4">
-                                                <span className="flex items-center gap-1">
-                                                    <CheckCircle className="w-3 h-3 text-green-500" />
-                                                    成功 {proxy.success_count}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <XCircle className="w-3 h-3 text-red-500" />
-                                                    失败 {proxy.fail_count}
-                                                </span>
-                                                {proxy.last_check_at && (
-                                                    <span>上次检查: {proxy.last_check_at}</span>
-                                                )}
+                                            <div>
+                                                <span className="text-gray-500">Username:</span> {proxy.username || "None"}
                                             </div>
+                                            <div>
+                                                <span className="text-gray-500">Success:</span> {proxy.success_count}
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">Failed:</span> {proxy.fail_count}
+                                            </div>
+                                            {proxy.last_check_at && (
+                                                <div>
+                                                    <span className="text-gray-500">Last check:</span> {proxy.last_check_at}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -323,6 +318,7 @@ export function ProxyManagement() {
                                             size="sm"
                                             onClick={() => handleHealthCheck(proxy.id)}
                                             disabled={checkingId === proxy.id}
+                                            title="Health check"
                                         >
                                             {checkingId === proxy.id ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />

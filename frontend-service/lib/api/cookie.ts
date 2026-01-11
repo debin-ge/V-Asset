@@ -1,6 +1,6 @@
 import apiClient from '../api-client';
 
-// Cookie 状态枚举
+// Cookie status enum
 export const CookieStatus = {
     ACTIVE: 0,
     EXPIRED: 1,
@@ -8,12 +8,12 @@ export const CookieStatus = {
 } as const;
 
 export const CookieStatusLabel: Record<number, string> = {
-    [CookieStatus.ACTIVE]: '可用',
-    [CookieStatus.EXPIRED]: '已过期',
-    [CookieStatus.FROZEN]: '冷冻中',
+    [CookieStatus.ACTIVE]: 'Active',
+    [CookieStatus.EXPIRED]: 'Expired',
+    [CookieStatus.FROZEN]: 'Frozen',
 };
 
-// 平台选项
+// Platform options
 export const PlatformOptions = [
     { value: 'youtube', label: 'YouTube' },
     { value: 'bilibili', label: 'Bilibili' },
@@ -22,7 +22,7 @@ export const PlatformOptions = [
     { value: 'instagram', label: 'Instagram' },
 ];
 
-// Cookie 信息接口
+// Cookie info interface
 export interface CookieInfo {
     id: number;
     platform: string;
@@ -76,35 +76,35 @@ export interface FreezeCookieResponse {
 }
 
 export const cookieApi = {
-    // 创建 Cookie
+    // Create Cookie
     create: async (data: CreateCookieRequest): Promise<{ id: number }> => {
         const response = await apiClient.post('/api/v1/admin/cookies', data);
         return response.data as { id: number };
     },
 
-    // 更新 Cookie
+    // Update Cookie
     update: async (data: UpdateCookieRequest): Promise<void> => {
         await apiClient.put(`/api/v1/admin/cookies/${data.id}`, data);
     },
 
-    // 删除 Cookie
+    // Delete Cookie
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/api/v1/admin/cookies/${id}`);
     },
 
-    // 获取 Cookie
+    // Get Cookie
     get: async (id: number): Promise<CookieInfo> => {
         const response = await apiClient.get(`/api/v1/admin/cookies/${id}`);
         return response.data as CookieInfo;
     },
 
-    // 列表 Cookie
+    // List Cookies
     list: async (params?: ListCookiesParams): Promise<CookieListResponse> => {
         const response = await apiClient.get('/api/v1/admin/cookies', { params });
         return response.data as CookieListResponse;
     },
 
-    // 冷冻 Cookie
+    // Freeze Cookie
     freeze: async (id: number, freezeSeconds?: number): Promise<FreezeCookieResponse> => {
         const response = await apiClient.post(`/api/v1/admin/cookies/${id}/freeze`, {
             freeze_seconds: freezeSeconds || 0,

@@ -123,7 +123,7 @@ func LoadConfig(configPath string) (*Config, error) {
 
 	// Cookie 默认值
 	if cfg.Cookie.DefaultFreezeSeconds == 0 {
-		cfg.Cookie.DefaultFreezeSeconds = 60
+		cfg.Cookie.DefaultFreezeSeconds = 0 // 不冷冻
 	}
 
 	return &cfg, nil

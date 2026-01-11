@@ -215,6 +215,10 @@ type VideoFormat struct {
 	Fps           float64                `protobuf:"fixed64,6,opt,name=fps,proto3" json:"fps,omitempty"`
 	VideoCodec    string                 `protobuf:"bytes,7,opt,name=video_codec,json=videoCodec,proto3" json:"video_codec,omitempty"`
 	AudioCodec    string                 `protobuf:"bytes,8,opt,name=audio_codec,json=audioCodec,proto3" json:"audio_codec,omitempty"`
+	Width         int32                  `protobuf:"varint,9,opt,name=width,proto3" json:"width,omitempty"` // 分辨率宽度
+	Vbr           float64                `protobuf:"fixed64,10,opt,name=vbr,proto3" json:"vbr,omitempty"`   // 视频码率 kbps
+	Abr           float64                `protobuf:"fixed64,11,opt,name=abr,proto3" json:"abr,omitempty"`   // 音频码率 kbps
+	Asr           int32                  `protobuf:"varint,12,opt,name=asr,proto3" json:"asr,omitempty"`    // 音频采样率 Hz
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -303,6 +307,34 @@ func (x *VideoFormat) GetAudioCodec() string {
 		return x.AudioCodec
 	}
 	return ""
+}
+
+func (x *VideoFormat) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *VideoFormat) GetVbr() float64 {
+	if x != nil {
+		return x.Vbr
+	}
+	return 0
+}
+
+func (x *VideoFormat) GetAbr() float64 {
+	if x != nil {
+		return x.Abr
+	}
+	return 0
+}
+
+func (x *VideoFormat) GetAsr() int32 {
+	if x != nil {
+		return x.Asr
+	}
+	return 0
 }
 
 type ValidateURLRequest struct {
@@ -433,7 +465,7 @@ const file_proto_parser_proto_rawDesc = "" +
 	"\aformats\x18\n" +
 	" \x03(\v2\x13.parser.VideoFormatR\aformats\x12\x1b\n" +
 	"\tcookie_id\x18\v \x01(\x03R\bcookieId\x12\x1b\n" +
-	"\tproxy_url\x18\f \x01(\tR\bproxyUrl\"\xea\x01\n" +
+	"\tproxy_url\x18\f \x01(\tR\bproxyUrl\"\xb6\x02\n" +
 	"\vVideoFormat\x12\x1b\n" +
 	"\tformat_id\x18\x01 \x01(\tR\bformatId\x12\x18\n" +
 	"\aquality\x18\x02 \x01(\tR\aquality\x12\x1c\n" +
@@ -444,7 +476,12 @@ const file_proto_parser_proto_rawDesc = "" +
 	"\vvideo_codec\x18\a \x01(\tR\n" +
 	"videoCodec\x12\x1f\n" +
 	"\vaudio_codec\x18\b \x01(\tR\n" +
-	"audioCodec\"&\n" +
+	"audioCodec\x12\x14\n" +
+	"\x05width\x18\t \x01(\x05R\x05width\x12\x10\n" +
+	"\x03vbr\x18\n" +
+	" \x01(\x01R\x03vbr\x12\x10\n" +
+	"\x03abr\x18\v \x01(\x01R\x03abr\x12\x10\n" +
+	"\x03asr\x18\f \x01(\x05R\x03asr\"&\n" +
 	"\x12ValidateURLRequest\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\"a\n" +
 	"\x13ValidateURLResponse\x12\x14\n" +

@@ -1,6 +1,6 @@
 import apiClient from '../api-client';
 
-// 代理状态枚举
+// Proxy status enum
 export const ProxyStatus = {
     ACTIVE: 0,
     INACTIVE: 1,
@@ -8,12 +8,12 @@ export const ProxyStatus = {
 } as const;
 
 export const ProxyStatusLabel: Record<number, string> = {
-    [ProxyStatus.ACTIVE]: '可用',
-    [ProxyStatus.INACTIVE]: '不可用',
-    [ProxyStatus.CHECKING]: '检查中',
+    [ProxyStatus.ACTIVE]: 'Active',
+    [ProxyStatus.INACTIVE]: 'Inactive',
+    [ProxyStatus.CHECKING]: 'Checking',
 };
 
-// 代理信息接口
+// Proxy info interface
 export interface ProxyInfo {
     id: number;
     ip: string;
@@ -78,35 +78,35 @@ export interface HealthCheckResponse {
 }
 
 export const proxyApi = {
-    // 创建代理
+    // Create proxy
     create: async (data: CreateProxyRequest): Promise<CreateProxyResponse> => {
         const response = await apiClient.post('/api/v1/admin/proxies', data);
         return response.data as CreateProxyResponse;
     },
 
-    // 更新代理
+    // Update proxy
     update: async (data: UpdateProxyRequest): Promise<void> => {
         await apiClient.put(`/api/v1/admin/proxies/${data.id}`, data);
     },
 
-    // 删除代理
+    // Delete proxy
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/api/v1/admin/proxies/${id}`);
     },
 
-    // 获取代理
+    // Get proxy
     get: async (id: number): Promise<ProxyInfo> => {
         const response = await apiClient.get(`/api/v1/admin/proxies/${id}`);
         return response.data as ProxyInfo;
     },
 
-    // 列表代理
+    // List proxies
     list: async (params?: ListProxiesParams): Promise<ProxyListResponse> => {
         const response = await apiClient.get('/api/v1/admin/proxies', { params });
         return response.data as ProxyListResponse;
     },
 
-    // 健康检查
+    // Health check
     checkHealth: async (id: number): Promise<HealthCheckResponse> => {
         const response = await apiClient.post(`/api/v1/admin/proxies/${id}/health-check`);
         return response.data as HealthCheckResponse;

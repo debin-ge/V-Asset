@@ -232,24 +232,46 @@ func (r *CookieRepository) Freeze(ctx context.Context, id int64, freezeSeconds i
 // UpdateUsage 更新使用统计并冷冻
 func (r *CookieRepository) UpdateUsage(ctx context.Context, id int64, success bool, freezeSeconds int) error {
 	now := time.Now()
-	frozenUntil := now.Add(time.Duration(freezeSeconds) * time.Second)
 
 	var query string
-	if success {
-		query = `
-			UPDATE cookies 
-			SET use_count = use_count + 1, success_count = success_count + 1, 
-			    last_used_at = $2, frozen_until = $3, updated_at = $4
-			WHERE id = $1`
+	var args []interface{}
+
+	// 当 freezeSeconds 为 0 时，不更新 frozen_until
+	if freezeSeconds == 0 {
+		if success {
+			query = `
+				UPDATE cookies 
+				SET use_count = use_count + 1, success_count = success_count + 1, 
+				    last_used_at = $2, updated_at = $3
+				WHERE id = $1`
+		} else {
+			query = `
+				UPDATE cookies 
+				SET use_count = use_count + 1, fail_count = fail_count + 1, 
+				    last_used_at = $2, updated_at = $3
+				WHERE id = $1`
+		}
+		args = []interface{}{id, now, now}
 	} else {
-		query = `
-			UPDATE cookies 
-			SET use_count = use_count + 1, fail_count = fail_count + 1, 
-			    last_used_at = $2, frozen_until = $3, updated_at = $4
-			WHERE id = $1`
+		// freezeSeconds > 0 时，同时更新 frozen_until
+		frozenUntil := now.Add(time.Duration(freezeSeconds) * time.Second)
+		if success {
+			query = `
+				UPDATE cookies 
+				SET use_count = use_count + 1, success_count = success_count + 1, 
+				    last_used_at = $2, frozen_until = $3, updated_at = $4
+				WHERE id = $1`
+		} else {
+			query = `
+				UPDATE cookies 
+				SET use_count = use_count + 1, fail_count = fail_count + 1, 
+				    last_used_at = $2, frozen_until = $3, updated_at = $4
+				WHERE id = $1`
+		}
+		args = []interface{}{id, now, frozenUntil, now}
 	}
 
-	_, err := r.db.ExecContext(ctx, query, id, now, frozenUntil, now)
+	_, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("update cookie usage failed: %w", err)
 	}

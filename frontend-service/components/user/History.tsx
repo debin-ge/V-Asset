@@ -21,7 +21,7 @@ export function History() {
             setHistory(data.items)
         } catch (error) {
             console.error("Failed to load history", error)
-            toast.error("加载历史记录失败")
+            toast.error("Failed to load history")
         } finally {
             setIsLoading(false)
         }
@@ -36,9 +36,9 @@ export function History() {
         try {
             await historyApi.deleteHistory(historyId)
             setHistory(prev => prev.filter(h => h.history_id !== historyId))
-            toast.success("删除成功")
+            toast.success("Deleted successfully")
         } catch (error) {
-            toast.error("删除失败")
+            toast.error("Delete failed")
         } finally {
             setDeletingId(null)
         }
@@ -48,9 +48,9 @@ export function History() {
         setDownloadingId(historyId)
         try {
             await downloadApi.downloadFile(historyId)
-            toast.success("下载已开始")
+            toast.success("Download started")
         } catch (error) {
-            toast.error("下载失败")
+            toast.error("Download failed")
         } finally {
             setDownloadingId(null)
         }
@@ -68,7 +68,7 @@ export function History() {
         return (
             <div className="flex items-center justify-center py-12 text-gray-500">
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                加载中...
+                Loading...
             </div>
         )
     }
@@ -77,8 +77,8 @@ export function History() {
         return (
             <div className="text-center py-12 space-y-4">
                 <div className="text-4xl">📦</div>
-                <h3 className="text-lg font-medium">暂无下载历史</h3>
-                <p className="text-gray-500">开始您的第一次下载吧！</p>
+                <h3 className="text-lg font-medium">No download history</h3>
+                <p className="text-gray-500">Start your first download!</p>
             </div>
         )
     }
@@ -97,7 +97,7 @@ export function History() {
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    无封面
+                                    No cover
                                 </div>
                             )}
                             {item.duration > 0 && (
@@ -138,7 +138,7 @@ export function History() {
                                         ) : (
                                             <Download className="w-4 h-4 mr-2" />
                                         )}
-                                        下载
+                                        Download
                                     </Button>
                                 )}
                                 <Button

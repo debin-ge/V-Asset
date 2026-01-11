@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -8,15 +9,20 @@ import (
 
 // VideoFormat yt-dlp返回的格式信息
 type VideoFormat struct {
-	FormatID   string  `json:"format_id"`
-	URL        string  `json:"url"`
-	Ext        string  `json:"ext"`
-	Resolution string  `json:"resolution"`
-	Filesize   int64   `json:"filesize"`
-	FPS        float64 `json:"fps"`
-	VCodec     string  `json:"vcodec"`
-	ACodec     string  `json:"acodec"`
-	Height     int     `json:"height"`
+	FormatID       string  `json:"format_id"`
+	URL            string  `json:"url"`
+	Ext            string  `json:"ext"`
+	Resolution     string  `json:"resolution"`
+	Filesize       int64   `json:"filesize"`
+	FilesizeApprox int64   `json:"filesize_approx"` // 估算文件大小（当filesize不可用时）
+	FPS            float64 `json:"fps"`
+	VCodec         string  `json:"vcodec"`
+	ACodec         string  `json:"acodec"`
+	Height         int     `json:"height"`
+	Width          int     `json:"width"`
+	VBR            float64 `json:"vbr"` // 视频码率 kbps
+	ABR            float64 `json:"abr"` // 音频码率 kbps
+	ASR            int     `json:"asr"` // 音频采样率 Hz
 }
 
 // NormalizedFormat 标准化后的格式信息
@@ -26,43 +32,81 @@ type NormalizedFormat struct {
 	Extension  string
 	Filesize   int64
 	Height     int
+	Width      int
 	FPS        float64
 	VideoCodec string
 	AudioCodec string
-	Score      int // 优先级分数
+	VBR        float64 // 视频码率 kbps
+	ABR        float64 // 音频码率 kbps
+	ASR        int     // 音频采样率 Hz
+	Score      int     // 优先级分数
 }
 
 // NormalizeFormats 标准化视频格式列表
+// 保留所有格式（包括纯视频、纯音频、合并格式），前端根据codec字段区分
 func NormalizeFormats(rawFormats []VideoFormat) []NormalizedFormat {
-	var result []NormalizedFormat
+	log.Printf("[DEBUG-NormalizeFormats] Input: %d raw formats", len(rawFormats))
 
-	for _, f := range rawFormats {
-		// 过滤掉纯音频格式
-		if f.VCodec == "none" || f.VCodec == "" {
+	var result []NormalizedFormat
+	var videoCount, audioCount, skippedCount int
+	var maxHeight int
+
+	for i, f := range rawFormats {
+		// 跳过 storyboard 等非媒体格式
+		if f.VCodec == "none" && f.ACodec == "none" {
+			skippedCount++
 			continue
 		}
 
-		// 提取分辨率高度
+		// 提取分辨率高度（音频格式height为0是正常的）
 		height := f.Height
-		if height == 0 {
+		if height == 0 && f.VCodec != "none" && f.VCodec != "" {
 			height = extractHeight(f.Resolution)
 		}
-		if height == 0 {
-			continue
+
+		if height > maxHeight {
+			maxHeight = height
 		}
 
 		// 计算优先级得分
 		score := calculateScore(f, height)
 
+		// 构造质量标签
+		quality := ""
+		if height > 0 {
+			quality = formatQuality(height)
+			videoCount++
+		} else if f.ABR > 0 {
+			// 音频格式使用码率作为质量描述
+			quality = "audio"
+			audioCount++
+		}
+
+		// 获取文件大小（优先使用精确值，回退到估算值）
+		filesize := f.Filesize
+		if filesize == 0 {
+			filesize = f.FilesizeApprox
+		}
+
+		// 调试前5个格式
+		if i < 5 {
+			log.Printf("[DEBUG-NormalizeFormats] Format[%d]: id=%s, height=%d, vcodec=%s, acodec=%s, filesize=%d",
+				i, f.FormatID, height, f.VCodec, f.ACodec, filesize)
+		}
+
 		result = append(result, NormalizedFormat{
 			FormatID:   f.FormatID,
-			Quality:    formatQuality(height),
+			Quality:    quality,
 			Extension:  f.Ext,
-			Filesize:   f.Filesize,
+			Filesize:   filesize,
 			Height:     height,
+			Width:      f.Width,
 			FPS:        f.FPS,
 			VideoCodec: f.VCodec,
 			AudioCodec: f.ACodec,
+			VBR:        f.VBR,
+			ABR:        f.ABR,
+			ASR:        f.ASR,
 			Score:      score,
 		})
 	}
@@ -71,6 +115,9 @@ func NormalizeFormats(rawFormats []VideoFormat) []NormalizedFormat {
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Score > result[j].Score
 	})
+
+	log.Printf("[DEBUG-NormalizeFormats] Output: %d formats (video=%d, audio=%d, skipped=%d, maxHeight=%d)",
+		len(result), videoCount, audioCount, skippedCount, maxHeight)
 
 	return result
 }
