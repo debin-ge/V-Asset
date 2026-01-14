@@ -12,7 +12,7 @@ services:
     container_name: vasset-postgres
     environment:
       POSTGRES_USER: ${DB_USER:-vasset}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-vasset}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_DB: ${DB_NAME:-vasset}
       TZ: Asia/Shanghai
       PGTZ: Asia/Shanghai
