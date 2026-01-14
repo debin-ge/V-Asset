@@ -11,9 +11,9 @@ services:
     image: postgres:15-alpine
     container_name: vasset-postgres
     environment:
-      POSTGRES_USER: vasset
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: vasset
+      POSTGRES_USER: ${DB_USER:-vasset}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-vasset}
+      POSTGRES_DB: ${DB_NAME:-vasset}
       TZ: Asia/Shanghai
       PGTZ: Asia/Shanghai
     ports:
@@ -50,8 +50,8 @@ services:
       - "5672" # AMQP
       - "15672" # 管理界面
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
@@ -70,14 +70,14 @@ services:
     ports:
       - "9001:9001"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=vasset
-      - DB_PASSWORD=password
-      - DB_NAME=vasset
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=
-      - JWT_SECRET=your-secret-key-change-in-production
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-vasset}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-vasset}
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,8 +92,8 @@ services:
     ports:
       - "9002:9002"
     environment:
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     volumes:
       - cookies-data:/etc/vasset/cookies
     depends_on:
@@ -108,15 +108,15 @@ services:
     ports:
       - "9003:9003"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=vasset
-      - DB_PASSWORD=password
-      - DB_NAME=vasset
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - PROXY_API_KEY=
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-vasset}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-vasset}
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      - PROXY_API_KEY=${PROXY_API_KEY:-}
     volumes:
       - vasset-data:/data/vasset
     depends_on:
@@ -135,13 +135,13 @@ services:
     ports:
       - "9004:9004"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=vasset
-      - DB_PASSWORD=password
-      - DB_NAME=vasset
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-vasset}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-vasset}
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     volumes:
       - vasset-data:/data/vasset
     depends_on:
@@ -160,12 +160,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - AUTH_SERVICE_ADDR=auth-service:9001
-      - PARSER_SERVICE_ADDR=parser-service:9002
-      - ASSET_SERVICE_ADDR=asset-service:9004
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - AUTH_SERVICE_ADDR=${AUTH_SERVICE_ADDR:-auth-service:9001}
+      - PARSER_SERVICE_ADDR=${PARSER_SERVICE_ADDR:-parser-service:9002}
+      - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
     volumes:
       - vasset-data:/data/vasset:ro # 只读挂载，用于提供文件下载
     depends_on:
