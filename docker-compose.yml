@@ -42,25 +42,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # RabbitMQ 消息队列
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: vasset-rabbitmq
-    ports:
-      - "5672" # AMQP
-      - "15672" # 管理界面
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
-
   # ==================== 微服务 ====================
 
   # Auth Service - 认证服务
@@ -73,7 +54,7 @@ services:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-vasset}
-      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_PASSWORD=password
       - DB_NAME=${DB_NAME:-vasset}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -82,49 +63,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # Parser Service - 解析服务
-  parser-service:
-    build: ./parser-service
-    container_name: vasset-parser
-    ports:
-      - "9002:9002"
-    environment:
-      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-    volumes:
-      - cookies-data:/etc/vasset/cookies
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # Downloader Service - 下载服务
-  downloader-service:
-    build: ./downloader-service
-    container_name: vasset-downloader
-    ports:
-      - "9003:9003"
-    environment:
-      - DB_HOST=${DB_HOST:-postgres}
-      - DB_PORT=${DB_PORT:-5432}
-      - DB_USER=${DB_USER:-vasset}
-      - DB_PASSWORD=${DB_PASSWORD:-password}
-      - DB_NAME=${DB_NAME:-vasset}
-      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
-      - PROXY_API_KEY=${PROXY_API_KEY:-}
-    volumes:
-      - vasset-data:/data/vasset
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
     restart: unless-stopped
 
@@ -138,7 +76,7 @@ services:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-vasset}
-      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_PASSWORD=password
       - DB_NAME=${DB_NAME:-vasset}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -153,6 +91,22 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  # Proxy Service - 代理服务 (对接第三方 yt-dlp API)
+  proxy-service:
+    build: ./proxy-service
+    container_name: vasset-proxy
+    ports:
+      - "9010:9010"
+    environment:
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - YTDLP_API_BASE_URL=${YTDLP_API_BASE_URL:-https://yt-dlp-651719502982.us-west2.run.app}
+      - YTDLP_API_KEY=${YTDLP_API_KEY:-your_secret_token_here}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   # API Gateway - API 网关
   api-gateway:
     build: ./api-gateway
@@ -161,18 +115,16 @@ services:
       - "8080:8080"
     environment:
       - AUTH_SERVICE_ADDR=${AUTH_SERVICE_ADDR:-auth-service:9001}
-      - PARSER_SERVICE_ADDR=${PARSER_SERVICE_ADDR:-parser-service:9002}
+      - PROXY_SERVICE_ADDR=${PROXY_SERVICE_ADDR:-proxy-service:9010}
       - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
     volumes:
       - vasset-data:/data/vasset:ro # 只读挂载，用于提供文件下载
     depends_on:
       - auth-service
-      - parser-service
+      - proxy-service
       - asset-service
-      - downloader-service
     restart: unless-stopped
 
   # Frontend Service - 前端服务
@@ -193,8 +145,6 @@ volumes:
   postgres-data:
     driver: local
   redis-data:
-    driver: local
-  rabbitmq-data:
     driver: local
   vasset-data:
     driver: local

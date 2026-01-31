@@ -2,7 +2,7 @@ server:
   port: 9004
   
 database:
-  host: localhost
+  host: postgres
   port: 5432
   user: vasset
   password: password

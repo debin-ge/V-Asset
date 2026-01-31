@@ -14,13 +14,13 @@ import (
 
 // GRPCClients gRPC 客户端集合
 type GRPCClients struct {
-	AuthClient   pb.AuthServiceClient
-	ParserClient pb.ParserServiceClient
-	AssetClient  pb.AssetServiceClient
+	AuthClient  pb.AuthServiceClient
+	ProxyClient pb.ProxyServiceClient
+	AssetClient pb.AssetServiceClient
 
-	authConn   *grpc.ClientConn
-	parserConn *grpc.ClientConn
-	assetConn  *grpc.ClientConn
+	authConn  *grpc.ClientConn
+	proxyConn *grpc.ClientConn
+	assetConn *grpc.ClientConn
 }
 
 // NewGRPCClients 创建 gRPC 客户端
@@ -41,30 +41,30 @@ func NewGRPCClients(cfg *config.GRPCConfig) (*GRPCClients, error) {
 	}
 	log.Printf("✓ Connected to Auth Service: %s", cfg.AuthService)
 
-	// 连接 Parser Service
-	parserConn, err := grpc.NewClient(cfg.ParserService, opts...)
+	// 连接 Proxy Service
+	proxyConn, err := grpc.NewClient(cfg.ProxyService, opts...)
 	if err != nil {
 		authConn.Close()
 		return nil, err
 	}
-	log.Printf("✓ Connected to Parser Service: %s", cfg.ParserService)
+	log.Printf("✓ Connected to Proxy Service: %s", cfg.ProxyService)
 
 	// 连接 Asset Service
 	assetConn, err := grpc.NewClient(cfg.AssetService, opts...)
 	if err != nil {
 		authConn.Close()
-		parserConn.Close()
+		proxyConn.Close()
 		return nil, err
 	}
 	log.Printf("✓ Connected to Asset Service: %s", cfg.AssetService)
 
 	return &GRPCClients{
-		AuthClient:   pb.NewAuthServiceClient(authConn),
-		ParserClient: pb.NewParserServiceClient(parserConn),
-		AssetClient:  pb.NewAssetServiceClient(assetConn),
-		authConn:     authConn,
-		parserConn:   parserConn,
-		assetConn:    assetConn,
+		AuthClient:  pb.NewAuthServiceClient(authConn),
+		ProxyClient: pb.NewProxyServiceClient(proxyConn),
+		AssetClient: pb.NewAssetServiceClient(assetConn),
+		authConn:    authConn,
+		proxyConn:   proxyConn,
+		assetConn:   assetConn,
 	}, nil
 }
 
@@ -73,8 +73,8 @@ func (c *GRPCClients) Close() {
 	if c.authConn != nil {
 		c.authConn.Close()
 	}
-	if c.parserConn != nil {
-		c.parserConn.Close()
+	if c.proxyConn != nil {
+		c.proxyConn.Close()
 	}
 	if c.assetConn != nil {
 		c.assetConn.Close()

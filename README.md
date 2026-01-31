@@ -32,7 +32,7 @@ V-Asset 是一个现代化的视频下载平台，支持多平台视频解析与
 └─────────┘ └───────┘ └───────┘ └──────────┘
       │         │         │         │
 ┌─────▼─────────▼─────────▼─────────▼────────────────────┐
-│         PostgreSQL │ Redis │ RabbitMQ                   │
+│         PostgreSQL │ Redis                              │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -48,7 +48,6 @@ V-Asset 是一个现代化的视频下载平台，支持多平台视频解析与
 | **Asset Service** | 9004 | Go, gRPC | 资产与历史管理 |
 | **PostgreSQL** | 5432 | PostgreSQL 15 | 主数据库 |
 | **Redis** | 6379 | Redis 7 | 缓存与会话 |
-| **RabbitMQ** | 5672/15672 | RabbitMQ 3 | 消息队列 |
 
 ## 📁 项目结构
 
@@ -104,8 +103,8 @@ docker-compose down
 # 重建并启动
 docker-compose up -d --build
 
-# 只启动基础设施 (数据库、缓存、消息队列)
-docker-compose up -d postgres redis rabbitmq
+# 只启动基础设施 (数据库、缓存)
+docker-compose up -d postgres redis
 
 # 重启单个服务
 docker-compose restart api-gateway
@@ -123,7 +122,6 @@ docker-compose down -v
 |------|------|------|
 | **前端应用** | http://localhost:3000 | Web 用户界面 |
 | **API Gateway** | http://localhost:8080 | 后端 API 接口 |
-| **RabbitMQ 管理界面** | http://localhost:15672 | 账号: guest/guest |
 
 ## 💻 开发模式
 
@@ -131,7 +129,7 @@ docker-compose down -v
 
 ```bash
 # 只启动基础设施服务
-docker-compose up -d postgres redis rabbitmq
+docker-compose up -d postgres redis
 ```
 
 ### 启动后端服务
@@ -178,7 +176,6 @@ API 文档请参考 [PRD/Backend_PRD.md](./PRD/Backend_PRD.md)
 - **HTTP 框架**: Gin
 - **数据库**: PostgreSQL 15
 - **缓存**: Redis 7
-- **消息队列**: RabbitMQ 3
 - **视频解析**: yt-dlp
 
 ## 📄 许可证

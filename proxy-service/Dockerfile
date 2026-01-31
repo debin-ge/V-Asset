@@ -1,0 +1,24 @@
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o bin/proxy-service cmd/main.go
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+COPY --from=builder /app/bin/proxy-service .
+COPY --from=builder /app/config ./config
+
+EXPOSE 9010
+
+CMD ["./proxy-service"]
+

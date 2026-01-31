@@ -10,14 +10,12 @@ import (
 
 // Config 应用配置
 type Config struct {
-	Server       ServerConfig       `yaml:"server"`
-	GRPC         GRPCConfig         `yaml:"grpc"`
-	Redis        RedisConfig        `yaml:"redis"`
-	RabbitMQ     RabbitMQConfig     `yaml:"rabbitmq"`
-	CORS         CORSConfig         `yaml:"cors"`
-	RateLimit    RateLimitConfig    `yaml:"rate_limit"`
-	FileDownload FileDownloadConfig `yaml:"file_download"`
-	Logging      LoggingConfig      `yaml:"logging"`
+	Server    ServerConfig    `yaml:"server"`
+	GRPC      GRPCConfig      `yaml:"grpc"`
+	Redis     RedisConfig     `yaml:"redis"`
+	CORS      CORSConfig      `yaml:"cors"`
+	RateLimit RateLimitConfig `yaml:"rate_limit"`
+	Logging   LoggingConfig   `yaml:"logging"`
 }
 
 // ServerConfig 服务器配置
@@ -31,10 +29,10 @@ type ServerConfig struct {
 
 // GRPCConfig gRPC 服务配置
 type GRPCConfig struct {
-	AuthService   string        `yaml:"auth_service"`
-	ParserService string        `yaml:"parser_service"`
-	AssetService  string        `yaml:"asset_service"`
-	Timeout       time.Duration `yaml:"timeout"`
+	AuthService  string        `yaml:"auth_service"`
+	ProxyService string        `yaml:"proxy_service"`
+	AssetService string        `yaml:"asset_service"`
+	Timeout      time.Duration `yaml:"timeout"`
 }
 
 // RedisConfig Redis 配置
@@ -43,14 +41,6 @@ type RedisConfig struct {
 	Password string `yaml:"password"`
 	DB       int    `yaml:"db"`
 	PoolSize int    `yaml:"pool_size"`
-}
-
-// RabbitMQConfig RabbitMQ 配置
-type RabbitMQConfig struct {
-	URL        string `yaml:"url"`
-	Exchange   string `yaml:"exchange"`
-	Queue      string `yaml:"queue"`
-	RoutingKey string `yaml:"routing_key"`
 }
 
 // CORSConfig CORS 配置
@@ -97,8 +87,8 @@ func LoadConfig(configPath string) (*Config, error) {
 	if authAddr := os.Getenv("AUTH_SERVICE_ADDR"); authAddr != "" {
 		cfg.GRPC.AuthService = authAddr
 	}
-	if parserAddr := os.Getenv("PARSER_SERVICE_ADDR"); parserAddr != "" {
-		cfg.GRPC.ParserService = parserAddr
+	if proxyAddr := os.Getenv("PROXY_SERVICE_ADDR"); proxyAddr != "" {
+		cfg.GRPC.ProxyService = proxyAddr
 	}
 	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
 		cfg.GRPC.AssetService = assetAddr
@@ -110,11 +100,6 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if redisPassword := os.Getenv("REDIS_PASSWORD"); redisPassword != "" {
 		cfg.Redis.Password = redisPassword
-	}
-
-	// RabbitMQ
-	if rabbitmqURL := os.Getenv("RABBITMQ_URL"); rabbitmqURL != "" {
-		cfg.RabbitMQ.URL = rabbitmqURL
 	}
 
 	// 设置默认值
@@ -141,9 +126,6 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.RateLimit.Burst == 0 {
 		cfg.RateLimit.Burst = 20
-	}
-	if cfg.FileDownload.BufferSize == 0 {
-		cfg.FileDownload.BufferSize = 32768 // 32KB
 	}
 
 	return &cfg, nil

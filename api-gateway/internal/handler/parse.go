@@ -13,15 +13,15 @@ import (
 
 // ParseHandler 解析处理器
 type ParseHandler struct {
-	parserClient pb.ParserServiceClient
-	timeout      time.Duration
+	proxyClient pb.ProxyServiceClient
+	timeout     time.Duration
 }
 
 // NewParseHandler 创建解析处理器
-func NewParseHandler(parserClient pb.ParserServiceClient, timeout time.Duration) *ParseHandler {
+func NewParseHandler(proxyClient pb.ProxyServiceClient, timeout time.Duration) *ParseHandler {
 	return &ParseHandler{
-		parserClient: parserClient,
-		timeout:      timeout,
+		proxyClient: proxyClient,
+		timeout:     timeout,
 	}
 }
 
@@ -36,7 +36,7 @@ func (h *ParseHandler) ParseURL(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
-	resp, err := h.parserClient.ParseURL(ctx, &pb.ParseURLRequest{
+	resp, err := h.proxyClient.Parse(ctx, &pb.ParseRequest{
 		Url:       req.URL,
 		SkipCache: req.SkipCache,
 	})
@@ -45,7 +45,7 @@ func (h *ParseHandler) ParseURL(c *gin.Context) {
 		return
 	}
 
-	// 调试日志：从 gRPC 接收的格式
+	// 调试日志
 	log.Printf("[DEBUG-ParseHandler] Received from gRPC: %d formats", len(resp.Formats))
 
 	// 转换格式列表
@@ -53,7 +53,6 @@ func (h *ParseHandler) ParseURL(c *gin.Context) {
 	var maxHeight int32
 	var videoCount, audioCount int
 	for i, f := range resp.Formats {
-		// 统计
 		if f.Height > maxHeight {
 			maxHeight = f.Height
 		}
@@ -64,7 +63,6 @@ func (h *ParseHandler) ParseURL(c *gin.Context) {
 			audioCount++
 		}
 
-		// 调试前3个格式
 		if i < 3 {
 			log.Printf("[DEBUG-ParseHandler] Format[%d]: id=%s, height=%d, video_codec=%s, audio_codec=%s, filesize=%d",
 				i, f.FormatId, f.Height, f.VideoCodec, f.AudioCodec, f.Filesize)

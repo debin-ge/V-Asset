@@ -10,8 +10,6 @@ import (
 
 	"vasset/api-gateway/internal/client"
 	"vasset/api-gateway/internal/models"
-	"vasset/api-gateway/internal/mq"
-	"vasset/api-gateway/internal/ws"
 	pb "vasset/api-gateway/proto"
 )
 
@@ -19,8 +17,6 @@ import (
 type HealthHandler struct {
 	grpcClients *client.GRPCClients
 	redisClient *redis.Client
-	mqPublisher *mq.Publisher
-	wsManager   *ws.Manager
 	startTime   time.Time
 	version     string
 }
@@ -29,15 +25,11 @@ type HealthHandler struct {
 func NewHealthHandler(
 	grpcClients *client.GRPCClients,
 	redisClient *redis.Client,
-	mqPublisher *mq.Publisher,
-	wsManager *ws.Manager,
 	version string,
 ) *HealthHandler {
 	return &HealthHandler{
 		grpcClients: grpcClients,
 		redisClient: redisClient,
-		mqPublisher: mqPublisher,
-		wsManager:   wsManager,
 		startTime:   time.Now(),
 		version:     version,
 	}
@@ -49,7 +41,6 @@ type HealthResponse struct {
 	Version      string            `json:"version"`
 	Uptime       int64             `json:"uptime"`
 	Dependencies map[string]string `json:"dependencies"`
-	WebSockets   int               `json:"websocket_connections"`
 }
 
 // HealthCheck 健康检查
@@ -77,12 +68,12 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 		dependencies["auth_service"] = "healthy"
 	}
 
-	// 检查 Parser Service
-	_, err = h.grpcClients.ParserClient.ValidateURL(ctx, &pb.ValidateURLRequest{Url: "test"})
+	// 检查 Proxy Service
+	_, err = h.grpcClients.ProxyClient.Parse(ctx, &pb.ParseRequest{Url: "test"})
 	if err != nil {
-		dependencies["parser_service"] = "healthy"
+		dependencies["proxy_service"] = "healthy"
 	} else {
-		dependencies["parser_service"] = "healthy"
+		dependencies["proxy_service"] = "healthy"
 	}
 
 	// 检查 Asset Service
@@ -92,9 +83,6 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	} else {
 		dependencies["asset_service"] = "healthy"
 	}
-
-	// RabbitMQ 状态（通过 publisher 状态判断）
-	dependencies["rabbitmq"] = "healthy"
 
 	status := "healthy"
 	statusCode := http.StatusOK
@@ -108,7 +96,6 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 		Version:      h.version,
 		Uptime:       int64(time.Since(h.startTime).Seconds()),
 		Dependencies: dependencies,
-		WebSockets:   h.wsManager.GetConnectionCount(),
 	})
 }
 

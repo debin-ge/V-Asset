@@ -1,5 +1,0 @@
-.DS_Store
-bin/
-*.log
-.env
-config/prod.yaml

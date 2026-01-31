@@ -1,0 +1,22 @@
+server:
+  port: 9010
+  mode: debug
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  pool_size: 50
+
+cache:
+  ttl: 1800  # 30分钟
+
+ytdlp_api:
+  base_url: "http://api-ytdlp.mrgdb.xyz"
+  api_key: "your_secret_token_here"
+  timeout: 300
+
+health_check:
+  enabled: true
+  interval: 60  # 检查间隔(秒)，默认 60 秒
+

@@ -16,7 +16,6 @@
 ### 依赖服务
 
 - Redis (localhost:6379)
-- RabbitMQ (localhost:5672)
 - Auth Service (localhost:9001)
 - Parser Service (localhost:9002)
 - Asset Service (localhost:9004)
@@ -75,4 +74,4 @@ make docker-up
 配置文件位于 `config/dev.yaml`，支持以下环境变量覆盖：
 
 - `REDIS_PASSWORD` - Redis 密码
-- `RABBITMQ_URL` - RabbitMQ 连接 URL
+

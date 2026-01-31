@@ -3,7 +3,6 @@
 import { useDownload } from "@/hooks/use-download"
 import { InputSection } from "@/components/home/Input"
 import { ResultCard } from "@/components/home/ResultCard"
-import { ProgressBar } from "@/components/home/ProgressBar"
 
 export default function Home() {
   const {
@@ -11,9 +10,6 @@ export default function Home() {
     setUrl,
     status,
     videoInfo,
-    progress,
-    speed,
-    timeLeft,
     handleParse,
     startDownload,
     reset,
@@ -39,24 +35,8 @@ export default function Home() {
         disabled={status === "downloading"}
       />
 
-      {status === "parsed" && videoInfo && (
+      {(status === "parsed" || status === "downloading" || status === "completed") && videoInfo && (
         <ResultCard info={videoInfo} onDownload={startDownload} />
-      )}
-
-      {(status === "downloading" || status === "completed") && (
-        <ProgressBar progress={progress} speed={speed} timeLeft={timeLeft} />
-      )}
-
-      {status === "completed" && (
-        <div className="mt-8 text-center animate-fade-in">
-          <p className="text-green-600 font-medium mb-4">Download Completed!</p>
-          <button
-            onClick={reset}
-            className="text-blue-600 hover:underline"
-          >
-            Download another video
-          </button>
-        </div>
       )}
     </div>
   )

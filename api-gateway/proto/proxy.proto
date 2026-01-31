@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package proxy;
+
+option go_package = "vasset/api-gateway/proto;pb";
+
+// ProxyService 代理服务 - 对接第三方 yt-dlp API
+service ProxyService {
+  // 解析视频URL获取元数据
+  rpc Parse(ParseRequest) returns (ParseResponse);
+  
+  // 提交下载任务
+  rpc Download(DownloadRequest) returns (DownloadResponse);
+  
+  // 流式下载（直接转发第三方流）
+  rpc StreamDownload(StreamDownloadRequest) returns (stream StreamChunk);
+}
+
+// ========== Parse 接口 ==========
+
+message ParseRequest {
+  string url = 1;
+  bool skip_cache = 2;
+}
+
+message ParseResponse {
+  string video_id = 1;
+  string platform = 2;
+  string title = 3;
+  string description = 4;
+  int64 duration = 5;
+  string thumbnail = 6;
+  string author = 7;
+  string upload_date = 8;
+  int64 view_count = 9;
+  repeated ProxyVideoFormat formats = 10;
+}
+
+message ProxyVideoFormat {
+  string format_id = 1;
+  string quality = 2;
+  string extension = 3;
+  int64 filesize = 4;
+  int32 height = 5;
+  int32 width = 6;
+  double fps = 7;
+  string video_codec = 8;
+  string audio_codec = 9;
+  double vbr = 10;
+  double abr = 11;
+  int32 asr = 12;
+  string format_note = 13;
+}
+
+// ========== Download 接口 ==========
+
+message DownloadRequest {
+  string url = 1;
+  string mode = 2;        // quick_download, audio_only
+  string quality = 3;     // 1080p, 720p, best
+  string format = 4;      // mp4, mp3
+}
+
+message DownloadResponse {
+  string task_id = 1;
+  int64 history_id = 2;
+  int64 estimated_time = 3;
+}
+
+// ========== StreamDownload 接口 ==========
+
+message StreamDownloadRequest {
+  string url = 1;
+  string format_id = 2;
+  string name = 3;
+  string ext = 4;
+  bool is_video = 5;
+}
+
+message StreamChunk {
+  bytes data = 1;
+  string content_type = 2;
+  int64 content_length = 3;
+  bool is_header = 4;      // 首个 chunk 包含元数据
+}

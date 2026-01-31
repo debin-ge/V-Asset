@@ -8,8 +8,6 @@ import (
 	"vasset/api-gateway/internal/config"
 	"vasset/api-gateway/internal/handler"
 	"vasset/api-gateway/internal/middleware"
-	"vasset/api-gateway/internal/mq"
-	"vasset/api-gateway/internal/ws"
 )
 
 // Dependencies 路由依赖
@@ -17,8 +15,6 @@ type Dependencies struct {
 	Config      *config.Config
 	GRPCClients *client.GRPCClients
 	RedisClient *redis.Client
-	MQPublisher *mq.Publisher
-	WSManager   *ws.Manager
 }
 
 // SetupRouter 设置路由
@@ -44,39 +40,20 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		deps.Config.GRPC.Timeout,
 	)
 	parseHandler := handler.NewParseHandler(
-		deps.GRPCClients.ParserClient,
-		deps.Config.GRPC.Timeout,
-	)
-	downloadHandler := handler.NewDownloadHandler(
-		deps.GRPCClients.AssetClient,
-		deps.GRPCClients.ParserClient,
-		deps.MQPublisher,
+		deps.GRPCClients.ProxyClient,
 		deps.Config.GRPC.Timeout,
 	)
 	historyHandler := handler.NewHistoryHandler(
 		deps.GRPCClients.AssetClient,
 		deps.Config.GRPC.Timeout,
 	)
-	fileHandler := handler.NewFileHandler(
-		deps.GRPCClients.AssetClient,
-		deps.Config.GRPC.Timeout,
-		deps.Config.FileDownload.BufferSize,
-	)
 	healthHandler := handler.NewHealthHandler(
 		deps.GRPCClients,
 		deps.RedisClient,
-		deps.MQPublisher,
-		deps.WSManager,
 		"1.0.0",
 	)
-	wsHandler := handler.NewWebSocketHandler(deps.WSManager)
-	proxyHandler := handler.NewProxyHandler(
-		deps.GRPCClients.AssetClient,
-		deps.Config.GRPC.Timeout,
-	)
-	cookieHandler := handler.NewCookieHandler(
-		deps.GRPCClients.AssetClient,
-		deps.Config.GRPC.Timeout,
+	streamHandler := handler.NewStreamHandler(
+		deps.GRPCClients.ProxyClient,
 	)
 
 	// ==================== 公开路由 ====================
@@ -109,38 +86,15 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		// 解析
 		protectedV1.POST("/parse", parseHandler.ParseURL)
 
-		// 下载
-		protectedV1.POST("/download", downloadHandler.SubmitDownload)
-
 		// 用户数据
 		protectedV1.GET("/user/history", historyHandler.GetHistory)
 		protectedV1.GET("/user/quota", historyHandler.GetQuota)
 		protectedV1.GET("/user/stats", historyHandler.GetUserStats)
 		protectedV1.DELETE("/user/history/:id", historyHandler.DeleteHistory)
 
-		// 文件下载
-		protectedV1.GET("/download/file", fileHandler.DownloadFile)
-
-		// 管理后台 - 代理管理
-		protectedV1.POST("/admin/proxies", proxyHandler.CreateProxy)
-		protectedV1.PUT("/admin/proxies/:id", proxyHandler.UpdateProxy)
-		protectedV1.DELETE("/admin/proxies/:id", proxyHandler.DeleteProxy)
-		protectedV1.GET("/admin/proxies/:id", proxyHandler.GetProxy)
-		protectedV1.GET("/admin/proxies", proxyHandler.ListProxies)
-		protectedV1.POST("/admin/proxies/:id/health-check", proxyHandler.CheckProxyHealth)
-
-		// 管理后台 - Cookie 管理
-		protectedV1.POST("/admin/cookies", cookieHandler.CreateCookie)
-		protectedV1.PUT("/admin/cookies/:id", cookieHandler.UpdateCookie)
-		protectedV1.DELETE("/admin/cookies/:id", cookieHandler.DeleteCookie)
-		protectedV1.GET("/admin/cookies/:id", cookieHandler.GetCookie)
-		protectedV1.GET("/admin/cookies", cookieHandler.ListCookies)
-		protectedV1.POST("/admin/cookies/:id/freeze", cookieHandler.FreezeCookie)
+		// 流式下载 (直接转发第三方流)
+		protectedV1.GET("/stream", streamHandler.StreamDownload)
 	}
-
-	// ==================== WebSocket 路由 ====================
-	// WebSocket 进度推送 (Token 通过查询参数验证)
-	r.GET("/api/v1/ws/progress", wsHandler.Progress)
 
 	return r
 }

@@ -2,7 +2,7 @@ server:
   port: 9001
   
 database:
-  host: localhost
+  host: postgres
   port: 5432
   user: vasset
   password: password
@@ -13,7 +13,7 @@ database:
   conn_max_lifetime: 3600s
 
 redis:
-  addr: localhost:6379
+  addr: redis:6379
   password: ""
   db: 0
   pool_size: 50
