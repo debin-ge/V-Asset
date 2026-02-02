@@ -2,18 +2,22 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { Download, Film, Headphones } from "lucide-react"
+import { Download, Film, Headphones, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { VideoInfo, VideoFormat } from "@/lib/api/parse"
 import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { DownloadProgress } from "@/hooks/use-download"
 
 interface ResultCardProps {
     info: VideoInfo
     onDownload: (type: 'video' | 'audio', formatId?: string) => void
+    downloadProgress?: DownloadProgress | null
+    isDownloading?: boolean
 }
 
-export function ResultCard({ info, onDownload }: ResultCardProps) {
+export function ResultCard({ info, onDownload, downloadProgress, isDownloading }: ResultCardProps) {
     const { user, openAuthModal } = useAuth()
 
     // Filter video formats (has video_codec, regardless of audio_codec)
@@ -87,6 +91,22 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
             return
         }
         onDownload(type, formatId)
+    }
+
+    const formatBytes = (bytes?: number) => {
+        if (!bytes || bytes === 0) return '0 B'
+        const k = 1024
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    }
+
+    const formatEta = (seconds: number) => {
+        if (seconds < 60) return `${seconds}秒`
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}分${seconds % 60}秒`
+        const hours = Math.floor(seconds / 3600)
+        const mins = Math.floor((seconds % 3600) / 60)
+        return `${hours}小时${mins}分`
     }
 
     const formatFileSize = (bytes?: number) => {
@@ -181,6 +201,39 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                     </h3>
                 </div>
             </div>
+
+            {/* Download Progress Bar */}
+            {isDownloading && downloadProgress && (
+                <div className="mx-4 mb-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                            <span className="text-sm font-medium text-gray-700">
+                                {downloadProgress.status === 'downloading' ? '下载中' :
+                                    downloadProgress.status === 'merging' ? '合并中' :
+                                        downloadProgress.status === 'pending' ? '准备中' : '处理中'}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                            {downloadProgress.speed && (
+                                <span className="font-mono">{downloadProgress.speed}</span>
+                            )}
+                            {downloadProgress.eta > 0 && (
+                                <span>剩余 {formatEta(downloadProgress.eta)}</span>
+                            )}
+                        </div>
+                    </div>
+                    <Progress value={downloadProgress.progress} className="h-2" />
+                    <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                        <span>{downloadProgress.progress.toFixed(1)}%</span>
+                        {downloadProgress.totalBytes > 0 && (
+                            <span>
+                                {formatBytes(downloadProgress.downloadedBytes)} / {formatBytes(downloadProgress.totalBytes)}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Tab Switcher - Always visible */}
             <div className="border-t border-gray-100 bg-gray-50">

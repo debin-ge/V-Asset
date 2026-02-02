@@ -191,3 +191,27 @@ func detectPlatform(url string) string {
 		return "unknown"
 	}
 }
+
+// GetProgress 获取下载进度
+func (h *GRPCHandler) GetProgress(ctx context.Context, req *pb.GetProgressRequest) (*pb.GetProgressResponse, error) {
+	h.logger.Info("GetProgress request", zap.String("task_id", req.TaskId))
+
+	// 调用第三方 API 获取进度
+	result, err := h.ytdlpClient.GetProgress(ctx, req.TaskId)
+	if err != nil {
+		h.logger.Error("GetProgress failed", zap.Error(err))
+		return nil, fmt.Errorf("failed to get progress: %w", err)
+	}
+
+	return &pb.GetProgressResponse{
+		TaskId:          result.TaskID,
+		Status:          result.Status,
+		Progress:        result.Progress,
+		Speed:           result.Speed,
+		Eta:             int32(result.ETA),
+		Error:           result.Error,
+		Filename:        result.Filename,
+		TotalBytes:      result.TotalBytes,
+		DownloadedBytes: result.DownloadedBytes,
+	}, nil
+}

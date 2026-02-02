@@ -22,6 +22,7 @@ const (
 	ProxyService_Parse_FullMethodName          = "/proxy.ProxyService/Parse"
 	ProxyService_Download_FullMethodName       = "/proxy.ProxyService/Download"
 	ProxyService_StreamDownload_FullMethodName = "/proxy.ProxyService/StreamDownload"
+	ProxyService_GetProgress_FullMethodName    = "/proxy.ProxyService/GetProgress"
 )
 
 // ProxyServiceClient is the client API for ProxyService service.
@@ -36,6 +37,8 @@ type ProxyServiceClient interface {
 	Download(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (*DownloadResponse, error)
 	// 流式下载（直接转发第三方流）
 	StreamDownload(ctx context.Context, in *StreamDownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamChunk], error)
+	// 获取下载进度
+	GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*GetProgressResponse, error)
 }
 
 type proxyServiceClient struct {
@@ -85,6 +88,16 @@ func (c *proxyServiceClient) StreamDownload(ctx context.Context, in *StreamDownl
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ProxyService_StreamDownloadClient = grpc.ServerStreamingClient[StreamChunk]
 
+func (c *proxyServiceClient) GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*GetProgressResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProgressResponse)
+	err := c.cc.Invoke(ctx, ProxyService_GetProgress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProxyServiceServer is the server API for ProxyService service.
 // All implementations must embed UnimplementedProxyServiceServer
 // for forward compatibility.
@@ -97,6 +110,8 @@ type ProxyServiceServer interface {
 	Download(context.Context, *DownloadRequest) (*DownloadResponse, error)
 	// 流式下载（直接转发第三方流）
 	StreamDownload(*StreamDownloadRequest, grpc.ServerStreamingServer[StreamChunk]) error
+	// 获取下载进度
+	GetProgress(context.Context, *GetProgressRequest) (*GetProgressResponse, error)
 	mustEmbedUnimplementedProxyServiceServer()
 }
 
@@ -115,6 +130,9 @@ func (UnimplementedProxyServiceServer) Download(context.Context, *DownloadReques
 }
 func (UnimplementedProxyServiceServer) StreamDownload(*StreamDownloadRequest, grpc.ServerStreamingServer[StreamChunk]) error {
 	return status.Error(codes.Unimplemented, "method StreamDownload not implemented")
+}
+func (UnimplementedProxyServiceServer) GetProgress(context.Context, *GetProgressRequest) (*GetProgressResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProgress not implemented")
 }
 func (UnimplementedProxyServiceServer) mustEmbedUnimplementedProxyServiceServer() {}
 func (UnimplementedProxyServiceServer) testEmbeddedByValue()                      {}
@@ -184,6 +202,24 @@ func _ProxyService_StreamDownload_Handler(srv interface{}, stream grpc.ServerStr
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ProxyService_StreamDownloadServer = grpc.ServerStreamingServer[StreamChunk]
 
+func _ProxyService_GetProgress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProgressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProxyServiceServer).GetProgress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProxyService_GetProgress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProxyServiceServer).GetProgress(ctx, req.(*GetProgressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProxyService_ServiceDesc is the grpc.ServiceDesc for ProxyService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -198,6 +234,10 @@ var ProxyService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Download",
 			Handler:    _ProxyService_Download_Handler,
+		},
+		{
+			MethodName: "GetProgress",
+			Handler:    _ProxyService_GetProgress_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

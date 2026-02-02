@@ -10,6 +10,7 @@ export default function Home() {
     setUrl,
     status,
     videoInfo,
+    downloadProgress,
     handleParse,
     startDownload,
     reset,
@@ -36,7 +37,12 @@ export default function Home() {
       />
 
       {(status === "parsed" || status === "downloading" || status === "completed") && videoInfo && (
-        <ResultCard info={videoInfo} onDownload={startDownload} />
+        <ResultCard
+          info={videoInfo}
+          onDownload={startDownload}
+          downloadProgress={downloadProgress}
+          isDownloading={status === "downloading"}
+        />
       )}
     </div>
   )

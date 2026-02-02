@@ -601,6 +601,158 @@ func (x *StreamChunk) GetIsHeader() bool {
 	return false
 }
 
+type GetProgressRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProgressRequest) Reset() {
+	*x = GetProgressRequest{}
+	mi := &file_proto_proxy_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProgressRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProgressRequest) ProtoMessage() {}
+
+func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_proxy_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProgressRequest.ProtoReflect.Descriptor instead.
+func (*GetProgressRequest) Descriptor() ([]byte, []int) {
+	return file_proto_proxy_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetProgressRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+type GetProgressResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	TaskId          string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Status          string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                                           // pending, downloading, merging, completed, failed
+	Progress        float64                `protobuf:"fixed64,3,opt,name=progress,proto3" json:"progress,omitempty"`                                     // 0-100
+	Speed           string                 `protobuf:"bytes,4,opt,name=speed,proto3" json:"speed,omitempty"`                                             // 下载速度，如 "2.5MB/s"
+	Eta             int32                  `protobuf:"varint,5,opt,name=eta,proto3" json:"eta,omitempty"`                                                // 预计剩余时间(秒)
+	Error           string                 `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`                                             // 错误信息
+	Filename        string                 `protobuf:"bytes,7,opt,name=filename,proto3" json:"filename,omitempty"`                                       // 文件名
+	TotalBytes      int64                  `protobuf:"varint,8,opt,name=total_bytes,json=totalBytes,proto3" json:"total_bytes,omitempty"`                // 总字节数
+	DownloadedBytes int64                  `protobuf:"varint,9,opt,name=downloaded_bytes,json=downloadedBytes,proto3" json:"downloaded_bytes,omitempty"` // 已下载字节数
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *GetProgressResponse) Reset() {
+	*x = GetProgressResponse{}
+	mi := &file_proto_proxy_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProgressResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProgressResponse) ProtoMessage() {}
+
+func (x *GetProgressResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_proxy_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProgressResponse.ProtoReflect.Descriptor instead.
+func (*GetProgressResponse) Descriptor() ([]byte, []int) {
+	return file_proto_proxy_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetProgressResponse) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *GetProgressResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GetProgressResponse) GetProgress() float64 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *GetProgressResponse) GetSpeed() string {
+	if x != nil {
+		return x.Speed
+	}
+	return ""
+}
+
+func (x *GetProgressResponse) GetEta() int32 {
+	if x != nil {
+		return x.Eta
+	}
+	return 0
+}
+
+func (x *GetProgressResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *GetProgressResponse) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
+func (x *GetProgressResponse) GetTotalBytes() int64 {
+	if x != nil {
+		return x.TotalBytes
+	}
+	return 0
+}
+
+func (x *GetProgressResponse) GetDownloadedBytes() int64 {
+	if x != nil {
+		return x.DownloadedBytes
+	}
+	return 0
+}
+
 var File_proto_proxy_proto protoreflect.FileDescriptor
 
 const file_proto_proxy_proto_rawDesc = "" +
@@ -662,11 +814,25 @@ const file_proto_proxy_proto_rawDesc = "" +
 	"\x04data\x18\x01 \x01(\fR\x04data\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12%\n" +
 	"\x0econtent_length\x18\x03 \x01(\x03R\rcontentLength\x12\x1b\n" +
-	"\tis_header\x18\x04 \x01(\bR\bisHeader2\xc5\x01\n" +
+	"\tis_header\x18\x04 \x01(\bR\bisHeader\"-\n" +
+	"\x12GetProgressRequest\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\"\x88\x02\n" +
+	"\x13GetProgressResponse\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1a\n" +
+	"\bprogress\x18\x03 \x01(\x01R\bprogress\x12\x14\n" +
+	"\x05speed\x18\x04 \x01(\tR\x05speed\x12\x10\n" +
+	"\x03eta\x18\x05 \x01(\x05R\x03eta\x12\x14\n" +
+	"\x05error\x18\x06 \x01(\tR\x05error\x12\x1a\n" +
+	"\bfilename\x18\a \x01(\tR\bfilename\x12\x1f\n" +
+	"\vtotal_bytes\x18\b \x01(\x03R\n" +
+	"totalBytes\x12)\n" +
+	"\x10downloaded_bytes\x18\t \x01(\x03R\x0fdownloadedBytes2\x8b\x02\n" +
 	"\fProxyService\x122\n" +
 	"\x05Parse\x12\x13.proxy.ParseRequest\x1a\x14.proxy.ParseResponse\x12;\n" +
 	"\bDownload\x12\x16.proxy.DownloadRequest\x1a\x17.proxy.DownloadResponse\x12D\n" +
-	"\x0eStreamDownload\x12\x1c.proxy.StreamDownloadRequest\x1a\x12.proxy.StreamChunk0\x01B\x1dZ\x1bvasset/api-gateway/proto;pbb\x06proto3"
+	"\x0eStreamDownload\x12\x1c.proxy.StreamDownloadRequest\x1a\x12.proxy.StreamChunk0\x01\x12D\n" +
+	"\vGetProgress\x12\x19.proxy.GetProgressRequest\x1a\x1a.proxy.GetProgressResponseB\x1dZ\x1bvasset/api-gateway/proto;pbb\x06proto3"
 
 var (
 	file_proto_proxy_proto_rawDescOnce sync.Once
@@ -680,7 +846,7 @@ func file_proto_proxy_proto_rawDescGZIP() []byte {
 	return file_proto_proxy_proto_rawDescData
 }
 
-var file_proto_proxy_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_proto_proxy_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_proto_proxy_proto_goTypes = []any{
 	(*ParseRequest)(nil),          // 0: proxy.ParseRequest
 	(*ParseResponse)(nil),         // 1: proxy.ParseResponse
@@ -689,17 +855,21 @@ var file_proto_proxy_proto_goTypes = []any{
 	(*DownloadResponse)(nil),      // 4: proxy.DownloadResponse
 	(*StreamDownloadRequest)(nil), // 5: proxy.StreamDownloadRequest
 	(*StreamChunk)(nil),           // 6: proxy.StreamChunk
+	(*GetProgressRequest)(nil),    // 7: proxy.GetProgressRequest
+	(*GetProgressResponse)(nil),   // 8: proxy.GetProgressResponse
 }
 var file_proto_proxy_proto_depIdxs = []int32{
 	2, // 0: proxy.ParseResponse.formats:type_name -> proxy.ProxyVideoFormat
 	0, // 1: proxy.ProxyService.Parse:input_type -> proxy.ParseRequest
 	3, // 2: proxy.ProxyService.Download:input_type -> proxy.DownloadRequest
 	5, // 3: proxy.ProxyService.StreamDownload:input_type -> proxy.StreamDownloadRequest
-	1, // 4: proxy.ProxyService.Parse:output_type -> proxy.ParseResponse
-	4, // 5: proxy.ProxyService.Download:output_type -> proxy.DownloadResponse
-	6, // 6: proxy.ProxyService.StreamDownload:output_type -> proxy.StreamChunk
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
+	7, // 4: proxy.ProxyService.GetProgress:input_type -> proxy.GetProgressRequest
+	1, // 5: proxy.ProxyService.Parse:output_type -> proxy.ParseResponse
+	4, // 6: proxy.ProxyService.Download:output_type -> proxy.DownloadResponse
+	6, // 7: proxy.ProxyService.StreamDownload:output_type -> proxy.StreamChunk
+	8, // 8: proxy.ProxyService.GetProgress:output_type -> proxy.GetProgressResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -716,7 +886,7 @@ func file_proto_proxy_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_proxy_proto_rawDesc), len(file_proto_proxy_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

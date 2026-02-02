@@ -55,6 +55,10 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 	streamHandler := handler.NewStreamHandler(
 		deps.GRPCClients.ProxyClient,
 	)
+	progressHandler := handler.NewProgressHandler(
+		deps.GRPCClients.ProxyClient,
+		deps.Config.GRPC.Timeout,
+	)
 
 	// ==================== 公开路由 ====================
 	// 健康检查 (无需认证)
@@ -94,6 +98,9 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 
 		// 流式下载 (直接转发第三方流)
 		protectedV1.GET("/stream", streamHandler.StreamDownload)
+
+		// 进度查询
+		protectedV1.GET("/progress/:task_id", progressHandler.GetProgress)
 	}
 
 	return r

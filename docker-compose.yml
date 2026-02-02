@@ -17,7 +17,7 @@ services:
       TZ: Asia/Shanghai
       PGTZ: Asia/Shanghai
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -32,7 +32,10 @@ services:
     image: redis:7-alpine
     container_name: vasset-redis
     ports:
-      - "6379"
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      TZ: Asia/Shanghai
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-password}
     volumes:
       - redis-data:/data
     healthcheck:
@@ -49,15 +52,16 @@ services:
     build: ./auth-service
     container_name: vasset-auth
     ports:
-      - "9001:9001"
+      - "${AUTH_SERVICE_PORT:-9001}:9001"
     environment:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-vasset}
       - DB_PASSWORD=password
       - DB_NAME=${DB_NAME:-vasset}
-      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-password}
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
     depends_on:
       postgres:
@@ -71,14 +75,15 @@ services:
     build: ./asset-service
     container_name: vasset-asset
     ports:
-      - "9004:9004"
+      - "${ASSET_SERVICE_PORT:-9004}:9004"
     environment:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-vasset}
       - DB_PASSWORD=password
       - DB_NAME=${DB_NAME:-vasset}
-      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     volumes:
       - vasset-data:/data/vasset
@@ -96,10 +101,11 @@ services:
     build: ./proxy-service
     container_name: vasset-proxy
     ports:
-      - "9010:9010"
+      - "${PROXY_SERVICE_PORT:-9010}:9010"
     environment:
-      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-password}
       - YTDLP_API_BASE_URL=${YTDLP_API_BASE_URL:-https://yt-dlp-651719502982.us-west2.run.app}
       - YTDLP_API_KEY=${YTDLP_API_KEY:-your_secret_token_here}
     depends_on:
@@ -112,13 +118,17 @@ services:
     build: ./api-gateway
     container_name: vasset-gateway
     ports:
-      - "8080:8080"
+      - "${API_GATEWAY_PORT:-8080}:8080"
     environment:
-      - AUTH_SERVICE_ADDR=${AUTH_SERVICE_ADDR:-auth-service:9001}
-      - PROXY_SERVICE_ADDR=${PROXY_SERVICE_ADDR:-proxy-service:9010}
-      - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
-      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - AUTH_SERVICE_HOST=${AUTH_SERVICE_HOST:-auth-service}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT:-9001}
+      - PROXY_SERVICE_HOST=${PROXY_SERVICE_HOST:-proxy-service}
+      - PROXY_SERVICE_PORT=${PROXY_SERVICE_PORT:-9010}
+      - ASSET_SERVICE_HOST=${ASSET_SERVICE_HOST:-asset-service}
+      - ASSET_SERVICE_PORT=${ASSET_SERVICE_PORT:-9004}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-password}
     volumes:
       - vasset-data:/data/vasset:ro # 只读挂载，用于提供文件下载
     depends_on:
@@ -135,7 +145,7 @@ services:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
     container_name: vasset-frontend
     ports:
-      - "80:3000"
+      - "${FRONTEND_PORT:-80}:3000"
     depends_on:
       - api-gateway
     restart: unless-stopped

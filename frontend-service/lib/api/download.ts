@@ -112,3 +112,21 @@ export function mapDownloadType(type: 'video' | 'audio'): string {
     return type === 'video' ? 'quick_download' : 'audio_only';
 }
 
+// 进度响应类型
+export interface ProgressResponse {
+    task_id: string;
+    status: string;       // pending, downloading, merging, completed, failed
+    progress: number;     // 0-100
+    speed: string;        // 下载速度，如 "2.5MB/s"
+    eta: number;          // 预计剩余时间(秒)
+    error: string;        // 错误信息
+    filename: string;     // 文件名
+    total_bytes: number;  // 总字节数
+    downloaded_bytes: number;  // 已下载字节数
+}
+
+// 获取下载进度
+export async function getProgress(taskId: string): Promise<ProgressResponse> {
+    const response = await apiClient.get(`/api/v1/progress/${taskId}`);
+    return response.data;
+}

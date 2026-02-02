@@ -63,3 +63,16 @@ func (f *Format) GetQuality() string {
 	}
 	return f.FormatNote
 }
+
+// ProgressAPIResponse 第三方 API /progress 响应
+type ProgressAPIResponse struct {
+	TaskID          string  `json:"task_id"`
+	Status          string  `json:"status"`           // pending, downloading, merging, completed, failed
+	Progress        float64 `json:"progress"`         // 0-100
+	Speed           string  `json:"speed"`            // 下载速度，如 "2.5MB/s"
+	ETA             int     `json:"eta"`              // 预计剩余时间(秒)
+	Error           string  `json:"error,omitempty"`  // 错误信息
+	Filename        string  `json:"filename"`         // 文件名
+	TotalBytes      int64   `json:"total_bytes"`      // 总字节数
+	DownloadedBytes int64   `json:"downloaded_bytes"` // 已下载字节数
+}

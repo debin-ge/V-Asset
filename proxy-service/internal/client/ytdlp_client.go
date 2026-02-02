@@ -211,3 +211,40 @@ func calculateFormatScore(f *models.Format, targetHeight int, isVideo bool) int 
 
 	return score
 }
+
+// GetProgress 获取下载进度
+func (c *YtDLPClient) GetProgress(ctx context.Context, taskID string) (*models.ProgressAPIResponse, error) {
+	c.logger.Info("Getting progress", zap.String("task_id", taskID))
+
+	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/progress/"+taskID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	if c.apiKey != "" {
+		req.Header.Set("x-api-key", c.apiKey)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("progress API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result models.ProgressAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	c.logger.Info("Progress retrieved",
+		zap.String("task_id", taskID),
+		zap.String("status", result.Status),
+		zap.Float64("progress", result.Progress))
+
+	return &result, nil
+}

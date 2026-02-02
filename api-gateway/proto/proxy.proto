@@ -14,6 +14,9 @@ service ProxyService {
   
   // 流式下载（直接转发第三方流）
   rpc StreamDownload(StreamDownloadRequest) returns (stream StreamChunk);
+  
+  // 获取下载进度
+  rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
 }
 
 // ========== Parse 接口 ==========
@@ -82,4 +85,22 @@ message StreamChunk {
   string content_type = 2;
   int64 content_length = 3;
   bool is_header = 4;      // 首个 chunk 包含元数据
+}
+
+// ========== GetProgress 接口 ==========
+
+message GetProgressRequest {
+  string task_id = 1;
+}
+
+message GetProgressResponse {
+  string task_id = 1;
+  string status = 2;       // pending, downloading, merging, completed, failed
+  double progress = 3;     // 0-100
+  string speed = 4;        // 下载速度，如 "2.5MB/s"
+  int32 eta = 5;           // 预计剩余时间(秒)
+  string error = 6;        // 错误信息
+  string filename = 7;     // 文件名
+  int64 total_bytes = 8;   // 总字节数
+  int64 downloaded_bytes = 9;  // 已下载字节数
 }

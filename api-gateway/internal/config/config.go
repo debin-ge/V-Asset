@@ -83,20 +83,46 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	// 从环境变量覆盖配置
-	// gRPC 服务地址
+	// gRPC 服务地址 - 支持完整地址或分开的 HOST/PORT
 	if authAddr := os.Getenv("AUTH_SERVICE_ADDR"); authAddr != "" {
 		cfg.GRPC.AuthService = authAddr
-	}
-	if proxyAddr := os.Getenv("PROXY_SERVICE_ADDR"); proxyAddr != "" {
-		cfg.GRPC.ProxyService = proxyAddr
-	}
-	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
-		cfg.GRPC.AssetService = assetAddr
+	} else if authHost := os.Getenv("AUTH_SERVICE_HOST"); authHost != "" {
+		authPort := os.Getenv("AUTH_SERVICE_PORT")
+		if authPort == "" {
+			authPort = "9001"
+		}
+		cfg.GRPC.AuthService = fmt.Sprintf("%s:%s", authHost, authPort)
 	}
 
-	// Redis
+	if proxyAddr := os.Getenv("PROXY_SERVICE_ADDR"); proxyAddr != "" {
+		cfg.GRPC.ProxyService = proxyAddr
+	} else if proxyHost := os.Getenv("PROXY_SERVICE_HOST"); proxyHost != "" {
+		proxyPort := os.Getenv("PROXY_SERVICE_PORT")
+		if proxyPort == "" {
+			proxyPort = "9010"
+		}
+		cfg.GRPC.ProxyService = fmt.Sprintf("%s:%s", proxyHost, proxyPort)
+	}
+
+	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
+		cfg.GRPC.AssetService = assetAddr
+	} else if assetHost := os.Getenv("ASSET_SERVICE_HOST"); assetHost != "" {
+		assetPort := os.Getenv("ASSET_SERVICE_PORT")
+		if assetPort == "" {
+			assetPort = "9004"
+		}
+		cfg.GRPC.AssetService = fmt.Sprintf("%s:%s", assetHost, assetPort)
+	}
+
+	// Redis - 支持完整地址或分开的 HOST/PORT
 	if redisAddr := os.Getenv("REDIS_ADDR"); redisAddr != "" {
 		cfg.Redis.Addr = redisAddr
+	} else if redisHost := os.Getenv("REDIS_HOST"); redisHost != "" {
+		redisPort := os.Getenv("REDIS_PORT")
+		if redisPort == "" {
+			redisPort = "6379"
+		}
+		cfg.Redis.Addr = fmt.Sprintf("%s:%s", redisHost, redisPort)
 	}
 	if redisPassword := os.Getenv("REDIS_PASSWORD"); redisPassword != "" {
 		cfg.Redis.Password = redisPassword
