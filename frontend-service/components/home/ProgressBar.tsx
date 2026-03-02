@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Progress } from "@/components/ui/progress"
 
 interface ProgressBarProps {
     progress: number

@@ -35,7 +35,7 @@ export function Profile() {
             const updatedUser = await authApi.updateProfile(nickname)
             setUser({ ...user!, nickname: updatedUser.nickname })
             toast.success("Profile updated successfully")
-        } catch (error) {
+        } catch {
             toast.error("Update failed, please try again")
         } finally {
             setIsSavingProfile(false)
@@ -139,4 +139,3 @@ export function Profile() {
         </div>
     )
 }
-

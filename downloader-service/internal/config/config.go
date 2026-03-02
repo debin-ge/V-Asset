@@ -170,6 +170,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	if rabbitMQURL := os.Getenv("RABBITMQ_URL"); rabbitMQURL != "" {
 		cfg.RabbitMQ.URL = rabbitMQURL
 	}
+	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
+		cfg.AssetService.Addr = assetAddr
+	}
 
 	// 代理配置
 	if proxyAPIKey := os.Getenv("PROXY_API_KEY"); proxyAPIKey != "" {

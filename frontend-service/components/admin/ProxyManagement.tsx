@@ -12,7 +12,7 @@ import {
 } from "@/lib/api/proxy"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -28,8 +28,6 @@ import {
     Trash2,
     RefreshCw,
     Server,
-    CheckCircle,
-    XCircle,
     Loader2,
     Activity
 } from "lucide-react"
@@ -38,7 +36,6 @@ export function ProxyManagement() {
     const [proxies, setProxies] = useState<ProxyInfo[]>([])
     const [loading, setLoading] = useState(true)
     const [total, setTotal] = useState(0)
-    const [page, setPage] = useState(1)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [checkingId, setCheckingId] = useState<number | null>(null)
 
@@ -55,10 +52,10 @@ export function ProxyManagement() {
     const [submitting, setSubmitting] = useState(false)
 
     // Load proxy list
-    const loadProxies = async () => {
+    const loadProxies = React.useCallback(async () => {
         setLoading(true)
         try {
-            const response: ProxyListResponse = await proxyApi.list({ page, page_size: 20 })
+            const response: ProxyListResponse = await proxyApi.list({ page: 1, page_size: 20 })
             setProxies(response.items || [])
             setTotal(response.total)
         } catch (error) {
@@ -67,11 +64,11 @@ export function ProxyManagement() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
     useEffect(() => {
         loadProxies()
-    }, [page])
+    }, [loadProxies])
 
     // Create proxy
     const handleCreate = async () => {

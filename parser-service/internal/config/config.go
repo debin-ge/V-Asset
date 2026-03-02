@@ -82,6 +82,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	if redisPassword := os.Getenv("REDIS_PASSWORD"); redisPassword != "" {
 		cfg.Redis.Password = redisPassword
 	}
+	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
+		cfg.AssetService.Addr = assetAddr
+	}
 
 	// 设置默认值
 	if cfg.YTDLP.BinaryPath == "" {

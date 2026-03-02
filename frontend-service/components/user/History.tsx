@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { historyApi, HistoryItem } from "@/lib/api/history"
 import { downloadApi } from "@/lib/api/download"
 import { formatDate, formatFileSize, formatDuration, getStatusText } from "@/lib/format"
@@ -37,7 +38,7 @@ export function History() {
             await historyApi.deleteHistory(historyId)
             setHistory(prev => prev.filter(h => h.history_id !== historyId))
             toast.success("Deleted successfully")
-        } catch (error) {
+        } catch {
             toast.error("Delete failed")
         } finally {
             setDeletingId(null)
@@ -49,7 +50,7 @@ export function History() {
         try {
             await downloadApi.downloadFile(historyId)
             toast.success("Download started")
-        } catch (error) {
+        } catch {
             toast.error("Download failed")
         } finally {
             setDownloadingId(null)
@@ -90,9 +91,10 @@ export function History() {
                     <CardContent className="p-0 flex flex-col sm:flex-row">
                         <div className="w-full sm:w-48 h-32 relative shrink-0 bg-gray-100">
                             {item.thumbnail ? (
-                                <img
+                                <Image
                                     src={item.thumbnail}
                                     alt={item.title}
+                                    fill
                                     className="w-full h-full object-cover"
                                 />
                             ) : (

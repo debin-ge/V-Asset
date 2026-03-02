@@ -5,6 +5,7 @@ export interface DownloadRequest {
     mode: string;       // 'quick_download' | 'audio_only'
     quality: string;    // '1080p' | '720p' | 'best'
     format?: string;
+    format_id?: string;
 }
 
 export interface DownloadResponse {

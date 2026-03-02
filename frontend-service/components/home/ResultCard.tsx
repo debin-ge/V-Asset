@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
+import Image from "next/image"
 import { Download, Film, Headphones } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { VideoInfo, VideoFormat } from "@/lib/api/parse"
@@ -158,9 +159,10 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
             {/* Video Info Header */}
             <div className="flex flex-col md:flex-row">
                 <div className="w-full md:w-48 h-32 md:h-auto relative">
-                    <img
+                    <Image
                         src={info.thumbnail}
                         alt={info.title}
+                        fill
                         className="w-full h-full object-cover"
                     />
                     <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">

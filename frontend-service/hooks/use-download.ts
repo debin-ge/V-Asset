@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { toast } from "sonner"
-import { parseApi, VideoInfo } from "@/lib/api/parse"
+import { parseApi } from "@/lib/api/parse"
+import type { VideoInfo } from "@/lib/api/parse"
 import { downloadApi, mapDownloadType } from "@/lib/api/download"
+import type { DownloadRequest } from "@/lib/api/download"
 import { wsClient, ProgressData } from "@/lib/ws-client"
-import { formatFileSize } from "@/lib/format"
 
 export type DownloadStatus = "idle" | "parsing" | "parsed" | "downloading" | "completed" | "error"
 
@@ -103,7 +104,7 @@ export function useDownload() {
         setProgress(0)
 
         try {
-            const downloadParams: any = {
+            const downloadParams: DownloadRequest = {
                 url: videoInfo.url,
                 mode: mapDownloadType(type),
                 quality: "best",

@@ -54,7 +54,7 @@ func (g *PathGenerator) GeneratePath(task *models.DownloadTask) (string, error) 
 
 		filePath = filepath.Join(
 			g.basePath, "archive",
-			fmt.Sprintf("%d", task.UserID),
+			task.UserID,
 			date,
 			fmt.Sprintf("%s_%d.%s", safeTitle, timestamp, format),
 		)

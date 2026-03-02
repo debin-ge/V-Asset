@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"vasset/api-gateway/internal/client"
 	"vasset/api-gateway/internal/models"
@@ -70,31 +72,38 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 
 	// 检查 Auth Service
 	_, err := h.grpcClients.AuthClient.GetUserInfo(ctx, &pb.GetUserInfoRequest{UserId: ""})
-	if err != nil {
-		// 即使返回错误也认为服务是可用的（可能是因为找不到用户）
+	if isReachableGRPCError(err) {
 		dependencies["auth_service"] = "healthy"
 	} else {
-		dependencies["auth_service"] = "healthy"
+		dependencies["auth_service"] = "unhealthy"
+		allHealthy = false
 	}
 
 	// 检查 Parser Service
 	_, err = h.grpcClients.ParserClient.ValidateURL(ctx, &pb.ValidateURLRequest{Url: "test"})
-	if err != nil {
+	if isReachableGRPCError(err) {
 		dependencies["parser_service"] = "healthy"
 	} else {
-		dependencies["parser_service"] = "healthy"
+		dependencies["parser_service"] = "unhealthy"
+		allHealthy = false
 	}
 
 	// 检查 Asset Service
 	_, err = h.grpcClients.AssetClient.CheckQuota(ctx, &pb.CheckQuotaRequest{UserId: ""})
-	if err != nil {
+	if isReachableGRPCError(err) {
 		dependencies["asset_service"] = "healthy"
 	} else {
-		dependencies["asset_service"] = "healthy"
+		dependencies["asset_service"] = "unhealthy"
+		allHealthy = false
 	}
 
 	// RabbitMQ 状态（通过 publisher 状态判断）
-	dependencies["rabbitmq"] = "healthy"
+	if h.mqPublisher == nil {
+		dependencies["rabbitmq"] = "unhealthy"
+		allHealthy = false
+	} else {
+		dependencies["rabbitmq"] = "healthy"
+	}
 
 	status := "healthy"
 	statusCode := http.StatusOK
@@ -144,4 +153,17 @@ func (h *HealthHandler) Live(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "alive",
 	})
+}
+
+func isReachableGRPCError(err error) bool {
+	if err == nil {
+		return true
+	}
+
+	switch status.Code(err) {
+	case codes.InvalidArgument, codes.NotFound, codes.Unauthenticated, codes.PermissionDenied, codes.AlreadyExists, codes.FailedPrecondition, codes.OutOfRange:
+		return true
+	default:
+		return false
+	}
 }

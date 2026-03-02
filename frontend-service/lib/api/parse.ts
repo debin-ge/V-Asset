@@ -33,19 +33,21 @@ export interface VideoInfo {
     url: string;             // 前端自行保存
 }
 
+type ParseApiVideoInfo = Omit<VideoInfo, 'durationFormatted' | 'url'>
+
 export const parseApi = {
     // 解析URL
     parseUrl: async (url: string, skipCache = false): Promise<VideoInfo> => {
-        const response = await apiClient.post('/api/v1/parse', { url, skip_cache: skipCache });
+        const response = await apiClient.post<ParseApiVideoInfo>('/api/v1/parse', { url, skip_cache: skipCache });
         const data = response.data;
 
         // 调试日志
         console.log('[DEBUG-parseUrl] Received from API:', {
             formatsCount: data.formats?.length || 0,
-            videoFormats: data.formats?.filter((f: any) => f.video_codec && f.video_codec !== 'none').length || 0,
-            audioFormats: data.formats?.filter((f: any) => f.audio_codec && f.audio_codec !== 'none' && (!f.video_codec || f.video_codec === 'none')).length || 0,
-            maxHeight: Math.max(...(data.formats?.map((f: any) => f.height || 0) || [0])),
-            first3Formats: data.formats?.slice(0, 3).map((f: any) => ({
+            videoFormats: data.formats?.filter((f) => f.video_codec && f.video_codec !== 'none').length || 0,
+            audioFormats: data.formats?.filter((f) => f.audio_codec && f.audio_codec !== 'none' && (!f.video_codec || f.video_codec === 'none')).length || 0,
+            maxHeight: Math.max(...(data.formats?.map((f) => f.height || 0) || [0])),
+            first3Formats: data.formats?.slice(0, 3).map((f) => ({
                 format_id: f.format_id,
                 height: f.height,
                 video_codec: f.video_codec,

@@ -29,8 +29,6 @@ import {
     Trash2,
     RefreshCw,
     Cookie as CookieIcon,
-    CheckCircle,
-    XCircle,
     Clock
 } from "lucide-react"
 
@@ -53,7 +51,7 @@ export function CookieManagement() {
     const [submitting, setSubmitting] = useState(false)
 
     // Load cookie list
-    const loadCookies = async () => {
+    const loadCookies = React.useCallback(async () => {
         setLoading(true)
         try {
             const params: { page: number; page_size: number; platform?: string } = {
@@ -72,11 +70,11 @@ export function CookieManagement() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [page, filterPlatform])
 
     useEffect(() => {
         loadCookies()
-    }, [page, filterPlatform])
+    }, [loadCookies])
 
     // Create cookie
     const handleCreate = async () => {
