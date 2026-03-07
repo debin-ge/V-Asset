@@ -1,0 +1,96 @@
+# ============================
+# OS generated files
+# ============================
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ============================
+# IDE / Editor
+# ============================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+docs/
+PRD/
+
+# ============================
+# Go
+# ============================
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of go coverage
+*.out
+*.prof
+
+# Go workspace file
+go.work.sum
+
+# Build output
+/bin/
+/dist/
+
+# Vendor (uncomment if not vendoring)
+# vendor/
+
+# ============================
+# Node.js / Frontend
+# ============================
+node_modules/
+.next/
+out/
+build/
+.turbo/
+*.tsbuildinfo
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================
+# Environment & Secrets
+# ============================
+.env
+!.env.example
+*.pem
+*.key
+
+# ============================
+# Docker
+# ============================
+docker-compose.override.yml
+
+# ============================
+# Logs & Temp
+# ============================
+*.log
+tmp/
+temp/
+
+# ============================
+# Misc
+# ============================
+*.bak
+*.tmp
+*.orig
+response_*.json
