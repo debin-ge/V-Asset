@@ -63,7 +63,7 @@ function AdminPageContent() {
                                         className="w-full justify-start px-4 py-3 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 hover:bg-gray-50 transition-colors"
                                     >
                                         <Server className="w-4 h-4 mr-3" />
-                                        Proxy Management
+                                        Proxy Source
                                     </TabsTrigger>
                                 )}
                                 <TabsTrigger
@@ -81,11 +81,11 @@ function AdminPageContent() {
                 <main className="flex-1 min-w-0">
                     <div className="mb-6">
                         <h1 className="text-2xl font-bold">
-                            {tab === "proxies" && isAdmin ? "Proxy Management" : "Cookie Management"}
+                            {tab === "proxies" && isAdmin ? "Proxy Source" : "Cookie Management"}
                         </h1>
                         <p className="text-gray-500">
                             {tab === "proxies" && isAdmin
-                                ? "Manage proxy servers with add, delete, and health check capabilities."
+                                ? "Inspect the dynamic proxy lease flow used by yt-dlp parse and download tasks."
                                 : "Manage platform cookies with add and delete operations."}
                         </p>
                     </div>

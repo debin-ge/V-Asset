@@ -44,12 +44,12 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		deps.Config.GRPC.Timeout,
 	)
 	parseHandler := handler.NewParseHandler(
-		deps.GRPCClients.ParserClient,
+		deps.GRPCClients.MediaClient,
 		deps.Config.GRPC.Timeout,
 	)
 	downloadHandler := handler.NewDownloadHandler(
 		deps.GRPCClients.AssetClient,
-		deps.GRPCClients.ParserClient,
+		deps.GRPCClients.MediaClient,
 		deps.MQPublisher,
 		deps.Config.GRPC.Timeout,
 	)
@@ -121,13 +121,8 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		// 文件下载
 		protectedV1.GET("/download/file", fileHandler.DownloadFile)
 
-		// 管理后台 - 代理管理
-		protectedV1.POST("/admin/proxies", proxyHandler.CreateProxy)
-		protectedV1.PUT("/admin/proxies/:id", proxyHandler.UpdateProxy)
-		protectedV1.DELETE("/admin/proxies/:id", proxyHandler.DeleteProxy)
-		protectedV1.GET("/admin/proxies/:id", proxyHandler.GetProxy)
-		protectedV1.GET("/admin/proxies", proxyHandler.ListProxies)
-		protectedV1.POST("/admin/proxies/:id/health-check", proxyHandler.CheckProxyHealth)
+		// 管理后台 - 代理源状态
+		protectedV1.GET("/admin/proxies/source/status", proxyHandler.GetProxySourceStatus)
 
 		// 管理后台 - Cookie 管理
 		protectedV1.POST("/admin/cookies", cookieHandler.CreateCookie)

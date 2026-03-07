@@ -7,7 +7,7 @@ server:
 
 grpc:
   auth_service: "localhost:9001"
-  parser_service: "localhost:9002"
+  media_service: "localhost:9002"
   asset_service: "localhost:9004"
   timeout: 90s  # 增加超时时间以适应 YouTube 解析（通常需要 10-60 秒）
 

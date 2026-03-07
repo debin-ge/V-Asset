@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package media;
+
+option go_package = "vasset/api-gateway/proto;pb";
+
+service MediaService {
+  rpc ParseURL(ParseURLRequest) returns (ParseURLResponse);
+  rpc ValidateURL(ValidateURLRequest) returns (ValidateURLResponse);
+}
+
+message ParseURLRequest {
+  string url = 1;
+  bool skip_cache = 2;
+}
+
+message ParseURLResponse {
+  string video_id = 1;
+  string platform = 2;
+  string title = 3;
+  string description = 4;
+  int64 duration = 5;
+  string thumbnail = 6;
+  string author = 7;
+  string upload_date = 8;
+  int64 view_count = 9;
+  repeated VideoFormat formats = 10;
+  int64 cookie_id = 11;
+  string proxy_url = 12;
+  string proxy_lease_id = 13;
+  string proxy_expire_at = 14;
+}
+
+message VideoFormat {
+  string format_id = 1;
+  string quality = 2;
+  string extension = 3;
+  int64 filesize = 4;
+  int32 height = 5;
+  double fps = 6;
+  string video_codec = 7;
+  string audio_codec = 8;
+  int32 width = 9;
+  double vbr = 10;
+  double abr = 11;
+  int32 asr = 12;
+}
+
+message ValidateURLRequest {
+  string url = 1;
+}
+
+message ValidateURLResponse {
+  bool valid = 1;
+  string platform = 2;
+  string message = 3;
+}

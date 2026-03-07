@@ -1,343 +1,166 @@
 "use client"
 
-import * as React from "react"
-import { useState, useEffect } from "react"
-import {
-    proxyApi,
-    ProxyInfo,
-    ProxyListResponse,
-    ProxyStatus,
-    ProxyStatusLabel,
-    CreateProxyRequest
-} from "@/lib/api/proxy"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import type { ReactNode } from "react"
+import { useEffect, useState } from "react"
+import { Activity, Clock3, RefreshCw, Route, ShieldCheck, ShieldX } from "lucide-react"
 import { toast } from "sonner"
-import {
-    Plus,
-    Trash2,
-    RefreshCw,
-    Server,
-    Loader2,
-    Activity
-} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { proxyApi, type ProxySourceStatus } from "@/lib/api/proxy"
 
 export function ProxyManagement() {
-    const [proxies, setProxies] = useState<ProxyInfo[]>([])
+    const [status, setStatus] = useState<ProxySourceStatus | null>(null)
     const [loading, setLoading] = useState(true)
-    const [total, setTotal] = useState(0)
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [checkingId, setCheckingId] = useState<number | null>(null)
+    const [probing, setProbing] = useState(false)
 
-    // Form state
-    const [formData, setFormData] = useState<CreateProxyRequest>({
-        ip: "",
-        port: 0,
-        username: "",
-        password: "",
-        protocol: "http",
-        region: "",
-        check_health: true,
-    })
-    const [submitting, setSubmitting] = useState(false)
-
-    // Load proxy list
-    const loadProxies = React.useCallback(async () => {
+    const loadStatus = async () => {
         setLoading(true)
         try {
-            const response: ProxyListResponse = await proxyApi.list({ page: 1, page_size: 20 })
-            setProxies(response.items || [])
-            setTotal(response.total)
+            const result = await proxyApi.getSourceStatus()
+            setStatus(result)
         } catch (error) {
-            toast.error("Failed to load proxy list")
+            toast.error("Failed to load dynamic proxy source status")
             console.error(error)
         } finally {
             setLoading(false)
         }
-    }, [])
+    }
+
+    const handleProbe = async () => {
+        setProbing(true)
+        try {
+            const result = await proxyApi.getSourceStatus()
+            setStatus(result)
+            if (result.healthy) {
+                toast.success("Dynamic proxy lease acquired successfully")
+            } else {
+                toast.error(result.message || "Dynamic proxy source is unavailable")
+            }
+        } catch (error) {
+            toast.error("Failed to probe dynamic proxy source")
+            console.error(error)
+        } finally {
+            setProbing(false)
+        }
+    }
 
     useEffect(() => {
-        loadProxies()
-    }, [loadProxies])
-
-    // Create proxy
-    const handleCreate = async () => {
-        if (!formData.ip || !formData.port) {
-            toast.error("IP and port cannot be empty")
-            return
-        }
-
-        setSubmitting(true)
-        try {
-            const result = await proxyApi.create(formData)
-            if (formData.check_health && !result.health_check_passed) {
-                toast.warning(`Proxy added, but health check failed: ${result.health_check_error}`)
-            } else {
-                toast.success("Proxy added successfully")
-            }
-            setIsDialogOpen(false)
-            setFormData({
-                ip: "",
-                port: 0,
-                username: "",
-                password: "",
-                protocol: "http",
-                region: "",
-                check_health: true,
-            })
-            loadProxies()
-        } catch (error) {
-            toast.error("Failed to add proxy")
-            console.error(error)
-        } finally {
-            setSubmitting(false)
-        }
-    }
-
-    // Delete proxy
-    const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this proxy?")) return
-
-        try {
-            await proxyApi.delete(id)
-            toast.success("Proxy deleted")
-            loadProxies()
-        } catch (error) {
-            toast.error("Failed to delete")
-            console.error(error)
-        }
-    }
-
-    // Health check
-    const handleHealthCheck = async (id: number) => {
-        setCheckingId(id)
-        try {
-            const result = await proxyApi.checkHealth(id)
-            if (result.healthy) {
-                toast.success(`Check passed, latency: ${result.latency_ms}ms`)
-            } else {
-                toast.error(`Check failed: ${result.error}`)
-            }
-            loadProxies()
-        } catch (error) {
-            toast.error("Health check failed")
-            console.error(error)
-        } finally {
-            setCheckingId(null)
-        }
-    }
-
-    // Get status style
-    const getStatusStyle = (status: number) => {
-        switch (status) {
-            case ProxyStatus.ACTIVE:
-                return "bg-green-100 text-green-700"
-            case ProxyStatus.INACTIVE:
-                return "bg-red-100 text-red-700"
-            case ProxyStatus.CHECKING:
-                return "bg-yellow-100 text-yellow-700"
-            default:
-                return "bg-gray-100 text-gray-700"
-        }
-    }
+        loadStatus()
+    }, [])
 
     return (
         <div className="space-y-6">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={loadProxies} disabled={loading}>
-                        <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                        Refresh
-                    </Button>
-                    <span className="text-sm text-gray-500">Total: {total} proxies</span>
-                </div>
-
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Proxy
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add Proxy</DialogTitle>
-                            <DialogDescription>
-                                Add a new proxy server. You can optionally perform a health check.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">IP Address *</label>
-                                    <Input
-                                        placeholder="192.168.1.1"
-                                        value={formData.ip}
-                                        onChange={(e) => setFormData({ ...formData, ip: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Port *</label>
-                                    <Input
-                                        type="number"
-                                        placeholder="8080"
-                                        value={formData.port || ""}
-                                        onChange={(e) => setFormData({ ...formData, port: parseInt(e.target.value) || 0 })}
-                                    />
-                                </div>
+            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 via-white to-amber-50">
+                <CardContent className="p-6 space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2">
+                            <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">
+                                <Route className="h-3.5 w-3.5" />
+                                Dynamic Proxy Flow
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Username</label>
-                                    <Input
-                                        placeholder="Optional"
-                                        value={formData.username}
-                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Password</label>
-                                    <Input
-                                        type="password"
-                                        placeholder="Optional"
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Protocol</label>
-                                    <select
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                                        value={formData.protocol}
-                                        onChange={(e) => setFormData({ ...formData, protocol: e.target.value as "http" | "https" | "socks5" })}
-                                    >
-                                        <option value="http">HTTP</option>
-                                        <option value="https">HTTPS</option>
-                                        <option value="socks5">SOCKS5</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Region</label>
-                                    <Input
-                                        placeholder="e.g., US, EU"
-                                        value={formData.region}
-                                        onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="check_health"
-                                    checked={formData.check_health}
-                                    onChange={(e) => setFormData({ ...formData, check_health: e.target.checked })}
-                                    className="h-4 w-4 rounded border-gray-300"
-                                />
-                                <label htmlFor="check_health" className="text-sm">Perform health check on add</label>
-                            </div>
+                            <h2 className="text-xl font-semibold text-slate-900">Proxy leases are acquired per task now</h2>
+                            <p className="max-w-3xl text-sm leading-6 text-slate-600">
+                                The downloader no longer stores static proxy endpoints in the admin panel. Before every parse request,
+                                the backend acquires a fresh proxy lease from the configured provider and reuses the same lease for the
+                                matching yt-dlp parse and download task.
+                            </p>
                         </div>
-                        <DialogFooter>
-                            <Button onClick={handleCreate} disabled={submitting}>
-                                Add
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                        <Button variant="outline" onClick={handleProbe} disabled={probing}>
+                            <RefreshCw className={`mr-2 h-4 w-4 ${probing ? "animate-spin" : ""}`} />
+                            Probe Source
+                        </Button>
+                    </div>
 
-            {/* Proxy list */}
+                    <div className="grid gap-3 md:grid-cols-3">
+                        <div className="rounded-2xl border border-orange-100 bg-white/80 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Step 1</p>
+                            <p className="mt-2 text-sm font-medium text-slate-900">Parse requests a fresh lease</p>
+                            <p className="mt-1 text-sm text-slate-600">Every parse call hits the proxy provider before yt-dlp starts.</p>
+                        </div>
+                        <div className="rounded-2xl border border-orange-100 bg-white/80 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Step 2</p>
+                            <p className="mt-2 text-sm font-medium text-slate-900">Lease metadata flows through MQ</p>
+                            <p className="mt-1 text-sm text-slate-600">`proxy_url` and `proxy_lease_id` are attached to the download task.</p>
+                        </div>
+                        <div className="rounded-2xl border border-orange-100 bg-white/80 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Step 3</p>
+                            <p className="mt-2 text-sm font-medium text-slate-900">Download must reuse the same lease</p>
+                            <p className="mt-1 text-sm text-slate-600">Workers now fail fast if a task arrives without a proxy lease.</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
-                </div>
-            ) : proxies.length === 0 ? (
                 <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                        <Server className="w-12 h-12 text-gray-300 mb-4" />
-                        <p className="text-gray-500">No proxies yet</p>
-                        <p className="text-sm text-gray-400">Click the button above to add a proxy</p>
+                    <CardContent className="flex items-center justify-center py-12">
+                        <RefreshCw className="h-6 w-6 animate-spin text-slate-400" />
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid gap-4">
-                    {proxies.map((proxy) => (
-                        <Card key={proxy.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <Server className="w-5 h-5 text-gray-600" />
-                                                <h3 className="font-semibold text-lg">
-                                                    {proxy.protocol}://{proxy.ip}:{proxy.port}
-                                                </h3>
-                                            </div>
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusStyle(proxy.status)}`}>
-                                                {ProxyStatusLabel[proxy.status as keyof typeof ProxyStatusLabel]}
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                            <div>
-                                                <span className="text-gray-500">Region:</span> {proxy.region || "N/A"}
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Username:</span> {proxy.username || "None"}
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Success:</span> {proxy.success_count}
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Failed:</span> {proxy.fail_count}
-                                            </div>
-                                            {proxy.last_check_at && (
-                                                <div>
-                                                    <span className="text-gray-500">Last check:</span> {proxy.last_check_at}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleHealthCheck(proxy.id)}
-                                            disabled={checkingId === proxy.id}
-                                            title="Health check"
-                                        >
-                                            {checkingId === proxy.id ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Activity className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleDelete(proxy.id)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
+                <div className="grid gap-4 lg:grid-cols-[1.2fr,0.8fr]">
+                    <Card>
+                        <CardContent className="p-6 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Current Status</p>
+                                    <h3 className="mt-1 text-lg font-semibold text-slate-900">Dynamic proxy source probe</h3>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${status?.healthy ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                    {status?.healthy ? <ShieldCheck className="h-4 w-4" /> : <ShieldX className="h-4 w-4" />}
+                                    {status?.healthy ? "Healthy" : "Unavailable"}
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <InfoItem icon={<Activity className="h-4 w-4" />} label="Mode" value={status?.mode || "dynamic-lease"} />
+                                <InfoItem icon={<Clock3 className="h-4 w-4" />} label="Last Probe" value={status?.checked_at || "N/A"} />
+                                <InfoItem icon={<Route className="h-4 w-4" />} label="Lease ID" value={status?.proxy_lease_id || "N/A"} />
+                                <InfoItem icon={<Clock3 className="h-4 w-4" />} label="Lease Expiry" value={status?.proxy_expire_at || "N/A"} />
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Resolved Proxy URL</p>
+                                <p className="mt-2 break-all font-mono text-sm text-slate-700">
+                                    {status?.proxy_url || "No lease returned yet"}
+                                </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Backend Message</p>
+                                <p className="mt-2 text-sm leading-6 text-slate-600">
+                                    {status?.message || "No status available"}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="p-6 space-y-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Operational Notes</p>
+                            <ul className="space-y-3 text-sm leading-6 text-slate-600">
+                                <li>The previous add, delete and static health-check workflow has been retired for downloads.</li>
+                                <li>If probing fails, verify `PROXY_API_ENDPOINT` and `PROXY_API_KEY` on the asset service.</li>
+                                <li>Proxy credentials are masked here on purpose. Actual credentials only stay inside backend services.</li>
+                                <li>Cached parse metadata no longer reuses old leases. A fresh lease is attached every time a task starts.</li>
+                            </ul>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
+        </div>
+    )
+}
+
+function InfoItem({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center gap-2 text-slate-500">
+                {icon}
+                <p className="text-xs uppercase tracking-[0.2em]">{label}</p>
+            </div>
+            <p className="mt-3 break-all text-sm font-medium text-slate-900">{value}</p>
         </div>
     )
 }

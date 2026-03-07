@@ -60,6 +60,10 @@ type StorageConfig struct {
 type ProxyConfig struct {
 	HealthCheckTimeout int    `yaml:"health_check_timeout"` // 健康检查超时（秒）
 	TestURL            string `yaml:"test_url"`             // 测试 URL
+	APIEndpoint        string `yaml:"api_endpoint"`         // 动态代理 API 地址
+	APIKey             string `yaml:"api_key"`              // 动态代理 API 密钥
+	Timeout            int    `yaml:"timeout"`              // 获取代理超时（秒）
+	RetryCount         int    `yaml:"retry_count"`          // 获取代理重试次数
 }
 
 // CookieConfig Cookie 配置
@@ -119,6 +123,18 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.Proxy.TestURL == "" {
 		cfg.Proxy.TestURL = "https://www.google.com"
+	}
+	if proxyAPIEndpoint := os.Getenv("PROXY_API_ENDPOINT"); proxyAPIEndpoint != "" {
+		cfg.Proxy.APIEndpoint = proxyAPIEndpoint
+	}
+	if proxyAPIKey := os.Getenv("PROXY_API_KEY"); proxyAPIKey != "" {
+		cfg.Proxy.APIKey = proxyAPIKey
+	}
+	if cfg.Proxy.Timeout == 0 {
+		cfg.Proxy.Timeout = 5
+	}
+	if cfg.Proxy.RetryCount == 0 {
+		cfg.Proxy.RetryCount = 3
 	}
 
 	// Cookie 默认值

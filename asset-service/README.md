@@ -54,6 +54,13 @@ make run
 - `database`: PostgreSQL连接配置
 - `quota`: 配额策略配置
 - `pagination`: 分页配置
+- `proxy.api_endpoint`: 动态代理 API 地址
+- `proxy.api_key`: 动态代理 API 密钥
+
+运行时也可以直接使用环境变量：
+
+- `PROXY_API_ENDPOINT`
+- `PROXY_API_KEY`
 
 ## 目录结构
 

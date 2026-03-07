@@ -311,30 +311,6 @@ func (s *GRPCServer) GetFileInfo(ctx context.Context, req *pb.GetFileInfoRequest
 
 // ========== 代理管理 ==========
 
-func (s *GRPCServer) CreateProxy(ctx context.Context, req *pb.CreateProxyRequest) (*pb.CreateProxyResponse, error) {
-	return s.proxyHandler.CreateProxy(ctx, req)
-}
-
-func (s *GRPCServer) UpdateProxy(ctx context.Context, req *pb.UpdateProxyRequest) (*pb.UpdateProxyResponse, error) {
-	return s.proxyHandler.UpdateProxy(ctx, req)
-}
-
-func (s *GRPCServer) DeleteProxy(ctx context.Context, req *pb.DeleteProxyRequest) (*pb.DeleteProxyResponse, error) {
-	return s.proxyHandler.DeleteProxy(ctx, req)
-}
-
-func (s *GRPCServer) GetProxy(ctx context.Context, req *pb.GetProxyRequest) (*pb.GetProxyResponse, error) {
-	return s.proxyHandler.GetProxy(ctx, req)
-}
-
-func (s *GRPCServer) ListProxies(ctx context.Context, req *pb.ListProxiesRequest) (*pb.ListProxiesResponse, error) {
-	return s.proxyHandler.ListProxies(ctx, req)
-}
-
-func (s *GRPCServer) CheckProxyHealth(ctx context.Context, req *pb.CheckProxyHealthRequest) (*pb.CheckProxyHealthResponse, error) {
-	return s.proxyHandler.CheckProxyHealth(ctx, req)
-}
-
 func (s *GRPCServer) GetAvailableProxy(ctx context.Context, req *pb.GetAvailableProxyRequest) (*pb.GetAvailableProxyResponse, error) {
 	return s.proxyHandler.GetAvailableProxy(ctx, req)
 }

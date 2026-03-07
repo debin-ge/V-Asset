@@ -13,15 +13,15 @@ import (
 
 // ParseHandler 解析处理器
 type ParseHandler struct {
-	parserClient pb.ParserServiceClient
-	timeout      time.Duration
+	mediaClient pb.MediaServiceClient
+	timeout     time.Duration
 }
 
 // NewParseHandler 创建解析处理器
-func NewParseHandler(parserClient pb.ParserServiceClient, timeout time.Duration) *ParseHandler {
+func NewParseHandler(mediaClient pb.MediaServiceClient, timeout time.Duration) *ParseHandler {
 	return &ParseHandler{
-		parserClient: parserClient,
-		timeout:      timeout,
+		mediaClient: mediaClient,
+		timeout:     timeout,
 	}
 }
 
@@ -36,7 +36,7 @@ func (h *ParseHandler) ParseURL(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
-	resp, err := h.parserClient.ParseURL(ctx, &pb.ParseURLRequest{
+	resp, err := h.mediaClient.ParseURL(ctx, &pb.ParseURLRequest{
 		Url:       req.URL,
 		SkipCache: req.SkipCache,
 	})

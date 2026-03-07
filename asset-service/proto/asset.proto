@@ -27,18 +27,6 @@ service AssetService {
   rpc CreateHistory(CreateHistoryRequest) returns (CreateHistoryResponse);
 
   // ========== 代理管理 ==========
-  // 创建代理
-  rpc CreateProxy(CreateProxyRequest) returns (CreateProxyResponse);
-  // 更新代理
-  rpc UpdateProxy(UpdateProxyRequest) returns (UpdateProxyResponse);
-  // 删除代理
-  rpc DeleteProxy(DeleteProxyRequest) returns (DeleteProxyResponse);
-  // 获取代理
-  rpc GetProxy(GetProxyRequest) returns (GetProxyResponse);
-  // 列表代理
-  rpc ListProxies(ListProxiesRequest) returns (ListProxiesResponse);
-  // 检查代理健康
-  rpc CheckProxyHealth(CheckProxyHealthRequest) returns (CheckProxyHealthResponse);
   // 获取可用代理（供其他服务调用）
   rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
   // 报告代理使用结果
@@ -191,100 +179,6 @@ message CreateHistoryResponse {
 
 // ========== 代理管理消息 ==========
 
-// 代理信息
-message ProxyInfo {
-  int64 id = 1;
-  string ip = 2;
-  int32 port = 3;
-  string username = 4;
-  string password = 5;
-  string protocol = 6;      // http/https/socks5
-  string region = 7;
-  int32 status = 8;         // 0=active, 1=inactive, 2=checking
-  string last_check_at = 9;
-  string last_check_result = 10;
-  int32 success_count = 11;
-  int32 fail_count = 12;
-  string last_used_at = 13;
-  string created_at = 14;
-  string updated_at = 15;
-}
-
-// 创建代理
-message CreateProxyRequest {
-  string ip = 1;
-  int32 port = 2;
-  string username = 3;      // 可选
-  string password = 4;      // 可选
-  string protocol = 5;      // 可选，默认 http
-  string region = 6;        // 可选
-  bool check_health = 7;    // 是否立即检查健康状态
-}
-
-message CreateProxyResponse {
-  int64 id = 1;
-  bool health_check_passed = 2;  // 健康检查是否通过
-  string health_check_error = 3; // 健康检查错误信息
-}
-
-// 更新代理
-message UpdateProxyRequest {
-  int64 id = 1;
-  string username = 2;
-  string password = 3;
-  string protocol = 4;
-  string region = 5;
-}
-
-message UpdateProxyResponse {
-  bool success = 1;
-}
-
-// 删除代理
-message DeleteProxyRequest {
-  int64 id = 1;
-}
-
-message DeleteProxyResponse {
-  bool success = 1;
-}
-
-// 获取代理
-message GetProxyRequest {
-  int64 id = 1;
-}
-
-message GetProxyResponse {
-  ProxyInfo proxy = 1;
-}
-
-// 列表代理
-message ListProxiesRequest {
-  int32 status = 1;         // 可选：状态过滤
-  string protocol = 2;      // 可选：协议过滤
-  string region = 3;        // 可选：地区过滤
-  int32 page = 4;
-  int32 page_size = 5;
-}
-
-message ListProxiesResponse {
-  int64 total = 1;
-  int32 page = 2;
-  int32 page_size = 3;
-  repeated ProxyInfo items = 4;
-}
-
-// 健康检查
-message CheckProxyHealthRequest {
-  int64 id = 1;
-}
-
-message CheckProxyHealthResponse {
-  bool healthy = 1;
-  string error = 2;
-  int64 latency_ms = 3;     // 延迟毫秒
-}
-
 // 获取可用代理
 message GetAvailableProxyRequest {
   string protocol = 1;      // 可选：协议过滤
@@ -292,13 +186,14 @@ message GetAvailableProxyRequest {
 }
 
 message GetAvailableProxyResponse {
-  string proxy_url = 1;     // 代理完整 URL
-  int64 proxy_id = 2;       // 代理 ID（用于上报）
+  string proxy_url = 1;          // 代理完整 URL
+  string proxy_lease_id = 2;     // 动态代理租约 ID
+  string expire_at = 3;          // 代理过期时间（RFC3339，可选）
 }
 
 // 报告代理使用结果
 message ReportProxyUsageRequest {
-  int64 proxy_id = 1;
+  string proxy_lease_id = 1;
   bool success = 2;
 }
 

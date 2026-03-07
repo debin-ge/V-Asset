@@ -18,7 +18,7 @@
 - Redis (localhost:6379)
 - RabbitMQ (localhost:5672)
 - Auth Service (localhost:9001)
-- Parser Service (localhost:9002)
+- Media Service (localhost:9002)
 - Asset Service (localhost:9004)
 
 ### 编译运行

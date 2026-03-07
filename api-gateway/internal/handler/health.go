@@ -79,12 +79,12 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 		allHealthy = false
 	}
 
-	// 检查 Parser Service
-	_, err = h.grpcClients.ParserClient.ValidateURL(ctx, &pb.ValidateURLRequest{Url: "test"})
+	// 检查 Media Service
+	_, err = h.grpcClients.MediaClient.ValidateURL(ctx, &pb.ValidateURLRequest{Url: "test"})
 	if isReachableGRPCError(err) {
-		dependencies["parser_service"] = "healthy"
+		dependencies["media_service"] = "healthy"
 	} else {
-		dependencies["parser_service"] = "unhealthy"
+		dependencies["media_service"] = "unhealthy"
 		allHealthy = false
 	}
 

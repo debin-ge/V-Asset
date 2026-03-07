@@ -31,10 +31,10 @@ type ServerConfig struct {
 
 // GRPCConfig gRPC 服务配置
 type GRPCConfig struct {
-	AuthService   string        `yaml:"auth_service"`
-	ParserService string        `yaml:"parser_service"`
-	AssetService  string        `yaml:"asset_service"`
-	Timeout       time.Duration `yaml:"timeout"`
+	AuthService  string        `yaml:"auth_service"`
+	MediaService string        `yaml:"media_service"`
+	AssetService string        `yaml:"asset_service"`
+	Timeout      time.Duration `yaml:"timeout"`
 }
 
 // RedisConfig Redis 配置
@@ -97,8 +97,8 @@ func LoadConfig(configPath string) (*Config, error) {
 	if authAddr := os.Getenv("AUTH_SERVICE_ADDR"); authAddr != "" {
 		cfg.GRPC.AuthService = authAddr
 	}
-	if parserAddr := os.Getenv("PARSER_SERVICE_ADDR"); parserAddr != "" {
-		cfg.GRPC.ParserService = parserAddr
+	if mediaAddr := os.Getenv("MEDIA_SERVICE_ADDR"); mediaAddr != "" {
+		cfg.GRPC.MediaService = mediaAddr
 	}
 	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
 		cfg.GRPC.AssetService = assetAddr

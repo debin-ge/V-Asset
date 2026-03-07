@@ -15,17 +15,19 @@ import (
 
 // DownloadTask 下载任务消息
 type DownloadTask struct {
-	TaskID    string `json:"task_id"`
-	UserID    string `json:"user_id"`
-	HistoryID int64  `json:"history_id"`
-	URL       string `json:"url"`
-	Mode      string `json:"mode"`    // quick_download, archive
-	Quality   string `json:"quality"` // 1080p, 720p, etc.
-	Format    string `json:"format"`  // mp4, webm
-	Platform  string `json:"platform"`
-	Title     string `json:"title"`
-	CookieID  int64  `json:"cookie_id"` // parser 使用的 cookie ID
-	ProxyURL  string `json:"proxy_url"` // parser 使用的 proxy URL
+	TaskID        string `json:"task_id"`
+	UserID        string `json:"user_id"`
+	HistoryID     int64  `json:"history_id"`
+	URL           string `json:"url"`
+	Mode          string `json:"mode"`    // quick_download, archive
+	Quality       string `json:"quality"` // 1080p, 720p, etc.
+	Format        string `json:"format"`  // mp4, webm
+	Platform      string `json:"platform"`
+	Title         string `json:"title"`
+	CookieID      int64  `json:"cookie_id"`       // parser 使用的 cookie ID
+	ProxyURL      string `json:"proxy_url"`       // parser 使用的 proxy URL
+	ProxyLeaseID  string `json:"proxy_lease_id"`  // parser 使用的动态代理租约 ID
+	ProxyExpireAt string `json:"proxy_expire_at"` // parser 获取到的代理过期时间
 }
 
 // Publisher RabbitMQ 发布器

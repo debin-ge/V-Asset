@@ -27,6 +27,10 @@ storage:
 proxy:
   health_check_timeout: 10    # 健康检查超时（秒）
   test_url: "https://www.google.com"  # 测试 URL
+  api_endpoint: ""            # 动态代理 API 地址
+  api_key: ""                 # 动态代理 API 密钥
+  timeout: 5                  # 获取代理超时（秒）
+  retry_count: 3              # 获取代理重试次数
 
 cookie:
   default_freeze_seconds: 60  # 使用后默认冷冻时间（秒）

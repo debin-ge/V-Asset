@@ -1,0 +1,121 @@
+server:
+  port: 9002
+
+# 解析与进度推送共用 Redis
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  pool_size: 50
+
+# 解析配置
+cache:
+  ttl: 3600
+  max_size: 10000
+
+platforms:
+  youtube:
+    enabled: true
+    cookie_file: ""
+    extra_args:
+      - "--user-agent"
+      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+      - "--sleep-requests"
+      - "1"
+      - "--sleep-interval"
+      - "5"
+  bilibili:
+    enabled: true
+    cookie_file: ""
+    extra_args:
+      - "--extractor-args"
+      - "bilibili:referer=https://www.bilibili.com"
+  tiktok:
+    enabled: true
+    cookie_file: ""
+    extra_args:
+      - "--extractor-args"
+      - "tiktok:api_hostname=api22-normal-c-alisg.tiktokv.com"
+  generic:
+    enabled: true
+
+# 下载配置
+database:
+  host: localhost
+  port: 5432
+  user: vasset
+  password: password
+  dbname: vasset
+  sslmode: disable
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: 3600s
+
+rabbitmq:
+  url: "amqp://guest:guest@localhost:5672/"
+  queue: "vasset.download.queue"
+  prefetch_count: 5
+
+worker:
+  pool_size: 10
+  max_concurrent: 10
+
+ytdlp:
+  binary_path: "/usr/local/bin/yt-dlp"
+  timeout: 1800
+  max_concurrent: 10
+  concurrent_fragments: 3
+  cookies_dir: "/etc/vasset/cookies"
+  proxy: ""
+  default_args:
+    - "--no-playlist"
+    - "--no-warnings"
+    - "--ignore-errors"
+    - "--no-check-certificates"
+    - "--retries"
+    - "10"
+    - "--fragment-retries"
+    - "10"
+    - "--retry-sleep"
+    - "linear=1::2"
+    - "--js-runtimes"
+    - "node"
+  platform_args:
+    youtube:
+      - "--user-agent"
+      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+      - "--sleep-requests"
+      - "1"
+    bilibili:
+      - "--extractor-args"
+      - "bilibili:referer=https://www.bilibili.com"
+    tiktok:
+      - "--extractor-args"
+      - "tiktok:api_hostname=api22-normal-c-alisg.tiktokv.com"
+
+# 周期检测 yt-dlp 版本（默认仅检测，不自动升级）
+ytdlp_update:
+  enabled: true
+  interval_hours: 6
+  timeout_seconds: 30
+  auto_update: false
+
+storage:
+  base_path: "/data/vasset"
+  tmp_ttl: 86400
+
+cleanup:
+  enabled: true
+  interval: 3600
+  batch_size: 100
+
+retry:
+  max_attempts: 3
+  initial_interval: 60
+  max_interval: 3600
+
+asset_service:
+  addr: "vasset-asset:9004"
+  timeout: 30
+  enable_cookies: true
+  cookie_temp_dir: "/tmp/media-cookies"

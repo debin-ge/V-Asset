@@ -1184,865 +1184,6 @@ func (x *CreateHistoryResponse) GetHistoryId() int64 {
 	return 0
 }
 
-// 代理信息
-type ProxyInfo struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Id              int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Ip              string                 `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
-	Port            int32                  `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitempty"`
-	Username        string                 `protobuf:"bytes,4,opt,name=username,proto3" json:"username,omitempty"`
-	Password        string                 `protobuf:"bytes,5,opt,name=password,proto3" json:"password,omitempty"`
-	Protocol        string                 `protobuf:"bytes,6,opt,name=protocol,proto3" json:"protocol,omitempty"` // http/https/socks5
-	Region          string                 `protobuf:"bytes,7,opt,name=region,proto3" json:"region,omitempty"`
-	Status          int32                  `protobuf:"varint,8,opt,name=status,proto3" json:"status,omitempty"` // 0=active, 1=inactive, 2=checking
-	LastCheckAt     string                 `protobuf:"bytes,9,opt,name=last_check_at,json=lastCheckAt,proto3" json:"last_check_at,omitempty"`
-	LastCheckResult string                 `protobuf:"bytes,10,opt,name=last_check_result,json=lastCheckResult,proto3" json:"last_check_result,omitempty"`
-	SuccessCount    int32                  `protobuf:"varint,11,opt,name=success_count,json=successCount,proto3" json:"success_count,omitempty"`
-	FailCount       int32                  `protobuf:"varint,12,opt,name=fail_count,json=failCount,proto3" json:"fail_count,omitempty"`
-	LastUsedAt      string                 `protobuf:"bytes,13,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
-	CreatedAt       string                 `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt       string                 `protobuf:"bytes,15,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *ProxyInfo) Reset() {
-	*x = ProxyInfo{}
-	mi := &file_proto_asset_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ProxyInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ProxyInfo) ProtoMessage() {}
-
-func (x *ProxyInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ProxyInfo.ProtoReflect.Descriptor instead.
-func (*ProxyInfo) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *ProxyInfo) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *ProxyInfo) GetIp() string {
-	if x != nil {
-		return x.Ip
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetPort() int32 {
-	if x != nil {
-		return x.Port
-	}
-	return 0
-}
-
-func (x *ProxyInfo) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetProtocol() string {
-	if x != nil {
-		return x.Protocol
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetRegion() string {
-	if x != nil {
-		return x.Region
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-func (x *ProxyInfo) GetLastCheckAt() string {
-	if x != nil {
-		return x.LastCheckAt
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetLastCheckResult() string {
-	if x != nil {
-		return x.LastCheckResult
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetSuccessCount() int32 {
-	if x != nil {
-		return x.SuccessCount
-	}
-	return 0
-}
-
-func (x *ProxyInfo) GetFailCount() int32 {
-	if x != nil {
-		return x.FailCount
-	}
-	return 0
-}
-
-func (x *ProxyInfo) GetLastUsedAt() string {
-	if x != nil {
-		return x.LastUsedAt
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetCreatedAt() string {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return ""
-}
-
-func (x *ProxyInfo) GetUpdatedAt() string {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return ""
-}
-
-// 创建代理
-type CreateProxyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ip            string                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
-	Port          int32                  `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
-	Username      string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`                           // 可选
-	Password      string                 `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`                           // 可选
-	Protocol      string                 `protobuf:"bytes,5,opt,name=protocol,proto3" json:"protocol,omitempty"`                           // 可选，默认 http
-	Region        string                 `protobuf:"bytes,6,opt,name=region,proto3" json:"region,omitempty"`                               // 可选
-	CheckHealth   bool                   `protobuf:"varint,7,opt,name=check_health,json=checkHealth,proto3" json:"check_health,omitempty"` // 是否立即检查健康状态
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateProxyRequest) Reset() {
-	*x = CreateProxyRequest{}
-	mi := &file_proto_asset_proto_msgTypes[18]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateProxyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateProxyRequest) ProtoMessage() {}
-
-func (x *CreateProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[18]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateProxyRequest.ProtoReflect.Descriptor instead.
-func (*CreateProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{18}
-}
-
-func (x *CreateProxyRequest) GetIp() string {
-	if x != nil {
-		return x.Ip
-	}
-	return ""
-}
-
-func (x *CreateProxyRequest) GetPort() int32 {
-	if x != nil {
-		return x.Port
-	}
-	return 0
-}
-
-func (x *CreateProxyRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *CreateProxyRequest) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *CreateProxyRequest) GetProtocol() string {
-	if x != nil {
-		return x.Protocol
-	}
-	return ""
-}
-
-func (x *CreateProxyRequest) GetRegion() string {
-	if x != nil {
-		return x.Region
-	}
-	return ""
-}
-
-func (x *CreateProxyRequest) GetCheckHealth() bool {
-	if x != nil {
-		return x.CheckHealth
-	}
-	return false
-}
-
-type CreateProxyResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	HealthCheckPassed bool                   `protobuf:"varint,2,opt,name=health_check_passed,json=healthCheckPassed,proto3" json:"health_check_passed,omitempty"` // 健康检查是否通过
-	HealthCheckError  string                 `protobuf:"bytes,3,opt,name=health_check_error,json=healthCheckError,proto3" json:"health_check_error,omitempty"`     // 健康检查错误信息
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *CreateProxyResponse) Reset() {
-	*x = CreateProxyResponse{}
-	mi := &file_proto_asset_proto_msgTypes[19]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateProxyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateProxyResponse) ProtoMessage() {}
-
-func (x *CreateProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[19]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateProxyResponse.ProtoReflect.Descriptor instead.
-func (*CreateProxyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *CreateProxyResponse) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *CreateProxyResponse) GetHealthCheckPassed() bool {
-	if x != nil {
-		return x.HealthCheckPassed
-	}
-	return false
-}
-
-func (x *CreateProxyResponse) GetHealthCheckError() string {
-	if x != nil {
-		return x.HealthCheckError
-	}
-	return ""
-}
-
-// 更新代理
-type UpdateProxyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-	Protocol      string                 `protobuf:"bytes,4,opt,name=protocol,proto3" json:"protocol,omitempty"`
-	Region        string                 `protobuf:"bytes,5,opt,name=region,proto3" json:"region,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateProxyRequest) Reset() {
-	*x = UpdateProxyRequest{}
-	mi := &file_proto_asset_proto_msgTypes[20]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateProxyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateProxyRequest) ProtoMessage() {}
-
-func (x *UpdateProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[20]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateProxyRequest.ProtoReflect.Descriptor instead.
-func (*UpdateProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{20}
-}
-
-func (x *UpdateProxyRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *UpdateProxyRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *UpdateProxyRequest) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *UpdateProxyRequest) GetProtocol() string {
-	if x != nil {
-		return x.Protocol
-	}
-	return ""
-}
-
-func (x *UpdateProxyRequest) GetRegion() string {
-	if x != nil {
-		return x.Region
-	}
-	return ""
-}
-
-type UpdateProxyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateProxyResponse) Reset() {
-	*x = UpdateProxyResponse{}
-	mi := &file_proto_asset_proto_msgTypes[21]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateProxyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateProxyResponse) ProtoMessage() {}
-
-func (x *UpdateProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[21]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateProxyResponse.ProtoReflect.Descriptor instead.
-func (*UpdateProxyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *UpdateProxyResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-// 删除代理
-type DeleteProxyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteProxyRequest) Reset() {
-	*x = DeleteProxyRequest{}
-	mi := &file_proto_asset_proto_msgTypes[22]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteProxyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteProxyRequest) ProtoMessage() {}
-
-func (x *DeleteProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[22]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteProxyRequest.ProtoReflect.Descriptor instead.
-func (*DeleteProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{22}
-}
-
-func (x *DeleteProxyRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type DeleteProxyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteProxyResponse) Reset() {
-	*x = DeleteProxyResponse{}
-	mi := &file_proto_asset_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteProxyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteProxyResponse) ProtoMessage() {}
-
-func (x *DeleteProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteProxyResponse.ProtoReflect.Descriptor instead.
-func (*DeleteProxyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *DeleteProxyResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-// 获取代理
-type GetProxyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetProxyRequest) Reset() {
-	*x = GetProxyRequest{}
-	mi := &file_proto_asset_proto_msgTypes[24]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetProxyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetProxyRequest) ProtoMessage() {}
-
-func (x *GetProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[24]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetProxyRequest.ProtoReflect.Descriptor instead.
-func (*GetProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *GetProxyRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type GetProxyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Proxy         *ProxyInfo             `protobuf:"bytes,1,opt,name=proxy,proto3" json:"proxy,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetProxyResponse) Reset() {
-	*x = GetProxyResponse{}
-	mi := &file_proto_asset_proto_msgTypes[25]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetProxyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetProxyResponse) ProtoMessage() {}
-
-func (x *GetProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[25]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetProxyResponse.ProtoReflect.Descriptor instead.
-func (*GetProxyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{25}
-}
-
-func (x *GetProxyResponse) GetProxy() *ProxyInfo {
-	if x != nil {
-		return x.Proxy
-	}
-	return nil
-}
-
-// 列表代理
-type ListProxiesRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        int32                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`    // 可选：状态过滤
-	Protocol      string                 `protobuf:"bytes,2,opt,name=protocol,proto3" json:"protocol,omitempty"` // 可选：协议过滤
-	Region        string                 `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"`     // 可选：地区过滤
-	Page          int32                  `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,5,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListProxiesRequest) Reset() {
-	*x = ListProxiesRequest{}
-	mi := &file_proto_asset_proto_msgTypes[26]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListProxiesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListProxiesRequest) ProtoMessage() {}
-
-func (x *ListProxiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[26]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListProxiesRequest.ProtoReflect.Descriptor instead.
-func (*ListProxiesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{26}
-}
-
-func (x *ListProxiesRequest) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-func (x *ListProxiesRequest) GetProtocol() string {
-	if x != nil {
-		return x.Protocol
-	}
-	return ""
-}
-
-func (x *ListProxiesRequest) GetRegion() string {
-	if x != nil {
-		return x.Region
-	}
-	return ""
-}
-
-func (x *ListProxiesRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *ListProxiesRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-type ListProxiesResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Total         int64                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	Items         []*ProxyInfo           `protobuf:"bytes,4,rep,name=items,proto3" json:"items,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListProxiesResponse) Reset() {
-	*x = ListProxiesResponse{}
-	mi := &file_proto_asset_proto_msgTypes[27]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListProxiesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListProxiesResponse) ProtoMessage() {}
-
-func (x *ListProxiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[27]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListProxiesResponse.ProtoReflect.Descriptor instead.
-func (*ListProxiesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{27}
-}
-
-func (x *ListProxiesResponse) GetTotal() int64 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
-func (x *ListProxiesResponse) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *ListProxiesResponse) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-func (x *ListProxiesResponse) GetItems() []*ProxyInfo {
-	if x != nil {
-		return x.Items
-	}
-	return nil
-}
-
-// 健康检查
-type CheckProxyHealthRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CheckProxyHealthRequest) Reset() {
-	*x = CheckProxyHealthRequest{}
-	mi := &file_proto_asset_proto_msgTypes[28]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CheckProxyHealthRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CheckProxyHealthRequest) ProtoMessage() {}
-
-func (x *CheckProxyHealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[28]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CheckProxyHealthRequest.ProtoReflect.Descriptor instead.
-func (*CheckProxyHealthRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{28}
-}
-
-func (x *CheckProxyHealthRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type CheckProxyHealthResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Healthy       bool                   `protobuf:"varint,1,opt,name=healthy,proto3" json:"healthy,omitempty"`
-	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	LatencyMs     int64                  `protobuf:"varint,3,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"` // 延迟毫秒
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CheckProxyHealthResponse) Reset() {
-	*x = CheckProxyHealthResponse{}
-	mi := &file_proto_asset_proto_msgTypes[29]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CheckProxyHealthResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CheckProxyHealthResponse) ProtoMessage() {}
-
-func (x *CheckProxyHealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[29]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CheckProxyHealthResponse.ProtoReflect.Descriptor instead.
-func (*CheckProxyHealthResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{29}
-}
-
-func (x *CheckProxyHealthResponse) GetHealthy() bool {
-	if x != nil {
-		return x.Healthy
-	}
-	return false
-}
-
-func (x *CheckProxyHealthResponse) GetError() string {
-	if x != nil {
-		return x.Error
-	}
-	return ""
-}
-
-func (x *CheckProxyHealthResponse) GetLatencyMs() int64 {
-	if x != nil {
-		return x.LatencyMs
-	}
-	return 0
-}
-
 // 获取可用代理
 type GetAvailableProxyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -2054,7 +1195,7 @@ type GetAvailableProxyRequest struct {
 
 func (x *GetAvailableProxyRequest) Reset() {
 	*x = GetAvailableProxyRequest{}
-	mi := &file_proto_asset_proto_msgTypes[30]
+	mi := &file_proto_asset_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2066,7 +1207,7 @@ func (x *GetAvailableProxyRequest) String() string {
 func (*GetAvailableProxyRequest) ProtoMessage() {}
 
 func (x *GetAvailableProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[30]
+	mi := &file_proto_asset_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2079,7 +1220,7 @@ func (x *GetAvailableProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableProxyRequest.ProtoReflect.Descriptor instead.
 func (*GetAvailableProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{30}
+	return file_proto_asset_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetAvailableProxyRequest) GetProtocol() string {
@@ -2098,15 +1239,16 @@ func (x *GetAvailableProxyRequest) GetRegion() string {
 
 type GetAvailableProxyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProxyUrl      string                 `protobuf:"bytes,1,opt,name=proxy_url,json=proxyUrl,proto3" json:"proxy_url,omitempty"` // 代理完整 URL
-	ProxyId       int64                  `protobuf:"varint,2,opt,name=proxy_id,json=proxyId,proto3" json:"proxy_id,omitempty"`   // 代理 ID（用于上报）
+	ProxyUrl      string                 `protobuf:"bytes,1,opt,name=proxy_url,json=proxyUrl,proto3" json:"proxy_url,omitempty"`               // 代理完整 URL
+	ProxyLeaseId  string                 `protobuf:"bytes,2,opt,name=proxy_lease_id,json=proxyLeaseId,proto3" json:"proxy_lease_id,omitempty"` // 动态代理租约 ID
+	ExpireAt      string                 `protobuf:"bytes,3,opt,name=expire_at,json=expireAt,proto3" json:"expire_at,omitempty"`               // 代理过期时间（RFC3339，可选）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetAvailableProxyResponse) Reset() {
 	*x = GetAvailableProxyResponse{}
-	mi := &file_proto_asset_proto_msgTypes[31]
+	mi := &file_proto_asset_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2118,7 +1260,7 @@ func (x *GetAvailableProxyResponse) String() string {
 func (*GetAvailableProxyResponse) ProtoMessage() {}
 
 func (x *GetAvailableProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[31]
+	mi := &file_proto_asset_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2131,7 +1273,7 @@ func (x *GetAvailableProxyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableProxyResponse.ProtoReflect.Descriptor instead.
 func (*GetAvailableProxyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{31}
+	return file_proto_asset_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetAvailableProxyResponse) GetProxyUrl() string {
@@ -2141,17 +1283,24 @@ func (x *GetAvailableProxyResponse) GetProxyUrl() string {
 	return ""
 }
 
-func (x *GetAvailableProxyResponse) GetProxyId() int64 {
+func (x *GetAvailableProxyResponse) GetProxyLeaseId() string {
 	if x != nil {
-		return x.ProxyId
+		return x.ProxyLeaseId
 	}
-	return 0
+	return ""
+}
+
+func (x *GetAvailableProxyResponse) GetExpireAt() string {
+	if x != nil {
+		return x.ExpireAt
+	}
+	return ""
 }
 
 // 报告代理使用结果
 type ReportProxyUsageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProxyId       int64                  `protobuf:"varint,1,opt,name=proxy_id,json=proxyId,proto3" json:"proxy_id,omitempty"`
+	ProxyLeaseId  string                 `protobuf:"bytes,1,opt,name=proxy_lease_id,json=proxyLeaseId,proto3" json:"proxy_lease_id,omitempty"`
 	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2159,7 +1308,7 @@ type ReportProxyUsageRequest struct {
 
 func (x *ReportProxyUsageRequest) Reset() {
 	*x = ReportProxyUsageRequest{}
-	mi := &file_proto_asset_proto_msgTypes[32]
+	mi := &file_proto_asset_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2171,7 +1320,7 @@ func (x *ReportProxyUsageRequest) String() string {
 func (*ReportProxyUsageRequest) ProtoMessage() {}
 
 func (x *ReportProxyUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[32]
+	mi := &file_proto_asset_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2184,14 +1333,14 @@ func (x *ReportProxyUsageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportProxyUsageRequest.ProtoReflect.Descriptor instead.
 func (*ReportProxyUsageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{32}
+	return file_proto_asset_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *ReportProxyUsageRequest) GetProxyId() int64 {
+func (x *ReportProxyUsageRequest) GetProxyLeaseId() string {
 	if x != nil {
-		return x.ProxyId
+		return x.ProxyLeaseId
 	}
-	return 0
+	return ""
 }
 
 func (x *ReportProxyUsageRequest) GetSuccess() bool {
@@ -2210,7 +1359,7 @@ type ReportProxyUsageResponse struct {
 
 func (x *ReportProxyUsageResponse) Reset() {
 	*x = ReportProxyUsageResponse{}
-	mi := &file_proto_asset_proto_msgTypes[33]
+	mi := &file_proto_asset_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2222,7 +1371,7 @@ func (x *ReportProxyUsageResponse) String() string {
 func (*ReportProxyUsageResponse) ProtoMessage() {}
 
 func (x *ReportProxyUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[33]
+	mi := &file_proto_asset_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2235,7 +1384,7 @@ func (x *ReportProxyUsageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportProxyUsageResponse.ProtoReflect.Descriptor instead.
 func (*ReportProxyUsageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{33}
+	return file_proto_asset_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ReportProxyUsageResponse) GetSuccess() bool {
@@ -2268,7 +1417,7 @@ type CookieInfo struct {
 
 func (x *CookieInfo) Reset() {
 	*x = CookieInfo{}
-	mi := &file_proto_asset_proto_msgTypes[34]
+	mi := &file_proto_asset_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2280,7 +1429,7 @@ func (x *CookieInfo) String() string {
 func (*CookieInfo) ProtoMessage() {}
 
 func (x *CookieInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[34]
+	mi := &file_proto_asset_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2293,7 +1442,7 @@ func (x *CookieInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CookieInfo.ProtoReflect.Descriptor instead.
 func (*CookieInfo) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{34}
+	return file_proto_asset_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CookieInfo) GetId() int64 {
@@ -2408,7 +1557,7 @@ type CreateCookieRequest struct {
 
 func (x *CreateCookieRequest) Reset() {
 	*x = CreateCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[35]
+	mi := &file_proto_asset_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2420,7 +1569,7 @@ func (x *CreateCookieRequest) String() string {
 func (*CreateCookieRequest) ProtoMessage() {}
 
 func (x *CreateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[35]
+	mi := &file_proto_asset_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2433,7 +1582,7 @@ func (x *CreateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCookieRequest.ProtoReflect.Descriptor instead.
 func (*CreateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{35}
+	return file_proto_asset_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateCookieRequest) GetPlatform() string {
@@ -2480,7 +1629,7 @@ type CreateCookieResponse struct {
 
 func (x *CreateCookieResponse) Reset() {
 	*x = CreateCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[36]
+	mi := &file_proto_asset_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2492,7 +1641,7 @@ func (x *CreateCookieResponse) String() string {
 func (*CreateCookieResponse) ProtoMessage() {}
 
 func (x *CreateCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[36]
+	mi := &file_proto_asset_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2505,7 +1654,7 @@ func (x *CreateCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCookieResponse.ProtoReflect.Descriptor instead.
 func (*CreateCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{36}
+	return file_proto_asset_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateCookieResponse) GetId() int64 {
@@ -2529,7 +1678,7 @@ type UpdateCookieRequest struct {
 
 func (x *UpdateCookieRequest) Reset() {
 	*x = UpdateCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[37]
+	mi := &file_proto_asset_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2541,7 +1690,7 @@ func (x *UpdateCookieRequest) String() string {
 func (*UpdateCookieRequest) ProtoMessage() {}
 
 func (x *UpdateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[37]
+	mi := &file_proto_asset_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2554,7 +1703,7 @@ func (x *UpdateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCookieRequest.ProtoReflect.Descriptor instead.
 func (*UpdateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{37}
+	return file_proto_asset_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *UpdateCookieRequest) GetId() int64 {
@@ -2601,7 +1750,7 @@ type UpdateCookieResponse struct {
 
 func (x *UpdateCookieResponse) Reset() {
 	*x = UpdateCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[38]
+	mi := &file_proto_asset_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2613,7 +1762,7 @@ func (x *UpdateCookieResponse) String() string {
 func (*UpdateCookieResponse) ProtoMessage() {}
 
 func (x *UpdateCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[38]
+	mi := &file_proto_asset_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2626,7 +1775,7 @@ func (x *UpdateCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCookieResponse.ProtoReflect.Descriptor instead.
 func (*UpdateCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{38}
+	return file_proto_asset_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UpdateCookieResponse) GetSuccess() bool {
@@ -2646,7 +1795,7 @@ type DeleteCookieRequest struct {
 
 func (x *DeleteCookieRequest) Reset() {
 	*x = DeleteCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[39]
+	mi := &file_proto_asset_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2658,7 +1807,7 @@ func (x *DeleteCookieRequest) String() string {
 func (*DeleteCookieRequest) ProtoMessage() {}
 
 func (x *DeleteCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[39]
+	mi := &file_proto_asset_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2671,7 +1820,7 @@ func (x *DeleteCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCookieRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{39}
+	return file_proto_asset_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DeleteCookieRequest) GetId() int64 {
@@ -2690,7 +1839,7 @@ type DeleteCookieResponse struct {
 
 func (x *DeleteCookieResponse) Reset() {
 	*x = DeleteCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[40]
+	mi := &file_proto_asset_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2702,7 +1851,7 @@ func (x *DeleteCookieResponse) String() string {
 func (*DeleteCookieResponse) ProtoMessage() {}
 
 func (x *DeleteCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[40]
+	mi := &file_proto_asset_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2715,7 +1864,7 @@ func (x *DeleteCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCookieResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{40}
+	return file_proto_asset_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DeleteCookieResponse) GetSuccess() bool {
@@ -2735,7 +1884,7 @@ type GetCookieRequest struct {
 
 func (x *GetCookieRequest) Reset() {
 	*x = GetCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[41]
+	mi := &file_proto_asset_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2747,7 +1896,7 @@ func (x *GetCookieRequest) String() string {
 func (*GetCookieRequest) ProtoMessage() {}
 
 func (x *GetCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[41]
+	mi := &file_proto_asset_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2760,7 +1909,7 @@ func (x *GetCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCookieRequest.ProtoReflect.Descriptor instead.
 func (*GetCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{41}
+	return file_proto_asset_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetCookieRequest) GetId() int64 {
@@ -2779,7 +1928,7 @@ type GetCookieResponse struct {
 
 func (x *GetCookieResponse) Reset() {
 	*x = GetCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[42]
+	mi := &file_proto_asset_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2791,7 +1940,7 @@ func (x *GetCookieResponse) String() string {
 func (*GetCookieResponse) ProtoMessage() {}
 
 func (x *GetCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[42]
+	mi := &file_proto_asset_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2804,7 +1953,7 @@ func (x *GetCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCookieResponse.ProtoReflect.Descriptor instead.
 func (*GetCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{42}
+	return file_proto_asset_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *GetCookieResponse) GetCookie() *CookieInfo {
@@ -2827,7 +1976,7 @@ type ListCookiesRequest struct {
 
 func (x *ListCookiesRequest) Reset() {
 	*x = ListCookiesRequest{}
-	mi := &file_proto_asset_proto_msgTypes[43]
+	mi := &file_proto_asset_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2839,7 +1988,7 @@ func (x *ListCookiesRequest) String() string {
 func (*ListCookiesRequest) ProtoMessage() {}
 
 func (x *ListCookiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[43]
+	mi := &file_proto_asset_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2852,7 +2001,7 @@ func (x *ListCookiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCookiesRequest.ProtoReflect.Descriptor instead.
 func (*ListCookiesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{43}
+	return file_proto_asset_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ListCookiesRequest) GetPlatform() string {
@@ -2895,7 +2044,7 @@ type ListCookiesResponse struct {
 
 func (x *ListCookiesResponse) Reset() {
 	*x = ListCookiesResponse{}
-	mi := &file_proto_asset_proto_msgTypes[44]
+	mi := &file_proto_asset_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2907,7 +2056,7 @@ func (x *ListCookiesResponse) String() string {
 func (*ListCookiesResponse) ProtoMessage() {}
 
 func (x *ListCookiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[44]
+	mi := &file_proto_asset_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2920,7 +2069,7 @@ func (x *ListCookiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCookiesResponse.ProtoReflect.Descriptor instead.
 func (*ListCookiesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{44}
+	return file_proto_asset_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ListCookiesResponse) GetTotal() int64 {
@@ -2961,7 +2110,7 @@ type GetAvailableCookieRequest struct {
 
 func (x *GetAvailableCookieRequest) Reset() {
 	*x = GetAvailableCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[45]
+	mi := &file_proto_asset_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2973,7 +2122,7 @@ func (x *GetAvailableCookieRequest) String() string {
 func (*GetAvailableCookieRequest) ProtoMessage() {}
 
 func (x *GetAvailableCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[45]
+	mi := &file_proto_asset_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2986,7 +2135,7 @@ func (x *GetAvailableCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableCookieRequest.ProtoReflect.Descriptor instead.
 func (*GetAvailableCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{45}
+	return file_proto_asset_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *GetAvailableCookieRequest) GetPlatform() string {
@@ -3006,7 +2155,7 @@ type GetAvailableCookieResponse struct {
 
 func (x *GetAvailableCookieResponse) Reset() {
 	*x = GetAvailableCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[46]
+	mi := &file_proto_asset_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3018,7 +2167,7 @@ func (x *GetAvailableCookieResponse) String() string {
 func (*GetAvailableCookieResponse) ProtoMessage() {}
 
 func (x *GetAvailableCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[46]
+	mi := &file_proto_asset_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3031,7 +2180,7 @@ func (x *GetAvailableCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableCookieResponse.ProtoReflect.Descriptor instead.
 func (*GetAvailableCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{46}
+	return file_proto_asset_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetAvailableCookieResponse) GetCookieId() int64 {
@@ -3059,7 +2208,7 @@ type ReportCookieUsageRequest struct {
 
 func (x *ReportCookieUsageRequest) Reset() {
 	*x = ReportCookieUsageRequest{}
-	mi := &file_proto_asset_proto_msgTypes[47]
+	mi := &file_proto_asset_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3071,7 +2220,7 @@ func (x *ReportCookieUsageRequest) String() string {
 func (*ReportCookieUsageRequest) ProtoMessage() {}
 
 func (x *ReportCookieUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[47]
+	mi := &file_proto_asset_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3084,7 +2233,7 @@ func (x *ReportCookieUsageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCookieUsageRequest.ProtoReflect.Descriptor instead.
 func (*ReportCookieUsageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{47}
+	return file_proto_asset_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ReportCookieUsageRequest) GetCookieId() int64 {
@@ -3110,7 +2259,7 @@ type ReportCookieUsageResponse struct {
 
 func (x *ReportCookieUsageResponse) Reset() {
 	*x = ReportCookieUsageResponse{}
-	mi := &file_proto_asset_proto_msgTypes[48]
+	mi := &file_proto_asset_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3122,7 +2271,7 @@ func (x *ReportCookieUsageResponse) String() string {
 func (*ReportCookieUsageResponse) ProtoMessage() {}
 
 func (x *ReportCookieUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[48]
+	mi := &file_proto_asset_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3135,7 +2284,7 @@ func (x *ReportCookieUsageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCookieUsageResponse.ProtoReflect.Descriptor instead.
 func (*ReportCookieUsageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{48}
+	return file_proto_asset_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ReportCookieUsageResponse) GetSuccess() bool {
@@ -3156,7 +2305,7 @@ type FreezeCookieRequest struct {
 
 func (x *FreezeCookieRequest) Reset() {
 	*x = FreezeCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[49]
+	mi := &file_proto_asset_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3168,7 +2317,7 @@ func (x *FreezeCookieRequest) String() string {
 func (*FreezeCookieRequest) ProtoMessage() {}
 
 func (x *FreezeCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[49]
+	mi := &file_proto_asset_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3181,7 +2330,7 @@ func (x *FreezeCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FreezeCookieRequest.ProtoReflect.Descriptor instead.
 func (*FreezeCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{49}
+	return file_proto_asset_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *FreezeCookieRequest) GetCookieId() int64 {
@@ -3208,7 +2357,7 @@ type FreezeCookieResponse struct {
 
 func (x *FreezeCookieResponse) Reset() {
 	*x = FreezeCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[50]
+	mi := &file_proto_asset_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3220,7 +2369,7 @@ func (x *FreezeCookieResponse) String() string {
 func (*FreezeCookieResponse) ProtoMessage() {}
 
 func (x *FreezeCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[50]
+	mi := &file_proto_asset_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3233,7 +2382,7 @@ func (x *FreezeCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FreezeCookieResponse.ProtoReflect.Descriptor instead.
 func (*FreezeCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{50}
+	return file_proto_asset_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *FreezeCookieResponse) GetSuccess() bool {
@@ -3350,82 +2499,16 @@ const file_proto_asset_proto_rawDesc = "" +
 	" \x01(\tR\x06author\"6\n" +
 	"\x15CreateHistoryResponse\x12\x1d\n" +
 	"\n" +
-	"history_id\x18\x01 \x01(\x03R\thistoryId\"\xb7\x03\n" +
-	"\tProxyInfo\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x0e\n" +
-	"\x02ip\x18\x02 \x01(\tR\x02ip\x12\x12\n" +
-	"\x04port\x18\x03 \x01(\x05R\x04port\x12\x1a\n" +
-	"\busername\x18\x04 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x05 \x01(\tR\bpassword\x12\x1a\n" +
-	"\bprotocol\x18\x06 \x01(\tR\bprotocol\x12\x16\n" +
-	"\x06region\x18\a \x01(\tR\x06region\x12\x16\n" +
-	"\x06status\x18\b \x01(\x05R\x06status\x12\"\n" +
-	"\rlast_check_at\x18\t \x01(\tR\vlastCheckAt\x12*\n" +
-	"\x11last_check_result\x18\n" +
-	" \x01(\tR\x0flastCheckResult\x12#\n" +
-	"\rsuccess_count\x18\v \x01(\x05R\fsuccessCount\x12\x1d\n" +
-	"\n" +
-	"fail_count\x18\f \x01(\x05R\tfailCount\x12 \n" +
-	"\flast_used_at\x18\r \x01(\tR\n" +
-	"lastUsedAt\x12\x1d\n" +
-	"\n" +
-	"created_at\x18\x0e \x01(\tR\tcreatedAt\x12\x1d\n" +
-	"\n" +
-	"updated_at\x18\x0f \x01(\tR\tupdatedAt\"\xc7\x01\n" +
-	"\x12CreateProxyRequest\x12\x0e\n" +
-	"\x02ip\x18\x01 \x01(\tR\x02ip\x12\x12\n" +
-	"\x04port\x18\x02 \x01(\x05R\x04port\x12\x1a\n" +
-	"\busername\x18\x03 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x04 \x01(\tR\bpassword\x12\x1a\n" +
-	"\bprotocol\x18\x05 \x01(\tR\bprotocol\x12\x16\n" +
-	"\x06region\x18\x06 \x01(\tR\x06region\x12!\n" +
-	"\fcheck_health\x18\a \x01(\bR\vcheckHealth\"\x83\x01\n" +
-	"\x13CreateProxyResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12.\n" +
-	"\x13health_check_passed\x18\x02 \x01(\bR\x11healthCheckPassed\x12,\n" +
-	"\x12health_check_error\x18\x03 \x01(\tR\x10healthCheckError\"\x90\x01\n" +
-	"\x12UpdateProxyRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x1a\n" +
-	"\bprotocol\x18\x04 \x01(\tR\bprotocol\x12\x16\n" +
-	"\x06region\x18\x05 \x01(\tR\x06region\"/\n" +
-	"\x13UpdateProxyResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"$\n" +
-	"\x12DeleteProxyRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"/\n" +
-	"\x13DeleteProxyResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"!\n" +
-	"\x0fGetProxyRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\":\n" +
-	"\x10GetProxyResponse\x12&\n" +
-	"\x05proxy\x18\x01 \x01(\v2\x10.asset.ProxyInfoR\x05proxy\"\x91\x01\n" +
-	"\x12ListProxiesRequest\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\x05R\x06status\x12\x1a\n" +
-	"\bprotocol\x18\x02 \x01(\tR\bprotocol\x12\x16\n" +
-	"\x06region\x18\x03 \x01(\tR\x06region\x12\x12\n" +
-	"\x04page\x18\x04 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x05 \x01(\x05R\bpageSize\"\x84\x01\n" +
-	"\x13ListProxiesResponse\x12\x14\n" +
-	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12&\n" +
-	"\x05items\x18\x04 \x03(\v2\x10.asset.ProxyInfoR\x05items\")\n" +
-	"\x17CheckProxyHealthRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"i\n" +
-	"\x18CheckProxyHealthResponse\x12\x18\n" +
-	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error\x12\x1d\n" +
-	"\n" +
-	"latency_ms\x18\x03 \x01(\x03R\tlatencyMs\"N\n" +
+	"history_id\x18\x01 \x01(\x03R\thistoryId\"N\n" +
 	"\x18GetAvailableProxyRequest\x12\x1a\n" +
 	"\bprotocol\x18\x01 \x01(\tR\bprotocol\x12\x16\n" +
-	"\x06region\x18\x02 \x01(\tR\x06region\"S\n" +
+	"\x06region\x18\x02 \x01(\tR\x06region\"{\n" +
 	"\x19GetAvailableProxyResponse\x12\x1b\n" +
-	"\tproxy_url\x18\x01 \x01(\tR\bproxyUrl\x12\x19\n" +
-	"\bproxy_id\x18\x02 \x01(\x03R\aproxyId\"N\n" +
-	"\x17ReportProxyUsageRequest\x12\x19\n" +
-	"\bproxy_id\x18\x01 \x01(\x03R\aproxyId\x12\x18\n" +
+	"\tproxy_url\x18\x01 \x01(\tR\bproxyUrl\x12$\n" +
+	"\x0eproxy_lease_id\x18\x02 \x01(\tR\fproxyLeaseId\x12\x1b\n" +
+	"\texpire_at\x18\x03 \x01(\tR\bexpireAt\"Y\n" +
+	"\x17ReportProxyUsageRequest\x12$\n" +
+	"\x0eproxy_lease_id\x18\x01 \x01(\tR\fproxyLeaseId\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\"4\n" +
 	"\x18ReportProxyUsageResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xa6\x03\n" +
@@ -3499,7 +2582,8 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x0efreeze_seconds\x18\x02 \x01(\x05R\rfreezeSeconds\"S\n" +
 	"\x14FreezeCookieResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
-	"\ffrozen_until\x18\x02 \x01(\tR\vfrozenUntil2\xb8\r\n" +
+	"\ffrozen_until\x18\x02 \x01(\tR\vfrozenUntil2\x8e\n" +
+	"\n" +
 	"\fAssetService\x12A\n" +
 	"\n" +
 	"GetHistory\x12\x18.asset.GetHistoryRequest\x1a\x19.asset.GetHistoryResponse\x12J\n" +
@@ -3509,13 +2593,7 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\fConsumeQuota\x12\x1a.asset.ConsumeQuotaRequest\x1a\x1b.asset.ConsumeQuotaResponse\x12G\n" +
 	"\fGetUserStats\x12\x1a.asset.GetUserStatsRequest\x1a\x1b.asset.GetUserStatsResponse\x12D\n" +
 	"\vGetFileInfo\x12\x19.asset.GetFileInfoRequest\x1a\x1a.asset.GetFileInfoResponse\x12J\n" +
-	"\rCreateHistory\x12\x1b.asset.CreateHistoryRequest\x1a\x1c.asset.CreateHistoryResponse\x12D\n" +
-	"\vCreateProxy\x12\x19.asset.CreateProxyRequest\x1a\x1a.asset.CreateProxyResponse\x12D\n" +
-	"\vUpdateProxy\x12\x19.asset.UpdateProxyRequest\x1a\x1a.asset.UpdateProxyResponse\x12D\n" +
-	"\vDeleteProxy\x12\x19.asset.DeleteProxyRequest\x1a\x1a.asset.DeleteProxyResponse\x12;\n" +
-	"\bGetProxy\x12\x16.asset.GetProxyRequest\x1a\x17.asset.GetProxyResponse\x12D\n" +
-	"\vListProxies\x12\x19.asset.ListProxiesRequest\x1a\x1a.asset.ListProxiesResponse\x12S\n" +
-	"\x10CheckProxyHealth\x12\x1e.asset.CheckProxyHealthRequest\x1a\x1f.asset.CheckProxyHealthResponse\x12V\n" +
+	"\rCreateHistory\x12\x1b.asset.CreateHistoryRequest\x1a\x1c.asset.CreateHistoryResponse\x12V\n" +
 	"\x11GetAvailableProxy\x12\x1f.asset.GetAvailableProxyRequest\x1a .asset.GetAvailableProxyResponse\x12S\n" +
 	"\x10ReportProxyUsage\x12\x1e.asset.ReportProxyUsageRequest\x1a\x1f.asset.ReportProxyUsageResponse\x12G\n" +
 	"\fCreateCookie\x12\x1a.asset.CreateCookieRequest\x1a\x1b.asset.CreateCookieResponse\x12G\n" +
@@ -3539,7 +2617,7 @@ func file_proto_asset_proto_rawDescGZIP() []byte {
 	return file_proto_asset_proto_rawDescData
 }
 
-var file_proto_asset_proto_msgTypes = make([]protoimpl.MessageInfo, 51)
+var file_proto_asset_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_proto_asset_proto_goTypes = []any{
 	(*GetHistoryRequest)(nil),          // 0: asset.GetHistoryRequest
 	(*GetHistoryResponse)(nil),         // 1: asset.GetHistoryResponse
@@ -3558,100 +2636,73 @@ var file_proto_asset_proto_goTypes = []any{
 	(*GetFileInfoResponse)(nil),        // 14: asset.GetFileInfoResponse
 	(*CreateHistoryRequest)(nil),       // 15: asset.CreateHistoryRequest
 	(*CreateHistoryResponse)(nil),      // 16: asset.CreateHistoryResponse
-	(*ProxyInfo)(nil),                  // 17: asset.ProxyInfo
-	(*CreateProxyRequest)(nil),         // 18: asset.CreateProxyRequest
-	(*CreateProxyResponse)(nil),        // 19: asset.CreateProxyResponse
-	(*UpdateProxyRequest)(nil),         // 20: asset.UpdateProxyRequest
-	(*UpdateProxyResponse)(nil),        // 21: asset.UpdateProxyResponse
-	(*DeleteProxyRequest)(nil),         // 22: asset.DeleteProxyRequest
-	(*DeleteProxyResponse)(nil),        // 23: asset.DeleteProxyResponse
-	(*GetProxyRequest)(nil),            // 24: asset.GetProxyRequest
-	(*GetProxyResponse)(nil),           // 25: asset.GetProxyResponse
-	(*ListProxiesRequest)(nil),         // 26: asset.ListProxiesRequest
-	(*ListProxiesResponse)(nil),        // 27: asset.ListProxiesResponse
-	(*CheckProxyHealthRequest)(nil),    // 28: asset.CheckProxyHealthRequest
-	(*CheckProxyHealthResponse)(nil),   // 29: asset.CheckProxyHealthResponse
-	(*GetAvailableProxyRequest)(nil),   // 30: asset.GetAvailableProxyRequest
-	(*GetAvailableProxyResponse)(nil),  // 31: asset.GetAvailableProxyResponse
-	(*ReportProxyUsageRequest)(nil),    // 32: asset.ReportProxyUsageRequest
-	(*ReportProxyUsageResponse)(nil),   // 33: asset.ReportProxyUsageResponse
-	(*CookieInfo)(nil),                 // 34: asset.CookieInfo
-	(*CreateCookieRequest)(nil),        // 35: asset.CreateCookieRequest
-	(*CreateCookieResponse)(nil),       // 36: asset.CreateCookieResponse
-	(*UpdateCookieRequest)(nil),        // 37: asset.UpdateCookieRequest
-	(*UpdateCookieResponse)(nil),       // 38: asset.UpdateCookieResponse
-	(*DeleteCookieRequest)(nil),        // 39: asset.DeleteCookieRequest
-	(*DeleteCookieResponse)(nil),       // 40: asset.DeleteCookieResponse
-	(*GetCookieRequest)(nil),           // 41: asset.GetCookieRequest
-	(*GetCookieResponse)(nil),          // 42: asset.GetCookieResponse
-	(*ListCookiesRequest)(nil),         // 43: asset.ListCookiesRequest
-	(*ListCookiesResponse)(nil),        // 44: asset.ListCookiesResponse
-	(*GetAvailableCookieRequest)(nil),  // 45: asset.GetAvailableCookieRequest
-	(*GetAvailableCookieResponse)(nil), // 46: asset.GetAvailableCookieResponse
-	(*ReportCookieUsageRequest)(nil),   // 47: asset.ReportCookieUsageRequest
-	(*ReportCookieUsageResponse)(nil),  // 48: asset.ReportCookieUsageResponse
-	(*FreezeCookieRequest)(nil),        // 49: asset.FreezeCookieRequest
-	(*FreezeCookieResponse)(nil),       // 50: asset.FreezeCookieResponse
+	(*GetAvailableProxyRequest)(nil),   // 17: asset.GetAvailableProxyRequest
+	(*GetAvailableProxyResponse)(nil),  // 18: asset.GetAvailableProxyResponse
+	(*ReportProxyUsageRequest)(nil),    // 19: asset.ReportProxyUsageRequest
+	(*ReportProxyUsageResponse)(nil),   // 20: asset.ReportProxyUsageResponse
+	(*CookieInfo)(nil),                 // 21: asset.CookieInfo
+	(*CreateCookieRequest)(nil),        // 22: asset.CreateCookieRequest
+	(*CreateCookieResponse)(nil),       // 23: asset.CreateCookieResponse
+	(*UpdateCookieRequest)(nil),        // 24: asset.UpdateCookieRequest
+	(*UpdateCookieResponse)(nil),       // 25: asset.UpdateCookieResponse
+	(*DeleteCookieRequest)(nil),        // 26: asset.DeleteCookieRequest
+	(*DeleteCookieResponse)(nil),       // 27: asset.DeleteCookieResponse
+	(*GetCookieRequest)(nil),           // 28: asset.GetCookieRequest
+	(*GetCookieResponse)(nil),          // 29: asset.GetCookieResponse
+	(*ListCookiesRequest)(nil),         // 30: asset.ListCookiesRequest
+	(*ListCookiesResponse)(nil),        // 31: asset.ListCookiesResponse
+	(*GetAvailableCookieRequest)(nil),  // 32: asset.GetAvailableCookieRequest
+	(*GetAvailableCookieResponse)(nil), // 33: asset.GetAvailableCookieResponse
+	(*ReportCookieUsageRequest)(nil),   // 34: asset.ReportCookieUsageRequest
+	(*ReportCookieUsageResponse)(nil),  // 35: asset.ReportCookieUsageResponse
+	(*FreezeCookieRequest)(nil),        // 36: asset.FreezeCookieRequest
+	(*FreezeCookieResponse)(nil),       // 37: asset.FreezeCookieResponse
 }
 var file_proto_asset_proto_depIdxs = []int32{
 	2,  // 0: asset.GetHistoryResponse.items:type_name -> asset.HistoryItem
 	11, // 1: asset.GetUserStatsResponse.top_platforms:type_name -> asset.PlatformStat
 	12, // 2: asset.GetUserStatsResponse.recent_activity:type_name -> asset.DailyActivity
-	17, // 3: asset.GetProxyResponse.proxy:type_name -> asset.ProxyInfo
-	17, // 4: asset.ListProxiesResponse.items:type_name -> asset.ProxyInfo
-	34, // 5: asset.GetCookieResponse.cookie:type_name -> asset.CookieInfo
-	34, // 6: asset.ListCookiesResponse.items:type_name -> asset.CookieInfo
-	0,  // 7: asset.AssetService.GetHistory:input_type -> asset.GetHistoryRequest
-	3,  // 8: asset.AssetService.DeleteHistory:input_type -> asset.DeleteHistoryRequest
-	5,  // 9: asset.AssetService.CheckQuota:input_type -> asset.CheckQuotaRequest
-	7,  // 10: asset.AssetService.ConsumeQuota:input_type -> asset.ConsumeQuotaRequest
-	9,  // 11: asset.AssetService.GetUserStats:input_type -> asset.GetUserStatsRequest
-	13, // 12: asset.AssetService.GetFileInfo:input_type -> asset.GetFileInfoRequest
-	15, // 13: asset.AssetService.CreateHistory:input_type -> asset.CreateHistoryRequest
-	18, // 14: asset.AssetService.CreateProxy:input_type -> asset.CreateProxyRequest
-	20, // 15: asset.AssetService.UpdateProxy:input_type -> asset.UpdateProxyRequest
-	22, // 16: asset.AssetService.DeleteProxy:input_type -> asset.DeleteProxyRequest
-	24, // 17: asset.AssetService.GetProxy:input_type -> asset.GetProxyRequest
-	26, // 18: asset.AssetService.ListProxies:input_type -> asset.ListProxiesRequest
-	28, // 19: asset.AssetService.CheckProxyHealth:input_type -> asset.CheckProxyHealthRequest
-	30, // 20: asset.AssetService.GetAvailableProxy:input_type -> asset.GetAvailableProxyRequest
-	32, // 21: asset.AssetService.ReportProxyUsage:input_type -> asset.ReportProxyUsageRequest
-	35, // 22: asset.AssetService.CreateCookie:input_type -> asset.CreateCookieRequest
-	37, // 23: asset.AssetService.UpdateCookie:input_type -> asset.UpdateCookieRequest
-	39, // 24: asset.AssetService.DeleteCookie:input_type -> asset.DeleteCookieRequest
-	41, // 25: asset.AssetService.GetCookie:input_type -> asset.GetCookieRequest
-	43, // 26: asset.AssetService.ListCookies:input_type -> asset.ListCookiesRequest
-	45, // 27: asset.AssetService.GetAvailableCookie:input_type -> asset.GetAvailableCookieRequest
-	47, // 28: asset.AssetService.ReportCookieUsage:input_type -> asset.ReportCookieUsageRequest
-	49, // 29: asset.AssetService.FreezeCookie:input_type -> asset.FreezeCookieRequest
-	1,  // 30: asset.AssetService.GetHistory:output_type -> asset.GetHistoryResponse
-	4,  // 31: asset.AssetService.DeleteHistory:output_type -> asset.DeleteHistoryResponse
-	6,  // 32: asset.AssetService.CheckQuota:output_type -> asset.CheckQuotaResponse
-	8,  // 33: asset.AssetService.ConsumeQuota:output_type -> asset.ConsumeQuotaResponse
-	10, // 34: asset.AssetService.GetUserStats:output_type -> asset.GetUserStatsResponse
-	14, // 35: asset.AssetService.GetFileInfo:output_type -> asset.GetFileInfoResponse
-	16, // 36: asset.AssetService.CreateHistory:output_type -> asset.CreateHistoryResponse
-	19, // 37: asset.AssetService.CreateProxy:output_type -> asset.CreateProxyResponse
-	21, // 38: asset.AssetService.UpdateProxy:output_type -> asset.UpdateProxyResponse
-	23, // 39: asset.AssetService.DeleteProxy:output_type -> asset.DeleteProxyResponse
-	25, // 40: asset.AssetService.GetProxy:output_type -> asset.GetProxyResponse
-	27, // 41: asset.AssetService.ListProxies:output_type -> asset.ListProxiesResponse
-	29, // 42: asset.AssetService.CheckProxyHealth:output_type -> asset.CheckProxyHealthResponse
-	31, // 43: asset.AssetService.GetAvailableProxy:output_type -> asset.GetAvailableProxyResponse
-	33, // 44: asset.AssetService.ReportProxyUsage:output_type -> asset.ReportProxyUsageResponse
-	36, // 45: asset.AssetService.CreateCookie:output_type -> asset.CreateCookieResponse
-	38, // 46: asset.AssetService.UpdateCookie:output_type -> asset.UpdateCookieResponse
-	40, // 47: asset.AssetService.DeleteCookie:output_type -> asset.DeleteCookieResponse
-	42, // 48: asset.AssetService.GetCookie:output_type -> asset.GetCookieResponse
-	44, // 49: asset.AssetService.ListCookies:output_type -> asset.ListCookiesResponse
-	46, // 50: asset.AssetService.GetAvailableCookie:output_type -> asset.GetAvailableCookieResponse
-	48, // 51: asset.AssetService.ReportCookieUsage:output_type -> asset.ReportCookieUsageResponse
-	50, // 52: asset.AssetService.FreezeCookie:output_type -> asset.FreezeCookieResponse
-	30, // [30:53] is the sub-list for method output_type
-	7,  // [7:30] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	21, // 3: asset.GetCookieResponse.cookie:type_name -> asset.CookieInfo
+	21, // 4: asset.ListCookiesResponse.items:type_name -> asset.CookieInfo
+	0,  // 5: asset.AssetService.GetHistory:input_type -> asset.GetHistoryRequest
+	3,  // 6: asset.AssetService.DeleteHistory:input_type -> asset.DeleteHistoryRequest
+	5,  // 7: asset.AssetService.CheckQuota:input_type -> asset.CheckQuotaRequest
+	7,  // 8: asset.AssetService.ConsumeQuota:input_type -> asset.ConsumeQuotaRequest
+	9,  // 9: asset.AssetService.GetUserStats:input_type -> asset.GetUserStatsRequest
+	13, // 10: asset.AssetService.GetFileInfo:input_type -> asset.GetFileInfoRequest
+	15, // 11: asset.AssetService.CreateHistory:input_type -> asset.CreateHistoryRequest
+	17, // 12: asset.AssetService.GetAvailableProxy:input_type -> asset.GetAvailableProxyRequest
+	19, // 13: asset.AssetService.ReportProxyUsage:input_type -> asset.ReportProxyUsageRequest
+	22, // 14: asset.AssetService.CreateCookie:input_type -> asset.CreateCookieRequest
+	24, // 15: asset.AssetService.UpdateCookie:input_type -> asset.UpdateCookieRequest
+	26, // 16: asset.AssetService.DeleteCookie:input_type -> asset.DeleteCookieRequest
+	28, // 17: asset.AssetService.GetCookie:input_type -> asset.GetCookieRequest
+	30, // 18: asset.AssetService.ListCookies:input_type -> asset.ListCookiesRequest
+	32, // 19: asset.AssetService.GetAvailableCookie:input_type -> asset.GetAvailableCookieRequest
+	34, // 20: asset.AssetService.ReportCookieUsage:input_type -> asset.ReportCookieUsageRequest
+	36, // 21: asset.AssetService.FreezeCookie:input_type -> asset.FreezeCookieRequest
+	1,  // 22: asset.AssetService.GetHistory:output_type -> asset.GetHistoryResponse
+	4,  // 23: asset.AssetService.DeleteHistory:output_type -> asset.DeleteHistoryResponse
+	6,  // 24: asset.AssetService.CheckQuota:output_type -> asset.CheckQuotaResponse
+	8,  // 25: asset.AssetService.ConsumeQuota:output_type -> asset.ConsumeQuotaResponse
+	10, // 26: asset.AssetService.GetUserStats:output_type -> asset.GetUserStatsResponse
+	14, // 27: asset.AssetService.GetFileInfo:output_type -> asset.GetFileInfoResponse
+	16, // 28: asset.AssetService.CreateHistory:output_type -> asset.CreateHistoryResponse
+	18, // 29: asset.AssetService.GetAvailableProxy:output_type -> asset.GetAvailableProxyResponse
+	20, // 30: asset.AssetService.ReportProxyUsage:output_type -> asset.ReportProxyUsageResponse
+	23, // 31: asset.AssetService.CreateCookie:output_type -> asset.CreateCookieResponse
+	25, // 32: asset.AssetService.UpdateCookie:output_type -> asset.UpdateCookieResponse
+	27, // 33: asset.AssetService.DeleteCookie:output_type -> asset.DeleteCookieResponse
+	29, // 34: asset.AssetService.GetCookie:output_type -> asset.GetCookieResponse
+	31, // 35: asset.AssetService.ListCookies:output_type -> asset.ListCookiesResponse
+	33, // 36: asset.AssetService.GetAvailableCookie:output_type -> asset.GetAvailableCookieResponse
+	35, // 37: asset.AssetService.ReportCookieUsage:output_type -> asset.ReportCookieUsageResponse
+	37, // 38: asset.AssetService.FreezeCookie:output_type -> asset.FreezeCookieResponse
+	22, // [22:39] is the sub-list for method output_type
+	5,  // [5:22] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_proto_asset_proto_init() }
@@ -3665,7 +2716,7 @@ func file_proto_asset_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_asset_proto_rawDesc), len(file_proto_asset_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   51,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

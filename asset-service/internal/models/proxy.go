@@ -39,23 +39,6 @@ type Proxy struct {
 	UpdatedAt       time.Time     `db:"updated_at"`
 }
 
-// ProxyFilter 代理查询过滤条件
-type ProxyFilter struct {
-	Status   *ProxyStatus   // 可选：状态过滤
-	Protocol *ProxyProtocol // 可选：协议过滤
-	Region   *string        // 可选：地区过滤
-	Page     int
-	PageSize int
-}
-
-// ProxyResult 代理查询结果
-type ProxyResult struct {
-	Total    int64
-	Page     int
-	PageSize int
-	Items    []Proxy
-}
-
 // GetURL 获取代理完整 URL
 func (p *Proxy) GetURL() string {
 	var url string

@@ -16,24 +16,24 @@ import (
 
 // DownloadHandler 下载处理器
 type DownloadHandler struct {
-	assetClient  pb.AssetServiceClient
-	parserClient pb.ParserServiceClient
-	publisher    *mq.Publisher
-	timeout      time.Duration
+	assetClient pb.AssetServiceClient
+	mediaClient pb.MediaServiceClient
+	publisher   *mq.Publisher
+	timeout     time.Duration
 }
 
 // NewDownloadHandler 创建下载处理器
 func NewDownloadHandler(
 	assetClient pb.AssetServiceClient,
-	parserClient pb.ParserServiceClient,
+	mediaClient pb.MediaServiceClient,
 	publisher *mq.Publisher,
 	timeout time.Duration,
 ) *DownloadHandler {
 	return &DownloadHandler{
-		assetClient:  assetClient,
-		parserClient: parserClient,
-		publisher:    publisher,
-		timeout:      timeout,
+		assetClient: assetClient,
+		mediaClient: mediaClient,
+		publisher:   publisher,
+		timeout:     timeout,
 	}
 }
 
@@ -79,7 +79,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 
 	log.Printf("[Download] Step 2/7: Validating URL: %s...", req.URL)
 	// 2. 验证 URL
-	validateResp, err := h.parserClient.ValidateURL(ctx, &pb.ValidateURLRequest{
+	validateResp, err := h.mediaClient.ValidateURL(ctx, &pb.ValidateURLRequest{
 		Url: req.URL,
 	})
 	if err != nil {
@@ -96,7 +96,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 
 	log.Printf("[Download] Step 3/7: Parsing URL to get metadata...")
 	// 3. 解析获取标题
-	parseResp, err := h.parserClient.ParseURL(ctx, &pb.ParseURLRequest{
+	parseResp, err := h.mediaClient.ParseURL(ctx, &pb.ParseURLRequest{
 		Url: req.URL,
 	})
 	if err != nil {
@@ -144,17 +144,19 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	log.Printf("[Download] Step 7/7: Publishing task %s to RabbitMQ...", taskID)
 	// 7. 发布下载任务到 RabbitMQ
 	task := &mq.DownloadTask{
-		TaskID:    taskID,
-		UserID:    userID,
-		HistoryID: historyResp.HistoryId,
-		URL:       req.URL,
-		Mode:      req.Mode,
-		Quality:   req.Quality,
-		Format:    req.Format,
-		Platform:  validateResp.Platform,
-		Title:     parseResp.Title,
-		CookieID:  parseResp.CookieId, // 传递 parser 使用的 cookie ID
-		ProxyURL:  parseResp.ProxyUrl, // 传递 parser 使用的 proxy URL
+		TaskID:        taskID,
+		UserID:        userID,
+		HistoryID:     historyResp.HistoryId,
+		URL:           req.URL,
+		Mode:          req.Mode,
+		Quality:       req.Quality,
+		Format:        req.Format,
+		Platform:      validateResp.Platform,
+		Title:         parseResp.Title,
+		CookieID:      parseResp.CookieId, // 传递 parser 使用的 cookie ID
+		ProxyURL:      parseResp.ProxyUrl, // 传递 parser 使用的 proxy URL
+		ProxyLeaseID:  parseResp.ProxyLeaseId,
+		ProxyExpireAt: parseResp.ProxyExpireAt,
 	}
 
 	if err := h.publisher.Publish(ctx, task); err != nil {
