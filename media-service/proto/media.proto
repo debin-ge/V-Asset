@@ -12,6 +12,7 @@ service MediaService {
 message ParseURLRequest {
   string url = 1;
   bool skip_cache = 2;
+  string task_id = 3;
 }
 
 message ParseURLResponse {

@@ -94,10 +94,16 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	}
 	log.Printf("[Download] ✓ URL validated - Platform: %s", validateResp.Platform)
 
-	log.Printf("[Download] Step 3/7: Parsing URL to get metadata...")
-	// 3. 解析获取标题
+	log.Printf("[Download] Step 3/7: Generating task ID...")
+	// 3. 生成任务 ID
+	taskID := uuid.New().String()
+	log.Printf("[Download] ✓ Task ID generated: %s", taskID)
+
+	log.Printf("[Download] Step 4/7: Parsing URL to get metadata with task %s...", taskID)
+	// 4. 解析获取标题，并绑定任务级代理
 	parseResp, err := h.mediaClient.ParseURL(ctx, &pb.ParseURLRequest{
-		Url: req.URL,
+		Url:    req.URL,
+		TaskId: taskID,
 	})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to parse URL: %v", err)
@@ -105,11 +111,6 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		return
 	}
 	log.Printf("[Download] ✓ URL parsed - Title: %s, Duration: %ds", parseResp.Title, parseResp.Duration)
-
-	log.Printf("[Download] Step 4/7: Generating task ID...")
-	// 4. 生成任务 ID
-	taskID := uuid.New().String()
-	log.Printf("[Download] ✓ Task ID generated: %s", taskID)
 
 	log.Printf("[Download] Step 5/7: Creating download history for task %s...", taskID)
 	// 5. 创建下载历史

@@ -15,11 +15,15 @@ RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o media-service cmd/main.go
 
 # 运行阶段
-FROM python:3.11-alpine
+FROM python:3.11-slim-bookworm
 
-# 安装yt-dlp、ffmpeg和Node.js (yt-dlp解析YouTube需要JS运行时)
-RUN apk --no-cache add ca-certificates tzdata ffmpeg nodejs && \
-    pip install --no-cache-dir yt-dlp
+# 安装yt-dlp、ffmpeg和Node.js (yt-dlp解析YouTube需要JS运行时，impersonation 依赖 curl-cffi)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates tzdata ffmpeg nodejs libjemalloc2 && \
+    jemalloc_path="$(find /usr/lib -name libjemalloc.so.2 | head -n 1)" && \
+    ln -sf "${jemalloc_path}" /usr/local/lib/libjemalloc.so.2 && \
+    pip install --no-cache-dir "yt-dlp[curl-cffi]" && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/
 
@@ -33,6 +37,7 @@ RUN mkdir -p /etc/vasset/cookies /data/vasset/tmp /data/vasset/archive
 
 # 设置时区
 ENV TZ=Asia/Shanghai
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
 EXPOSE 9002
 

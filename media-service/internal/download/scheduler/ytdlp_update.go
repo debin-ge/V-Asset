@@ -5,6 +5,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"vasset/media-service/internal/download/config"
@@ -17,6 +18,8 @@ type YtDLPUpdater struct {
 	interval   time.Duration
 	timeout    time.Duration
 	autoUpdate bool
+	mu         sync.Mutex
+	dryRunOK   *bool
 }
 
 func NewYtDLPUpdater(ytdlpCfg *config.YtDLPConfig, updateCfg *config.YtDLPUpdateConfig) *YtDLPUpdater {
@@ -72,6 +75,10 @@ func (u *YtDLPUpdater) checkOnce(ctx context.Context) {
 
 	args := []string{"--update"}
 	if !u.autoUpdate {
+		if !u.supportsDryRun(ctx) {
+			log.Println("[YtDLPUpdate] Skipping update check because this yt-dlp build does not support --dry-run")
+			return
+		}
 		args = append(args, "--dry-run")
 	}
 
@@ -85,4 +92,32 @@ func (u *YtDLPUpdater) checkOnce(ctx context.Context) {
 	}
 
 	log.Printf("[YtDLPUpdate] Check result: %s", strings.TrimSpace(string(updateOutput)))
+}
+
+func (u *YtDLPUpdater) supportsDryRun(ctx context.Context) bool {
+	u.mu.Lock()
+	if u.dryRunOK != nil {
+		value := *u.dryRunOK
+		u.mu.Unlock()
+		return value
+	}
+	u.mu.Unlock()
+
+	probeCtx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
+	output, err := exec.CommandContext(probeCtx, u.binaryPath, "--update", "--dry-run").CombinedOutput()
+	supported := true
+	if err != nil {
+		combined := strings.ToLower(string(output))
+		if strings.Contains(combined, "no such option: --dry-run") {
+			supported = false
+		}
+	}
+
+	u.mu.Lock()
+	u.dryRunOK = &supported
+	u.mu.Unlock()
+
+	return supported
 }

@@ -3,6 +3,7 @@ package ytdlp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -78,15 +79,79 @@ func (w *Wrapper) buildArgs(url string, cookieFile string, extraArgs []string) [
 	return args
 }
 
-// ExtractInfo 提取视频信息
-func (w *Wrapper) ExtractInfo(url string, cookieFile string, extraArgs ...string) (*VideoInfo, error) {
-	args := w.buildArgs(url, cookieFile, extraArgs)
+func formatCommandError(err error, output []byte) error {
+	outputText := strings.TrimSpace(string(output))
+	if outputText == "" {
+		if err == nil {
+			return utils.ErrYTDLPFailed
+		}
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && len(exitErr.Stderr) > 0 {
+			outputText = strings.TrimSpace(string(exitErr.Stderr))
+		}
+		if outputText == "" {
+			outputText = err.Error()
+		}
+	}
+	return fmt.Errorf("%w: %s", utils.MapYTDLPError(outputText), outputText)
+}
 
-	// 创建命令
-	ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
+func createEphemeralCacheDir(logPrefix string) (string, func()) {
+	cacheDir, err := os.MkdirTemp("", "yt-dlp-cache-*")
+	if err != nil {
+		log.Printf("[%s] WARN: Failed to create isolated cache dir: %v", logPrefix, err)
+		return "", func() {}
+	}
+
+	return cacheDir, func() {
+		if removeErr := os.RemoveAll(cacheDir); removeErr != nil {
+			log.Printf("[%s] WARN: Failed to cleanup cache dir %s: %v", logPrefix, cacheDir, removeErr)
+		}
+	}
+}
+
+func (w *Wrapper) commandContext(parent context.Context) (context.Context, context.CancelFunc) {
+	if parent == nil {
+		parent = context.Background()
+	}
+	return context.WithTimeout(parent, w.timeout)
+}
+
+func (w *Wrapper) executeJSONCommand(ctx context.Context, logPrefix string, args []string) ([]byte, error) {
+	cacheDir, cleanupCacheDir := createEphemeralCacheDir(logPrefix)
+	defer cleanupCacheDir()
+
+	commandArgs := append([]string(nil), args...)
+	if cacheDir != "" {
+		commandArgs = append([]string{"--cache-dir", cacheDir}, commandArgs...)
+		log.Printf("[%s] Using isolated cache dir: %s", logPrefix, cacheDir)
+	}
+
+	ctx, cancel := w.commandContext(ctx)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, w.binaryPath, args...)
+	cmd := exec.CommandContext(ctx, w.binaryPath, commandArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			log.Printf("[%s] ERROR: Timeout after %v", logPrefix, w.timeout)
+			return nil, utils.ErrTimeout
+		}
+		if ctx.Err() == context.Canceled {
+			log.Printf("[%s] ERROR: Command canceled by parent context", logPrefix)
+			return nil, utils.ErrTimeout
+		}
+		log.Printf("[%s] ERROR: Command failed: %v", logPrefix, err)
+		log.Printf("[%s] Output: %s", logPrefix, string(output))
+		return nil, formatCommandError(err, output)
+	}
+
+	return output, nil
+}
+
+// ExtractInfo 提取视频信息
+func (w *Wrapper) ExtractInfo(ctx context.Context, url string, cookieFile string, extraArgs ...string) (*VideoInfo, error) {
+	args := w.buildArgs(url, cookieFile, extraArgs)
 
 	// 记录完整命令
 	log.Printf("[YT-DLP] Executing command: %s %s", w.binaryPath, strings.Join(args, " "))
@@ -96,18 +161,9 @@ func (w *Wrapper) ExtractInfo(url string, cookieFile string, extraArgs ...string
 	}
 
 	// 执行命令
-	output, err := cmd.CombinedOutput()
+	output, err := w.executeJSONCommand(ctx, "YT-DLP", args)
 	if err != nil {
-		// 解析错误类型
-		if ctx.Err() == context.DeadlineExceeded {
-			log.Printf("[YT-DLP] ERROR: Timeout after %v", w.timeout)
-			return nil, utils.ErrTimeout
-		}
-		// 记录详细错误
-		log.Printf("[YT-DLP] ERROR: Command failed: %v", err)
-		log.Printf("[YT-DLP] Output: %s", string(output))
-		// 映射yt-dlp错误
-		return nil, fmt.Errorf("%w: %s", utils.MapYTDLPError(string(output)), string(output))
+		return nil, err
 	}
 
 	log.Printf("[YT-DLP] Success, output length: %d bytes, %s", len(output), string(output))
@@ -125,7 +181,7 @@ func (w *Wrapper) ExtractInfo(url string, cookieFile string, extraArgs ...string
 }
 
 // ExtractInfoWithProxy 使用指定代理提取视频信息 (临时覆盖默认代理)
-func (w *Wrapper) ExtractInfoWithProxy(url, proxyURL, cookieFile string, extraArgs ...string) (*VideoInfo, error) {
+func (w *Wrapper) ExtractInfoWithProxy(ctx context.Context, url, proxyURL, cookieFile string, extraArgs ...string) (*VideoInfo, error) {
 	args := []string{
 		"--dump-json",
 		"--skip-download",
@@ -163,19 +219,9 @@ func (w *Wrapper) ExtractInfoWithProxy(url, proxyURL, cookieFile string, extraAr
 		log.Printf("[YT-DLP-PROXY] Cookie file: %s", cookieFile)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, w.binaryPath, args...)
-	output, err := cmd.CombinedOutput()
+	output, err := w.executeJSONCommand(ctx, "YT-DLP-PROXY", args)
 	if err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			log.Printf("[YT-DLP-PROXY] ERROR: Timeout after %v", w.timeout)
-			return nil, utils.ErrTimeout
-		}
-		log.Printf("[YT-DLP-PROXY] ERROR: Command failed: %v", err)
-		log.Printf("[YT-DLP-PROXY] Output: %s", string(output))
-		return nil, fmt.Errorf("%w: %s", utils.MapYTDLPError(string(output)), string(output))
+		return nil, err
 	}
 
 	log.Printf("[YT-DLP-PROXY] Success, output length: %d bytes, %s", len(output), string(output))

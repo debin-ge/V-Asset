@@ -133,3 +133,13 @@ func (s *UserService) UpdateNickname(ctx context.Context, userID string, nicknam
 func (s *UserService) UpdatePassword(ctx context.Context, userID string, passwordHash string) error {
 	return s.userRepo.UpdatePassword(ctx, userID, passwordHash)
 }
+
+// GetPlatformUserStats 获取平台用户统计
+func (s *UserService) GetPlatformUserStats(ctx context.Context) (int64, error) {
+	totalUsers, err := s.userRepo.CountTotalUsers(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total users: %w", err)
+	}
+
+	return totalUsers, nil
+}

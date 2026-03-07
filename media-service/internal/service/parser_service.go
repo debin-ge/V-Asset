@@ -12,6 +12,7 @@ import (
 	"vasset/media-service/internal/client"
 	"vasset/media-service/internal/config"
 	"vasset/media-service/internal/detector"
+	"vasset/media-service/internal/platformpolicy"
 	"vasset/media-service/internal/utils"
 	"vasset/media-service/internal/ytdlp"
 )
@@ -25,6 +26,7 @@ type ParserService struct {
 	logger        *zap.Logger
 	assetClient   *client.AssetClient
 	enableCookies bool
+	youtubePolicy platformpolicy.YouTubePolicy
 }
 
 type parseAccessContext struct {
@@ -47,7 +49,7 @@ func NewParserService(
 
 	// YouTube适配器
 	if platformCfg, ok := cfg.Platforms["youtube"]; ok && platformCfg.Enabled {
-		adapters["youtube"] = adapter.NewYouTubeAdapter(ytdlpWrapper, "", platformCfg.ExtraArgs)
+		adapters["youtube"] = adapter.NewYouTubeAdapter(ytdlpWrapper, "", cfg.YTDLP.YouTube.Args)
 	}
 
 	// Bilibili适配器
@@ -95,11 +97,12 @@ func NewParserService(
 		logger:        logger,
 		assetClient:   assetClient,
 		enableCookies: cfg.AssetService.EnableCookies && assetClient != nil,
+		youtubePolicy: cfg.YTDLP.YouTube,
 	}
 }
 
 // ParseURL 解析视频URL
-func (s *ParserService) ParseURL(ctx context.Context, url string, skipCache bool) (*cache.ParseResult, error) {
+func (s *ParserService) ParseURL(ctx context.Context, taskID, url string, skipCache bool) (*cache.ParseResult, error) {
 	// 1. 标准化URL
 	url = utils.NormalizeURL(url)
 
@@ -112,7 +115,7 @@ func (s *ParserService) ParseURL(ctx context.Context, url string, skipCache bool
 	if !skipCache {
 		if cached, err := s.cache.Get(ctx, url); err == nil {
 			s.logger.Info("cache hit", zap.String("url", url))
-			if err := s.attachDynamicAccess(cached); err != nil {
+			if err := s.attachDynamicAccess(cached, taskID); err != nil {
 				return nil, err
 			}
 			return cached, nil
@@ -143,7 +146,7 @@ func (s *ParserService) ParseURL(ctx context.Context, url string, skipCache bool
 		zap.String("url", url),
 		zap.String("platform", platform))
 
-	accessCtx, err := s.getParseAccessContext(platform)
+	accessCtx, err := s.getParseAccessContext(ctx, taskID, platform)
 	if err != nil {
 		s.logger.Error("failed to get proxy lease for parsing",
 			zap.String("url", url),
@@ -160,15 +163,16 @@ func (s *ParserService) ParseURL(ctx context.Context, url string, skipCache bool
 		zap.String("url", url),
 		zap.String("platform", platform),
 		zap.String("adapter", fmt.Sprintf("%T", adpt)),
+		zap.Bool("youtube_cookie_disabled", platformpolicy.IsYouTubePlatform(platform) && s.youtubePolicy.CookiesDisabled()),
 		zap.Bool("has_cookie", accessCtx.cookieFile != ""),
 		zap.Bool("has_proxy", accessCtx.proxyLease != nil && accessCtx.proxyLease.URL != ""))
 
-	videoInfo, err := adpt.ParseWithProxyAndCookie(url, accessCtx.proxyLease.URL, accessCtx.cookieFile)
+	videoInfo, err := adpt.ParseWithProxyAndCookie(ctx, url, accessCtx.proxyLease.URL, accessCtx.cookieFile)
 
 	// 报告代理使用结果
 	if accessCtx.proxyLease != nil && s.assetClient != nil {
 		success := err == nil
-		if reportErr := s.assetClient.ReportProxyUsage(accessCtx.proxyLease.LeaseID, success); reportErr != nil {
+		if reportErr := s.assetClient.ReportProxyUsage(taskID, accessCtx.proxyLease.LeaseID, "parse", success); reportErr != nil {
 			s.logger.Warn("failed to report proxy usage", zap.Error(reportErr))
 		}
 	}
@@ -235,10 +239,14 @@ func (s *ParserService) ParseURL(ctx context.Context, url string, skipCache bool
 	return result, nil
 }
 
-func (s *ParserService) getParseAccessContext(platform string) (*parseAccessContext, error) {
+func (s *ParserService) getParseAccessContext(ctx context.Context, taskID, platform string) (*parseAccessContext, error) {
 	accessCtx := &parseAccessContext{}
 
-	if s.enableCookies && s.assetClient != nil {
+	if platformpolicy.IsYouTubePlatform(platform) && s.youtubePolicy.CookiesDisabled() {
+		s.logger.Info("youtube access policy applied",
+			zap.String("platform", platform),
+			zap.Bool("youtube_cookie_disabled", true))
+	} else if s.enableCookies && s.assetClient != nil {
 		s.logger.Info("attempting to get cookie", zap.String("platform", platform))
 
 		cookieFile, cookieID, err := s.assetClient.GetAvailableCookie(platform)
@@ -258,8 +266,14 @@ func (s *ParserService) getParseAccessContext(platform string) (*parseAccessCont
 		return nil, fmt.Errorf("asset service is not configured for proxy acquisition")
 	}
 
-	s.logger.Info("attempting to get proxy lease from Asset Service")
-	proxyLease, err := s.assetClient.GetAvailableProxy()
+	s.logger.Info("attempting to get proxy lease from Asset Service", zap.String("task_id", taskID))
+	var proxyLease *client.ProxyLease
+	var err error
+	if taskID != "" {
+		proxyLease, err = s.assetClient.AcquireProxyForTask(ctx, taskID, platform)
+	} else {
+		proxyLease, err = s.assetClient.GetAvailableProxy()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get proxy lease: %w", err)
 	}
@@ -276,8 +290,8 @@ func (s *ParserService) getParseAccessContext(platform string) (*parseAccessCont
 	return accessCtx, nil
 }
 
-func (s *ParserService) attachDynamicAccess(result *cache.ParseResult) error {
-	accessCtx, err := s.getParseAccessContext(result.Platform)
+func (s *ParserService) attachDynamicAccess(result *cache.ParseResult, taskID string) error {
+	accessCtx, err := s.getParseAccessContext(context.Background(), taskID, result.Platform)
 	if err != nil {
 		s.logger.Warn("failed to refresh dynamic proxy context for cached result", zap.Error(err))
 		return err

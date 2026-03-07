@@ -17,13 +17,6 @@ platforms:
   youtube:
     enabled: true
     cookie_file: ""
-    extra_args:
-      - "--user-agent"
-      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-      - "--sleep-requests"
-      - "1"
-      - "--sleep-interval"
-      - "5"
   bilibili:
     enabled: true
     cookie_file: ""
@@ -80,12 +73,18 @@ ytdlp:
     - "linear=1::2"
     - "--js-runtimes"
     - "node"
+  youtube:
+    disable_cookies: true
+    args:
+      - "--impersonate"
+      - "chrome-131:android"
+      - "--extractor-args"
+      - "youtube:player_client=android,tv,web_safari"
+      - "--sleep-interval"
+      - "3"
+      - "--max-sleep-interval"
+      - "8"
   platform_args:
-    youtube:
-      - "--user-agent"
-      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-      - "--sleep-requests"
-      - "1"
     bilibili:
       - "--extractor-args"
       - "bilibili:referer=https://www.bilibili.com"

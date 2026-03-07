@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"vasset/asset-service/internal/models"
 	"vasset/asset-service/internal/repository"
@@ -66,4 +67,53 @@ func (s *StatsService) GetUserStats(ctx context.Context, userID string) (*models
 	stats.RecentActivity = activities
 
 	return stats, nil
+}
+
+// GetPlatformStats 获取平台统计
+func (s *StatsService) GetPlatformStats(ctx context.Context) (*models.PlatformStats, error) {
+	stats := &models.PlatformStats{}
+
+	total, err := s.historyRepo.GetPlatformTotalCount(ctx)
+	if err != nil {
+		return nil, err
+	}
+	stats.TotalDownloads = total
+
+	success, err := s.historyRepo.GetPlatformCountByStatus(ctx, models.StatusCompleted)
+	if err != nil {
+		return nil, err
+	}
+	stats.SuccessDownloads = success
+
+	failed, err := s.historyRepo.GetPlatformCountByStatus(ctx, models.StatusFailed)
+	if err != nil {
+		return nil, err
+	}
+	stats.FailedDownloads = failed
+
+	downloadsToday, err := s.historyRepo.GetPlatformDownloadsToday(ctx)
+	if err != nil {
+		return nil, err
+	}
+	stats.DownloadsToday = downloadsToday
+
+	now := time.Now()
+	dau, err := s.historyRepo.GetActiveUserCount(ctx, now.Add(-24*time.Hour))
+	if err != nil {
+		return nil, err
+	}
+	stats.DailyActiveUsers = dau
+
+	wau, err := s.historyRepo.GetActiveUserCount(ctx, now.Add(-7*24*time.Hour))
+	if err != nil {
+		return nil, err
+	}
+	stats.WeeklyActiveUsers = wau
+
+	return stats, nil
+}
+
+// GetRequestTrend 获取平台请求趋势
+func (s *StatsService) GetRequestTrend(ctx context.Context, granularity string, limit int) ([]models.TrendPoint, error) {
+	return s.historyRepo.GetRequestTrend(ctx, granularity, limit)
 }

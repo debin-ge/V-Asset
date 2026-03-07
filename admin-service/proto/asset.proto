@@ -1,0 +1,254 @@
+syntax = "proto3";
+
+package asset;
+
+option go_package = "vasset/admin-service/proto;pb";
+
+service AssetService {
+  rpc GetPlatformStats(GetPlatformStatsRequest) returns (GetPlatformStatsResponse);
+  rpc GetRequestTrend(GetRequestTrendRequest) returns (GetRequestTrendResponse);
+  rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
+  rpc GetProxySourcePolicy(GetProxySourcePolicyRequest) returns (GetProxySourcePolicyResponse);
+  rpc UpdateProxySourcePolicy(UpdateProxySourcePolicyRequest) returns (UpdateProxySourcePolicyResponse);
+  rpc ListProxies(ListProxiesRequest) returns (ListProxiesResponse);
+  rpc CreateProxy(CreateProxyRequest) returns (CreateProxyResponse);
+  rpc UpdateProxy(UpdateProxyRequest) returns (UpdateProxyResponse);
+  rpc UpdateProxyStatus(UpdateProxyStatusRequest) returns (UpdateProxyStatusResponse);
+  rpc DeleteProxy(DeleteProxyRequest) returns (DeleteProxyResponse);
+  rpc CreateCookie(CreateCookieRequest) returns (CreateCookieResponse);
+  rpc UpdateCookie(UpdateCookieRequest) returns (UpdateCookieResponse);
+  rpc DeleteCookie(DeleteCookieRequest) returns (DeleteCookieResponse);
+  rpc GetCookie(GetCookieRequest) returns (GetCookieResponse);
+  rpc ListCookies(ListCookiesRequest) returns (ListCookiesResponse);
+  rpc FreezeCookie(FreezeCookieRequest) returns (FreezeCookieResponse);
+}
+
+message GetPlatformStatsRequest {}
+
+message GetPlatformStatsResponse {
+  int64 total_downloads = 1;
+  int64 success_downloads = 2;
+  int64 failed_downloads = 3;
+  int64 downloads_today = 4;
+  int64 daily_active_users = 5;
+  int64 weekly_active_users = 6;
+}
+
+message GetRequestTrendRequest {
+  string granularity = 1;
+  int32 limit = 2;
+}
+
+message TrendPoint {
+  string label = 1;
+  int64 count = 2;
+}
+
+message GetRequestTrendResponse {
+  string granularity = 1;
+  repeated TrendPoint points = 2;
+}
+
+message GetAvailableProxyRequest {
+  string protocol = 1;
+  string region = 2;
+}
+
+message GetAvailableProxyResponse {
+  string proxy_url = 1;
+  string proxy_lease_id = 2;
+  string expire_at = 3;
+}
+
+message GetProxySourcePolicyRequest {}
+
+message GetProxySourcePolicyResponse {
+  int64 id = 1;
+  string scope_type = 2;
+  string scope_value = 3;
+  string primary_source = 4;
+  string fallback_source = 5;
+  bool fallback_enabled = 6;
+  int32 dynamic_timeout_ms = 7;
+  int32 dynamic_retry_count = 8;
+  int32 dynamic_circuit_breaker_sec = 9;
+  int32 min_lease_ttl_sec = 10;
+  string manual_selection_strategy = 11;
+}
+
+message UpdateProxySourcePolicyRequest {
+  int64 id = 1;
+  string primary_source = 2;
+  string fallback_source = 3;
+  bool fallback_enabled = 4;
+  int32 dynamic_timeout_ms = 5;
+  int32 dynamic_retry_count = 6;
+  int32 dynamic_circuit_breaker_sec = 7;
+  int32 min_lease_ttl_sec = 8;
+  string manual_selection_strategy = 9;
+}
+
+message UpdateProxySourcePolicyResponse {
+  bool success = 1;
+}
+
+message ProxyInfo {
+  int64 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string username = 5;
+  string region = 6;
+  int32 priority = 7;
+  string platform_tags = 8;
+  string remark = 9;
+  int32 status = 10;
+  string last_used_at = 11;
+  int32 success_count = 12;
+  int32 fail_count = 13;
+  string created_at = 14;
+  string updated_at = 15;
+}
+
+message ListProxiesRequest {
+  string search = 1;
+  string protocol = 2;
+  string region = 3;
+  int32 status = 4;
+}
+
+message ListProxiesResponse {
+  repeated ProxyInfo items = 1;
+}
+
+message CreateProxyRequest {
+  string host = 1;
+  int32 port = 2;
+  string protocol = 3;
+  string username = 4;
+  string password = 5;
+  string region = 6;
+  int32 priority = 7;
+  string platform_tags = 8;
+  string remark = 9;
+  int32 status = 10;
+}
+
+message CreateProxyResponse {
+  int64 id = 1;
+}
+
+message UpdateProxyRequest {
+  int64 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string username = 5;
+  string password = 6;
+  string region = 7;
+  int32 priority = 8;
+  string platform_tags = 9;
+  string remark = 10;
+}
+
+message UpdateProxyResponse {
+  bool success = 1;
+}
+
+message UpdateProxyStatusRequest {
+  int64 id = 1;
+  int32 status = 2;
+}
+
+message UpdateProxyStatusResponse {
+  bool success = 1;
+}
+
+message DeleteProxyRequest {
+  int64 id = 1;
+}
+
+message DeleteProxyResponse {
+  bool success = 1;
+}
+
+message CookieInfo {
+  int64 id = 1;
+  string platform = 2;
+  string name = 3;
+  string content = 4;
+  int32 status = 5;
+  string expire_at = 6;
+  string frozen_until = 7;
+  int32 freeze_seconds = 8;
+  string last_used_at = 9;
+  int32 use_count = 10;
+  int32 success_count = 11;
+  int32 fail_count = 12;
+  string created_at = 13;
+  string updated_at = 14;
+}
+
+message CreateCookieRequest {
+  string platform = 1;
+  string name = 2;
+  string content = 3;
+  string expire_at = 4;
+  int32 freeze_seconds = 5;
+}
+
+message CreateCookieResponse {
+  int64 id = 1;
+}
+
+message UpdateCookieRequest {
+  int64 id = 1;
+  string name = 2;
+  string content = 3;
+  string expire_at = 4;
+  int32 freeze_seconds = 5;
+}
+
+message UpdateCookieResponse {
+  bool success = 1;
+}
+
+message DeleteCookieRequest {
+  int64 id = 1;
+}
+
+message DeleteCookieResponse {
+  bool success = 1;
+}
+
+message GetCookieRequest {
+  int64 id = 1;
+}
+
+message GetCookieResponse {
+  CookieInfo cookie = 1;
+}
+
+message ListCookiesRequest {
+  string platform = 1;
+  int32 status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListCookiesResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated CookieInfo items = 4;
+}
+
+message FreezeCookieRequest {
+  int64 cookie_id = 1;
+  int32 freeze_seconds = 2;
+}
+
+message FreezeCookieResponse {
+  bool success = 1;
+  string frozen_until = 2;
+}

@@ -1,15 +1,15 @@
 server:
   port: 8080
   mode: debug  # debug, release
-  read_timeout: 120s   # 增加以适应长时间解析请求
-  write_timeout: 120s  # 必须 >= grpc.timeout，否则响应写入会超时导致 500 错误
+  read_timeout: 330s   # 必须覆盖 YouTube 解析的长尾耗时
+  write_timeout: 330s  # 必须 >= grpc.timeout，否则响应写入会超时导致 500 错误
   max_header_bytes: 1048576  # 1MB
 
 grpc:
   auth_service: "localhost:9001"
   media_service: "localhost:9002"
   asset_service: "localhost:9004"
-  timeout: 90s  # 增加超时时间以适应 YouTube 解析（通常需要 10-60 秒）
+  timeout: 300s  # YouTube + 代理链路可能超过 90s，需明显放宽
 
 redis:
   addr: "localhost:6379"

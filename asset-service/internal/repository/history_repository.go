@@ -326,3 +326,99 @@ func (r *HistoryRepository) GetDailyActivity(ctx context.Context, userID string,
 
 	return activities, nil
 }
+
+// GetPlatformTotalCount 获取平台总下载请求数
+func (r *HistoryRepository) GetPlatformTotalCount(ctx context.Context) (int64, error) {
+	var count int64
+	query := `SELECT COUNT(*) FROM download_history`
+	err := r.db.QueryRowContext(ctx, query).Scan(&count)
+	return count, err
+}
+
+// GetPlatformCountByStatus 获取平台按状态统计
+func (r *HistoryRepository) GetPlatformCountByStatus(ctx context.Context, status models.HistoryStatus) (int64, error) {
+	var count int64
+	query := `SELECT COUNT(*) FROM download_history WHERE status = $1`
+	err := r.db.QueryRowContext(ctx, query, status).Scan(&count)
+	return count, err
+}
+
+// GetPlatformDownloadsToday 获取平台今日下载请求数
+func (r *HistoryRepository) GetPlatformDownloadsToday(ctx context.Context) (int64, error) {
+	var count int64
+	query := `SELECT COUNT(*) FROM download_history WHERE created_at >= CURRENT_DATE`
+	err := r.db.QueryRowContext(ctx, query).Scan(&count)
+	return count, err
+}
+
+// GetActiveUserCount 获取活跃用户数
+func (r *HistoryRepository) GetActiveUserCount(ctx context.Context, since time.Time) (int64, error) {
+	var count int64
+	query := `
+		SELECT COUNT(DISTINCT user_id)
+		FROM download_history
+		WHERE user_id <> '' AND created_at >= $1
+	`
+	err := r.db.QueryRowContext(ctx, query, since).Scan(&count)
+	return count, err
+}
+
+// GetRequestTrend 获取平台请求趋势
+func (r *HistoryRepository) GetRequestTrend(ctx context.Context, granularity string, limit int) ([]models.TrendPoint, error) {
+	if limit <= 0 {
+		limit = 7
+	}
+
+	var (
+		query string
+		args  []interface{}
+	)
+
+	switch granularity {
+	case "hour":
+		query = `
+			SELECT TO_CHAR(bucket, 'YYYY-MM-DD HH24:00') AS label, count
+			FROM (
+				SELECT DATE_TRUNC('hour', created_at) AS bucket, COUNT(*) AS count
+				FROM download_history
+				WHERE created_at >= NOW() - ($1::int * INTERVAL '1 hour')
+				GROUP BY bucket
+				ORDER BY bucket DESC
+				LIMIT $1
+			) trend
+			ORDER BY bucket ASC
+		`
+		args = []interface{}{limit}
+	default:
+		query = `
+			SELECT TO_CHAR(bucket, 'YYYY-MM-DD') AS label, count
+			FROM (
+				SELECT DATE_TRUNC('day', created_at) AS bucket, COUNT(*) AS count
+				FROM download_history
+				WHERE created_at >= CURRENT_DATE - ($1::int - 1)
+				GROUP BY bucket
+				ORDER BY bucket DESC
+				LIMIT $1
+			) trend
+			ORDER BY bucket ASC
+		`
+		args = []interface{}{limit}
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query request trend: %w", err)
+	}
+	defer rows.Close()
+
+	points := make([]models.TrendPoint, 0, limit)
+	for rows.Next() {
+		var point models.TrendPoint
+		if err := rows.Scan(&point.Label, &point.Count); err != nil {
+			return nil, fmt.Errorf("failed to scan request trend: %w", err)
+		}
+		points = append(points, point)
+	}
+
+	return points, nil
+}

@@ -280,6 +280,51 @@ func (s *GRPCServer) GetUserStats(ctx context.Context, req *pb.GetUserStatsReque
 	}, nil
 }
 
+// GetPlatformStats 获取平台统计
+func (s *GRPCServer) GetPlatformStats(ctx context.Context, req *pb.GetPlatformStatsRequest) (*pb.GetPlatformStatsResponse, error) {
+	stats, err := s.statsService.GetPlatformStats(ctx)
+	if err != nil {
+		log.Printf("GetPlatformStats error: %v", err)
+		return nil, status.Error(codes.Internal, "获取平台统计失败")
+	}
+
+	return &pb.GetPlatformStatsResponse{
+		TotalDownloads:    stats.TotalDownloads,
+		SuccessDownloads:  stats.SuccessDownloads,
+		FailedDownloads:   stats.FailedDownloads,
+		DownloadsToday:    stats.DownloadsToday,
+		DailyActiveUsers:  stats.DailyActiveUsers,
+		WeeklyActiveUsers: stats.WeeklyActiveUsers,
+	}, nil
+}
+
+// GetRequestTrend 获取平台请求趋势
+func (s *GRPCServer) GetRequestTrend(ctx context.Context, req *pb.GetRequestTrendRequest) (*pb.GetRequestTrendResponse, error) {
+	granularity := req.Granularity
+	if granularity == "" {
+		granularity = "day"
+	}
+
+	points, err := s.statsService.GetRequestTrend(ctx, granularity, int(req.Limit))
+	if err != nil {
+		log.Printf("GetRequestTrend error: %v", err)
+		return nil, status.Error(codes.Internal, "获取请求趋势失败")
+	}
+
+	respPoints := make([]*pb.TrendPoint, 0, len(points))
+	for _, point := range points {
+		respPoints = append(respPoints, &pb.TrendPoint{
+			Label: point.Label,
+			Count: point.Count,
+		})
+	}
+
+	return &pb.GetRequestTrendResponse{
+		Granularity: granularity,
+		Points:      respPoints,
+	}, nil
+}
+
 // GetFileInfo 获取文件信息
 func (s *GRPCServer) GetFileInfo(ctx context.Context, req *pb.GetFileInfoRequest) (*pb.GetFileInfoResponse, error) {
 	if req.HistoryId == 0 || req.UserId == "" {
@@ -311,12 +356,44 @@ func (s *GRPCServer) GetFileInfo(ctx context.Context, req *pb.GetFileInfoRequest
 
 // ========== 代理管理 ==========
 
+func (s *GRPCServer) AcquireProxyForTask(ctx context.Context, req *pb.AcquireProxyForTaskRequest) (*pb.AcquireProxyForTaskResponse, error) {
+	return s.proxyHandler.AcquireProxyForTask(ctx, req)
+}
+
 func (s *GRPCServer) GetAvailableProxy(ctx context.Context, req *pb.GetAvailableProxyRequest) (*pb.GetAvailableProxyResponse, error) {
 	return s.proxyHandler.GetAvailableProxy(ctx, req)
 }
 
 func (s *GRPCServer) ReportProxyUsage(ctx context.Context, req *pb.ReportProxyUsageRequest) (*pb.ReportProxyUsageResponse, error) {
 	return s.proxyHandler.ReportProxyUsage(ctx, req)
+}
+
+func (s *GRPCServer) GetProxySourcePolicy(ctx context.Context, req *pb.GetProxySourcePolicyRequest) (*pb.GetProxySourcePolicyResponse, error) {
+	return s.proxyHandler.GetProxySourcePolicy(ctx, req)
+}
+
+func (s *GRPCServer) UpdateProxySourcePolicy(ctx context.Context, req *pb.UpdateProxySourcePolicyRequest) (*pb.UpdateProxySourcePolicyResponse, error) {
+	return s.proxyHandler.UpdateProxySourcePolicy(ctx, req)
+}
+
+func (s *GRPCServer) ListProxies(ctx context.Context, req *pb.ListProxiesRequest) (*pb.ListProxiesResponse, error) {
+	return s.proxyHandler.ListProxies(ctx, req)
+}
+
+func (s *GRPCServer) CreateProxy(ctx context.Context, req *pb.CreateProxyRequest) (*pb.CreateProxyResponse, error) {
+	return s.proxyHandler.CreateProxy(ctx, req)
+}
+
+func (s *GRPCServer) UpdateProxy(ctx context.Context, req *pb.UpdateProxyRequest) (*pb.UpdateProxyResponse, error) {
+	return s.proxyHandler.UpdateProxy(ctx, req)
+}
+
+func (s *GRPCServer) UpdateProxyStatus(ctx context.Context, req *pb.UpdateProxyStatusRequest) (*pb.UpdateProxyStatusResponse, error) {
+	return s.proxyHandler.UpdateProxyStatus(ctx, req)
+}
+
+func (s *GRPCServer) DeleteProxy(ctx context.Context, req *pb.DeleteProxyRequest) (*pb.DeleteProxyResponse, error) {
+	return s.proxyHandler.DeleteProxy(ctx, req)
 }
 
 // ========== Cookie 管理 ==========

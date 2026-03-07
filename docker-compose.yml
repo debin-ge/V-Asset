@@ -161,17 +161,47 @@ services:
       - asset-service
     restart: unless-stopped
 
+  # Admin Service - 管理后台后端
+  admin-service:
+    build: ./admin-service
+    container_name: vasset-admin-service
+    ports:
+      - "8081:8081"
+    environment:
+      - AUTH_SERVICE_ADDR=${AUTH_SERVICE_ADDR:-auth-service:9001}
+      - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    depends_on:
+      - auth-service
+      - asset-service
+      - redis
+    restart: unless-stopped
+
   # Frontend Service - 前端服务
   frontend-service:
     build:
       context: ./frontend-service
       args:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+        - NEXT_PUBLIC_PARSE_TIMEOUT_MS=${NEXT_PUBLIC_PARSE_TIMEOUT_MS:-300000}
     container_name: vasset-frontend
     ports:
       - "80:3000"
     depends_on:
       - api-gateway
+    restart: unless-stopped
+
+  # Admin Frontend - 管理后台前端
+  admin-frontend:
+    build: ./admin-frontend
+    container_name: vasset-admin-frontend
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_ADMIN_API_BASE_URL=${NEXT_PUBLIC_ADMIN_API_BASE_URL:-http://localhost:8081}
+    depends_on:
+      - admin-service
     restart: unless-stopped
 
 # ==================== 数据卷 ====================

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"vasset/media-service/internal/platformpolicy"
 )
 
 // Config 应用配置
@@ -33,12 +35,13 @@ type RedisConfig struct {
 
 // YTDLPConfig yt-dlp配置
 type YTDLPConfig struct {
-	BinaryPath    string   `yaml:"binary_path"`
-	Timeout       int      `yaml:"timeout"`        // 解析超时(秒)
-	MaxConcurrent int      `yaml:"max_concurrent"` // 最大并发解析数
-	CookiesDir    string   `yaml:"cookies_dir"`
-	Proxy         string   `yaml:"proxy"`        // 代理地址
-	DefaultArgs   []string `yaml:"default_args"` // 默认参数
+	BinaryPath    string                       `yaml:"binary_path"`
+	Timeout       int                          `yaml:"timeout"`        // 解析超时(秒)
+	MaxConcurrent int                          `yaml:"max_concurrent"` // 最大并发解析数
+	CookiesDir    string                       `yaml:"cookies_dir"`
+	Proxy         string                       `yaml:"proxy"`        // 代理地址
+	DefaultArgs   []string                     `yaml:"default_args"` // 默认参数
+	YouTube       platformpolicy.YouTubePolicy `yaml:"youtube"`
 }
 
 // CacheConfig 缓存配置
@@ -96,6 +99,7 @@ func LoadConfig(configPath string) (*Config, error) {
 	if cfg.YTDLP.MaxConcurrent == 0 {
 		cfg.YTDLP.MaxConcurrent = 10
 	}
+	cfg.YTDLP.YouTube = platformpolicy.NormalizeYouTubePolicy(cfg.YTDLP.YouTube)
 	if cfg.Cache.TTL == 0 {
 		cfg.Cache.TTL = 3600
 	}

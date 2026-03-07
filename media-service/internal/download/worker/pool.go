@@ -12,13 +12,14 @@ import (
 	"vasset/media-service/internal/download/repository"
 	"vasset/media-service/internal/download/storage"
 	"vasset/media-service/internal/download/ytdlp"
+	"vasset/media-service/internal/platformpolicy"
 )
 
 // AssetClientInterface Asset 服务客户端接口
 type AssetClientInterface interface {
 	GetCookieContent(cookieID int64, platform, taskID string) (string, error)
 	ReportCookieUsage(cookieID int64, success bool, taskID string) error
-	ReportProxyUsage(proxyLeaseID string, success bool) error
+	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error
 	CleanupCookieFile(cookieFile string) error
 }
 
@@ -40,8 +41,9 @@ type Pool struct {
 	assetClient       AssetClientInterface // 新增：Asset 客户端
 
 	// 配置
-	storageCfg *config.StorageConfig
-	retryCfg   *config.RetryConfig
+	storageCfg    *config.StorageConfig
+	retryCfg      *config.RetryConfig
+	youtubePolicy platformpolicy.YouTubePolicy
 }
 
 // TaskWrapper 任务包装器
@@ -61,6 +63,7 @@ func NewPool(
 	fileManager *storage.FileManager,
 	progressPublisher *ProgressPublisher,
 	assetClient AssetClientInterface, // 新增：Asset 客户端（可选）
+	youtubePolicy platformpolicy.YouTubePolicy,
 ) *Pool {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -78,6 +81,7 @@ func NewPool(
 		assetClient:       assetClient, // 新增
 		storageCfg:        storageCfg,
 		retryCfg:          retryCfg,
+		youtubePolicy:     youtubePolicy,
 	}
 
 	return pool
@@ -224,9 +228,12 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	// 6. 获取 Cookie 并执行下载
 	var cookieFile string
 	platform := task.Metadata.Platform
+	log.Printf("[Worker] [Task %s] Download access policy: platform=%s youtube_cookie_disabled=%t has_proxy=%t", taskID, platform, platformpolicy.IsYouTubePlatform(platform) && p.youtubePolicy.CookiesDisabled(), proxyURL != "")
 
 	// 如果有 CookieID，从 Asset Service 获取 cookie 内容
-	if task.CookieID > 0 && p.assetClient != nil {
+	if platformpolicy.IsYouTubePlatform(platform) && p.youtubePolicy.CookiesDisabled() {
+		log.Printf("[Worker] [Task %s] youtube_cookie_disabled=true, skipping cookie fetch", taskID)
+	} else if task.CookieID > 0 && p.assetClient != nil {
 		log.Printf("[Worker] [Task %s] Getting cookie content for ID: %d", taskID, task.CookieID)
 		var err error
 		cookieFile, err = p.assetClient.GetCookieContent(task.CookieID, platform, taskID)
@@ -247,13 +254,15 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 
 	if task.ProxyLeaseID != "" && p.assetClient != nil {
 		success := downloadErr == nil
-		if reportErr := p.assetClient.ReportProxyUsage(task.ProxyLeaseID, success); reportErr != nil {
+		if reportErr := p.assetClient.ReportProxyUsage(task.TaskID, task.ProxyLeaseID, "download", success); reportErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to report proxy usage: %v", taskID, reportErr)
 		}
 	}
 
 	// 报告 Cookie 使用结果
-	if task.CookieID > 0 && p.assetClient != nil {
+	if platformpolicy.IsYouTubePlatform(platform) && p.youtubePolicy.CookiesDisabled() {
+		log.Printf("[Worker] [Task %s] youtube_cookie_disabled=true, skipping cookie usage report", taskID)
+	} else if task.CookieID > 0 && p.assetClient != nil {
 		success := downloadErr == nil
 		if reportErr := p.assetClient.ReportCookieUsage(task.CookieID, success, taskID); reportErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to report cookie usage: %v", taskID, reportErr)

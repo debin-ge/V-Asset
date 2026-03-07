@@ -72,6 +72,22 @@ type DailyActivity struct {
 	Count int64  `json:"count" db:"count"`
 }
 
+// TrendPoint 趋势点
+type TrendPoint struct {
+	Label string `json:"label" db:"label"`
+	Count int64  `json:"count" db:"count"`
+}
+
+// PlatformStats 平台整体统计
+type PlatformStats struct {
+	TotalDownloads    int64 `json:"total_downloads"`
+	SuccessDownloads  int64 `json:"success_downloads"`
+	FailedDownloads   int64 `json:"failed_downloads"`
+	DownloadsToday    int64 `json:"downloads_today"`
+	DailyActiveUsers  int64 `json:"daily_active_users"`
+	WeeklyActiveUsers int64 `json:"weekly_active_users"`
+}
+
 // HistoryFilter 历史查询过滤条件
 type HistoryFilter struct {
 	UserID    string

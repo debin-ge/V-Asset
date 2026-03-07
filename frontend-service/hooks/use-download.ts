@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { AxiosError } from "axios"
 import { toast } from "sonner"
 import { parseApi } from "@/lib/api/parse"
 import type { VideoInfo } from "@/lib/api/parse"
@@ -91,7 +92,10 @@ export function useDownload() {
             setStatus("parsed")
         } catch (error) {
             setStatus("error")
-            const message = error instanceof Error ? error.message : "Parse failed, please check the link"
+            let message = error instanceof Error ? error.message : "Parse failed, please check the link"
+            if (error instanceof AxiosError && error.code === "ECONNABORTED") {
+                message = "解析耗时较长，请稍后重试，或联系管理员增加解析超时时间"
+            }
             toast.error(message)
         }
     }

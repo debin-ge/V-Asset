@@ -153,12 +153,12 @@ func (c *AssetClient) GetAvailableProxy(ctx context.Context) (*ProxyLease, error
 }
 
 // ReportProxyUsage 报告代理使用结果
-func (c *AssetClient) ReportProxyUsage(proxyLeaseID string, success bool) error {
-	if proxyLeaseID == "" {
+func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error {
+	if taskID == "" && proxyLeaseID == "" {
 		return nil
 	}
 
-	log.Printf("[AssetClient] Reporting proxy usage: lease_id=%s, success=%v", proxyLeaseID, success)
+	log.Printf("[AssetClient] Reporting proxy usage: task_id=%s, lease_id=%s, stage=%s, success=%v", taskID, proxyLeaseID, stage, success)
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
@@ -166,6 +166,8 @@ func (c *AssetClient) ReportProxyUsage(proxyLeaseID string, success bool) error 
 	_, err := c.client.ReportProxyUsage(ctx, &pb.ReportProxyUsageRequest{
 		ProxyLeaseId: proxyLeaseID,
 		Success:      success,
+		TaskId:       taskID,
+		Stage:        stage,
 	})
 
 	if err != nil {

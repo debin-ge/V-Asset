@@ -1,6 +1,8 @@
 package adapter
 
 import (
+	"context"
+
 	"vasset/media-service/internal/ytdlp"
 )
 
@@ -17,16 +19,16 @@ func NewGenericAdapter(wrapper *ytdlp.Wrapper) *GenericAdapter {
 }
 
 // Parse 解析视频(使用默认参数)
-func (a *GenericAdapter) Parse(url string) (*ytdlp.VideoInfo, error) {
-	return a.ytdlp.ExtractInfo(url, "")
+func (a *GenericAdapter) Parse(ctx context.Context, url string) (*ytdlp.VideoInfo, error) {
+	return a.ytdlp.ExtractInfo(ctx, url, "")
 }
 
 // ParseWithCookie 解析视频（使用动态 cookie）
-func (a *GenericAdapter) ParseWithCookie(url string, cookieFile string) (*ytdlp.VideoInfo, error) {
-	return a.ytdlp.ExtractInfo(url, cookieFile)
+func (a *GenericAdapter) ParseWithCookie(ctx context.Context, url string, cookieFile string) (*ytdlp.VideoInfo, error) {
+	return a.ytdlp.ExtractInfo(ctx, url, cookieFile)
 }
 
 // ParseWithProxyAndCookie 解析视频（使用动态 proxy 和 cookie）
-func (a *GenericAdapter) ParseWithProxyAndCookie(url, proxyURL, cookieFile string) (*ytdlp.VideoInfo, error) {
-	return a.ytdlp.ExtractInfoWithProxy(url, proxyURL, cookieFile)
+func (a *GenericAdapter) ParseWithProxyAndCookie(ctx context.Context, url, proxyURL, cookieFile string) (*ytdlp.VideoInfo, error) {
+	return a.ytdlp.ExtractInfoWithProxy(ctx, url, proxyURL, cookieFile)
 }

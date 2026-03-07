@@ -49,13 +49,15 @@ func main() {
 	historyRepo := repository.NewHistoryRepository(db)
 	quotaRepo := repository.NewQuotaRepository(db)
 	proxyRepo := repository.NewProxyRepository(db)
+	proxyPolicyRepo := repository.NewProxyPolicyRepository(db)
+	taskProxyBindingRepo := repository.NewTaskProxyBindingRepository(db)
 	cookieRepo := repository.NewCookieRepository(db)
 
 	// 4. 初始化 Service
 	historyService := service.NewHistoryService(historyRepo)
 	quotaService := service.NewQuotaService(quotaRepo, &cfg.Quota)
 	statsService := service.NewStatsService(historyRepo)
-	proxyService := service.NewProxyService(proxyRepo, cfg)
+	proxyService := service.NewProxyService(proxyRepo, proxyPolicyRepo, taskProxyBindingRepo, cfg)
 	cookieService := service.NewCookieService(cookieRepo, cfg)
 
 	// 5. 初始化 Handler

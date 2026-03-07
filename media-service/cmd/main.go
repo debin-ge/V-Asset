@@ -107,6 +107,7 @@ func main() {
 		fileManager,
 		progressPublisher,
 		assetClient,
+		downloadCfg.YtDLP.YouTube,
 	)
 	workerPool.Start()
 

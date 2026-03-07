@@ -19,29 +19,32 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AssetService_GetHistory_FullMethodName         = "/asset.AssetService/GetHistory"
-	AssetService_DeleteHistory_FullMethodName      = "/asset.AssetService/DeleteHistory"
-	AssetService_CheckQuota_FullMethodName         = "/asset.AssetService/CheckQuota"
-	AssetService_ConsumeQuota_FullMethodName       = "/asset.AssetService/ConsumeQuota"
-	AssetService_GetUserStats_FullMethodName       = "/asset.AssetService/GetUserStats"
-	AssetService_GetFileInfo_FullMethodName        = "/asset.AssetService/GetFileInfo"
-	AssetService_CreateHistory_FullMethodName      = "/asset.AssetService/CreateHistory"
-	AssetService_GetAvailableProxy_FullMethodName  = "/asset.AssetService/GetAvailableProxy"
-	AssetService_ReportProxyUsage_FullMethodName   = "/asset.AssetService/ReportProxyUsage"
-	AssetService_CreateCookie_FullMethodName       = "/asset.AssetService/CreateCookie"
-	AssetService_UpdateCookie_FullMethodName       = "/asset.AssetService/UpdateCookie"
-	AssetService_DeleteCookie_FullMethodName       = "/asset.AssetService/DeleteCookie"
-	AssetService_GetCookie_FullMethodName          = "/asset.AssetService/GetCookie"
-	AssetService_ListCookies_FullMethodName        = "/asset.AssetService/ListCookies"
-	AssetService_GetAvailableCookie_FullMethodName = "/asset.AssetService/GetAvailableCookie"
-	AssetService_ReportCookieUsage_FullMethodName  = "/asset.AssetService/ReportCookieUsage"
-	AssetService_FreezeCookie_FullMethodName       = "/asset.AssetService/FreezeCookie"
+	AssetService_AcquireProxyForTask_FullMethodName = "/asset.AssetService/AcquireProxyForTask"
+	AssetService_GetHistory_FullMethodName          = "/asset.AssetService/GetHistory"
+	AssetService_DeleteHistory_FullMethodName       = "/asset.AssetService/DeleteHistory"
+	AssetService_CheckQuota_FullMethodName          = "/asset.AssetService/CheckQuota"
+	AssetService_ConsumeQuota_FullMethodName        = "/asset.AssetService/ConsumeQuota"
+	AssetService_GetUserStats_FullMethodName        = "/asset.AssetService/GetUserStats"
+	AssetService_GetFileInfo_FullMethodName         = "/asset.AssetService/GetFileInfo"
+	AssetService_CreateHistory_FullMethodName       = "/asset.AssetService/CreateHistory"
+	AssetService_GetAvailableProxy_FullMethodName   = "/asset.AssetService/GetAvailableProxy"
+	AssetService_ReportProxyUsage_FullMethodName    = "/asset.AssetService/ReportProxyUsage"
+	AssetService_CreateCookie_FullMethodName        = "/asset.AssetService/CreateCookie"
+	AssetService_UpdateCookie_FullMethodName        = "/asset.AssetService/UpdateCookie"
+	AssetService_DeleteCookie_FullMethodName        = "/asset.AssetService/DeleteCookie"
+	AssetService_GetCookie_FullMethodName           = "/asset.AssetService/GetCookie"
+	AssetService_ListCookies_FullMethodName         = "/asset.AssetService/ListCookies"
+	AssetService_GetAvailableCookie_FullMethodName  = "/asset.AssetService/GetAvailableCookie"
+	AssetService_ReportCookieUsage_FullMethodName   = "/asset.AssetService/ReportCookieUsage"
+	AssetService_FreezeCookie_FullMethodName        = "/asset.AssetService/FreezeCookie"
 )
 
 // AssetServiceClient is the client API for AssetService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AssetServiceClient interface {
+	// 按任务获取或复用代理绑定
+	AcquireProxyForTask(ctx context.Context, in *AcquireProxyForTaskRequest, opts ...grpc.CallOption) (*AcquireProxyForTaskResponse, error)
 	// 获取下载历史
 	GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*GetHistoryResponse, error)
 	// 删除历史记录
@@ -86,6 +89,16 @@ type assetServiceClient struct {
 
 func NewAssetServiceClient(cc grpc.ClientConnInterface) AssetServiceClient {
 	return &assetServiceClient{cc}
+}
+
+func (c *assetServiceClient) AcquireProxyForTask(ctx context.Context, in *AcquireProxyForTaskRequest, opts ...grpc.CallOption) (*AcquireProxyForTaskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AcquireProxyForTaskResponse)
+	err := c.cc.Invoke(ctx, AssetService_AcquireProxyForTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *assetServiceClient) GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*GetHistoryResponse, error) {
@@ -262,6 +275,8 @@ func (c *assetServiceClient) FreezeCookie(ctx context.Context, in *FreezeCookieR
 // All implementations must embed UnimplementedAssetServiceServer
 // for forward compatibility.
 type AssetServiceServer interface {
+	// 按任务获取或复用代理绑定
+	AcquireProxyForTask(context.Context, *AcquireProxyForTaskRequest) (*AcquireProxyForTaskResponse, error)
 	// 获取下载历史
 	GetHistory(context.Context, *GetHistoryRequest) (*GetHistoryResponse, error)
 	// 删除历史记录
@@ -308,6 +323,9 @@ type AssetServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAssetServiceServer struct{}
 
+func (UnimplementedAssetServiceServer) AcquireProxyForTask(context.Context, *AcquireProxyForTaskRequest) (*AcquireProxyForTaskResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcquireProxyForTask not implemented")
+}
 func (UnimplementedAssetServiceServer) GetHistory(context.Context, *GetHistoryRequest) (*GetHistoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetHistory not implemented")
 }
@@ -378,6 +396,24 @@ func RegisterAssetServiceServer(s grpc.ServiceRegistrar, srv AssetServiceServer)
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AssetService_ServiceDesc, srv)
+}
+
+func _AssetService_AcquireProxyForTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcquireProxyForTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).AcquireProxyForTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_AcquireProxyForTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).AcquireProxyForTask(ctx, req.(*AcquireProxyForTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AssetService_GetHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -693,6 +729,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "asset.AssetService",
 	HandlerType: (*AssetServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AcquireProxyForTask",
+			Handler:    _AssetService_AcquireProxyForTask_Handler,
+		},
 		{
 			MethodName: "GetHistory",
 			Handler:    _AssetService_GetHistory_Handler,

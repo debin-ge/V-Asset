@@ -32,7 +32,7 @@ func (s *GRPCServer) ParseURL(ctx context.Context, req *pb.ParseURLRequest) (*pb
 	s.logger.Info("ParseURL request", zap.String("url", req.Url))
 
 	// 调用解析服务
-	result, err := s.parserService.ParseURL(ctx, req.Url, req.SkipCache)
+	result, err := s.parserService.ParseURL(ctx, req.TaskId, req.Url, req.SkipCache)
 	if err != nil {
 		s.logger.Error("ParseURL failed", zap.String("url", req.Url), zap.Error(err))
 		return nil, mapErrorToGRPCStatus(err)

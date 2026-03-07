@@ -25,6 +25,7 @@ type ParseURLRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
 	SkipCache     bool                   `protobuf:"varint,2,opt,name=skip_cache,json=skipCache,proto3" json:"skip_cache,omitempty"`
+	TaskId        string                 `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -71,6 +72,13 @@ func (x *ParseURLRequest) GetSkipCache() bool {
 		return x.SkipCache
 	}
 	return false
+}
+
+func (x *ParseURLRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
 }
 
 type ParseURLResponse struct {
@@ -461,11 +469,12 @@ var File_proto_media_proto protoreflect.FileDescriptor
 
 const file_proto_media_proto_rawDesc = "" +
 	"\n" +
-	"\x11proto/media.proto\x12\x05media\"B\n" +
+	"\x11proto/media.proto\x12\x05media\"[\n" +
 	"\x0fParseURLRequest\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12\x1d\n" +
 	"\n" +
-	"skip_cache\x18\x02 \x01(\bR\tskipCache\"\xc9\x03\n" +
+	"skip_cache\x18\x02 \x01(\bR\tskipCache\x12\x17\n" +
+	"\atask_id\x18\x03 \x01(\tR\x06taskId\"\xc9\x03\n" +
 	"\x10ParseURLResponse\x12\x19\n" +
 	"\bvideo_id\x18\x01 \x01(\tR\avideoId\x12\x1a\n" +
 	"\bplatform\x18\x02 \x01(\tR\bplatform\x12\x14\n" +

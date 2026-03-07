@@ -15,6 +15,7 @@ import (
 
 	"vasset/media-service/internal/download/config"
 	"vasset/media-service/internal/download/models"
+	"vasset/media-service/internal/platformpolicy"
 )
 
 // Executor yt-dlp 执行器
@@ -26,6 +27,7 @@ type Executor struct {
 	defaultArgs         []string
 	platformArgs        map[string][]string
 	progressCallback    func(*models.Progress)
+	youtubePolicy       platformpolicy.YouTubePolicy
 }
 
 // NewExecutor 创建 yt-dlp 执行器
@@ -37,6 +39,7 @@ func NewExecutor(cfg *config.YtDLPConfig) *Executor {
 		cookiesDir:          cfg.CookiesDir,
 		defaultArgs:         cfg.DefaultArgs,
 		platformArgs:        cfg.PlatformArgs,
+		youtubePolicy:       cfg.YouTube,
 	}
 }
 
@@ -141,13 +144,18 @@ func (e *Executor) buildCommand(task *models.DownloadTask, proxyURL, outputPath,
 	// 检测平台并添加平台特定参数
 	platform := detectPlatform(task.URL)
 	log.Printf("[YtDLP] [Task %s] Detected platform: %s", task.TaskID, platform)
-	if platformArgs, ok := e.platformArgs[platform]; ok && len(platformArgs) > 0 {
+	if platformpolicy.IsYouTubePlatform(platform) {
+		args = append(args, e.youtubePolicy.Args...)
+		log.Printf("[YtDLP] [Task %s] Applied shared YouTube args: %d", task.TaskID, len(e.youtubePolicy.Args))
+	} else if platformArgs, ok := e.platformArgs[platform]; ok && len(platformArgs) > 0 {
 		args = append(args, platformArgs...)
 		log.Printf("[YtDLP] [Task %s] Added %d platform-specific args for %s", task.TaskID, len(platformArgs), platform)
 	}
 
 	// 添加 cookies：优先使用传入的 cookieFile，否则回退到自动检测
-	if cookieFile != "" {
+	if platformpolicy.IsYouTubePlatform(platform) && e.youtubePolicy.CookiesDisabled() {
+		log.Printf("[YtDLP] [Task %s] youtube_cookie_disabled=true, skipping cookie injection", task.TaskID)
+	} else if cookieFile != "" {
 		args = append(args, "--cookies", cookieFile)
 		log.Printf("[YtDLP] [Task %s] Using provided cookie file: %s", task.TaskID, cookieFile)
 	} else {

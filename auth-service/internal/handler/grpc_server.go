@@ -161,6 +161,18 @@ func (s *GRPCServer) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest
 	}, nil
 }
 
+// GetPlatformUserStats 获取平台用户统计
+func (s *GRPCServer) GetPlatformUserStats(ctx context.Context, req *pb.GetPlatformUserStatsRequest) (*pb.GetPlatformUserStatsResponse, error) {
+	totalUsers, err := s.userService.GetPlatformUserStats(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.GetPlatformUserStatsResponse{
+		TotalUsers: totalUsers,
+	}, nil
+}
+
 // UpdateProfile 更新用户信息
 func (s *GRPCServer) UpdateProfile(ctx context.Context, req *pb.UpdateProfileRequest) (*pb.UpdateProfileResponse, error) {
 	LogRequest("UpdateProfile", req)

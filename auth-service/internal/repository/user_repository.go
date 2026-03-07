@@ -184,3 +184,15 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, userID string, pass
 
 	return nil
 }
+
+// CountTotalUsers 获取平台总用户数
+func (r *UserRepository) CountTotalUsers(ctx context.Context) (int64, error) {
+	query := `SELECT COUNT(*) FROM users`
+
+	var count int64
+	if err := r.db.QueryRowContext(ctx, query).Scan(&count); err != nil {
+		return 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	return count, nil
+}

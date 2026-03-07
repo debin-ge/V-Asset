@@ -1,6 +1,8 @@
 import apiClient from '../api-client';
 import { formatDuration } from '../format';
 
+const PARSE_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_PARSE_TIMEOUT_MS || 300000);
+
 export interface VideoFormat {
     format_id: string;
     quality: string;
@@ -38,7 +40,11 @@ type ParseApiVideoInfo = Omit<VideoInfo, 'durationFormatted' | 'url'>
 export const parseApi = {
     // 解析URL
     parseUrl: async (url: string, skipCache = false): Promise<VideoInfo> => {
-        const response = await apiClient.post<ParseApiVideoInfo>('/api/v1/parse', { url, skip_cache: skipCache });
+        const response = await apiClient.post<ParseApiVideoInfo>(
+            '/api/v1/parse',
+            { url, skip_cache: skipCache },
+            { timeout: PARSE_TIMEOUT_MS }
+        );
         const data = response.data;
 
         // 调试日志

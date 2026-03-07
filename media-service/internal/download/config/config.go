@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"vasset/media-service/internal/platformpolicy"
 )
 
 // Config 应用配置
@@ -81,12 +83,13 @@ type WorkerConfig struct {
 
 // YtDLPConfig yt-dlp 配置
 type YtDLPConfig struct {
-	BinaryPath          string              `yaml:"binary_path"`
-	Timeout             int                 `yaml:"timeout"`
-	ConcurrentFragments int                 `yaml:"concurrent_fragments"`
-	CookiesDir          string              `yaml:"cookies_dir"`
-	DefaultArgs         []string            `yaml:"default_args"`
-	PlatformArgs        map[string][]string `yaml:"platform_args"`
+	BinaryPath          string                       `yaml:"binary_path"`
+	Timeout             int                          `yaml:"timeout"`
+	ConcurrentFragments int                          `yaml:"concurrent_fragments"`
+	CookiesDir          string                       `yaml:"cookies_dir"`
+	DefaultArgs         []string                     `yaml:"default_args"`
+	PlatformArgs        map[string][]string          `yaml:"platform_args"`
+	YouTube             platformpolicy.YouTubePolicy `yaml:"youtube"`
 }
 
 // YtDLPUpdateConfig yt-dlp 更新检测配置
@@ -178,6 +181,7 @@ func LoadConfig(configPath string) (*Config, error) {
 	if cfg.YtDLPUpdate.TimeoutSeconds <= 0 {
 		cfg.YtDLPUpdate.TimeoutSeconds = 30
 	}
+	cfg.YtDLP.YouTube = platformpolicy.NormalizeYouTubePolicy(cfg.YtDLP.YouTube)
 
 	return &cfg, nil
 }

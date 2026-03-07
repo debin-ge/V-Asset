@@ -151,13 +151,45 @@ func (c *AssetClient) GetAvailableProxy() (*ProxyLease, error) {
 	}, nil
 }
 
+// AcquireProxyForTask 为指定任务获取或复用代理
+func (c *AssetClient) AcquireProxyForTask(ctx context.Context, taskID, platform string) (*ProxyLease, error) {
+	if taskID == "" {
+		return nil, fmt.Errorf("task id is required")
+	}
+
+	log.Printf("[AssetClient] Requesting task-bound proxy from Asset Service: task_id=%s, platform=%s", taskID, platform)
+
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
+	resp, err := c.client.AcquireProxyForTask(ctx, &pb.AcquireProxyForTaskRequest{
+		TaskId:   taskID,
+		Platform: platform,
+	})
+	if err != nil {
+		log.Printf("[AssetClient] ERROR: Failed to acquire proxy for task %s: %v", taskID, err)
+		return nil, fmt.Errorf("failed to acquire proxy for task: %w", err)
+	}
+
+	if resp.ProxyUrl == "" {
+		return nil, fmt.Errorf("proxy binding is empty for task %s", taskID)
+	}
+
+	log.Printf("[AssetClient] ✓ Got task-bound proxy: task_id=%s, lease_id=%s, expire_at=%s", taskID, resp.ProxyLeaseId, resp.ExpireAt)
+	return &ProxyLease{
+		URL:      resp.ProxyUrl,
+		LeaseID:  resp.ProxyLeaseId,
+		ExpireAt: resp.ExpireAt,
+	}, nil
+}
+
 // ReportProxyUsage 报告代理使用结果
-func (c *AssetClient) ReportProxyUsage(proxyLeaseID string, success bool) error {
-	if proxyLeaseID == "" {
+func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error {
+	if taskID == "" && proxyLeaseID == "" {
 		return nil
 	}
 
-	log.Printf("[AssetClient] Reporting proxy usage: lease_id=%s, success=%v", proxyLeaseID, success)
+	log.Printf("[AssetClient] Reporting proxy usage: task_id=%s, lease_id=%s, stage=%s, success=%v", taskID, proxyLeaseID, stage, success)
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
@@ -165,6 +197,8 @@ func (c *AssetClient) ReportProxyUsage(proxyLeaseID string, success bool) error 
 	_, err := c.client.ReportProxyUsage(ctx, &pb.ReportProxyUsageRequest{
 		ProxyLeaseId: proxyLeaseID,
 		Success:      success,
+		TaskId:       taskID,
+		Stage:        stage,
 	})
 
 	if err != nil {

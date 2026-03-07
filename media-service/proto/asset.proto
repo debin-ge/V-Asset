@@ -5,6 +5,8 @@ package asset;
 option go_package = "vasset/asset-service/proto;pb";
 
 service AssetService {
+  // 按任务获取或复用代理绑定
+  rpc AcquireProxyForTask(AcquireProxyForTaskRequest) returns (AcquireProxyForTaskResponse);
   // 获取下载历史
   rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
   
@@ -179,6 +181,23 @@ message CreateHistoryResponse {
 
 // ========== 代理管理消息 ==========
 
+message AcquireProxyForTaskRequest {
+  string task_id = 1;
+  string protocol = 2;
+  string region = 3;
+  string platform = 4;
+}
+
+message AcquireProxyForTaskResponse {
+  string proxy_url = 1;
+  string proxy_lease_id = 2;
+  string expire_at = 3;
+  string source_type = 4;
+  bool is_degraded = 5;
+  string degrade_reason = 6;
+  int64 proxy_id = 7;
+}
+
 // 获取可用代理
 message GetAvailableProxyRequest {
   string protocol = 1;      // 可选：协议过滤
@@ -195,6 +214,11 @@ message GetAvailableProxyResponse {
 message ReportProxyUsageRequest {
   string proxy_lease_id = 1;
   bool success = 2;
+  string task_id = 3;
+  string stage = 4;
+  int64 proxy_id = 5;
+  string source_type = 6;
+  string error_message = 7;
 }
 
 message ReportProxyUsageResponse {
