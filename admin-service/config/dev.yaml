@@ -33,5 +33,5 @@ cors:
     - OPTIONS
   allowed_headers:
     - Content-Type
+    - Authorization
   allow_credentials: true
-
