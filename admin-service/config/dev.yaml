@@ -21,6 +21,8 @@ session:
   ttl: 24h
   cookie_name: vasset_admin_session
   secure: false
+  cookie_domain: ""
+  same_site: Lax
 
 cors:
   allowed_origins:

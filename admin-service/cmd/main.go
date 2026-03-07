@@ -54,7 +54,7 @@ func main() {
 	deps := &router.Dependencies{
 		Config:         cfg,
 		HealthHandler:  handler.NewHealthHandler(),
-		AuthHandler:    handler.NewAuthHandler(authService, cfg.Session.CookieName, cfg.Session.Secure),
+		AuthHandler:    handler.NewAuthHandler(authService, cfg.Session.CookieName, cfg.Session.Secure, cfg.Session.CookieDomain, cfg.Session.SameSite),
 		StatsHandler:   handler.NewStatsHandler(statsService),
 		ProxyHandler:   handler.NewProxyHandler(proxyService),
 		CookieHandler:  handler.NewCookieHandler(cookieService),

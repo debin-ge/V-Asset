@@ -39,10 +39,12 @@ type RedisConfig struct {
 }
 
 type SessionConfig struct {
-	Secret     string        `yaml:"secret"`
-	TTL        time.Duration `yaml:"ttl"`
-	CookieName string        `yaml:"cookie_name"`
-	Secure     bool          `yaml:"secure"`
+	Secret       string        `yaml:"secret"`
+	TTL          time.Duration `yaml:"ttl"`
+	CookieName   string        `yaml:"cookie_name"`
+	Secure       bool          `yaml:"secure"`
+	CookieDomain string        `yaml:"cookie_domain"`
+	SameSite     string        `yaml:"same_site"`
 }
 
 type CORSConfig struct {
@@ -87,6 +89,12 @@ func LoadConfig(configPath string) (*Config, error) {
 	if sessionSecure := os.Getenv("SESSION_SECURE"); sessionSecure != "" {
 		cfg.Session.Secure = strings.EqualFold(sessionSecure, "true") || sessionSecure == "1"
 	}
+	if sessionCookieDomain := os.Getenv("SESSION_COOKIE_DOMAIN"); sessionCookieDomain != "" {
+		cfg.Session.CookieDomain = sessionCookieDomain
+	}
+	if sessionSameSite := os.Getenv("SESSION_SAME_SITE"); sessionSameSite != "" {
+		cfg.Session.SameSite = sessionSameSite
+	}
 
 	if cfg.Server.Port == 0 {
 		cfg.Server.Port = 8081
@@ -108,6 +116,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.Session.CookieName == "" {
 		cfg.Session.CookieName = "vasset_admin_session"
+	}
+	if cfg.Session.SameSite == "" {
+		cfg.Session.SameSite = "Lax"
 	}
 	if len(cfg.CORS.AllowedMethods) == 0 {
 		cfg.CORS.AllowedMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
