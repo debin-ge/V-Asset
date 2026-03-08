@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { historyApi, HistoryItem } from "@/lib/api/history"
 import { downloadApi } from "@/lib/api/download"
 import { formatDate, formatFileSize, formatDuration, getStatusText } from "@/lib/format"
@@ -9,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Download, Trash2, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
 import { toast } from "sonner"
+import { RemoteThumbnail } from "@/components/common/RemoteThumbnail"
 
 export function History() {
     const [history, setHistory] = React.useState<HistoryItem[]>([])
@@ -91,11 +91,10 @@ export function History() {
                     <CardContent className="p-0 flex flex-col sm:flex-row">
                         <div className="w-full sm:w-48 h-32 relative shrink-0 bg-gray-100">
                             {item.thumbnail ? (
-                                <Image
+                                <RemoteThumbnail
                                     src={item.thumbnail}
                                     alt={item.title}
-                                    fill
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
