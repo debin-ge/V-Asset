@@ -41,9 +41,28 @@ async function proxy(request: NextRequest, path: string[]) {
     responseHeaders.set("content-type", responseContentType);
   }
 
-  const setCookie = upstream.headers.get("set-cookie");
-  if (setCookie) {
-    responseHeaders.append("set-cookie", setCookie);
+  // Node fetch may expose Set-Cookie via getSetCookie() instead of get("set-cookie").
+  const getSetCookie = (
+    upstream.headers as Headers & { getSetCookie?: () => string[] }
+  ).getSetCookie;
+  const setCookies = typeof getSetCookie === "function"
+    ? getSetCookie.call(upstream.headers)
+    : [];
+
+  if (setCookies.length > 0) {
+    for (const value of setCookies) {
+      responseHeaders.append("set-cookie", value);
+    }
+  } else {
+    const setCookie = upstream.headers.get("set-cookie");
+    if (setCookie) {
+      responseHeaders.append("set-cookie", setCookie);
+    }
+  }
+
+  const location = upstream.headers.get("location");
+  if (location) {
+    responseHeaders.set("location", location);
   }
 
   return new Response(upstream.body, {
