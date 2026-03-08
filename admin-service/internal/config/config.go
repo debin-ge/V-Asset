@@ -97,7 +97,7 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	if cfg.Server.Port == 0 {
-		cfg.Server.Port = 8081
+		cfg.Server.Port = 9005
 	}
 	if cfg.Server.Mode == "" {
 		cfg.Server.Mode = "debug"

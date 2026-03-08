@@ -14,6 +14,7 @@ type Config struct {
 	GRPC         GRPCConfig         `yaml:"grpc"`
 	Redis        RedisConfig        `yaml:"redis"`
 	RabbitMQ     RabbitMQConfig     `yaml:"rabbitmq"`
+	AdminSession AdminSessionConfig `yaml:"admin_session"`
 	CORS         CORSConfig         `yaml:"cors"`
 	RateLimit    RateLimitConfig    `yaml:"rate_limit"`
 	FileDownload FileDownloadConfig `yaml:"file_download"`
@@ -34,7 +35,16 @@ type GRPCConfig struct {
 	AuthService  string        `yaml:"auth_service"`
 	MediaService string        `yaml:"media_service"`
 	AssetService string        `yaml:"asset_service"`
+	AdminService string        `yaml:"admin_service"`
 	Timeout      time.Duration `yaml:"timeout"`
+}
+
+type AdminSessionConfig struct {
+	CookieName   string        `yaml:"cookie_name"`
+	TTL          time.Duration `yaml:"ttl"`
+	Secure       bool          `yaml:"secure"`
+	CookieDomain string        `yaml:"cookie_domain"`
+	SameSite     string        `yaml:"same_site"`
 }
 
 // RedisConfig Redis 配置
@@ -103,6 +113,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	if assetAddr := os.Getenv("ASSET_SERVICE_ADDR"); assetAddr != "" {
 		cfg.GRPC.AssetService = assetAddr
 	}
+	if adminAddr := os.Getenv("ADMIN_SERVICE_ADDR"); adminAddr != "" {
+		cfg.GRPC.AdminService = adminAddr
+	}
 
 	// Redis
 	if redisAddr := os.Getenv("REDIS_ADDR"); redisAddr != "" {
@@ -115,6 +128,18 @@ func LoadConfig(configPath string) (*Config, error) {
 	// RabbitMQ
 	if rabbitmqURL := os.Getenv("RABBITMQ_URL"); rabbitmqURL != "" {
 		cfg.RabbitMQ.URL = rabbitmqURL
+	}
+	if adminCookieName := os.Getenv("ADMIN_SESSION_COOKIE_NAME"); adminCookieName != "" {
+		cfg.AdminSession.CookieName = adminCookieName
+	}
+	if adminCookieDomain := os.Getenv("ADMIN_SESSION_COOKIE_DOMAIN"); adminCookieDomain != "" {
+		cfg.AdminSession.CookieDomain = adminCookieDomain
+	}
+	if adminSessionSameSite := os.Getenv("ADMIN_SESSION_SAME_SITE"); adminSessionSameSite != "" {
+		cfg.AdminSession.SameSite = adminSessionSameSite
+	}
+	if adminSessionSecure := os.Getenv("ADMIN_SESSION_SECURE"); adminSessionSecure != "" {
+		cfg.AdminSession.Secure = adminSessionSecure == "1" || adminSessionSecure == "true" || adminSessionSecure == "TRUE"
 	}
 
 	// 设置默认值
@@ -132,6 +157,18 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.GRPC.Timeout == 0 {
 		cfg.GRPC.Timeout = 5 * time.Second
+	}
+	if cfg.GRPC.AdminService == "" {
+		cfg.GRPC.AdminService = "localhost:9005"
+	}
+	if cfg.AdminSession.CookieName == "" {
+		cfg.AdminSession.CookieName = "vasset_admin_session"
+	}
+	if cfg.AdminSession.TTL == 0 {
+		cfg.AdminSession.TTL = 24 * time.Hour
+	}
+	if cfg.AdminSession.SameSite == "" {
+		cfg.AdminSession.SameSite = "Lax"
 	}
 	if cfg.RateLimit.GlobalRPS == 0 {
 		cfg.RateLimit.GlobalRPS = 200

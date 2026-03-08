@@ -150,9 +150,14 @@ services:
       - AUTH_SERVICE_ADDR=${AUTH_SERVICE_ADDR:-auth-service:9001}
       - MEDIA_SERVICE_ADDR=${MEDIA_SERVICE_ADDR:-media-service:9002}
       - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
+      - ADMIN_SERVICE_ADDR=${ADMIN_SERVICE_ADDR:-admin-service:9005}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      - ADMIN_SESSION_COOKIE_NAME=${ADMIN_SESSION_COOKIE_NAME:-vasset_admin_session}
+      - ADMIN_SESSION_SECURE=${ADMIN_SESSION_SECURE:-false}
+      - ADMIN_SESSION_SAME_SITE=${ADMIN_SESSION_SAME_SITE:-Lax}
+      - ADMIN_SESSION_COOKIE_DOMAIN=${ADMIN_SESSION_COOKIE_DOMAIN:-}
     volumes:
       - vasset-data:/data/vasset:ro # 只读挂载，用于提供文件下载
     depends_on:
@@ -166,14 +171,12 @@ services:
     build: ./admin-service
     container_name: vasset-admin-service
     ports:
-      - "8081:8081"
+      - "9005:9005"
     environment:
       - AUTH_SERVICE_ADDR=${AUTH_SERVICE_ADDR:-auth-service:9001}
       - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
-      - CORS_ALLOWED_HEADERS=${CORS_ALLOWED_HEADERS:-Content-Type,Authorization}
       - SESSION_SECURE=${SESSION_SECURE:-false}
       - SESSION_SAME_SITE=${SESSION_SAME_SITE:-Lax}
       - SESSION_COOKIE_DOMAIN=${SESSION_COOKIE_DOMAIN:-}
@@ -199,14 +202,17 @@ services:
 
   # Admin Frontend - 管理后台前端
   admin-frontend:
-    build: ./admin-frontend
+    build:
+      context: ./admin-frontend
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
     container_name: vasset-admin-frontend
     ports:
       - "3001:3001"
     environment:
-      - NEXT_PUBLIC_ADMIN_API_BASE_URL=${NEXT_PUBLIC_ADMIN_API_BASE_URL:-http://localhost:8081}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
     depends_on:
-      - admin-service
+      - api-gateway
     restart: unless-stopped
 
 # ==================== 数据卷 ====================

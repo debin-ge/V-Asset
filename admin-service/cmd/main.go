@@ -2,21 +2,22 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
 
 	"vasset/admin-service/internal/client"
 	"vasset/admin-service/internal/config"
-	"vasset/admin-service/internal/handler"
-	"vasset/admin-service/internal/router"
+	grpcserver "vasset/admin-service/internal/grpc"
 	"vasset/admin-service/internal/service"
+	pb "vasset/admin-service/proto"
 )
 
 func main() {
@@ -51,29 +52,18 @@ func main() {
 	proxyService := service.NewProxyService(grpcClients.AssetClient)
 	cookieService := service.NewCookieService(grpcClients.AssetClient)
 
-	deps := &router.Dependencies{
-		Config:         cfg,
-		HealthHandler:  handler.NewHealthHandler(),
-		AuthHandler:    handler.NewAuthHandler(authService, cfg.Session.CookieName, cfg.Session.Secure, cfg.Session.CookieDomain, cfg.Session.SameSite),
-		StatsHandler:   handler.NewStatsHandler(statsService),
-		ProxyHandler:   handler.NewProxyHandler(proxyService),
-		CookieHandler:  handler.NewCookieHandler(cookieService),
-		SessionService: sessionService,
+	lis, err := net.Listen("tcp", net.JoinHostPort("", formatPort(cfg.Server.Port)))
+	if err != nil {
+		log.Fatalf("failed to listen on port %d: %v", cfg.Server.Port, err)
 	}
 
-	r := router.SetupRouter(deps)
-	srv := &http.Server{
-		Addr:           fmt.Sprintf(":%d", cfg.Server.Port),
-		Handler:        r,
-		ReadTimeout:    cfg.Server.ReadTimeout,
-		WriteTimeout:   cfg.Server.WriteTimeout,
-		MaxHeaderBytes: cfg.Server.MaxHeaderBytes,
-	}
+	grpcSrv := grpc.NewServer()
+	pb.RegisterAdminServiceServer(grpcSrv, grpcserver.NewAdminServer(authService, statsService, proxyService, cookieService))
 
 	go func() {
-		log.Printf("admin-service listening on :%d", cfg.Server.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("failed to start server: %v", err)
+		log.Printf("admin-service gRPC listening on :%d", cfg.Server.Port)
+		if err := grpcSrv.Serve(lis); err != nil {
+			log.Fatalf("failed to start grpc server: %v", err)
 		}
 	}()
 
@@ -83,7 +73,19 @@ func main() {
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("server forced to shutdown: %v", err)
+	stopped := make(chan struct{})
+	go func() {
+		grpcSrv.GracefulStop()
+		close(stopped)
+	}()
+
+	select {
+	case <-shutdownCtx.Done():
+		grpcSrv.Stop()
+	case <-stopped:
 	}
+}
+
+func formatPort(port int) string {
+	return strconv.Itoa(port)
 }

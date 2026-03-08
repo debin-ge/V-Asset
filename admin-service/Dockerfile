@@ -15,7 +15,6 @@ WORKDIR /app
 COPY --from=builder /admin-service /usr/local/bin/admin-service
 COPY config ./config
 
-EXPOSE 8081
+EXPOSE 9005
 
 CMD ["admin-service"]
-

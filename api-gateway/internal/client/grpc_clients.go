@@ -17,10 +17,12 @@ type GRPCClients struct {
 	AuthClient  pb.AuthServiceClient
 	MediaClient pb.MediaServiceClient
 	AssetClient pb.AssetServiceClient
+	AdminClient pb.AdminServiceClient
 
 	authConn  *grpc.ClientConn
 	mediaConn *grpc.ClientConn
 	assetConn *grpc.ClientConn
+	adminConn *grpc.ClientConn
 }
 
 // NewGRPCClients 创建 gRPC 客户端
@@ -58,13 +60,24 @@ func NewGRPCClients(cfg *config.GRPCConfig) (*GRPCClients, error) {
 	}
 	log.Printf("✓ Connected to Asset Service: %s", cfg.AssetService)
 
+	adminConn, err := grpc.NewClient(cfg.AdminService, opts...)
+	if err != nil {
+		authConn.Close()
+		mediaConn.Close()
+		assetConn.Close()
+		return nil, err
+	}
+	log.Printf("✓ Connected to Admin Service: %s", cfg.AdminService)
+
 	return &GRPCClients{
 		AuthClient:  pb.NewAuthServiceClient(authConn),
 		MediaClient: pb.NewMediaServiceClient(mediaConn),
 		AssetClient: pb.NewAssetServiceClient(assetConn),
+		AdminClient: pb.NewAdminServiceClient(adminConn),
 		authConn:    authConn,
 		mediaConn:   mediaConn,
 		assetConn:   assetConn,
+		adminConn:   adminConn,
 	}, nil
 }
 
@@ -78,6 +91,9 @@ func (c *GRPCClients) Close() {
 	}
 	if c.assetConn != nil {
 		c.assetConn.Close()
+	}
+	if c.adminConn != nil {
+		c.adminConn.Close()
 	}
 }
 

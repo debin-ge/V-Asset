@@ -1,0 +1,234 @@
+syntax = "proto3";
+
+package admin;
+
+option go_package = "vasset/api-gateway/proto;pb";
+
+service AdminService {
+  rpc Login(AdminLoginRequest) returns (AdminLoginResponse);
+  rpc Logout(AdminLogoutRequest) returns (AdminOperationResponse);
+  rpc GetCurrentUser(AdminSessionRequest) returns (AdminCurrentUserResponse);
+
+  rpc GetOverview(AdminEmpty) returns (AdminOverviewResponse);
+  rpc GetRequestTrend(AdminRequestTrendRequest) returns (AdminRequestTrendResponse);
+  rpc GetUserStats(AdminEmpty) returns (AdminUserStatsResponse);
+
+  rpc GetProxySourceStatus(AdminEmpty) returns (AdminProxySourceStatusResponse);
+  rpc GetProxySourcePolicy(AdminEmpty) returns (AdminProxySourcePolicyResponse);
+  rpc UpdateProxySourcePolicy(AdminUpdateProxySourcePolicyRequest) returns (AdminOperationResponse);
+  rpc ListProxies(AdminListProxiesRequest) returns (AdminListProxiesResponse);
+  rpc CreateProxy(AdminCreateProxyRequest) returns (AdminCreateResourceResponse);
+  rpc UpdateProxy(AdminUpdateProxyRequest) returns (AdminOperationResponse);
+  rpc UpdateProxyStatus(AdminUpdateProxyStatusRequest) returns (AdminOperationResponse);
+  rpc DeleteProxy(AdminDeleteRequest) returns (AdminOperationResponse);
+
+  rpc ListCookies(AdminListCookiesRequest) returns (AdminListCookiesResponse);
+  rpc CreateCookie(AdminCreateCookieRequest) returns (AdminCreateResourceResponse);
+  rpc UpdateCookie(AdminUpdateCookieRequest) returns (AdminOperationResponse);
+  rpc DeleteCookie(AdminDeleteRequest) returns (AdminOperationResponse);
+  rpc FreezeCookie(AdminFreezeCookieRequest) returns (AdminFreezeCookieResponse);
+}
+
+message AdminEmpty {}
+message AdminUser {
+  string user_id = 1;
+  string email = 2;
+  string nickname = 3;
+  string avatar_url = 4;
+  int32 role = 5;
+  string created_at = 6;
+}
+message AdminLoginRequest {
+  string email = 1;
+  string password = 2;
+  string user_agent = 3;
+  string ip_address = 4;
+}
+message AdminLoginResponse {
+  string session_id = 1;
+  AdminUser user = 2;
+}
+message AdminLogoutRequest {
+  string session_id = 1;
+}
+message AdminSessionRequest {
+  string session_id = 1;
+}
+message AdminCurrentUserResponse {
+  AdminUser user = 1;
+}
+message AdminOverviewResponse {
+  int64 total_users = 1;
+  int64 daily_active_users = 2;
+  int64 weekly_active_users = 3;
+  int64 total_downloads = 4;
+  int64 downloads_today = 5;
+  int64 success_downloads = 6;
+  int64 failed_downloads = 7;
+  int64 active_manual_proxies = 8;
+  int64 total_manual_proxies = 9;
+}
+message AdminTrendPoint {
+  string label = 1;
+  int64 count = 2;
+}
+message AdminRequestTrendRequest {
+  string granularity = 1;
+  int32 limit = 2;
+}
+message AdminRequestTrendResponse {
+  string granularity = 1;
+  repeated AdminTrendPoint points = 2;
+}
+message AdminUserStatsResponse {
+  int64 total_users = 1;
+  int64 daily_active_users = 2;
+  int64 weekly_active_users = 3;
+}
+message AdminProxySourceStatusResponse {
+  bool healthy = 1;
+  string mode = 2;
+  string message = 3;
+  string proxy_url = 4;
+  string proxy_lease_id = 5;
+  string proxy_expire_at = 6;
+  string checked_at = 7;
+}
+message AdminProxySourcePolicyResponse {
+  int64 id = 1;
+  string scope_type = 2;
+  string scope_value = 3;
+  string primary_source = 4;
+  string fallback_source = 5;
+  bool fallback_enabled = 6;
+  int32 dynamic_timeout_ms = 7;
+  int32 dynamic_retry_count = 8;
+  int32 dynamic_circuit_breaker_sec = 9;
+  int32 min_lease_ttl_sec = 10;
+  string manual_selection_strategy = 11;
+}
+message AdminUpdateProxySourcePolicyRequest {
+  int64 id = 1;
+  string primary_source = 2;
+  string fallback_source = 3;
+  bool fallback_enabled = 4;
+  int32 dynamic_timeout_ms = 5;
+  int32 dynamic_retry_count = 6;
+  int32 dynamic_circuit_breaker_sec = 7;
+  int32 min_lease_ttl_sec = 8;
+  string manual_selection_strategy = 9;
+}
+message AdminProxyInfo {
+  int64 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string username = 5;
+  string region = 6;
+  int32 priority = 7;
+  string platform_tags = 8;
+  string remark = 9;
+  int32 status = 10;
+  string last_used_at = 11;
+  int32 success_count = 12;
+  int32 fail_count = 13;
+  string created_at = 14;
+  string updated_at = 15;
+}
+message AdminListProxiesRequest {
+  string search = 1;
+  string protocol = 2;
+  string region = 3;
+  int32 status = 4;
+  bool has_status = 5;
+}
+message AdminListProxiesResponse {
+  repeated AdminProxyInfo items = 1;
+}
+message AdminCreateProxyRequest {
+  string host = 1;
+  int32 port = 2;
+  string protocol = 3;
+  string username = 4;
+  string password = 5;
+  string region = 6;
+  int32 priority = 7;
+  string platform_tags = 8;
+  string remark = 9;
+  int32 status = 10;
+}
+message AdminUpdateProxyRequest {
+  int64 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string username = 5;
+  string password = 6;
+  string region = 7;
+  int32 priority = 8;
+  string platform_tags = 9;
+  string remark = 10;
+}
+message AdminUpdateProxyStatusRequest {
+  int64 id = 1;
+  int32 status = 2;
+}
+message AdminDeleteRequest {
+  int64 id = 1;
+}
+message AdminCookieInfo {
+  int64 id = 1;
+  string platform = 2;
+  string name = 3;
+  string content = 4;
+  int32 status = 5;
+  string expire_at = 6;
+  string frozen_until = 7;
+  int32 freeze_seconds = 8;
+  string last_used_at = 9;
+  int64 use_count = 10;
+  int64 success_count = 11;
+  int64 fail_count = 12;
+  string created_at = 13;
+  string updated_at = 14;
+}
+message AdminListCookiesRequest {
+  string platform = 1;
+  int32 status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+message AdminListCookiesResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated AdminCookieInfo items = 4;
+}
+message AdminCreateCookieRequest {
+  string platform = 1;
+  string name = 2;
+  string content = 3;
+  string expire_at = 4;
+  int32 freeze_seconds = 5;
+}
+message AdminUpdateCookieRequest {
+  int64 id = 1;
+  string name = 2;
+  string content = 3;
+  string expire_at = 4;
+  int32 freeze_seconds = 5;
+}
+message AdminFreezeCookieRequest {
+  int64 id = 1;
+  int32 freeze_seconds = 2;
+}
+message AdminFreezeCookieResponse {
+  bool success = 1;
+  string frozen_until = 2;
+}
+message AdminCreateResourceResponse {
+  int64 id = 1;
+}
+message AdminOperationResponse {
+  bool success = 1;
+}

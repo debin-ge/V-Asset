@@ -9,7 +9,15 @@ grpc:
   auth_service: "localhost:9001"
   media_service: "localhost:9002"
   asset_service: "localhost:9004"
+  admin_service: "localhost:9005"
   timeout: 300s  # YouTube + 代理链路可能超过 90s，需明显放宽
+
+admin_session:
+  cookie_name: "vasset_admin_session"
+  ttl: 24h
+  secure: false
+  cookie_domain: ""
+  same_site: "Lax"
 
 redis:
   addr: "localhost:6379"

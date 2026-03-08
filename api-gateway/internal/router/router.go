@@ -70,12 +70,21 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		"1.0.0",
 	)
 	wsHandler := handler.NewWebSocketHandler(deps.WSManager)
-	proxyHandler := handler.NewProxyHandler(
-		deps.GRPCClients.AssetClient,
+	adminAuthHandler := handler.NewAdminAuthHandler(
+		deps.GRPCClients.AdminClient,
+		deps.Config.GRPC.Timeout,
+		&deps.Config.AdminSession,
+	)
+	adminStatsHandler := handler.NewAdminStatsHandler(
+		deps.GRPCClients.AdminClient,
 		deps.Config.GRPC.Timeout,
 	)
-	cookieHandler := handler.NewCookieHandler(
-		deps.GRPCClients.AssetClient,
+	adminProxyHandler := handler.NewAdminProxyHandler(
+		deps.GRPCClients.AdminClient,
+		deps.Config.GRPC.Timeout,
+	)
+	adminCookieHandler := handler.NewAdminCookieHandler(
+		deps.GRPCClients.AdminClient,
 		deps.Config.GRPC.Timeout,
 	)
 
@@ -93,6 +102,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		// 认证接口
 		publicV1.POST("/auth/register", authHandler.Register)
 		publicV1.POST("/auth/login", authHandler.Login)
+		publicV1.POST("/admin/auth/login", adminAuthHandler.Login)
 	}
 
 	// ==================== 认证路由 ====================
@@ -121,16 +131,33 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		// 文件下载
 		protectedV1.GET("/download/file", fileHandler.DownloadFile)
 
-		// 管理后台 - 代理源状态
-		protectedV1.GET("/admin/proxies/source/status", proxyHandler.GetProxySourceStatus)
+	}
 
-		// 管理后台 - Cookie 管理
-		protectedV1.POST("/admin/cookies", cookieHandler.CreateCookie)
-		protectedV1.PUT("/admin/cookies/:id", cookieHandler.UpdateCookie)
-		protectedV1.DELETE("/admin/cookies/:id", cookieHandler.DeleteCookie)
-		protectedV1.GET("/admin/cookies/:id", cookieHandler.GetCookie)
-		protectedV1.GET("/admin/cookies", cookieHandler.ListCookies)
-		protectedV1.POST("/admin/cookies/:id/freeze", cookieHandler.FreezeCookie)
+	adminV1 := r.Group("/api/v1/admin")
+	adminV1.Use(middleware.AdminSession(deps.GRPCClients.AdminClient, &deps.Config.AdminSession, deps.Config.GRPC.Timeout))
+	adminV1.Use(middleware.RateLimit(rateLimiter))
+	{
+		adminV1.POST("/auth/logout", adminAuthHandler.Logout)
+		adminV1.GET("/auth/me", adminAuthHandler.Me)
+
+		adminV1.GET("/stats/overview", adminStatsHandler.Overview)
+		adminV1.GET("/stats/requests", adminStatsHandler.RequestTrend)
+		adminV1.GET("/stats/users", adminStatsHandler.Users)
+
+		adminV1.GET("/proxies/source/status", adminProxyHandler.GetSourceStatus)
+		adminV1.GET("/proxy-policies/current", adminProxyHandler.GetSourcePolicy)
+		adminV1.PUT("/proxy-policies/:id", adminProxyHandler.UpdateSourcePolicy)
+		adminV1.GET("/proxies", adminProxyHandler.List)
+		adminV1.POST("/proxies", adminProxyHandler.Create)
+		adminV1.PUT("/proxies/:id", adminProxyHandler.Update)
+		adminV1.PATCH("/proxies/:id/status", adminProxyHandler.UpdateStatus)
+		adminV1.DELETE("/proxies/:id", adminProxyHandler.Delete)
+
+		adminV1.GET("/cookies", adminCookieHandler.List)
+		adminV1.POST("/cookies", adminCookieHandler.Create)
+		adminV1.PUT("/cookies/:id", adminCookieHandler.Update)
+		adminV1.DELETE("/cookies/:id", adminCookieHandler.Delete)
+		adminV1.POST("/cookies/:id/freeze", adminCookieHandler.Freeze)
 	}
 
 	// ==================== WebSocket 路由 ====================
