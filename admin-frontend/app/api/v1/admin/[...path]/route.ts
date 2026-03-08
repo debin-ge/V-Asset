@@ -1,6 +1,9 @@
 import type { NextRequest } from "next/server";
 
-const apiGatewayOrigin = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const apiGatewayOrigin =
+  process.env.API_GATEWAY_INTERNAL_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080";
 
 async function proxy(request: NextRequest, path: string[]) {
   const targetUrl = new URL(`/api/v1/admin/${path.join("/")}`, apiGatewayOrigin);
