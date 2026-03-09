@@ -77,9 +77,9 @@ ytdlp:
     disable_cookies: true
     args:
       - "--impersonate"
-      - "chrome-131:android"
+      - "Chrome-136"
       - "--extractor-args"
-      - "youtube:player_client=android,tv,web_safari"
+      - "youtube:player_client=web,default"
       - "--sleep-interval"
       - "3"
       - "--max-sleep-interval"
