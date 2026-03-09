@@ -12,7 +12,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, User, History, BarChart, Shield } from "lucide-react"
+import { LogOut, User, History, BarChart } from "lucide-react"
 
 export function Header() {
     const { user, quota, openAuthModal, logout } = useAuth()
@@ -69,12 +69,6 @@ export function Header() {
                                     <Link href="/user?tab=stats" className="cursor-pointer">
                                         <BarChart className="mr-2 h-4 w-4" />
                                         <span>Stats</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/admin?tab=proxies" className="cursor-pointer">
-                                        <Shield className="mr-2 h-4 w-4" />
-                                        <span>Admin Panel</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
