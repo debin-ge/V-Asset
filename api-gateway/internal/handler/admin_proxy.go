@@ -176,7 +176,7 @@ func (h *AdminProxyHandler) Create(c *gin.Context) {
 		Status:       req.Status,
 	})
 	if err != nil {
-		models.InternalError(c, grpcErrorMessage(err))
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -227,19 +227,23 @@ func (h *AdminProxyHandler) UpdateStatus(c *gin.Context) {
 	}
 
 	var req struct {
-		Status int32 `json:"status" binding:"required"`
+		Status *int32 `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		models.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+	if req.Status == nil {
+		models.BadRequest(c, "invalid request: status is required")
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
-	_, err = h.adminClient.UpdateProxyStatus(ctx, &pb.AdminUpdateProxyStatusRequest{Id: id, Status: req.Status})
+	_, err = h.adminClient.UpdateProxyStatus(ctx, &pb.AdminUpdateProxyStatusRequest{Id: id, Status: *req.Status})
 	if err != nil {
-		models.InternalError(c, grpcErrorMessage(err))
+		writeGRPCError(c, err)
 		return
 	}
 

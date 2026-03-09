@@ -369,3 +369,8 @@ func (s *ProxyService) DeleteProxy(ctx context.Context, id int64) error {
 func (s *ProxyService) IsNotFoundError(err error) bool {
 	return errors.Is(err, sql.ErrNoRows)
 }
+
+// IsAlreadyExistsError 判断是否为唯一约束冲突
+func (s *ProxyService) IsAlreadyExistsError(err error) bool {
+	return errors.Is(err, repository.ErrProxyAlreadyExists)
+}

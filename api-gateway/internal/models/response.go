@@ -76,6 +76,11 @@ func NotFound(c *gin.Context, message string) {
 	Error(c, http.StatusNotFound, message)
 }
 
+// Conflict 资源冲突
+func Conflict(c *gin.Context, message string) {
+	Error(c, http.StatusConflict, message)
+}
+
 // InternalError 服务器错误
 func InternalError(c *gin.Context, message string) {
 	Error(c, http.StatusInternalServerError, message)

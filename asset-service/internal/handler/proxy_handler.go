@@ -242,6 +242,9 @@ func (h *ProxyHandler) CreateProxy(ctx context.Context, req *pb.CreateProxyReque
 	id, err := h.proxyService.CreateProxy(ctx, proxy)
 	if err != nil {
 		log.Printf("CreateProxy error: %v", err)
+		if h.proxyService.IsAlreadyExistsError(err) {
+			return nil, status.Error(codes.AlreadyExists, "代理已存在")
+		}
 		return nil, status.Error(codes.Internal, "创建代理失败")
 	}
 
@@ -279,6 +282,9 @@ func (h *ProxyHandler) UpdateProxy(ctx context.Context, req *pb.UpdateProxyReque
 		log.Printf("UpdateProxy error: %v", err)
 		if h.proxyService.IsNotFoundError(err) {
 			return nil, status.Error(codes.NotFound, "代理不存在")
+		}
+		if h.proxyService.IsAlreadyExistsError(err) {
+			return nil, status.Error(codes.AlreadyExists, "代理已存在")
 		}
 		return nil, status.Error(codes.Internal, "更新代理失败")
 	}

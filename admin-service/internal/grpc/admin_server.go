@@ -194,7 +194,7 @@ func (s *AdminServer) CreateProxy(ctx context.Context, req *pb.AdminCreateProxyR
 		Status:       req.GetStatus(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, mapDownstreamError(err)
 	}
 	return &pb.AdminCreateResourceResponse{Id: id}, nil
 }
@@ -212,21 +212,21 @@ func (s *AdminServer) UpdateProxy(ctx context.Context, req *pb.AdminUpdateProxyR
 		Remark:       req.GetRemark(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, mapDownstreamError(err)
 	}
 	return &pb.AdminOperationResponse{Success: true}, nil
 }
 
 func (s *AdminServer) UpdateProxyStatus(ctx context.Context, req *pb.AdminUpdateProxyStatusRequest) (*pb.AdminOperationResponse, error) {
 	if err := s.proxyService.UpdateStatus(ctx, req.GetId(), req.GetStatus()); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, mapDownstreamError(err)
 	}
 	return &pb.AdminOperationResponse{Success: true}, nil
 }
 
 func (s *AdminServer) DeleteProxy(ctx context.Context, req *pb.AdminDeleteRequest) (*pb.AdminOperationResponse, error) {
 	if err := s.proxyService.Delete(ctx, req.GetId()); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, mapDownstreamError(err)
 	}
 	return &pb.AdminOperationResponse{Success: true}, nil
 }
@@ -368,4 +368,11 @@ func mapServiceError(err error) error {
 		return status.Error(codes.DeadlineExceeded, err.Error())
 	}
 	return status.Error(codes.Unauthenticated, err.Error())
+}
+
+func mapDownstreamError(err error) error {
+	if st, ok := status.FromError(err); ok {
+		return status.Error(st.Code(), st.Message())
+	}
+	return status.Error(codes.Internal, err.Error())
 }

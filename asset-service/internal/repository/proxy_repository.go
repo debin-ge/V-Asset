@@ -3,12 +3,18 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
+
 	"vasset/asset-service/internal/models"
 )
+
+// ErrProxyAlreadyExists 表示同一 IP 和端口的代理已存在
+var ErrProxyAlreadyExists = errors.New("proxy already exists")
 
 // ProxyRepository 代理数据访问层
 type ProxyRepository struct {
@@ -207,6 +213,10 @@ func (r *ProxyRepository) CreateProxy(ctx context.Context, proxy *models.Proxy) 
 		proxy.Status,
 	).Scan(&id)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" && pqErr.Constraint == "proxies_ip_port_key" {
+			return 0, ErrProxyAlreadyExists
+		}
 		return 0, fmt.Errorf("create proxy failed: %w", err)
 	}
 	return id, nil
@@ -247,6 +257,10 @@ func (r *ProxyRepository) UpdateProxy(ctx context.Context, proxy *models.Proxy) 
 		proxy.Remark,
 	)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" && pqErr.Constraint == "proxies_ip_port_key" {
+			return ErrProxyAlreadyExists
+		}
 		return fmt.Errorf("update proxy failed: %w", err)
 	}
 
