@@ -102,6 +102,32 @@ func TestHandleConnectionRejectsUnauthorizedTaskAccess(t *testing.T) {
 	assertResponseMessage(t, w, "task not found or access denied")
 }
 
+func TestCheckOriginAllowsSameHostnameWithPortDifference(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequest(http.MethodGet, "http://ytdlp.obstream.com:8080/api/v1/ws/progress", nil)
+	req.Host = "ytdlp.obstream.com:8080"
+	req.Header.Set("Origin", "http://ytdlp.obstream.com")
+
+	if !upgrader.CheckOrigin(req) {
+		t.Fatalf("expected same hostname origin to be allowed despite port difference")
+	}
+}
+
+func TestCheckOriginUsesForwardedHeaders(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequest(http.MethodGet, "http://internal:8080/api/v1/ws/progress", nil)
+	req.Host = "internal:8080"
+	req.Header.Set("Origin", "https://ytdlp.obstream.com")
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("X-Forwarded-Host", "ytdlp.obstream.com")
+
+	if !upgrader.CheckOrigin(req) {
+		t.Fatalf("expected forwarded host/scheme to be accepted")
+	}
+}
+
 func assertResponseMessage(t *testing.T, w *httptest.ResponseRecorder, want string) {
 	t.Helper()
 

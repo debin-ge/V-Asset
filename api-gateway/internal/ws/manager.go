@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -36,14 +37,13 @@ var upgrader = websocket.Upgrader{
 			return false
 		}
 
-		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
-		}
+		scheme := requestScheme(r)
+		requestHost := requestHostName(r)
+		originHost := parsedOrigin.Hostname()
 
-		allowed := parsedOrigin.Host == r.Host && parsedOrigin.Scheme == scheme
+		allowed := originHost != "" && requestHost != "" && strings.EqualFold(originHost, requestHost) && parsedOrigin.Scheme == scheme
 		if !allowed {
-			log.Printf("[WS] Rejecting websocket origin: remote=%s host=%s origin=%s expected_scheme=%s", r.RemoteAddr, r.Host, origin, scheme)
+			log.Printf("[WS] Rejecting websocket origin: remote=%s host=%s origin=%s expected_scheme=%s expected_host=%s", r.RemoteAddr, r.Host, origin, scheme, requestHost)
 		}
 		return allowed
 	},
@@ -221,6 +221,36 @@ func (m *Manager) validateTaskAccess(ctx context.Context, userID, taskID string)
 
 	log.Printf("[WS] Failed to validate task ownership: user=%s task=%s err=%v", userID, taskID, err)
 	return fmt.Errorf("failed to validate task access")
+}
+
+func requestScheme(r *http.Request) string {
+	if forwardedProto := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")); forwardedProto != "" {
+		if idx := strings.Index(forwardedProto, ","); idx >= 0 {
+			forwardedProto = forwardedProto[:idx]
+		}
+		return strings.TrimSpace(strings.ToLower(forwardedProto))
+	}
+
+	if r.TLS != nil {
+		return "https"
+	}
+
+	return "http"
+}
+
+func requestHostName(r *http.Request) string {
+	host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
+	if host == "" {
+		host = r.Host
+	} else if idx := strings.Index(host, ","); idx >= 0 {
+		host = host[:idx]
+	}
+
+	if parsedHost, _, err := net.SplitHostPort(host); err == nil {
+		return parsedHost
+	}
+
+	return host
 }
 
 // heartbeat 发送心跳
