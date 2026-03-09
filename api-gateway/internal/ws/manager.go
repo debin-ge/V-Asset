@@ -40,8 +40,12 @@ var upgrader = websocket.Upgrader{
 		scheme := requestScheme(r)
 		requestHost := requestHostName(r)
 		originHost := parsedOrigin.Hostname()
+		hostMatches := originHost != "" && strings.EqualFold(originHost, requestHost)
+		if !hostMatches && isInternalProxyHost(requestHost) {
+			hostMatches = originHost != ""
+		}
 
-		allowed := originHost != "" && requestHost != "" && strings.EqualFold(originHost, requestHost) && parsedOrigin.Scheme == scheme
+		allowed := originHost != "" && hostMatches && isAllowedOriginScheme(parsedOrigin.Scheme, scheme)
 		if !allowed {
 			log.Printf("[WS] Rejecting websocket origin: remote=%s host=%s origin=%s expected_scheme=%s expected_host=%s", r.RemoteAddr, r.Host, origin, scheme, requestHost)
 		}
@@ -260,6 +264,39 @@ func requestHostName(r *http.Request) string {
 	}
 
 	return host
+}
+
+func isAllowedOriginScheme(originScheme, requestScheme string) bool {
+	originScheme = strings.ToLower(strings.TrimSpace(originScheme))
+	requestScheme = strings.ToLower(strings.TrimSpace(requestScheme))
+
+	if originScheme == requestScheme {
+		return true
+	}
+
+	// Browsers may send Origin: http://example.com even when the socket target is
+	// upgraded through an HTTPS/WSS edge proxy for the same site.
+	return requestScheme == "https" && originScheme == "http"
+}
+
+func isInternalProxyHost(host string) bool {
+	host = strings.TrimSpace(strings.ToLower(host))
+	if host == "" {
+		return false
+	}
+
+	if host == "localhost" || host == "api-gateway" {
+		return true
+	}
+
+	if strings.Contains(host, ".") {
+		if ip := net.ParseIP(host); ip != nil {
+			return ip.IsLoopback() || ip.IsPrivate()
+		}
+		return false
+	}
+
+	return true
 }
 
 // heartbeat 发送心跳

@@ -142,6 +142,31 @@ func TestCheckOriginUsesCloudflareVisitorScheme(t *testing.T) {
 	}
 }
 
+func TestCheckOriginAllowsInternalProxyHostWithoutForwardedHost(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequest(http.MethodGet, "http://api-gateway:8080/api/v1/ws/progress", nil)
+	req.Host = "api-gateway:8080"
+	req.Header.Set("Origin", "http://ytdlp.obstream.com")
+	req.Header.Set("X-Forwarded-Proto", "https")
+
+	if !upgrader.CheckOrigin(req) {
+		t.Fatalf("expected internal proxy host to trust same-site origin when forwarded host is unavailable")
+	}
+}
+
+func TestAllowedOriginSchemeAllowsHttpOriginForHTTPSProxy(t *testing.T) {
+	t.Parallel()
+
+	if !isAllowedOriginScheme("http", "https") {
+		t.Fatalf("expected http origin to be allowed for https proxy")
+	}
+
+	if isAllowedOriginScheme("https", "http") {
+		t.Fatalf("did not expect https origin to be allowed for http proxy")
+	}
+}
+
 func assertResponseMessage(t *testing.T, w *httptest.ResponseRecorder, want string) {
 	t.Helper()
 
