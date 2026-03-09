@@ -44,20 +44,16 @@ async function proxy(request: NextRequest, path: string[]) {
   });
 
   const responseHeaders = new Headers();
-  const responseContentType = upstream.headers.get("content-type");
-  if (responseContentType) {
-    responseHeaders.set("content-type", responseContentType);
-  }
-
-  const contentDisposition = upstream.headers.get("content-disposition");
-  if (contentDisposition) {
-    responseHeaders.set("content-disposition", contentDisposition);
-  }
-
-  const location = upstream.headers.get("location");
-  if (location) {
-    responseHeaders.set("location", location);
-  }
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "content-type");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "content-disposition");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "location");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "vary");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-origin");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-methods");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-headers");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-credentials");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-max-age");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-expose-headers");
 
   const getSetCookie = (
     upstream.headers as Headers & { getSetCookie?: () => string[] }
@@ -82,6 +78,13 @@ async function proxy(request: NextRequest, path: string[]) {
     status: upstream.status,
     headers: responseHeaders,
   });
+}
+
+function copyHeaderIfPresent(source: Headers, target: Headers, name: string) {
+  const value = source.get(name);
+  if (value) {
+    target.set(name, value);
+  }
 }
 
 export async function GET(

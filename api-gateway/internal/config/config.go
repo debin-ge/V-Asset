@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -129,6 +130,15 @@ func LoadConfig(configPath string) (*Config, error) {
 	if rabbitmqURL := os.Getenv("RABBITMQ_URL"); rabbitmqURL != "" {
 		cfg.RabbitMQ.URL = rabbitmqURL
 	}
+	if corsAllowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS"); corsAllowedOrigins != "" {
+		cfg.CORS.AllowedOrigins = splitAndTrim(corsAllowedOrigins)
+	}
+	if corsAllowedMethods := os.Getenv("CORS_ALLOWED_METHODS"); corsAllowedMethods != "" {
+		cfg.CORS.AllowedMethods = splitAndTrim(corsAllowedMethods)
+	}
+	if corsAllowedHeaders := os.Getenv("CORS_ALLOWED_HEADERS"); corsAllowedHeaders != "" {
+		cfg.CORS.AllowedHeaders = splitAndTrim(corsAllowedHeaders)
+	}
 	if adminCookieName := os.Getenv("ADMIN_SESSION_COOKIE_NAME"); adminCookieName != "" {
 		cfg.AdminSession.CookieName = adminCookieName
 	}
@@ -184,4 +194,16 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func splitAndTrim(value string) []string {
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

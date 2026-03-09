@@ -39,10 +39,15 @@ async function proxy(request: NextRequest, path: string[]) {
   });
 
   const responseHeaders = new Headers();
-  const responseContentType = upstream.headers.get("content-type");
-  if (responseContentType) {
-    responseHeaders.set("content-type", responseContentType);
-  }
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "content-type");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "location");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "vary");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-origin");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-methods");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-headers");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-allow-credentials");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-max-age");
+  copyHeaderIfPresent(upstream.headers, responseHeaders, "access-control-expose-headers");
 
   // Node fetch may expose Set-Cookie via getSetCookie() instead of get("set-cookie").
   const getSetCookie = (
@@ -63,15 +68,17 @@ async function proxy(request: NextRequest, path: string[]) {
     }
   }
 
-  const location = upstream.headers.get("location");
-  if (location) {
-    responseHeaders.set("location", location);
-  }
-
   return new Response(upstream.body, {
     status: upstream.status,
     headers: responseHeaders,
   });
+}
+
+function copyHeaderIfPresent(source: Headers, target: Headers, name: string) {
+  const value = source.get(name);
+  if (value) {
+    target.set(name, value);
+  }
 }
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
