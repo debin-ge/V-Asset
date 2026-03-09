@@ -155,15 +155,17 @@ func TestCheckOriginAllowsInternalProxyHostWithoutForwardedHost(t *testing.T) {
 	}
 }
 
-func TestAllowedOriginSchemeAllowsHttpOriginForHTTPSProxy(t *testing.T) {
+func TestCheckOriginAllowsSchemeMismatchForSameHostname(t *testing.T) {
 	t.Parallel()
 
-	if !isAllowedOriginScheme("http", "https") {
-		t.Fatalf("expected http origin to be allowed for https proxy")
-	}
+	req := httptest.NewRequest(http.MethodGet, "http://internal:8080/api/v1/ws/progress", nil)
+	req.Host = "internal:8080"
+	req.Header.Set("Origin", "http://ytdlp.obstream.com")
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("X-Forwarded-Host", "ytdlp.obstream.com")
 
-	if isAllowedOriginScheme("https", "http") {
-		t.Fatalf("did not expect https origin to be allowed for http proxy")
+	if !upgrader.CheckOrigin(req) {
+		t.Fatalf("expected same hostname origin to be accepted regardless of proxy scheme")
 	}
 }
 
