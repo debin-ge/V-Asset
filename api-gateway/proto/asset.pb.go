@@ -1184,6 +1184,142 @@ func (x *CreateHistoryResponse) GetHistoryId() int64 {
 	return 0
 }
 
+type UpdateHistoryStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Status        int32                  `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty"`
+	FilePath      string                 `protobuf:"bytes,3,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	FileName      string                 `protobuf:"bytes,4,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
+	FileSize      int64                  `protobuf:"varint,5,opt,name=file_size,json=fileSize,proto3" json:"file_size,omitempty"`
+	FileHash      string                 `protobuf:"bytes,6,opt,name=file_hash,json=fileHash,proto3" json:"file_hash,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,7,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateHistoryStatusRequest) Reset() {
+	*x = UpdateHistoryStatusRequest{}
+	mi := &file_proto_asset_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateHistoryStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateHistoryStatusRequest) ProtoMessage() {}
+
+func (x *UpdateHistoryStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_asset_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateHistoryStatusRequest.ProtoReflect.Descriptor instead.
+func (*UpdateHistoryStatusRequest) Descriptor() ([]byte, []int) {
+	return file_proto_asset_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UpdateHistoryStatusRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *UpdateHistoryStatusRequest) GetStatus() int32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *UpdateHistoryStatusRequest) GetFilePath() string {
+	if x != nil {
+		return x.FilePath
+	}
+	return ""
+}
+
+func (x *UpdateHistoryStatusRequest) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
+func (x *UpdateHistoryStatusRequest) GetFileSize() int64 {
+	if x != nil {
+		return x.FileSize
+	}
+	return 0
+}
+
+func (x *UpdateHistoryStatusRequest) GetFileHash() string {
+	if x != nil {
+		return x.FileHash
+	}
+	return ""
+}
+
+func (x *UpdateHistoryStatusRequest) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+type UpdateHistoryStatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateHistoryStatusResponse) Reset() {
+	*x = UpdateHistoryStatusResponse{}
+	mi := &file_proto_asset_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateHistoryStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateHistoryStatusResponse) ProtoMessage() {}
+
+func (x *UpdateHistoryStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_asset_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateHistoryStatusResponse.ProtoReflect.Descriptor instead.
+func (*UpdateHistoryStatusResponse) Descriptor() ([]byte, []int) {
+	return file_proto_asset_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *UpdateHistoryStatusResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 // 获取可用代理
 type GetAvailableProxyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1195,7 +1331,7 @@ type GetAvailableProxyRequest struct {
 
 func (x *GetAvailableProxyRequest) Reset() {
 	*x = GetAvailableProxyRequest{}
-	mi := &file_proto_asset_proto_msgTypes[17]
+	mi := &file_proto_asset_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1207,7 +1343,7 @@ func (x *GetAvailableProxyRequest) String() string {
 func (*GetAvailableProxyRequest) ProtoMessage() {}
 
 func (x *GetAvailableProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[17]
+	mi := &file_proto_asset_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1220,7 +1356,7 @@ func (x *GetAvailableProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableProxyRequest.ProtoReflect.Descriptor instead.
 func (*GetAvailableProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{17}
+	return file_proto_asset_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetAvailableProxyRequest) GetProtocol() string {
@@ -1248,7 +1384,7 @@ type GetAvailableProxyResponse struct {
 
 func (x *GetAvailableProxyResponse) Reset() {
 	*x = GetAvailableProxyResponse{}
-	mi := &file_proto_asset_proto_msgTypes[18]
+	mi := &file_proto_asset_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1260,7 +1396,7 @@ func (x *GetAvailableProxyResponse) String() string {
 func (*GetAvailableProxyResponse) ProtoMessage() {}
 
 func (x *GetAvailableProxyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[18]
+	mi := &file_proto_asset_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1273,7 +1409,7 @@ func (x *GetAvailableProxyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableProxyResponse.ProtoReflect.Descriptor instead.
 func (*GetAvailableProxyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{18}
+	return file_proto_asset_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetAvailableProxyResponse) GetProxyUrl() string {
@@ -1308,7 +1444,7 @@ type ReportProxyUsageRequest struct {
 
 func (x *ReportProxyUsageRequest) Reset() {
 	*x = ReportProxyUsageRequest{}
-	mi := &file_proto_asset_proto_msgTypes[19]
+	mi := &file_proto_asset_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1320,7 +1456,7 @@ func (x *ReportProxyUsageRequest) String() string {
 func (*ReportProxyUsageRequest) ProtoMessage() {}
 
 func (x *ReportProxyUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[19]
+	mi := &file_proto_asset_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1333,7 +1469,7 @@ func (x *ReportProxyUsageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportProxyUsageRequest.ProtoReflect.Descriptor instead.
 func (*ReportProxyUsageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{19}
+	return file_proto_asset_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ReportProxyUsageRequest) GetProxyLeaseId() string {
@@ -1359,7 +1495,7 @@ type ReportProxyUsageResponse struct {
 
 func (x *ReportProxyUsageResponse) Reset() {
 	*x = ReportProxyUsageResponse{}
-	mi := &file_proto_asset_proto_msgTypes[20]
+	mi := &file_proto_asset_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1371,7 +1507,7 @@ func (x *ReportProxyUsageResponse) String() string {
 func (*ReportProxyUsageResponse) ProtoMessage() {}
 
 func (x *ReportProxyUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[20]
+	mi := &file_proto_asset_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1384,7 +1520,7 @@ func (x *ReportProxyUsageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportProxyUsageResponse.ProtoReflect.Descriptor instead.
 func (*ReportProxyUsageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{20}
+	return file_proto_asset_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ReportProxyUsageResponse) GetSuccess() bool {
@@ -1417,7 +1553,7 @@ type CookieInfo struct {
 
 func (x *CookieInfo) Reset() {
 	*x = CookieInfo{}
-	mi := &file_proto_asset_proto_msgTypes[21]
+	mi := &file_proto_asset_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1429,7 +1565,7 @@ func (x *CookieInfo) String() string {
 func (*CookieInfo) ProtoMessage() {}
 
 func (x *CookieInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[21]
+	mi := &file_proto_asset_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1442,7 +1578,7 @@ func (x *CookieInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CookieInfo.ProtoReflect.Descriptor instead.
 func (*CookieInfo) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{21}
+	return file_proto_asset_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CookieInfo) GetId() int64 {
@@ -1557,7 +1693,7 @@ type CreateCookieRequest struct {
 
 func (x *CreateCookieRequest) Reset() {
 	*x = CreateCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[22]
+	mi := &file_proto_asset_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1569,7 +1705,7 @@ func (x *CreateCookieRequest) String() string {
 func (*CreateCookieRequest) ProtoMessage() {}
 
 func (x *CreateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[22]
+	mi := &file_proto_asset_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1582,7 +1718,7 @@ func (x *CreateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCookieRequest.ProtoReflect.Descriptor instead.
 func (*CreateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{22}
+	return file_proto_asset_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreateCookieRequest) GetPlatform() string {
@@ -1629,7 +1765,7 @@ type CreateCookieResponse struct {
 
 func (x *CreateCookieResponse) Reset() {
 	*x = CreateCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[23]
+	mi := &file_proto_asset_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1641,7 +1777,7 @@ func (x *CreateCookieResponse) String() string {
 func (*CreateCookieResponse) ProtoMessage() {}
 
 func (x *CreateCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[23]
+	mi := &file_proto_asset_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1654,7 +1790,7 @@ func (x *CreateCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCookieResponse.ProtoReflect.Descriptor instead.
 func (*CreateCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{23}
+	return file_proto_asset_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *CreateCookieResponse) GetId() int64 {
@@ -1678,7 +1814,7 @@ type UpdateCookieRequest struct {
 
 func (x *UpdateCookieRequest) Reset() {
 	*x = UpdateCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[24]
+	mi := &file_proto_asset_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1690,7 +1826,7 @@ func (x *UpdateCookieRequest) String() string {
 func (*UpdateCookieRequest) ProtoMessage() {}
 
 func (x *UpdateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[24]
+	mi := &file_proto_asset_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1703,7 +1839,7 @@ func (x *UpdateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCookieRequest.ProtoReflect.Descriptor instead.
 func (*UpdateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{24}
+	return file_proto_asset_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UpdateCookieRequest) GetId() int64 {
@@ -1750,7 +1886,7 @@ type UpdateCookieResponse struct {
 
 func (x *UpdateCookieResponse) Reset() {
 	*x = UpdateCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[25]
+	mi := &file_proto_asset_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1762,7 +1898,7 @@ func (x *UpdateCookieResponse) String() string {
 func (*UpdateCookieResponse) ProtoMessage() {}
 
 func (x *UpdateCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[25]
+	mi := &file_proto_asset_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1775,7 +1911,7 @@ func (x *UpdateCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCookieResponse.ProtoReflect.Descriptor instead.
 func (*UpdateCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{25}
+	return file_proto_asset_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *UpdateCookieResponse) GetSuccess() bool {
@@ -1795,7 +1931,7 @@ type DeleteCookieRequest struct {
 
 func (x *DeleteCookieRequest) Reset() {
 	*x = DeleteCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[26]
+	mi := &file_proto_asset_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1807,7 +1943,7 @@ func (x *DeleteCookieRequest) String() string {
 func (*DeleteCookieRequest) ProtoMessage() {}
 
 func (x *DeleteCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[26]
+	mi := &file_proto_asset_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1820,7 +1956,7 @@ func (x *DeleteCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCookieRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{26}
+	return file_proto_asset_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *DeleteCookieRequest) GetId() int64 {
@@ -1839,7 +1975,7 @@ type DeleteCookieResponse struct {
 
 func (x *DeleteCookieResponse) Reset() {
 	*x = DeleteCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[27]
+	mi := &file_proto_asset_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1851,7 +1987,7 @@ func (x *DeleteCookieResponse) String() string {
 func (*DeleteCookieResponse) ProtoMessage() {}
 
 func (x *DeleteCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[27]
+	mi := &file_proto_asset_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1864,7 +2000,7 @@ func (x *DeleteCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCookieResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{27}
+	return file_proto_asset_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *DeleteCookieResponse) GetSuccess() bool {
@@ -1884,7 +2020,7 @@ type GetCookieRequest struct {
 
 func (x *GetCookieRequest) Reset() {
 	*x = GetCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[28]
+	mi := &file_proto_asset_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1896,7 +2032,7 @@ func (x *GetCookieRequest) String() string {
 func (*GetCookieRequest) ProtoMessage() {}
 
 func (x *GetCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[28]
+	mi := &file_proto_asset_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1909,7 +2045,7 @@ func (x *GetCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCookieRequest.ProtoReflect.Descriptor instead.
 func (*GetCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{28}
+	return file_proto_asset_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *GetCookieRequest) GetId() int64 {
@@ -1928,7 +2064,7 @@ type GetCookieResponse struct {
 
 func (x *GetCookieResponse) Reset() {
 	*x = GetCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[29]
+	mi := &file_proto_asset_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1940,7 +2076,7 @@ func (x *GetCookieResponse) String() string {
 func (*GetCookieResponse) ProtoMessage() {}
 
 func (x *GetCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[29]
+	mi := &file_proto_asset_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1953,7 +2089,7 @@ func (x *GetCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCookieResponse.ProtoReflect.Descriptor instead.
 func (*GetCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{29}
+	return file_proto_asset_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetCookieResponse) GetCookie() *CookieInfo {
@@ -1976,7 +2112,7 @@ type ListCookiesRequest struct {
 
 func (x *ListCookiesRequest) Reset() {
 	*x = ListCookiesRequest{}
-	mi := &file_proto_asset_proto_msgTypes[30]
+	mi := &file_proto_asset_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1988,7 +2124,7 @@ func (x *ListCookiesRequest) String() string {
 func (*ListCookiesRequest) ProtoMessage() {}
 
 func (x *ListCookiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[30]
+	mi := &file_proto_asset_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2001,7 +2137,7 @@ func (x *ListCookiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCookiesRequest.ProtoReflect.Descriptor instead.
 func (*ListCookiesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{30}
+	return file_proto_asset_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ListCookiesRequest) GetPlatform() string {
@@ -2044,7 +2180,7 @@ type ListCookiesResponse struct {
 
 func (x *ListCookiesResponse) Reset() {
 	*x = ListCookiesResponse{}
-	mi := &file_proto_asset_proto_msgTypes[31]
+	mi := &file_proto_asset_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2056,7 +2192,7 @@ func (x *ListCookiesResponse) String() string {
 func (*ListCookiesResponse) ProtoMessage() {}
 
 func (x *ListCookiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[31]
+	mi := &file_proto_asset_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2069,7 +2205,7 @@ func (x *ListCookiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCookiesResponse.ProtoReflect.Descriptor instead.
 func (*ListCookiesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{31}
+	return file_proto_asset_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListCookiesResponse) GetTotal() int64 {
@@ -2110,7 +2246,7 @@ type GetAvailableCookieRequest struct {
 
 func (x *GetAvailableCookieRequest) Reset() {
 	*x = GetAvailableCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[32]
+	mi := &file_proto_asset_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2122,7 +2258,7 @@ func (x *GetAvailableCookieRequest) String() string {
 func (*GetAvailableCookieRequest) ProtoMessage() {}
 
 func (x *GetAvailableCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[32]
+	mi := &file_proto_asset_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2135,7 +2271,7 @@ func (x *GetAvailableCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableCookieRequest.ProtoReflect.Descriptor instead.
 func (*GetAvailableCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{32}
+	return file_proto_asset_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *GetAvailableCookieRequest) GetPlatform() string {
@@ -2155,7 +2291,7 @@ type GetAvailableCookieResponse struct {
 
 func (x *GetAvailableCookieResponse) Reset() {
 	*x = GetAvailableCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[33]
+	mi := &file_proto_asset_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2167,7 +2303,7 @@ func (x *GetAvailableCookieResponse) String() string {
 func (*GetAvailableCookieResponse) ProtoMessage() {}
 
 func (x *GetAvailableCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[33]
+	mi := &file_proto_asset_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2180,7 +2316,7 @@ func (x *GetAvailableCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAvailableCookieResponse.ProtoReflect.Descriptor instead.
 func (*GetAvailableCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{33}
+	return file_proto_asset_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetAvailableCookieResponse) GetCookieId() int64 {
@@ -2208,7 +2344,7 @@ type ReportCookieUsageRequest struct {
 
 func (x *ReportCookieUsageRequest) Reset() {
 	*x = ReportCookieUsageRequest{}
-	mi := &file_proto_asset_proto_msgTypes[34]
+	mi := &file_proto_asset_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2220,7 +2356,7 @@ func (x *ReportCookieUsageRequest) String() string {
 func (*ReportCookieUsageRequest) ProtoMessage() {}
 
 func (x *ReportCookieUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[34]
+	mi := &file_proto_asset_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2233,7 +2369,7 @@ func (x *ReportCookieUsageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCookieUsageRequest.ProtoReflect.Descriptor instead.
 func (*ReportCookieUsageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{34}
+	return file_proto_asset_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ReportCookieUsageRequest) GetCookieId() int64 {
@@ -2259,7 +2395,7 @@ type ReportCookieUsageResponse struct {
 
 func (x *ReportCookieUsageResponse) Reset() {
 	*x = ReportCookieUsageResponse{}
-	mi := &file_proto_asset_proto_msgTypes[35]
+	mi := &file_proto_asset_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2271,7 +2407,7 @@ func (x *ReportCookieUsageResponse) String() string {
 func (*ReportCookieUsageResponse) ProtoMessage() {}
 
 func (x *ReportCookieUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[35]
+	mi := &file_proto_asset_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2284,7 +2420,7 @@ func (x *ReportCookieUsageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCookieUsageResponse.ProtoReflect.Descriptor instead.
 func (*ReportCookieUsageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{35}
+	return file_proto_asset_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ReportCookieUsageResponse) GetSuccess() bool {
@@ -2305,7 +2441,7 @@ type FreezeCookieRequest struct {
 
 func (x *FreezeCookieRequest) Reset() {
 	*x = FreezeCookieRequest{}
-	mi := &file_proto_asset_proto_msgTypes[36]
+	mi := &file_proto_asset_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2317,7 +2453,7 @@ func (x *FreezeCookieRequest) String() string {
 func (*FreezeCookieRequest) ProtoMessage() {}
 
 func (x *FreezeCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[36]
+	mi := &file_proto_asset_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2330,7 +2466,7 @@ func (x *FreezeCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FreezeCookieRequest.ProtoReflect.Descriptor instead.
 func (*FreezeCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{36}
+	return file_proto_asset_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *FreezeCookieRequest) GetCookieId() int64 {
@@ -2357,7 +2493,7 @@ type FreezeCookieResponse struct {
 
 func (x *FreezeCookieResponse) Reset() {
 	*x = FreezeCookieResponse{}
-	mi := &file_proto_asset_proto_msgTypes[37]
+	mi := &file_proto_asset_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2369,7 +2505,7 @@ func (x *FreezeCookieResponse) String() string {
 func (*FreezeCookieResponse) ProtoMessage() {}
 
 func (x *FreezeCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_asset_proto_msgTypes[37]
+	mi := &file_proto_asset_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2382,7 +2518,7 @@ func (x *FreezeCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FreezeCookieResponse.ProtoReflect.Descriptor instead.
 func (*FreezeCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_asset_proto_rawDescGZIP(), []int{37}
+	return file_proto_asset_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *FreezeCookieResponse) GetSuccess() bool {
@@ -2499,7 +2635,17 @@ const file_proto_asset_proto_rawDesc = "" +
 	" \x01(\tR\x06author\"6\n" +
 	"\x15CreateHistoryResponse\x12\x1d\n" +
 	"\n" +
-	"history_id\x18\x01 \x01(\x03R\thistoryId\"N\n" +
+	"history_id\x18\x01 \x01(\x03R\thistoryId\"\xe6\x01\n" +
+	"\x1aUpdateHistoryStatusRequest\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\x05R\x06status\x12\x1b\n" +
+	"\tfile_path\x18\x03 \x01(\tR\bfilePath\x12\x1b\n" +
+	"\tfile_name\x18\x04 \x01(\tR\bfileName\x12\x1b\n" +
+	"\tfile_size\x18\x05 \x01(\x03R\bfileSize\x12\x1b\n" +
+	"\tfile_hash\x18\x06 \x01(\tR\bfileHash\x12#\n" +
+	"\rerror_message\x18\a \x01(\tR\ferrorMessage\"7\n" +
+	"\x1bUpdateHistoryStatusResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"N\n" +
 	"\x18GetAvailableProxyRequest\x12\x1a\n" +
 	"\bprotocol\x18\x01 \x01(\tR\bprotocol\x12\x16\n" +
 	"\x06region\x18\x02 \x01(\tR\x06region\"{\n" +
@@ -2582,7 +2728,7 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x0efreeze_seconds\x18\x02 \x01(\x05R\rfreezeSeconds\"S\n" +
 	"\x14FreezeCookieResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
-	"\ffrozen_until\x18\x02 \x01(\tR\vfrozenUntil2\x8e\n" +
+	"\ffrozen_until\x18\x02 \x01(\tR\vfrozenUntil2\xec\n" +
 	"\n" +
 	"\fAssetService\x12A\n" +
 	"\n" +
@@ -2593,7 +2739,8 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\fConsumeQuota\x12\x1a.asset.ConsumeQuotaRequest\x1a\x1b.asset.ConsumeQuotaResponse\x12G\n" +
 	"\fGetUserStats\x12\x1a.asset.GetUserStatsRequest\x1a\x1b.asset.GetUserStatsResponse\x12D\n" +
 	"\vGetFileInfo\x12\x19.asset.GetFileInfoRequest\x1a\x1a.asset.GetFileInfoResponse\x12J\n" +
-	"\rCreateHistory\x12\x1b.asset.CreateHistoryRequest\x1a\x1c.asset.CreateHistoryResponse\x12V\n" +
+	"\rCreateHistory\x12\x1b.asset.CreateHistoryRequest\x1a\x1c.asset.CreateHistoryResponse\x12\\\n" +
+	"\x13UpdateHistoryStatus\x12!.asset.UpdateHistoryStatusRequest\x1a\".asset.UpdateHistoryStatusResponse\x12V\n" +
 	"\x11GetAvailableProxy\x12\x1f.asset.GetAvailableProxyRequest\x1a .asset.GetAvailableProxyResponse\x12S\n" +
 	"\x10ReportProxyUsage\x12\x1e.asset.ReportProxyUsageRequest\x1a\x1f.asset.ReportProxyUsageResponse\x12G\n" +
 	"\fCreateCookie\x12\x1a.asset.CreateCookieRequest\x1a\x1b.asset.CreateCookieResponse\x12G\n" +
@@ -2617,53 +2764,55 @@ func file_proto_asset_proto_rawDescGZIP() []byte {
 	return file_proto_asset_proto_rawDescData
 }
 
-var file_proto_asset_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
+var file_proto_asset_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_proto_asset_proto_goTypes = []any{
-	(*GetHistoryRequest)(nil),          // 0: asset.GetHistoryRequest
-	(*GetHistoryResponse)(nil),         // 1: asset.GetHistoryResponse
-	(*HistoryItem)(nil),                // 2: asset.HistoryItem
-	(*DeleteHistoryRequest)(nil),       // 3: asset.DeleteHistoryRequest
-	(*DeleteHistoryResponse)(nil),      // 4: asset.DeleteHistoryResponse
-	(*CheckQuotaRequest)(nil),          // 5: asset.CheckQuotaRequest
-	(*CheckQuotaResponse)(nil),         // 6: asset.CheckQuotaResponse
-	(*ConsumeQuotaRequest)(nil),        // 7: asset.ConsumeQuotaRequest
-	(*ConsumeQuotaResponse)(nil),       // 8: asset.ConsumeQuotaResponse
-	(*GetUserStatsRequest)(nil),        // 9: asset.GetUserStatsRequest
-	(*GetUserStatsResponse)(nil),       // 10: asset.GetUserStatsResponse
-	(*PlatformStat)(nil),               // 11: asset.PlatformStat
-	(*DailyActivity)(nil),              // 12: asset.DailyActivity
-	(*GetFileInfoRequest)(nil),         // 13: asset.GetFileInfoRequest
-	(*GetFileInfoResponse)(nil),        // 14: asset.GetFileInfoResponse
-	(*CreateHistoryRequest)(nil),       // 15: asset.CreateHistoryRequest
-	(*CreateHistoryResponse)(nil),      // 16: asset.CreateHistoryResponse
-	(*GetAvailableProxyRequest)(nil),   // 17: asset.GetAvailableProxyRequest
-	(*GetAvailableProxyResponse)(nil),  // 18: asset.GetAvailableProxyResponse
-	(*ReportProxyUsageRequest)(nil),    // 19: asset.ReportProxyUsageRequest
-	(*ReportProxyUsageResponse)(nil),   // 20: asset.ReportProxyUsageResponse
-	(*CookieInfo)(nil),                 // 21: asset.CookieInfo
-	(*CreateCookieRequest)(nil),        // 22: asset.CreateCookieRequest
-	(*CreateCookieResponse)(nil),       // 23: asset.CreateCookieResponse
-	(*UpdateCookieRequest)(nil),        // 24: asset.UpdateCookieRequest
-	(*UpdateCookieResponse)(nil),       // 25: asset.UpdateCookieResponse
-	(*DeleteCookieRequest)(nil),        // 26: asset.DeleteCookieRequest
-	(*DeleteCookieResponse)(nil),       // 27: asset.DeleteCookieResponse
-	(*GetCookieRequest)(nil),           // 28: asset.GetCookieRequest
-	(*GetCookieResponse)(nil),          // 29: asset.GetCookieResponse
-	(*ListCookiesRequest)(nil),         // 30: asset.ListCookiesRequest
-	(*ListCookiesResponse)(nil),        // 31: asset.ListCookiesResponse
-	(*GetAvailableCookieRequest)(nil),  // 32: asset.GetAvailableCookieRequest
-	(*GetAvailableCookieResponse)(nil), // 33: asset.GetAvailableCookieResponse
-	(*ReportCookieUsageRequest)(nil),   // 34: asset.ReportCookieUsageRequest
-	(*ReportCookieUsageResponse)(nil),  // 35: asset.ReportCookieUsageResponse
-	(*FreezeCookieRequest)(nil),        // 36: asset.FreezeCookieRequest
-	(*FreezeCookieResponse)(nil),       // 37: asset.FreezeCookieResponse
+	(*GetHistoryRequest)(nil),           // 0: asset.GetHistoryRequest
+	(*GetHistoryResponse)(nil),          // 1: asset.GetHistoryResponse
+	(*HistoryItem)(nil),                 // 2: asset.HistoryItem
+	(*DeleteHistoryRequest)(nil),        // 3: asset.DeleteHistoryRequest
+	(*DeleteHistoryResponse)(nil),       // 4: asset.DeleteHistoryResponse
+	(*CheckQuotaRequest)(nil),           // 5: asset.CheckQuotaRequest
+	(*CheckQuotaResponse)(nil),          // 6: asset.CheckQuotaResponse
+	(*ConsumeQuotaRequest)(nil),         // 7: asset.ConsumeQuotaRequest
+	(*ConsumeQuotaResponse)(nil),        // 8: asset.ConsumeQuotaResponse
+	(*GetUserStatsRequest)(nil),         // 9: asset.GetUserStatsRequest
+	(*GetUserStatsResponse)(nil),        // 10: asset.GetUserStatsResponse
+	(*PlatformStat)(nil),                // 11: asset.PlatformStat
+	(*DailyActivity)(nil),               // 12: asset.DailyActivity
+	(*GetFileInfoRequest)(nil),          // 13: asset.GetFileInfoRequest
+	(*GetFileInfoResponse)(nil),         // 14: asset.GetFileInfoResponse
+	(*CreateHistoryRequest)(nil),        // 15: asset.CreateHistoryRequest
+	(*CreateHistoryResponse)(nil),       // 16: asset.CreateHistoryResponse
+	(*UpdateHistoryStatusRequest)(nil),  // 17: asset.UpdateHistoryStatusRequest
+	(*UpdateHistoryStatusResponse)(nil), // 18: asset.UpdateHistoryStatusResponse
+	(*GetAvailableProxyRequest)(nil),    // 19: asset.GetAvailableProxyRequest
+	(*GetAvailableProxyResponse)(nil),   // 20: asset.GetAvailableProxyResponse
+	(*ReportProxyUsageRequest)(nil),     // 21: asset.ReportProxyUsageRequest
+	(*ReportProxyUsageResponse)(nil),    // 22: asset.ReportProxyUsageResponse
+	(*CookieInfo)(nil),                  // 23: asset.CookieInfo
+	(*CreateCookieRequest)(nil),         // 24: asset.CreateCookieRequest
+	(*CreateCookieResponse)(nil),        // 25: asset.CreateCookieResponse
+	(*UpdateCookieRequest)(nil),         // 26: asset.UpdateCookieRequest
+	(*UpdateCookieResponse)(nil),        // 27: asset.UpdateCookieResponse
+	(*DeleteCookieRequest)(nil),         // 28: asset.DeleteCookieRequest
+	(*DeleteCookieResponse)(nil),        // 29: asset.DeleteCookieResponse
+	(*GetCookieRequest)(nil),            // 30: asset.GetCookieRequest
+	(*GetCookieResponse)(nil),           // 31: asset.GetCookieResponse
+	(*ListCookiesRequest)(nil),          // 32: asset.ListCookiesRequest
+	(*ListCookiesResponse)(nil),         // 33: asset.ListCookiesResponse
+	(*GetAvailableCookieRequest)(nil),   // 34: asset.GetAvailableCookieRequest
+	(*GetAvailableCookieResponse)(nil),  // 35: asset.GetAvailableCookieResponse
+	(*ReportCookieUsageRequest)(nil),    // 36: asset.ReportCookieUsageRequest
+	(*ReportCookieUsageResponse)(nil),   // 37: asset.ReportCookieUsageResponse
+	(*FreezeCookieRequest)(nil),         // 38: asset.FreezeCookieRequest
+	(*FreezeCookieResponse)(nil),        // 39: asset.FreezeCookieResponse
 }
 var file_proto_asset_proto_depIdxs = []int32{
 	2,  // 0: asset.GetHistoryResponse.items:type_name -> asset.HistoryItem
 	11, // 1: asset.GetUserStatsResponse.top_platforms:type_name -> asset.PlatformStat
 	12, // 2: asset.GetUserStatsResponse.recent_activity:type_name -> asset.DailyActivity
-	21, // 3: asset.GetCookieResponse.cookie:type_name -> asset.CookieInfo
-	21, // 4: asset.ListCookiesResponse.items:type_name -> asset.CookieInfo
+	23, // 3: asset.GetCookieResponse.cookie:type_name -> asset.CookieInfo
+	23, // 4: asset.ListCookiesResponse.items:type_name -> asset.CookieInfo
 	0,  // 5: asset.AssetService.GetHistory:input_type -> asset.GetHistoryRequest
 	3,  // 6: asset.AssetService.DeleteHistory:input_type -> asset.DeleteHistoryRequest
 	5,  // 7: asset.AssetService.CheckQuota:input_type -> asset.CheckQuotaRequest
@@ -2671,35 +2820,37 @@ var file_proto_asset_proto_depIdxs = []int32{
 	9,  // 9: asset.AssetService.GetUserStats:input_type -> asset.GetUserStatsRequest
 	13, // 10: asset.AssetService.GetFileInfo:input_type -> asset.GetFileInfoRequest
 	15, // 11: asset.AssetService.CreateHistory:input_type -> asset.CreateHistoryRequest
-	17, // 12: asset.AssetService.GetAvailableProxy:input_type -> asset.GetAvailableProxyRequest
-	19, // 13: asset.AssetService.ReportProxyUsage:input_type -> asset.ReportProxyUsageRequest
-	22, // 14: asset.AssetService.CreateCookie:input_type -> asset.CreateCookieRequest
-	24, // 15: asset.AssetService.UpdateCookie:input_type -> asset.UpdateCookieRequest
-	26, // 16: asset.AssetService.DeleteCookie:input_type -> asset.DeleteCookieRequest
-	28, // 17: asset.AssetService.GetCookie:input_type -> asset.GetCookieRequest
-	30, // 18: asset.AssetService.ListCookies:input_type -> asset.ListCookiesRequest
-	32, // 19: asset.AssetService.GetAvailableCookie:input_type -> asset.GetAvailableCookieRequest
-	34, // 20: asset.AssetService.ReportCookieUsage:input_type -> asset.ReportCookieUsageRequest
-	36, // 21: asset.AssetService.FreezeCookie:input_type -> asset.FreezeCookieRequest
-	1,  // 22: asset.AssetService.GetHistory:output_type -> asset.GetHistoryResponse
-	4,  // 23: asset.AssetService.DeleteHistory:output_type -> asset.DeleteHistoryResponse
-	6,  // 24: asset.AssetService.CheckQuota:output_type -> asset.CheckQuotaResponse
-	8,  // 25: asset.AssetService.ConsumeQuota:output_type -> asset.ConsumeQuotaResponse
-	10, // 26: asset.AssetService.GetUserStats:output_type -> asset.GetUserStatsResponse
-	14, // 27: asset.AssetService.GetFileInfo:output_type -> asset.GetFileInfoResponse
-	16, // 28: asset.AssetService.CreateHistory:output_type -> asset.CreateHistoryResponse
-	18, // 29: asset.AssetService.GetAvailableProxy:output_type -> asset.GetAvailableProxyResponse
-	20, // 30: asset.AssetService.ReportProxyUsage:output_type -> asset.ReportProxyUsageResponse
-	23, // 31: asset.AssetService.CreateCookie:output_type -> asset.CreateCookieResponse
-	25, // 32: asset.AssetService.UpdateCookie:output_type -> asset.UpdateCookieResponse
-	27, // 33: asset.AssetService.DeleteCookie:output_type -> asset.DeleteCookieResponse
-	29, // 34: asset.AssetService.GetCookie:output_type -> asset.GetCookieResponse
-	31, // 35: asset.AssetService.ListCookies:output_type -> asset.ListCookiesResponse
-	33, // 36: asset.AssetService.GetAvailableCookie:output_type -> asset.GetAvailableCookieResponse
-	35, // 37: asset.AssetService.ReportCookieUsage:output_type -> asset.ReportCookieUsageResponse
-	37, // 38: asset.AssetService.FreezeCookie:output_type -> asset.FreezeCookieResponse
-	22, // [22:39] is the sub-list for method output_type
-	5,  // [5:22] is the sub-list for method input_type
+	17, // 12: asset.AssetService.UpdateHistoryStatus:input_type -> asset.UpdateHistoryStatusRequest
+	19, // 13: asset.AssetService.GetAvailableProxy:input_type -> asset.GetAvailableProxyRequest
+	21, // 14: asset.AssetService.ReportProxyUsage:input_type -> asset.ReportProxyUsageRequest
+	24, // 15: asset.AssetService.CreateCookie:input_type -> asset.CreateCookieRequest
+	26, // 16: asset.AssetService.UpdateCookie:input_type -> asset.UpdateCookieRequest
+	28, // 17: asset.AssetService.DeleteCookie:input_type -> asset.DeleteCookieRequest
+	30, // 18: asset.AssetService.GetCookie:input_type -> asset.GetCookieRequest
+	32, // 19: asset.AssetService.ListCookies:input_type -> asset.ListCookiesRequest
+	34, // 20: asset.AssetService.GetAvailableCookie:input_type -> asset.GetAvailableCookieRequest
+	36, // 21: asset.AssetService.ReportCookieUsage:input_type -> asset.ReportCookieUsageRequest
+	38, // 22: asset.AssetService.FreezeCookie:input_type -> asset.FreezeCookieRequest
+	1,  // 23: asset.AssetService.GetHistory:output_type -> asset.GetHistoryResponse
+	4,  // 24: asset.AssetService.DeleteHistory:output_type -> asset.DeleteHistoryResponse
+	6,  // 25: asset.AssetService.CheckQuota:output_type -> asset.CheckQuotaResponse
+	8,  // 26: asset.AssetService.ConsumeQuota:output_type -> asset.ConsumeQuotaResponse
+	10, // 27: asset.AssetService.GetUserStats:output_type -> asset.GetUserStatsResponse
+	14, // 28: asset.AssetService.GetFileInfo:output_type -> asset.GetFileInfoResponse
+	16, // 29: asset.AssetService.CreateHistory:output_type -> asset.CreateHistoryResponse
+	18, // 30: asset.AssetService.UpdateHistoryStatus:output_type -> asset.UpdateHistoryStatusResponse
+	20, // 31: asset.AssetService.GetAvailableProxy:output_type -> asset.GetAvailableProxyResponse
+	22, // 32: asset.AssetService.ReportProxyUsage:output_type -> asset.ReportProxyUsageResponse
+	25, // 33: asset.AssetService.CreateCookie:output_type -> asset.CreateCookieResponse
+	27, // 34: asset.AssetService.UpdateCookie:output_type -> asset.UpdateCookieResponse
+	29, // 35: asset.AssetService.DeleteCookie:output_type -> asset.DeleteCookieResponse
+	31, // 36: asset.AssetService.GetCookie:output_type -> asset.GetCookieResponse
+	33, // 37: asset.AssetService.ListCookies:output_type -> asset.ListCookiesResponse
+	35, // 38: asset.AssetService.GetAvailableCookie:output_type -> asset.GetAvailableCookieResponse
+	37, // 39: asset.AssetService.ReportCookieUsage:output_type -> asset.ReportCookieUsageResponse
+	39, // 40: asset.AssetService.FreezeCookie:output_type -> asset.FreezeCookieResponse
+	23, // [23:41] is the sub-list for method output_type
+	5,  // [5:23] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name
@@ -2716,7 +2867,7 @@ func file_proto_asset_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_asset_proto_rawDesc), len(file_proto_asset_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   38,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

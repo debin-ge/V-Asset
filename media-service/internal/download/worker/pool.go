@@ -21,6 +21,8 @@ type AssetClientInterface interface {
 	ReportCookieUsage(cookieID int64, success bool, taskID string) error
 	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error
 	CleanupCookieFile(cookieFile string) error
+	UpdateHistoryCompleted(taskID, filePath, fileName, fileHash string, fileSize int64, pendingCleanup bool) error
+	UpdateHistoryFailed(taskID, errorMessage string) error
 }
 
 // Pool Worker 池
@@ -314,6 +316,14 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	}
 	log.Printf("[Worker] [Task %s] ✓ Database updated", taskID)
 
+	if p.assetClient != nil {
+		if err := p.assetClient.UpdateHistoryCompleted(taskID, outputPath, fileName, fileHash, fileSize, expireAt != nil); err != nil {
+			log.Printf("[Worker] [Task %s] ❌ Failed to sync completed history to asset service: %v", taskID, err)
+			return p.handleError(ctx, task, err)
+		}
+		log.Printf("[Worker] [Task %s] ✓ Asset history synced", taskID)
+	}
+
 	// 10. 发布完成消息
 	log.Printf("[Worker] [Task %s] Publishing completion message...", taskID)
 	if err := p.progressPublisher.PublishCompleted(ctx, taskID, "Download completed"); err != nil {
@@ -347,6 +357,14 @@ func (p *Pool) handleError(ctx context.Context, task *models.DownloadTask, err e
 		log.Printf("[Worker] [Task %s] ⚠ Failed to update failed status in DB: %v", taskID, dbErr)
 	} else {
 		log.Printf("[Worker] [Task %s] ✓ Database updated with failed status", taskID)
+	}
+
+	if p.assetClient != nil {
+		if syncErr := p.assetClient.UpdateHistoryFailed(taskID, err.Error()); syncErr != nil {
+			log.Printf("[Worker] [Task %s] ⚠ Failed to sync failed status to asset service: %v", taskID, syncErr)
+		} else {
+			log.Printf("[Worker] [Task %s] ✓ Failed status synced to asset service", taskID)
+		}
 	}
 
 	return err

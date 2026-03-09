@@ -27,6 +27,7 @@ const (
 	AssetService_GetUserStats_FullMethodName        = "/asset.AssetService/GetUserStats"
 	AssetService_GetFileInfo_FullMethodName         = "/asset.AssetService/GetFileInfo"
 	AssetService_CreateHistory_FullMethodName       = "/asset.AssetService/CreateHistory"
+	AssetService_UpdateHistoryStatus_FullMethodName = "/asset.AssetService/UpdateHistoryStatus"
 	AssetService_GetAvailableProxy_FullMethodName   = "/asset.AssetService/GetAvailableProxy"
 	AssetService_ReportProxyUsage_FullMethodName    = "/asset.AssetService/ReportProxyUsage"
 	AssetService_CreateCookie_FullMethodName        = "/asset.AssetService/CreateCookie"
@@ -59,6 +60,8 @@ type AssetServiceClient interface {
 	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 	// 创建下载历史
 	CreateHistory(ctx context.Context, in *CreateHistoryRequest, opts ...grpc.CallOption) (*CreateHistoryResponse, error)
+	// 更新下载历史状态
+	UpdateHistoryStatus(ctx context.Context, in *UpdateHistoryStatusRequest, opts ...grpc.CallOption) (*UpdateHistoryStatusResponse, error)
 	// ========== 代理管理 ==========
 	// 获取可用代理（供其他服务调用）
 	GetAvailableProxy(ctx context.Context, in *GetAvailableProxyRequest, opts ...grpc.CallOption) (*GetAvailableProxyResponse, error)
@@ -165,6 +168,16 @@ func (c *assetServiceClient) CreateHistory(ctx context.Context, in *CreateHistor
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateHistoryResponse)
 	err := c.cc.Invoke(ctx, AssetService_CreateHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateHistoryStatus(ctx context.Context, in *UpdateHistoryStatusRequest, opts ...grpc.CallOption) (*UpdateHistoryStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateHistoryStatusResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateHistoryStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -291,6 +304,8 @@ type AssetServiceServer interface {
 	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	// 创建下载历史
 	CreateHistory(context.Context, *CreateHistoryRequest) (*CreateHistoryResponse, error)
+	// 更新下载历史状态
+	UpdateHistoryStatus(context.Context, *UpdateHistoryStatusRequest) (*UpdateHistoryStatusResponse, error)
 	// ========== 代理管理 ==========
 	// 获取可用代理（供其他服务调用）
 	GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error)
@@ -346,6 +361,9 @@ func (UnimplementedAssetServiceServer) GetFileInfo(context.Context, *GetFileInfo
 }
 func (UnimplementedAssetServiceServer) CreateHistory(context.Context, *CreateHistoryRequest) (*CreateHistoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateHistory not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateHistoryStatus(context.Context, *UpdateHistoryStatusRequest) (*UpdateHistoryStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateHistoryStatus not implemented")
 }
 func (UnimplementedAssetServiceServer) GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAvailableProxy not implemented")
@@ -538,6 +556,24 @@ func _AssetService_CreateHistory_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).CreateHistory(ctx, req.(*CreateHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateHistoryStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHistoryStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateHistoryStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateHistoryStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateHistoryStatus(ctx, req.(*UpdateHistoryStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -760,6 +796,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateHistory",
 			Handler:    _AssetService_CreateHistory_Handler,
+		},
+		{
+			MethodName: "UpdateHistoryStatus",
+			Handler:    _AssetService_UpdateHistoryStatus_Handler,
 		},
 		{
 			MethodName: "GetAvailableProxy",

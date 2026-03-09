@@ -22,6 +22,12 @@ type AssetClient struct {
 	cookieTempDir string
 }
 
+const (
+	historyStatusCompleted      = 2
+	historyStatusFailed         = 3
+	historyStatusPendingCleanup = 4
+)
+
 // ProxyLease 表示一次动态代理租约。
 type ProxyLease struct {
 	URL      string
@@ -177,6 +183,50 @@ func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, succe
 	}
 
 	return err
+}
+
+// UpdateHistoryCompleted 同步下载完成状态到 Asset Service
+func (c *AssetClient) UpdateHistoryCompleted(taskID, filePath, fileName, fileHash string, fileSize int64, pendingCleanup bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	status := int32(historyStatusCompleted)
+	if pendingCleanup {
+		status = historyStatusPendingCleanup
+	}
+
+	_, err := c.client.UpdateHistoryStatus(ctx, &pb.UpdateHistoryStatusRequest{
+		TaskId:   taskID,
+		Status:   status,
+		FilePath: filePath,
+		FileName: fileName,
+		FileSize: fileSize,
+		FileHash: fileHash,
+	})
+	if err != nil {
+		log.Printf("[AssetClient] ERROR: Failed to sync completed history for task %s: %v", taskID, err)
+		return err
+	}
+
+	return nil
+}
+
+// UpdateHistoryFailed 同步下载失败状态到 Asset Service
+func (c *AssetClient) UpdateHistoryFailed(taskID, errorMessage string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	_, err := c.client.UpdateHistoryStatus(ctx, &pb.UpdateHistoryStatusRequest{
+		TaskId:       taskID,
+		Status:       historyStatusFailed,
+		ErrorMessage: errorMessage,
+	})
+	if err != nil {
+		log.Printf("[AssetClient] ERROR: Failed to sync failed history for task %s: %v", taskID, err)
+		return err
+	}
+
+	return nil
 }
 
 // Close 关闭连接

@@ -17,5 +17,5 @@ export default function HomePage() {
     router.replace(user ? "/dashboard" : "/login");
   }, [isLoading, router, user]);
 
-  return <main className="login-shell">Loading...</main>;
+  return <main className="flex min-h-screen items-center justify-center px-4 text-sm text-muted-foreground">Loading...</main>;
 }

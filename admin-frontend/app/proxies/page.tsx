@@ -3,13 +3,17 @@
 import * as React from "react";
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppShell } from "@/components/layout/AppShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { ProxyPolicyCard } from "@/components/proxies/ProxyPolicyCard";
 import { ProxyStatusCard } from "@/components/proxies/ProxyStatusCard";
 import { ProxyTable } from "@/components/proxies/ProxyTable";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { proxyApi } from "@/lib/api/proxy";
 import type { ProxyCreatePayload, ProxySourcePolicy, ProxySourceStatus, UpdateProxySourcePolicyPayload, ProxyInfo, ProxyUpdatePayload } from "@/types/proxy";
+import { toast } from "sonner";
 
 export default function ProxiesPage() {
   const [status, setStatus] = React.useState<ProxySourceStatus | null>(null);
@@ -42,63 +46,109 @@ export default function ProxiesPage() {
 
   const handlePolicyUpdate = async (payload: UpdateProxySourcePolicyPayload) => {
     if (!policy) return;
-    await proxyApi.updatePolicy(policy.id, payload);
-    await loadData();
+    try {
+      await proxyApi.updatePolicy(policy.id, payload);
+      await loadData();
+      toast.success("Policy updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update policy");
+    }
   };
 
   const handleCreate = async (payload: ProxyCreatePayload) => {
-    await proxyApi.create(payload);
-    await loadData();
+    try {
+      await proxyApi.create(payload);
+      await loadData();
+      toast.success("Proxy added");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add proxy");
+      throw error;
+    }
   };
 
   const handleUpdate = async (id: number, payload: ProxyUpdatePayload) => {
-    await proxyApi.update(id, payload);
-    await loadData();
+    try {
+      await proxyApi.update(id, payload);
+      await loadData();
+      toast.success("Proxy updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update proxy");
+      throw error;
+    }
   };
 
   const handleStatusChange = async (id: number, nextStatus: number) => {
-    await proxyApi.updateStatus(id, nextStatus);
-    await loadData();
+    try {
+      await proxyApi.updateStatus(id, nextStatus);
+      await loadData();
+      toast.success(nextStatus === 0 ? "Proxy enabled" : "Proxy disabled");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to change proxy status");
+    }
   };
 
   const handleDelete = async (id: number) => {
-    await proxyApi.delete(id);
-    await loadData();
+    try {
+      await proxyApi.delete(id);
+      await loadData();
+      toast.success("Proxy deleted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete proxy");
+    }
   };
 
   return (
     <ProtectedRoute>
-      <div className="layout shell">
-        <Sidebar />
-        <main className="content">
-          <Header />
-          <div className="toolbar">
-            <div>
-              <h1 className="page-title">Proxies</h1>
-              <p className="muted">管理 Proxy 主备策略和手动代理池。</p>
-            </div>
-            <button className="button" onClick={() => void loadData()}>Refresh</button>
-          </div>
-          <div className="card" style={{ marginBottom: 16 }}>
-            <div className="grid proxy-form-grid">
-              <input className="field" placeholder="Search host / region / tags / remark" value={search} onChange={(e) => setSearch(e.target.value)} />
-              <select className="select" value={protocol} onChange={(e) => setProtocol(e.target.value)}>
+      <AppShell>
+        <div className="space-y-4">
+          <PageHeader
+            eyebrow="Network Pool"
+            title="Proxies"
+            description="管理 Proxy 主备策略、健康状态与手动代理池。"
+            actions={
+              <Button onClick={() => void loadData()}>
+                Refresh
+              </Button>
+            }
+          />
+          <Card className="rounded-[28px] border-border/60 bg-white/85 shadow-sm">
+            <CardContent className="grid gap-3 py-6 md:grid-cols-2 xl:grid-cols-5">
+              <Input
+                placeholder="Search host / region / tags / remark"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <select
+                className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                value={protocol}
+                onChange={(e) => setProtocol(e.target.value)}
+              >
                 <option value="">All Protocols</option>
                 <option value="http">HTTP</option>
                 <option value="https">HTTPS</option>
                 <option value="socks5">SOCKS5</option>
               </select>
-              <input className="field" placeholder="Region" value={region} onChange={(e) => setRegion(e.target.value)} />
-              <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <Input placeholder="Region" value={region} onChange={(e) => setRegion(e.target.value)} />
+              <select
+                className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
                 <option value="-1">All Status</option>
                 <option value="0">Active</option>
                 <option value="1">Inactive</option>
                 <option value="2">Checking</option>
               </select>
-              <button className="button ghost" type="button" onClick={() => { setSearch(""); setProtocol(""); setRegion(""); setStatusFilter("-1"); }}>Reset Filters</button>
-            </div>
-          </div>
-          <div className="grid">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => { setSearch(""); setProtocol(""); setRegion(""); setStatusFilter("-1"); }}
+              >
+                Reset Filters
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="grid gap-4">
             <ProxyStatusCard status={status} />
             <ProxyPolicyCard policy={policy} onSubmit={(payload) => void handlePolicyUpdate(payload)} />
             <ProxyTable
@@ -109,8 +159,8 @@ export default function ProxiesPage() {
               onDelete={(id) => void handleDelete(id)}
             />
           </div>
-        </main>
-      </div>
+        </div>
+      </AppShell>
     </ProtectedRoute>
   );
 }

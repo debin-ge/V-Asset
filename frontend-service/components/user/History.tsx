@@ -57,9 +57,12 @@ export function History() {
         }
     }
 
+    const isDownloadable = (status: number) => status === 2 || status === 4
+
     const getStatusIcon = (status: number) => {
         switch (status) {
             case 2: return <CheckCircle className="w-4 h-4 text-green-500" />
+            case 4: return <CheckCircle className="w-4 h-4 text-green-500" />
             case 3: return <XCircle className="w-4 h-4 text-red-500" />
             default: return <Clock className="w-4 h-4 text-yellow-500" />
         }
@@ -127,7 +130,7 @@ export function History() {
                                 )}
                             </div>
                             <div className="flex gap-2 mt-4 sm:mt-0 justify-end">
-                                {item.status === 2 && (
+                                {isDownloadable(item.status) && (
                                     <Button
                                         size="sm"
                                         variant="outline"

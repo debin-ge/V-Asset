@@ -28,6 +28,9 @@ service AssetService {
   // 创建下载历史
   rpc CreateHistory(CreateHistoryRequest) returns (CreateHistoryResponse);
 
+  // 更新下载历史状态
+  rpc UpdateHistoryStatus(UpdateHistoryStatusRequest) returns (UpdateHistoryStatusResponse);
+
   // ========== 代理管理 ==========
   // 获取可用代理（供其他服务调用）
   rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
@@ -177,6 +180,20 @@ message CreateHistoryRequest {
 
 message CreateHistoryResponse {
   int64 history_id = 1;
+}
+
+message UpdateHistoryStatusRequest {
+  string task_id = 1;
+  int32 status = 2;
+  string file_path = 3;
+  string file_name = 4;
+  int64 file_size = 5;
+  string file_hash = 6;
+  string error_message = 7;
+}
+
+message UpdateHistoryStatusResponse {
+  bool success = 1;
 }
 
 // ========== 代理管理消息 ==========

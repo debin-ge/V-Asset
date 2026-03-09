@@ -1,5 +1,18 @@
 import * as React from "react";
 
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import type { ProxyCreatePayload, ProxyInfo, ProxyUpdatePayload } from "@/types/proxy";
 
 export function ProxyTable({
@@ -10,84 +23,105 @@ export function ProxyTable({
   onDelete,
 }: {
   items: ProxyInfo[];
-  onCreate: (payload: ProxyCreatePayload) => void;
-  onUpdate: (id: number, payload: ProxyUpdatePayload) => void;
+  onCreate: (payload: ProxyCreatePayload) => Promise<void> | void;
+  onUpdate: (id: number, payload: ProxyUpdatePayload) => Promise<void> | void;
   onUpdateStatus: (id: number, status: number) => void;
   onDelete: (id: number) => void;
 }) {
-  const [editingId, setEditingId] = React.useState<number | null>(null);
+  const [editingItem, setEditingItem] = React.useState<ProxyInfo | null>(null);
+  const [createOpen, setCreateOpen] = React.useState(false);
 
   return (
-    <div className="card">
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
-        <div>
-          <p className="muted" style={{ marginTop: 0 }}>Manual Pool</p>
-          <h3 style={{ margin: 0 }}>Configured Proxies</h3>
+    <Card className="overflow-hidden rounded-[32px] border-white/60 bg-white/78 shadow-xl shadow-blue-950/5 backdrop-blur-xl">
+      <CardHeader>
+        <CardTitle>Configured Proxies</CardTitle>
+        <CardDescription>维护手动代理池，支持在线编辑与状态切换。</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex justify-end">
+          <Button className="rounded-full" onClick={() => setCreateOpen(true)}>Add Proxy</Button>
         </div>
-      </div>
-      <ProxyCreateForm onSubmit={onCreate} />
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Host</th>
-            <th>Protocol</th>
-            <th>Region</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Usage</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
+        <div className="space-y-4">
           {items.map((item) => (
-            <React.Fragment key={item.id}>
-              <tr>
-                <td>{item.host}:{item.port}</td>
-                <td>{item.protocol}</td>
-                <td>{item.region || "N/A"}</td>
-                <td>{item.priority}</td>
-                <td>
-                  <span className={`status-badge ${proxyStatusClassName(item.status)}`}>
-                    {proxyStatusLabel(item.status)}
-                  </span>
-                </td>
-                <td>{item.success_count}/{item.fail_count}</td>
-                <td>
-                  <div className="inline-actions">
-                    <button
-                      className="button ghost"
-                      onClick={() => setEditingId((current) => current === item.id ? null : item.id)}
-                    >
-                      {editingId === item.id ? "Cancel" : "Edit"}
-                    </button>
-                    {item.status === 0 ? (
-                      <button className="button secondary" onClick={() => onUpdateStatus(item.id, 1)}>Disable</button>
-                    ) : (
-                      <button className="button ghost" onClick={() => onUpdateStatus(item.id, 0)}>Enable</button>
-                    )}
-                    <button className="button secondary" onClick={() => onDelete(item.id)}>Delete</button>
+            <div
+              key={item.id}
+              className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 px-4 py-3 text-white shadow-lg shadow-blue-500/20">
+                      <p className="text-xs uppercase tracking-[0.18em] text-white/70">{item.protocol}</p>
+                      <p className="text-lg font-semibold">{item.host}:{item.port}</p>
+                    </div>
+                    <StatusBadge label={proxyStatusLabel(item.status)} tone={proxyStatusTone(item.status)} />
+                    <MetaPill label="Region" value={item.region || "N/A"} />
+                    <MetaPill label="Priority" value={String(item.priority)} />
                   </div>
-                </td>
-              </tr>
-              {editingId === item.id ? (
-                <tr>
-                  <td colSpan={7}>
-                    <ProxyEditForm
-                      item={item}
-                      onCancel={() => setEditingId(null)}
-                      onSubmit={(payload) => {
-                        onUpdate(item.id, payload);
-                        setEditingId(null);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ) : null}
-            </React.Fragment>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <InfoStat label="Usage" value={`${item.success_count}/${item.fail_count}`} />
+                    <InfoStat label="Platforms" value={item.platform_tags || "Any"} />
+                    <InfoStat label="Remark" value={item.remark || "No remark"} />
+                    <InfoStat label="Updated" value={item.updated_at} />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 lg:justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => setEditingItem(item)}>
+                    Edit
+                  </Button>
+                  {item.status === 0 ? (
+                    <Button variant="outline" size="sm" onClick={() => onUpdateStatus(item.id, 1)}>
+                      Disable
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="sm" onClick={() => onUpdateStatus(item.id, 0)}>
+                      Enable
+                    </Button>
+                  )}
+                  <ConfirmDialog
+                    trigger={<Button variant="outline" size="sm">Delete</Button>}
+                    title="Delete proxy?"
+                    description={`This will permanently remove proxy ${item.host}:${item.port} from the manual pool.`}
+                    actionLabel="Delete"
+                    onConfirm={() => onDelete(item.id)}
+                  />
+                </div>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
-    </div>
+          {items.length === 0 ? (
+            <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-6 py-12 text-center text-sm text-slate-500">
+              No proxies configured yet.
+            </div>
+          ) : null}
+        </div>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogContent className="max-w-4xl">
+            <ProxyCreateForm
+              onCancel={() => setCreateOpen(false)}
+              onSubmit={async (payload) => {
+                await onCreate(payload);
+                setCreateOpen(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+        <Dialog open={Boolean(editingItem)} onOpenChange={(open) => { if (!open) setEditingItem(null); }}>
+          <DialogContent className="max-w-4xl">
+            {editingItem ? (
+              <ProxyEditForm
+                item={editingItem}
+                onCancel={() => setEditingItem(null)}
+                onSubmit={async (payload) => {
+                  await onUpdate(editingItem.id, payload);
+                  setEditingItem(null);
+                }}
+              />
+            ) : null}
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -97,18 +131,17 @@ function ProxyEditForm({
   onCancel,
 }: {
   item: ProxyInfo;
-  onSubmit: (payload: ProxyUpdatePayload) => void;
+  onSubmit: (payload: ProxyUpdatePayload) => Promise<void> | void;
   onCancel: () => void;
 }) {
   return (
     <form
-      className="grid proxy-form-grid"
-      style={{ padding: "8px 0" }}
-      onSubmit={(event) => {
+      className="grid gap-4"
+      onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         const password = String(form.get("password") || "");
-        onSubmit({
+        await onSubmit({
           host: String(form.get("host") || ""),
           port: Number(form.get("port") || 0),
           protocol: String(form.get("protocol") || "http"),
@@ -121,36 +154,47 @@ function ProxyEditForm({
         });
       }}
     >
-      <input className="field" name="host" defaultValue={item.host} placeholder="Host / IP / Domain" />
-      <input className="field" name="port" type="number" defaultValue={item.port} placeholder="Port" />
-      <select className="select" name="protocol" defaultValue={item.protocol}>
-        <option value="http">HTTP</option>
-        <option value="https">HTTPS</option>
-        <option value="socks5">SOCKS5</option>
-      </select>
-      <input className="field" name="username" defaultValue={item.username || ""} placeholder="Username" />
-      <input className="field" name="password" placeholder="Password (leave empty to keep current)" />
-      <input className="field" name="region" defaultValue={item.region || ""} placeholder="Region" />
-      <input className="field" name="priority" type="number" defaultValue={item.priority} placeholder="Priority" />
-      <input className="field" name="platform_tags" defaultValue={item.platform_tags || ""} placeholder="Platform Tags" />
-      <input className="field" name="remark" defaultValue={item.remark || ""} placeholder="Remark" />
-      <div className="inline-actions">
-        <button className="button" type="submit">Save</button>
-        <button className="button secondary" type="button" onClick={onCancel}>Cancel</button>
+      <DialogHeader>
+        <DialogTitle>Edit Proxy</DialogTitle>
+        <DialogDescription>更新代理主机、认证信息和优先级。</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <Input name="host" defaultValue={item.host} placeholder="Host / IP / Domain" />
+        <Input name="port" type="number" defaultValue={item.port} placeholder="Port" />
+        <NativeSelect name="protocol" defaultValue={item.protocol}>
+          <option value="http">HTTP</option>
+          <option value="https">HTTPS</option>
+          <option value="socks5">SOCKS5</option>
+        </NativeSelect>
+        <Input name="username" defaultValue={item.username || ""} placeholder="Username" />
+        <Input name="password" placeholder="Password (leave empty to keep current)" />
+        <Input name="region" defaultValue={item.region || ""} placeholder="Region" />
+        <Input name="priority" type="number" defaultValue={item.priority} placeholder="Priority" />
+        <Input name="platform_tags" defaultValue={item.platform_tags || ""} placeholder="Platform Tags" />
+        <Input name="remark" defaultValue={item.remark || ""} placeholder="Remark" />
       </div>
+      <DialogFooter>
+        <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+        <Button type="submit">Save</Button>
+      </DialogFooter>
     </form>
   );
 }
 
-function ProxyCreateForm({ onSubmit }: { onSubmit: (payload: ProxyCreatePayload) => void }) {
+function ProxyCreateForm({
+  onSubmit,
+  onCancel,
+}: {
+  onSubmit: (payload: ProxyCreatePayload) => Promise<void> | void;
+  onCancel: () => void;
+}) {
   return (
     <form
-      className="grid proxy-form-grid"
-      style={{ marginBottom: 20 }}
-      onSubmit={(event) => {
+      className="grid gap-4"
+      onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
-        onSubmit({
+        await onSubmit({
           host: String(form.get("host") || ""),
           port: Number(form.get("port") || 0),
           protocol: String(form.get("protocol") || "http"),
@@ -165,20 +209,31 @@ function ProxyCreateForm({ onSubmit }: { onSubmit: (payload: ProxyCreatePayload)
         event.currentTarget.reset();
       }}
     >
-      <input className="field" name="host" placeholder="Host / IP / Domain" />
-      <input className="field" name="port" type="number" placeholder="Port" />
-      <select className="select" name="protocol" defaultValue="http">
-        <option value="http">HTTP</option>
-        <option value="https">HTTPS</option>
-        <option value="socks5">SOCKS5</option>
-      </select>
-      <input className="field" name="username" placeholder="Username" />
-      <input className="field" name="password" placeholder="Password" />
-      <input className="field" name="region" placeholder="Region" />
-      <input className="field" name="priority" type="number" placeholder="Priority" />
-      <input className="field" name="platform_tags" placeholder="Platform Tags" />
-      <input className="field" name="remark" placeholder="Remark" />
-      <button className="button" type="submit">Add Proxy</button>
+      <DialogHeader>
+        <DialogTitle>Add Proxy</DialogTitle>
+        <DialogDescription>录入新的代理节点，默认会加入手动池并启用。</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <Input name="host" placeholder="Host / IP / Domain" />
+        <Input name="port" type="number" placeholder="Port" />
+        <NativeSelect name="protocol" defaultValue="http">
+          <option value="http">HTTP</option>
+          <option value="https">HTTPS</option>
+          <option value="socks5">SOCKS5</option>
+        </NativeSelect>
+        <Input name="username" placeholder="Username" />
+        <Input name="password" placeholder="Password" />
+        <Input name="region" placeholder="Region" />
+        <Input name="priority" type="number" placeholder="Priority" />
+        <Input name="platform_tags" placeholder="Platform Tags" />
+        <Input name="remark" placeholder="Remark" />
+      </div>
+      <DialogFooter>
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">Add Proxy</Button>
+      </DialogFooter>
     </form>
   );
 }
@@ -196,15 +251,42 @@ function proxyStatusLabel(status: number) {
   }
 }
 
-function proxyStatusClassName(status: number) {
+function proxyStatusTone(status: number): "success" | "danger" | "info" | "neutral" {
   switch (status) {
     case 0:
-      return "status-active";
+      return "success";
     case 1:
-      return "status-expired";
+      return "danger";
     case 2:
-      return "status-frozen";
+      return "info";
     default:
-      return "";
+      return "neutral";
   }
+}
+
+function NativeSelect(props: React.ComponentProps<"select">) {
+  return (
+    <select
+      {...props}
+      className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+    />
+  );
+}
+
+function MetaPill({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
+      <span className="font-medium text-slate-400">{label}</span>
+      {value}
+    </span>
+  );
+}
+
+function InfoStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50/80 px-4 py-3">
+      <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-medium text-slate-900">{value}</p>
+    </div>
+  );
 }

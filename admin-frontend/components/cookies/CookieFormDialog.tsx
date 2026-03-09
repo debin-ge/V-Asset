@@ -2,6 +2,11 @@
 
 import * as React from "react";
 
+import { Button } from "@/components/ui/button";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
 type CookieFormState = {
   platform: string;
   name: string;
@@ -20,6 +25,7 @@ const emptyState: CookieFormState = {
 
 export function CookieFormDialog({
   onSubmit,
+  onCancel,
 }: {
   onSubmit: (payload: {
     platform: string;
@@ -28,6 +34,7 @@ export function CookieFormDialog({
     expire_at?: string;
     freeze_seconds?: number;
   }) => Promise<void>;
+  onCancel: () => void;
 }) {
   const [form, setForm] = React.useState<CookieFormState>(emptyState);
   const [submitting, setSubmitting] = React.useState(false);
@@ -55,16 +62,16 @@ export function CookieFormDialog({
   };
 
   return (
-    <form className="card grid" onSubmit={handleSubmit}>
-      <div>
-        <p className="muted" style={{ marginBottom: 6 }}>New Cookie</p>
-        <h2 style={{ margin: 0 }}>Create Platform Cookie</h2>
-      </div>
-      <div className="split" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <label className="grid" style={{ gap: 6 }}>
-          <span>Platform</span>
+    <form className="grid gap-4" onSubmit={handleSubmit}>
+      <DialogHeader>
+        <DialogTitle>Create Platform Cookie</DialogTitle>
+        <DialogDescription>录入平台会话内容、冻结时长与过期时间。</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Platform</span>
           <select
-            className="select"
+            className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={form.platform}
             onChange={(e) => setForm((prev) => ({ ...prev, platform: e.target.value }))}
           >
@@ -75,38 +82,36 @@ export function CookieFormDialog({
             <option value="instagram">Instagram</option>
           </select>
         </label>
-        <label className="grid" style={{ gap: 6 }}>
-          <span>Name</span>
-          <input
-            className="field"
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Name</span>
+          <Input
             value={form.name}
             onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+            placeholder="Account label"
           />
         </label>
       </div>
-      <label className="grid" style={{ gap: 6 }}>
-        <span>Cookie Content</span>
-        <textarea
-          className="textarea"
+      <label className="grid gap-2">
+        <span className="text-sm font-medium text-foreground">Cookie Content</span>
+        <Textarea
           rows={6}
           value={form.content}
           onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+          placeholder="Paste raw cookie content"
         />
       </label>
-      <div className="split" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <label className="grid" style={{ gap: 6 }}>
-          <span>Expire At</span>
-          <input
-            className="field"
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Expire At</span>
+          <Input
             type="datetime-local"
             value={form.expire_at}
             onChange={(e) => setForm((prev) => ({ ...prev, expire_at: e.target.value }))}
           />
         </label>
-        <label className="grid" style={{ gap: 6 }}>
-          <span>Freeze Seconds</span>
-          <input
-            className="field"
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-foreground">Freeze Seconds</span>
+          <Input
             type="number"
             min="0"
             value={form.freeze_seconds}
@@ -114,13 +119,15 @@ export function CookieFormDialog({
           />
         </label>
       </div>
-      {error ? <p style={{ color: "#a12c1d", margin: 0 }}>{error}</p> : null}
-      <div className="inline-actions">
-        <button className="button" type="submit" disabled={submitting}>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      <DialogFooter>
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={submitting}>
           {submitting ? "Creating..." : "Create Cookie"}
-        </button>
-      </div>
+        </Button>
+      </DialogFooter>
     </form>
   );
 }
-

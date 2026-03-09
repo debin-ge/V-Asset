@@ -105,6 +105,71 @@ func (r *HistoryRepository) Create(ctx context.Context, history *models.Download
 	return id, nil
 }
 
+// UpdateCompletionByTaskID 按任务 ID 更新完成状态和文件信息
+func (r *HistoryRepository) UpdateCompletionByTaskID(ctx context.Context, taskID string, status models.HistoryStatus, fileInfo *models.FileInfo) error {
+	query := `
+		UPDATE download_history
+		SET status = $1,
+		    file_path = $2,
+		    file_name = $3,
+		    file_size = $4,
+		    file_hash = $5,
+		    error_message = NULL,
+		    completed_at = $6
+		WHERE task_id = $7
+	`
+
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		status,
+		fileInfo.FilePath,
+		fileInfo.FileName,
+		fileInfo.FileSize,
+		fileInfo.FileHash,
+		time.Now(),
+		taskID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update completion status: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to inspect completion update result: %w", err)
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+// UpdateFailureByTaskID 按任务 ID 更新失败状态
+func (r *HistoryRepository) UpdateFailureByTaskID(ctx context.Context, taskID string, errorMessage string) error {
+	query := `
+		UPDATE download_history
+		SET status = $1,
+		    error_message = $2
+		WHERE task_id = $3
+	`
+
+	result, err := r.db.ExecContext(ctx, query, models.StatusFailed, errorMessage, taskID)
+	if err != nil {
+		return fmt.Errorf("failed to update failure status: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to inspect failure update result: %w", err)
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
 // Query 查询历史记录(支持过滤、分页、排序)
 func (r *HistoryRepository) Query(ctx context.Context, filter *models.HistoryFilter) (*models.HistoryResult, error) {
 	// 构建WHERE子句

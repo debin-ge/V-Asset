@@ -34,6 +34,21 @@ func (s *HistoryService) CreateHistory(ctx context.Context, history *models.Down
 	return s.historyRepo.Create(ctx, history)
 }
 
+// UpdateHistoryStatus 按任务 ID 更新下载历史状态
+func (s *HistoryService) UpdateHistoryStatus(ctx context.Context, taskID string, status models.HistoryStatus, fileInfo *models.FileInfo, errorMessage string) error {
+	switch status {
+	case models.StatusCompleted, models.StatusPendingCleanup:
+		if fileInfo == nil {
+			return errors.New("file info is required for completed status")
+		}
+		return s.historyRepo.UpdateCompletionByTaskID(ctx, taskID, status, fileInfo)
+	case models.StatusFailed:
+		return s.historyRepo.UpdateFailureByTaskID(ctx, taskID, errorMessage)
+	default:
+		return errors.New("unsupported history status update")
+	}
+}
+
 // DeleteHistory 删除历史记录
 func (s *HistoryService) DeleteHistory(ctx context.Context, historyID int64, userID string) error {
 	// 1. 获取记录信息

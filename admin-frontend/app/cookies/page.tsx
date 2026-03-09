@@ -6,10 +6,12 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { CookieFilterBar } from "@/components/cookies/CookieFilterBar";
 import { CookieFormDialog } from "@/components/cookies/CookieFormDialog";
 import { CookieTable } from "@/components/cookies/CookieTable";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppShell } from "@/components/layout/AppShell";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cookieApi } from "@/lib/api/cookie";
 import type { CookieInfo } from "@/types/cookie";
+import { toast } from "sonner";
 
 export default function CookiesPage() {
   const [items, setItems] = React.useState<CookieInfo[]>([]);
@@ -30,13 +32,23 @@ export default function CookiesPage() {
   }, [loadCookies]);
 
   const handleDelete = async (id: number) => {
-    await cookieApi.delete(id);
-    await loadCookies();
+    try {
+      await cookieApi.delete(id);
+      await loadCookies();
+      toast.success("Cookie deleted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete cookie");
+    }
   };
 
   const handleFreeze = async (id: number) => {
-    await cookieApi.freeze(id, 1800);
-    await loadCookies();
+    try {
+      await cookieApi.freeze(id, 1800);
+      await loadCookies();
+      toast.success("Cookie frozen");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to freeze cookie");
+    }
   };
 
   const handleCreate = async (payload: {
@@ -46,23 +58,26 @@ export default function CookiesPage() {
     expire_at?: string;
     freeze_seconds?: number;
   }) => {
-    await cookieApi.create(payload);
-    setShowCreateForm(false);
-    await loadCookies();
+    try {
+      await cookieApi.create(payload);
+      setShowCreateForm(false);
+      await loadCookies();
+      toast.success("Cookie created");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create cookie");
+      throw error;
+    }
   };
 
   return (
     <ProtectedRoute>
-      <div className="layout shell">
-        <Sidebar />
-        <main className="content">
-          <Header />
-          <div style={{ marginBottom: 16 }}>
-            <div>
-              <h1 className="page-title">Cookies</h1>
-              <p className="muted">管理平台 Cookies 资源。</p>
-            </div>
-          </div>
+      <AppShell>
+        <div className="space-y-4">
+          <PageHeader
+            eyebrow="Session Assets"
+            title="Cookies"
+            description="管理平台 Cookies 资源、冻结窗口和使用状态。"
+          />
           <CookieFilterBar
             platform={platform}
             onPlatformChange={setPlatform}
@@ -70,14 +85,18 @@ export default function CookiesPage() {
             onCreateToggle={() => setShowCreateForm((prev) => !prev)}
             creating={showCreateForm}
           />
-          {showCreateForm ? <CookieFormDialog onSubmit={handleCreate} /> : null}
+          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+            <DialogContent className="max-w-2xl">
+              <CookieFormDialog onSubmit={handleCreate} onCancel={() => setShowCreateForm(false)} />
+            </DialogContent>
+          </Dialog>
           <CookieTable
             items={items}
             onDelete={(id) => void handleDelete(id)}
             onFreeze={(id) => void handleFreeze(id)}
           />
-        </main>
-      </div>
+        </div>
+      </AppShell>
     </ProtectedRoute>
   );
 }

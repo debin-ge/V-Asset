@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"time"
 
@@ -193,6 +195,42 @@ func (s *GRPCServer) CreateHistory(ctx context.Context, req *pb.CreateHistoryReq
 	return &pb.CreateHistoryResponse{
 		HistoryId: historyID,
 	}, nil
+}
+
+// UpdateHistoryStatus 更新下载历史状态
+func (s *GRPCServer) UpdateHistoryStatus(ctx context.Context, req *pb.UpdateHistoryStatusRequest) (*pb.UpdateHistoryStatusResponse, error) {
+	if req.TaskId == "" {
+		return nil, status.Error(codes.InvalidArgument, "任务ID不能为空")
+	}
+
+	historyStatus := models.HistoryStatus(req.Status)
+
+	var fileInfo *models.FileInfo
+	if historyStatus == models.StatusCompleted || historyStatus == models.StatusPendingCleanup {
+		if req.FilePath == "" || req.FileName == "" {
+			return nil, status.Error(codes.InvalidArgument, "完成状态必须提供文件信息")
+		}
+		fileInfo = &models.FileInfo{
+			FilePath: req.FilePath,
+			FileName: req.FileName,
+			FileSize: req.FileSize,
+			FileHash: req.FileHash,
+		}
+	}
+
+	if err := s.historyService.UpdateHistoryStatus(ctx, req.TaskId, historyStatus, fileInfo, req.ErrorMessage); err != nil {
+		log.Printf("UpdateHistoryStatus error: %v", err)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, status.Error(codes.NotFound, "历史记录不存在")
+		case err.Error() == "file info is required for completed status", err.Error() == "unsupported history status update":
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "更新历史记录失败")
+		}
+	}
+
+	return &pb.UpdateHistoryStatusResponse{Success: true}, nil
 }
 
 // CheckQuota 检查配额
