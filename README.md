@@ -32,13 +32,13 @@ V-Asset 面向“视频解析、下载交付、资产沉淀、后台治理”这
 
 ## 📁 仓库组成
 
-- [frontend-service](V-Asset/frontend-service)
-- [admin-frontend](V-Asset/admin-frontend)
-- [api-gateway](V-Asset/api-gateway)
-- [auth-service](V-Asset/auth-service)
-- [media-service](V-Asset/media-service)
-- [asset-service](V-Asset/asset-service)
-- [admin-service](V-Asset/admin-service)
+- [frontend-service](frontend-service)
+- [admin-frontend](admin-frontend)
+- [api-gateway](api-gateway)
+- [auth-service](auth-service)
+- [media-service](media-service)
+- [asset-service](asset-service)
+- [admin-service](admin-service)
 
 
 ## 🛠️ 技术栈
