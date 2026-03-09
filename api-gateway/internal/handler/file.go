@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 
@@ -87,9 +90,10 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 	}
 
 	// 5. 设置响应头
+	dispositionFilename := buildContentDispositionFilename(resp.FileName)
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", resp.FileName))
+	c.Header("Content-Disposition", dispositionFilename)
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Length", fmt.Sprintf("%d", fileInfo.Size()))
 	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -117,4 +121,37 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 		}
 		c.Writer.Flush()
 	}
+}
+
+func buildContentDispositionFilename(filename string) string {
+	if filename == "" {
+		filename = "download"
+	}
+
+	fallback := buildASCIIFilename(filename)
+	encoded := url.PathEscape(filename)
+
+	return fmt.Sprintf("attachment; filename=%q; filename*=UTF-8''%s", fallback, encoded)
+}
+
+func buildASCIIFilename(filename string) string {
+	var builder strings.Builder
+	builder.Grow(len(filename))
+
+	for _, r := range filename {
+		switch {
+		case r == '"' || r == '\\':
+			builder.WriteByte('_')
+		case r < utf8.RuneSelf && r >= 32 && r != ';':
+			builder.WriteRune(r)
+		default:
+			builder.WriteByte('_')
+		}
+	}
+
+	cleaned := strings.TrimSpace(builder.String())
+	if cleaned == "" {
+		return "download"
+	}
+	return cleaned
 }

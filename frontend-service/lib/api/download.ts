@@ -30,11 +30,7 @@ export const downloadApi = {
 
         // 从响应头获取文件名
         const contentDisposition = response.headers['content-disposition'];
-        let filename = 'download';
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename="(.+)"/);
-            if (match) filename = match[1];
-        }
+        const filename = parseDownloadFilename(contentDisposition);
 
         // 创建下载链接
         const blob = new Blob([response.data]);
@@ -48,6 +44,36 @@ export const downloadApi = {
         window.URL.revokeObjectURL(url);
     },
 };
+
+function parseDownloadFilename(contentDisposition?: string): string {
+    if (!contentDisposition) {
+        return 'download';
+    }
+
+    const encodedMatch = contentDisposition.match(/filename\*\s*=\s*([^;]+)/i);
+    if (encodedMatch) {
+        const rawValue = encodedMatch[1].trim().replace(/^"(.*)"$/, '$1');
+        const encodedPart = rawValue.includes("''") ? rawValue.split("''").slice(1).join("''") : rawValue;
+
+        try {
+            return decodeURIComponent(encodedPart);
+        } catch {
+            return encodedPart;
+        }
+    }
+
+    const quotedMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
+    if (quotedMatch) {
+        return quotedMatch[1];
+    }
+
+    const plainMatch = contentDisposition.match(/filename\s*=\s*([^;]+)/i);
+    if (plainMatch) {
+        return plainMatch[1].trim();
+    }
+
+    return 'download';
+}
 
 // 下载类型映射
 export function mapDownloadType(type: 'video' | 'audio'): string {

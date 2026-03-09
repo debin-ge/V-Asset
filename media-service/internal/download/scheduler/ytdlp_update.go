@@ -2,10 +2,13 @@ package scheduler
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"vasset/media-service/internal/download/config"
@@ -18,9 +21,9 @@ type YtDLPUpdater struct {
 	interval   time.Duration
 	timeout    time.Duration
 	autoUpdate bool
-	mu         sync.Mutex
-	dryRunOK   *bool
 }
+
+const latestReleaseAPI = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
 
 func NewYtDLPUpdater(ytdlpCfg *config.YtDLPConfig, updateCfg *config.YtDLPUpdateConfig) *YtDLPUpdater {
 	return &YtDLPUpdater{
@@ -63,24 +66,19 @@ func (u *YtDLPUpdater) Start(ctx context.Context) {
 }
 
 func (u *YtDLPUpdater) checkOnce(ctx context.Context) {
-	versionCtx, versionCancel := context.WithTimeout(ctx, u.timeout)
-	defer versionCancel()
-
-	versionOutput, versionErr := exec.CommandContext(versionCtx, u.binaryPath, "--version").CombinedOutput()
+	currentVersion, versionErr := u.getCurrentVersion(ctx)
 	if versionErr != nil {
 		log.Printf("[YtDLPUpdate] Failed to read current version: %v", versionErr)
 	} else {
-		log.Printf("[YtDLPUpdate] Current version: %s", strings.TrimSpace(string(versionOutput)))
+		log.Printf("[YtDLPUpdate] Current version: %s", currentVersion)
+	}
+
+	if !u.autoUpdate {
+		u.logLatestReleaseCheck(ctx, currentVersion)
+		return
 	}
 
 	args := []string{"--update"}
-	if !u.autoUpdate {
-		if !u.supportsDryRun(ctx) {
-			log.Println("[YtDLPUpdate] Skipping update check because this yt-dlp build does not support --dry-run")
-			return
-		}
-		args = append(args, "--dry-run")
-	}
 
 	updateCtx, updateCancel := context.WithTimeout(ctx, u.timeout)
 	defer updateCancel()
@@ -94,30 +92,128 @@ func (u *YtDLPUpdater) checkOnce(ctx context.Context) {
 	log.Printf("[YtDLPUpdate] Check result: %s", strings.TrimSpace(string(updateOutput)))
 }
 
-func (u *YtDLPUpdater) supportsDryRun(ctx context.Context) bool {
-	u.mu.Lock()
-	if u.dryRunOK != nil {
-		value := *u.dryRunOK
-		u.mu.Unlock()
-		return value
-	}
-	u.mu.Unlock()
+func (u *YtDLPUpdater) getCurrentVersion(ctx context.Context) (string, error) {
+	versionCtx, versionCancel := context.WithTimeout(ctx, u.timeout)
+	defer versionCancel()
 
-	probeCtx, cancel := context.WithTimeout(ctx, u.timeout)
+	versionOutput, versionErr := exec.CommandContext(versionCtx, u.binaryPath, "--version").CombinedOutput()
+	if versionErr != nil {
+		return "", versionErr
+	}
+
+	return normalizeVersion(strings.TrimSpace(string(versionOutput))), nil
+}
+
+func (u *YtDLPUpdater) logLatestReleaseCheck(ctx context.Context, currentVersion string) {
+	latestVersion, err := u.getLatestReleaseVersion(ctx)
+	if err != nil {
+		log.Printf("[YtDLPUpdate] Failed to fetch latest release: %v", err)
+		return
+	}
+
+	if currentVersion == "" {
+		log.Printf("[YtDLPUpdate] Latest release: %s", latestVersion)
+		return
+	}
+
+	switch compareVersions(currentVersion, latestVersion) {
+	case -1:
+		log.Printf("[YtDLPUpdate] Update available: current=%s latest=%s", currentVersion, latestVersion)
+	case 1:
+		log.Printf("[YtDLPUpdate] Current version %s is newer than latest release %s", currentVersion, latestVersion)
+	default:
+		log.Printf("[YtDLPUpdate] Already up to date: %s", currentVersion)
+	}
+}
+
+func (u *YtDLPUpdater) getLatestReleaseVersion(ctx context.Context) (string, error) {
+	requestCtx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	output, err := exec.CommandContext(probeCtx, u.binaryPath, "--update", "--dry-run").CombinedOutput()
-	supported := true
+	req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, latestReleaseAPI, nil)
 	if err != nil {
-		combined := strings.ToLower(string(output))
-		if strings.Contains(combined, "no such option: --dry-run") {
-			supported = false
+		return "", err
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("User-Agent", "vasset-media-service")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status: %s", resp.Status)
+	}
+
+	var payload struct {
+		TagName string `json:"tag_name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return "", err
+	}
+
+	if payload.TagName == "" {
+		return "", fmt.Errorf("tag_name is empty")
+	}
+
+	return normalizeVersion(payload.TagName), nil
+}
+
+func normalizeVersion(version string) string {
+	version = strings.TrimSpace(version)
+	if strings.Contains(version, "@") {
+		version = version[strings.LastIndex(version, "@")+1:]
+	}
+	version = strings.TrimPrefix(version, "v")
+	return version
+}
+
+func compareVersions(current, latest string) int {
+	currentParts := versionParts(current)
+	latestParts := versionParts(latest)
+	maxLen := len(currentParts)
+	if len(latestParts) > maxLen {
+		maxLen = len(latestParts)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		currentPart := 0
+		if i < len(currentParts) {
+			currentPart = currentParts[i]
+		}
+		latestPart := 0
+		if i < len(latestParts) {
+			latestPart = latestParts[i]
+		}
+
+		switch {
+		case currentPart < latestPart:
+			return -1
+		case currentPart > latestPart:
+			return 1
 		}
 	}
 
-	u.mu.Lock()
-	u.dryRunOK = &supported
-	u.mu.Unlock()
+	return 0
+}
 
-	return supported
+func versionParts(version string) []int {
+	fields := strings.FieldsFunc(version, func(r rune) bool {
+		return r < '0' || r > '9'
+	})
+
+	parts := make([]int, 0, len(fields))
+	for _, field := range fields {
+		if field == "" {
+			continue
+		}
+		value, err := strconv.Atoi(field)
+		if err != nil {
+			continue
+		}
+		parts = append(parts, value)
+	}
+	return parts
 }
