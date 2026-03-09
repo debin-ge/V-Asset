@@ -191,15 +191,15 @@ services:
     build:
       context: ./frontend-service
       args:
-        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
-        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-ws://localhost:8080}
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
+        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-}
         - NEXT_PUBLIC_PARSE_TIMEOUT_MS=${NEXT_PUBLIC_PARSE_TIMEOUT_MS:-300000}
     container_name: vasset-frontend
     ports:
       - "80:3000"
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
-      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-ws://localhost:8080}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-}
     depends_on:
       - api-gateway
     restart: unless-stopped
@@ -209,13 +209,13 @@ services:
     build:
       context: ./admin-frontend
       args:
-        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
         - API_GATEWAY_INTERNAL_URL=${API_GATEWAY_INTERNAL_URL:-http://api-gateway:8080}
     container_name: vasset-admin-frontend
     ports:
       - "3001:3001"
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
       - API_GATEWAY_INTERNAL_URL=${API_GATEWAY_INTERNAL_URL:-http://api-gateway:8080}
     depends_on:
       - api-gateway

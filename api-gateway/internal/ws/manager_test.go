@@ -128,6 +128,20 @@ func TestCheckOriginUsesForwardedHeaders(t *testing.T) {
 	}
 }
 
+func TestCheckOriginUsesCloudflareVisitorScheme(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequest(http.MethodGet, "http://internal:8080/api/v1/ws/progress", nil)
+	req.Host = "internal:8080"
+	req.Header.Set("Origin", "https://ytdlp.obstream.com")
+	req.Header.Set("X-Forwarded-Host", "ytdlp.obstream.com")
+	req.Header.Set("CF-Visitor", `{"scheme":"https"}`)
+
+	if !upgrader.CheckOrigin(req) {
+		t.Fatalf("expected CF-Visitor https scheme to be accepted")
+	}
+}
+
 func assertResponseMessage(t *testing.T, w *httptest.ResponseRecorder, want string) {
 	t.Helper()
 

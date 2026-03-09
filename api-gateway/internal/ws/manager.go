@@ -231,6 +231,15 @@ func requestScheme(r *http.Request) string {
 		return strings.TrimSpace(strings.ToLower(forwardedProto))
 	}
 
+	if cfVisitor := strings.TrimSpace(r.Header.Get("CF-Visitor")); cfVisitor != "" {
+		if strings.Contains(strings.ToLower(cfVisitor), `"scheme":"https"`) {
+			return "https"
+		}
+		if strings.Contains(strings.ToLower(cfVisitor), `"scheme":"http"`) {
+			return "http"
+		}
+	}
+
 	if r.TLS != nil {
 		return "https"
 	}

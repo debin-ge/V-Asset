@@ -1,6 +1,19 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+function resolveApiBaseUrl(): string {
+    const explicitBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (explicitBaseUrl) {
+        return explicitBaseUrl;
+    }
+
+    if (typeof window !== 'undefined') {
+        return window.location.origin;
+    }
+
+    return 'http://localhost:8080';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 // Token存储键名
 const TOKEN_KEY = 'v-asset-token';
