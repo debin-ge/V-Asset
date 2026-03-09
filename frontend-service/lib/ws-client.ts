@@ -1,6 +1,31 @@
 import { tokenManager } from './api-client';
 
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+function resolveWsBaseUrl(): string {
+    const explicitWsUrl = process.env.NEXT_PUBLIC_WS_URL;
+    if (explicitWsUrl) {
+        return explicitWsUrl;
+    }
+
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (apiBaseUrl) {
+        try {
+            const apiUrl = new URL(apiBaseUrl);
+            apiUrl.protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+            return apiUrl.origin;
+        } catch (error) {
+            console.warn('Invalid NEXT_PUBLIC_API_BASE_URL for WebSocket resolution:', error);
+        }
+    }
+
+    if (typeof window !== 'undefined') {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${protocol}//${window.location.host}`;
+    }
+
+    return 'ws://localhost:8080';
+}
+
+const WS_BASE_URL = resolveWsBaseUrl();
 
 export interface ProgressData {
     task_id: string;
@@ -88,6 +113,7 @@ class ProgressWebSocket {
     // 订阅任务进度
     subscribe(taskId: string, callback: ProgressCallback): void {
         this.listeners.set(taskId, callback);
+        console.log('Subscribing to progress updates for task:', taskId, 'via', WS_BASE_URL);
 
         // 确保WebSocket已连接
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {

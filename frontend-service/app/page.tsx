@@ -16,7 +16,9 @@ export default function Home() {
     timeLeft,
     handleParse,
     startDownload,
+    downloadFile,
     reset,
+    autoDownloadAttempted,
   } = useDownload()
 
   return (
@@ -50,12 +52,25 @@ export default function Home() {
       {status === "completed" && (
         <div className="mt-8 text-center animate-fade-in">
           <p className="text-green-600 font-medium mb-4">Download Completed!</p>
-          <button
-            onClick={reset}
-            className="text-blue-600 hover:underline"
-          >
-            Download another video
-          </button>
+          {autoDownloadAttempted && (
+            <p className="text-sm text-gray-500 mb-4">
+              If your browser blocked the automatic download, click the button below.
+            </p>
+          )}
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={downloadFile}
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Download file
+            </button>
+            <button
+              onClick={reset}
+              className="text-blue-600 hover:underline"
+            >
+              Download another video
+            </button>
+          </div>
         </div>
       )}
     </div>

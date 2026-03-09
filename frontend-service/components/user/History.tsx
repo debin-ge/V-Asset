@@ -2,11 +2,10 @@
 
 import * as React from "react"
 import { historyApi, HistoryItem } from "@/lib/api/history"
-import { downloadApi } from "@/lib/api/download"
 import { formatDate, formatFileSize, formatDuration, getStatusText } from "@/lib/format"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download, Trash2, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
+import { Trash2, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
 import { toast } from "sonner"
 import { RemoteThumbnail } from "@/components/common/RemoteThumbnail"
 
@@ -14,7 +13,6 @@ export function History() {
     const [history, setHistory] = React.useState<HistoryItem[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
     const [deletingId, setDeletingId] = React.useState<number | null>(null)
-    const [downloadingId, setDownloadingId] = React.useState<number | null>(null)
 
     const loadHistory = React.useCallback(async () => {
         try {
@@ -44,20 +42,6 @@ export function History() {
             setDeletingId(null)
         }
     }
-
-    const handleDownload = async (historyId: number) => {
-        setDownloadingId(historyId)
-        try {
-            await downloadApi.downloadFile(historyId)
-            toast.success("Download started")
-        } catch {
-            toast.error("Download failed")
-        } finally {
-            setDownloadingId(null)
-        }
-    }
-
-    const isDownloadable = (status: number) => status === 2 || status === 4
 
     const getStatusIcon = (status: number) => {
         switch (status) {
@@ -130,21 +114,6 @@ export function History() {
                                 )}
                             </div>
                             <div className="flex gap-2 mt-4 sm:mt-0 justify-end">
-                                {isDownloadable(item.status) && (
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleDownload(item.history_id)}
-                                        disabled={downloadingId === item.history_id}
-                                    >
-                                        {downloadingId === item.history_id ? (
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                        ) : (
-                                            <Download className="w-4 h-4 mr-2" />
-                                        )}
-                                        Download
-                                    </Button>
-                                )}
                                 <Button
                                     size="sm"
                                     variant="ghost"

@@ -20,6 +20,7 @@ export function useDownload() {
     const [timeLeft, setTimeLeft] = React.useState("")
     const [currentTaskId, setCurrentTaskId] = React.useState<string | null>(null)
     const [historyId, setHistoryId] = React.useState<number | null>(null)
+    const [autoDownloadAttempted, setAutoDownloadAttempted] = React.useState(false)
 
     // Use ref to store historyId for access in callbacks
     const historyIdRef = React.useRef<number | null>(null)
@@ -39,11 +40,12 @@ export function useDownload() {
     // Auto download file to browser
     const triggerFileDownload = React.useCallback(async (hId: number) => {
         try {
+            setAutoDownloadAttempted(true)
             await downloadApi.downloadFile(hId)
             toast.success("文件下载已开始")
         } catch (error) {
-            const message = error instanceof Error ? error.message : "文件下载失败"
-            toast.error(message)
+            console.error("[Download] Automatic download did not start", error)
+            toast.info("自动下载未生效，请点击下方按钮手动下载")
         }
     }, [])
 
@@ -70,7 +72,7 @@ export function useDownload() {
                 triggerFileDownload(hId)
             } else {
                 console.error('[Download] historyId is null, cannot trigger download')
-                toast.error("无法获取下载文件信息，请在历史记录中手动下载")
+                toast.error("无法获取下载文件信息，请重新提交下载任务")
             }
         } else if (isFailed) {
             setStatus("error")
@@ -165,6 +167,7 @@ export function useDownload() {
         setTimeLeft("")
         setCurrentTaskId(null)
         setHistoryId(null)
+        setAutoDownloadAttempted(false)
     }
 
     return {
@@ -180,5 +183,6 @@ export function useDownload() {
         downloadFile,
         reset,
         historyId,
+        autoDownloadAttempted,
     }
 }
