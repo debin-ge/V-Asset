@@ -41,7 +41,11 @@ var upgrader = websocket.Upgrader{
 			scheme = "https"
 		}
 
-		return parsedOrigin.Host == r.Host && parsedOrigin.Scheme == scheme
+		allowed := parsedOrigin.Host == r.Host && parsedOrigin.Scheme == scheme
+		if !allowed {
+			log.Printf("[WS] Rejecting websocket origin: remote=%s host=%s origin=%s expected_scheme=%s", r.RemoteAddr, r.Host, origin, scheme)
+		}
+		return allowed
 	},
 }
 
@@ -100,6 +104,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 
 	claims, err := middleware.AuthenticateToken(c.Request.Context(), m.authClient, m.rdb, token)
 	if err != nil {
+		log.Printf("[WS] Rejecting connection from %s: auth failed (%v)", c.ClientIP(), err)
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"code":    401,
 			"message": err.Error(),
@@ -109,6 +114,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 
 	taskID := strings.TrimSpace(c.Query("task_id"))
 	if taskID == "" {
+		log.Printf("[WS] Rejecting connection from %s for user %s: missing task_id", c.ClientIP(), claims.UserID)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
 			"message": "task_id is required",
@@ -117,6 +123,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	}
 
 	if err := m.validateTaskAccess(c.Request.Context(), claims.UserID, taskID); err != nil {
+		log.Printf("[WS] Rejecting connection from %s for user %s task %s: access denied (%v)", c.ClientIP(), claims.UserID, taskID, err)
 		c.JSON(http.StatusForbidden, gin.H{
 			"code":    403,
 			"message": err.Error(),
@@ -127,7 +134,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	// 升级到 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("[WS] Failed to upgrade connection: %v", err)
+		log.Printf("[WS] Failed to upgrade connection from %s for user %s task %s: %v", c.ClientIP(), claims.UserID, taskID, err)
 		return
 	}
 

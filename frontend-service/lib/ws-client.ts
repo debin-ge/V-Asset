@@ -43,15 +43,16 @@ export interface ProgressData {
 type ProgressCallback = (progress: ProgressData) => void;
 
 class ProgressWebSocket {
-    private ws: WebSocket | null = null;
-    private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    private sockets: Map<string, WebSocket> = new Map();
+    private reconnectTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
     private listeners: Map<string, ProgressCallback> = new Map();
-    private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
-    private isConnecting = false;
+    private reconnectAttempts: Map<string, number> = new Map();
+    private connectingTasks: Set<string> = new Set();
+    private readonly maxReconnectAttempts = 5;
 
-    connect(): void {
-        if (this.isConnecting || this.ws?.readyState === WebSocket.OPEN) {
+    connect(taskId: string): void {
+        const existing = this.sockets.get(taskId);
+        if (this.connectingTasks.has(taskId) || existing?.readyState === WebSocket.OPEN) {
             return;
         }
 
@@ -61,22 +62,23 @@ class ProgressWebSocket {
             return;
         }
 
-        this.isConnecting = true;
-        const wsUrl = `${WS_BASE_URL}/api/v1/ws/progress?token=${token}`;
+        this.connectingTasks.add(taskId);
+        const wsUrl = `${WS_BASE_URL}/api/v1/ws/progress?token=${encodeURIComponent(token)}&task_id=${encodeURIComponent(taskId)}`;
 
         try {
-            this.ws = new WebSocket(wsUrl);
+            const ws = new WebSocket(wsUrl);
+            this.sockets.set(taskId, ws);
 
-            this.ws.onopen = () => {
-                console.log('WebSocket connected');
-                this.isConnecting = false;
-                this.reconnectAttempts = 0;
+            ws.onopen = () => {
+                console.log('WebSocket connected for task:', taskId);
+                this.connectingTasks.delete(taskId);
+                this.reconnectAttempts.set(taskId, 0);
             };
 
-            this.ws.onmessage = (event) => {
+            ws.onmessage = (event) => {
                 try {
                     const progress: ProgressData = JSON.parse(event.data);
-                    const listener = this.listeners.get(progress.task_id);
+                    const listener = this.listeners.get(taskId) ?? this.listeners.get(progress.task_id);
                     if (listener) {
                         listener(progress);
                     }
@@ -85,28 +87,32 @@ class ProgressWebSocket {
                 }
             };
 
-            this.ws.onclose = (event) => {
-                console.log('WebSocket closed:', event.code, event.reason);
-                this.isConnecting = false;
-                this.ws = null;
+            ws.onclose = (event) => {
+                console.log('WebSocket closed:', taskId, event.code, event.reason);
+                this.connectingTasks.delete(taskId);
+                this.sockets.delete(taskId);
 
-                // 自动重连（如果有活跃的监听器）
-                if (this.listeners.size > 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
-                    this.reconnectAttempts++;
-                    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-                    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-                    this.reconnectTimer = setTimeout(() => this.connect(), delay);
+                if (this.listeners.has(taskId)) {
+                    const attempts = this.reconnectAttempts.get(taskId) ?? 0;
+                    if (attempts < this.maxReconnectAttempts) {
+                        const nextAttempt = attempts + 1;
+                        this.reconnectAttempts.set(taskId, nextAttempt);
+                        const delay = Math.min(1000 * Math.pow(2, nextAttempt), 30000);
+                        console.log(`Reconnecting task ${taskId} in ${delay}ms (attempt ${nextAttempt})`);
+                        const timer = setTimeout(() => this.connect(taskId), delay);
+                        this.reconnectTimers.set(taskId, timer);
+                    }
                 }
             };
 
-            this.ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.isConnecting = false;
+            ws.onerror = (error) => {
+                console.error('WebSocket error for task:', taskId, error);
+                this.connectingTasks.delete(taskId);
             };
 
         } catch (e) {
             console.error('Failed to create WebSocket:', e);
-            this.isConnecting = false;
+            this.connectingTasks.delete(taskId);
         }
     }
 
@@ -115,41 +121,47 @@ class ProgressWebSocket {
         this.listeners.set(taskId, callback);
         console.log('Subscribing to progress updates for task:', taskId, 'via', WS_BASE_URL);
 
-        // 确保WebSocket已连接
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            this.connect();
-        }
+        this.connect(taskId);
     }
 
     // 取消订阅
     unsubscribe(taskId: string): void {
         this.listeners.delete(taskId);
+        this.reconnectAttempts.delete(taskId);
+        this.connectingTasks.delete(taskId);
 
-        // 如果没有监听器了，可以选择断开连接
-        if (this.listeners.size === 0) {
-            this.disconnect();
+        const timer = this.reconnectTimers.get(taskId);
+        if (timer) {
+            clearTimeout(timer);
+            this.reconnectTimers.delete(taskId);
+        }
+
+        const socket = this.sockets.get(taskId);
+        if (socket) {
+            socket.close();
+            this.sockets.delete(taskId);
         }
     }
 
     // 断开连接
     disconnect(): void {
-        if (this.reconnectTimer) {
-            clearTimeout(this.reconnectTimer);
-            this.reconnectTimer = null;
-        }
-
-        if (this.ws) {
-            this.ws.close();
-            this.ws = null;
-        }
-
+        this.reconnectTimers.forEach((timer) => clearTimeout(timer));
+        this.reconnectTimers.clear();
+        this.sockets.forEach((socket) => socket.close());
+        this.sockets.clear();
         this.listeners.clear();
-        this.reconnectAttempts = 0;
+        this.reconnectAttempts.clear();
+        this.connectingTasks.clear();
     }
 
     // 检查连接状态
     isConnected(): boolean {
-        return this.ws?.readyState === WebSocket.OPEN;
+        for (const socket of this.sockets.values()) {
+            if (socket.readyState === WebSocket.OPEN) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
