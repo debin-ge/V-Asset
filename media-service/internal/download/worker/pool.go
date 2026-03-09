@@ -227,6 +227,10 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	})
 
 	log.Printf("[Worker] [Task %s] Step 6/10: Starting download...", taskID)
+	if err := p.progressPublisher.PublishStarted(ctx, taskID, "Download started"); err != nil {
+		log.Printf("[Worker] [Task %s] ⚠ Failed to publish initial progress: %v", taskID, err)
+	}
+
 	// 6. 获取 Cookie 并执行下载
 	var cookieFile string
 	platform := task.Metadata.Platform

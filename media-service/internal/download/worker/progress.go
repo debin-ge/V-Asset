@@ -52,6 +52,17 @@ func (p *ProgressPublisher) PublishDownloading(ctx context.Context, taskID strin
 	return p.Publish(ctx, msg)
 }
 
+// PublishStarted 发布下载开始状态，避免长时间静默导致前端看不到任何进度
+func (p *ProgressPublisher) PublishStarted(ctx context.Context, taskID string, message string) error {
+	msg := &models.ProgressMessage{
+		TaskID:  taskID,
+		Status:  "downloading",
+		Percent: 0,
+		Message: message,
+	}
+	return p.Publish(ctx, msg)
+}
+
 // PublishCompleted 发布完成状态
 func (p *ProgressPublisher) PublishCompleted(ctx context.Context, taskID, message string) error {
 	msg := &models.ProgressMessage{

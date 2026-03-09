@@ -22,6 +22,12 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+const (
+	wsReadTimeout  = 60 * time.Second
+	wsPingInterval = 30 * time.Second
+	wsWriteTimeout = 10 * time.Second
+)
+
 // ProgressMessage 进度消息
 type ProgressMessage struct {
 	TaskID          string  `json:"task_id"`
@@ -76,7 +82,9 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	}
 
 	connID := fmt.Sprintf("conn_%d", time.Now().UnixNano())
+	done := make(chan struct{})
 	defer func() {
+		close(done)
 		conn.Close()
 		m.connections.Delete(connID)
 		log.Printf("[WS] Connection closed: %s", connID)
@@ -87,13 +95,15 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	log.Printf("[WS] Connection established: %s (taskID: %s)", connID, taskID)
 
 	// 设置 Pong 处理
+	conn.SetReadDeadline(time.Now().Add(wsReadTimeout))
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		conn.SetReadDeadline(time.Now().Add(wsReadTimeout))
 		return nil
 	})
 
 	// 启动心跳
-	go m.heartbeat(connID, conn)
+	go m.heartbeat(connID, conn, done)
+	go m.readPump(connID, conn, done)
 
 	ctx := context.Background()
 
@@ -106,20 +116,31 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 		log.Printf("[WS] Subscribed to channel: %s", channelName)
 
 		ch := pubsub.Channel()
-		for msg := range ch {
-			var progress ProgressMessage
-			if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
-				log.Printf("[WS] Failed to parse message: %v", err)
-				continue
-			}
-
-			if err := conn.WriteJSON(progress); err != nil {
-				log.Printf("[WS] Failed to send message: %v", err)
+		for {
+			select {
+			case <-done:
 				return
-			}
+			case msg, ok := <-ch:
+				if !ok {
+					return
+				}
 
-			if progress.Status == "completed" || progress.Status == "failed" {
-				return
+				var progress ProgressMessage
+				if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
+					log.Printf("[WS] Failed to parse message: %v", err)
+					continue
+				}
+
+				conn.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
+				if err := conn.WriteJSON(progress); err != nil {
+					log.Printf("[WS] Failed to send message: %v", err)
+					return
+				}
+				log.Printf("[WS] Forwarded progress to %s: task=%s status=%s percent=%.2f", connID, progress.TaskID, progress.Status, progress.Percent)
+
+				if progress.Status == "completed" || progress.Status == "failed" {
+					return
+				}
 			}
 		}
 	} else {
@@ -130,36 +151,66 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 		log.Printf("[WS] Subscribed to pattern: progress:*")
 
 		ch := pubsub.Channel()
-		for msg := range ch {
-			var progress ProgressMessage
-			if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
-				log.Printf("[WS] Failed to parse message: %v", err)
-				continue
-			}
-
-			if err := conn.WriteJSON(progress); err != nil {
-				log.Printf("[WS] Failed to send message: %v", err)
+		for {
+			select {
+			case <-done:
 				return
+			case msg, ok := <-ch:
+				if !ok {
+					return
+				}
+
+				var progress ProgressMessage
+				if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
+					log.Printf("[WS] Failed to parse message: %v", err)
+					continue
+				}
+
+				conn.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
+				if err := conn.WriteJSON(progress); err != nil {
+					log.Printf("[WS] Failed to send message: %v", err)
+					return
+				}
+				log.Printf("[WS] Forwarded progress to %s: task=%s status=%s percent=%.2f", connID, progress.TaskID, progress.Status, progress.Percent)
 			}
 		}
 	}
 }
 
 // heartbeat 发送心跳
-func (m *Manager) heartbeat(taskID string, conn *websocket.Conn) {
-	ticker := time.NewTicker(30 * time.Second)
+func (m *Manager) heartbeat(taskID string, conn *websocket.Conn, done <-chan struct{}) {
+	ticker := time.NewTicker(wsPingInterval)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		// 检查连接是否还存在
-		if _, ok := m.connections.Load(taskID); !ok {
+	for {
+		select {
+		case <-done:
 			return
-		}
+		case <-ticker.C:
+			// 检查连接是否还存在
+			if _, ok := m.connections.Load(taskID); !ok {
+				return
+			}
 
-		// 发送 Ping
-		if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
-			log.Printf("[WS] Failed to send ping: %v", err)
+			// 发送 Ping
+			if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(wsWriteTimeout)); err != nil {
+				log.Printf("[WS] Failed to send ping: %v", err)
+				return
+			}
+		}
+	}
+}
+
+func (m *Manager) readPump(taskID string, conn *websocket.Conn, done <-chan struct{}) {
+	for {
+		select {
+		case <-done:
 			return
+		default:
+			if _, _, err := conn.ReadMessage(); err != nil {
+				log.Printf("[WS] Read loop ended for %s: %v", taskID, err)
+				return
+			}
 		}
 	}
 }
