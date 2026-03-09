@@ -19,6 +19,11 @@ import (
 	"vasset/media-service/internal/redact"
 )
 
+const (
+	formatTracePrefix = "[format-trace]"
+	fileTracePrefix   = "[file-trace]"
+)
+
 // Executor yt-dlp 执行器
 type Executor struct {
 	binaryPath          string
@@ -99,6 +104,10 @@ func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, prox
 	scanner := bufio.NewScanner(stdoutPipe)
 	for scanner.Scan() {
 		line := scanner.Text()
+		if strings.HasPrefix(line, formatTracePrefix) || strings.HasPrefix(line, fileTracePrefix) {
+			log.Printf("[YtDLP] [Task %s] %s", task.TaskID, line)
+			continue
+		}
 		progress := parseProgress(line)
 		if progress != nil && progressCallback != nil {
 			progressCallback(progress)
@@ -164,22 +173,27 @@ func (e *Executor) buildCommand(task *models.DownloadTask, proxyURL, outputPath,
 
 	// 添加并发分片下载
 	args = append(args, "--concurrent-fragments", fmt.Sprintf("%d", e.concurrentFragments))
+	args = append(args,
+		"--print", e.buildFormatTraceTemplate(),
+		"--print", e.buildFileTraceTemplate(),
+	)
 
 	// 添加输出格式
-	format := task.Format
-	if format == "" {
-		format = "mp4" // 默认使用 mp4 格式
+	format := e.resolveOutputFormat(task)
+	if e.shouldSetMergeOutputFormat(task) {
+		args = append(args, "--merge-output-format", format)
 	}
-	args = append(args, "--merge-output-format", format)
 
 	// 添加代理
 	if proxyURL != "" {
 		args = append(args, "--proxy", proxyURL)
 	}
 
-	// 添加质量选择
-	if task.Quality != "" {
-		args = append(args, "--format", e.buildFormatString(task.Quality, task.Format))
+	// 添加格式选择
+	if formatSelector := e.buildRequestedFormat(task); formatSelector != "" {
+		args = append(args, "--format", formatSelector)
+	} else if task.Quality != "" {
+		args = append(args, "--format", e.buildFormatString(task.Quality, format))
 	}
 
 	// 添加 URL
@@ -193,7 +207,7 @@ func (e *Executor) buildCommand(task *models.DownloadTask, proxyURL, outputPath,
 // buildFormatString 构建格式选择字符串
 func (e *Executor) buildFormatString(quality, format string) string {
 	// 根据质量选择格式
-	// 例如: bestvideo[height<=1080]+bestaudio/best[height<=1080]
+	// 例如: bestvideo[height<=1080]+bestaudio[ext=m4a]/best[height<=1080]
 	height := ""
 	switch quality {
 	case "2160p", "4K":
@@ -212,7 +226,103 @@ func (e *Executor) buildFormatString(quality, format string) string {
 		return "best"
 	}
 
-	return fmt.Sprintf("bestvideo[height<=%s]+bestaudio/best[height<=%s]", height, height)
+	preferredVideo := fmt.Sprintf("bestvideo[height<=%s]", height)
+	if format != "" {
+		preferredVideo = fmt.Sprintf("bestvideo[height<=%s][ext=%s]", height, format)
+	}
+	fallbackVideo := fmt.Sprintf("bestvideo[height<=%s]", height)
+	preferredAudio := e.buildCompatibleAudioSelector(format)
+	bestSelector := fmt.Sprintf("best[height<=%s]", height)
+	if format != "" {
+		bestSelector = fmt.Sprintf("best[height<=%s][ext=%s]/best[height<=%s]", height, format, height)
+	}
+
+	if preferredAudio == "bestaudio" {
+		return fmt.Sprintf("%s+bestaudio/%s+bestaudio/%s", preferredVideo, fallbackVideo, bestSelector)
+	}
+
+	return fmt.Sprintf("%s+%s/%s+bestaudio/%s+bestaudio/%s", preferredVideo, preferredAudio, preferredVideo, fallbackVideo, bestSelector)
+}
+
+func (e *Executor) resolveOutputFormat(task *models.DownloadTask) string {
+	if task.Format != "" {
+		return task.Format
+	}
+	if task.SelectedFormat != nil && task.SelectedFormat.Extension != "" {
+		return task.SelectedFormat.Extension
+	}
+	return "mp4"
+}
+
+func (e *Executor) shouldSetMergeOutputFormat(task *models.DownloadTask) bool {
+	if task.SelectedFormat == nil {
+		return true
+	}
+	if !hasVideo(task.SelectedFormat) {
+		return false
+	}
+	return !hasAudio(task.SelectedFormat)
+}
+
+func (e *Executor) buildRequestedFormat(task *models.DownloadTask) string {
+	selected := task.SelectedFormat
+	if selected == nil {
+		if task.FormatID == "" {
+			return ""
+		}
+		return fmt.Sprintf("%s/best", task.FormatID)
+	}
+	if selected.FormatID == "" {
+		return ""
+	}
+
+	if !hasVideo(selected) {
+		return selected.FormatID
+	}
+	if hasAudio(selected) {
+		return selected.FormatID
+	}
+
+	audioSelector := e.buildCompatibleAudioSelector(e.resolveOutputFormat(task))
+	if audioSelector == "bestaudio" {
+		return fmt.Sprintf("%s+bestaudio/%s/best", selected.FormatID, selected.FormatID)
+	}
+	return fmt.Sprintf("%s+%s/%s+bestaudio/%s/best", selected.FormatID, audioSelector, selected.FormatID, selected.FormatID)
+}
+
+func (e *Executor) buildCompatibleAudioSelector(format string) string {
+	switch strings.ToLower(format) {
+	case "mp4", "m4a", "mov":
+		return "bestaudio[ext=m4a]"
+	case "webm":
+		return "bestaudio[ext=webm]"
+	default:
+		return "bestaudio"
+	}
+}
+
+func (e *Executor) buildFormatTraceTemplate() string {
+	return "before_dl:" + formatTracePrefix + " " +
+		"format_id=%(format_id)s " +
+		"ext=%(ext)s " +
+		"resolution=%(resolution)s " +
+		"fps=%(fps)s " +
+		"vcodec=%(vcodec)s " +
+		"acodec=%(acodec)s " +
+		"req0=%(requested_formats.0.format_id)s " +
+		"req1=%(requested_formats.1.format_id)s"
+}
+
+func (e *Executor) buildFileTraceTemplate() string {
+	return "after_move:" + fileTracePrefix + " filepath=%(filepath)s"
+}
+
+func hasVideo(selected *models.SelectedFormat) bool {
+	return selected != nil && selected.VideoCodec != "" && selected.VideoCodec != "none"
+}
+
+func hasAudio(selected *models.SelectedFormat) bool {
+	return selected != nil && selected.AudioCodec != "" && selected.AudioCodec != "none"
 }
 
 // parseProgress 解析 yt-dlp 进度输出

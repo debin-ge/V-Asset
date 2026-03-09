@@ -33,6 +33,9 @@ func (g *PathGenerator) GeneratePath(task *models.DownloadTask) (string, error) 
 
 	// 确保 format 有默认值
 	format := task.Format
+	if format == "" && task.SelectedFormat != nil && task.SelectedFormat.Extension != "" {
+		format = task.SelectedFormat.Extension
+	}
 	if format == "" {
 		format = "mp4"
 	}

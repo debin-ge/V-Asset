@@ -1,11 +1,27 @@
 import apiClient from '../api-client';
 
+export interface SelectedFormatPayload {
+    format_id: string;
+    quality?: string;
+    extension?: string;
+    filesize?: number;
+    height?: number;
+    width?: number;
+    fps?: number;
+    video_codec?: string;
+    audio_codec?: string;
+    vbr?: number;
+    abr?: number;
+    asr?: number;
+}
+
 export interface DownloadRequest {
     url: string;
-    mode: string;       // 'quick_download' | 'audio_only'
-    quality: string;    // '1080p' | '720p' | 'best'
+    mode: string;       // 'quick_download' | 'archive'
+    quality: string;    // '1080p' | '720p' | '160kbps'
     format?: string;
     format_id?: string;
+    selected_format?: SelectedFormatPayload;
 }
 
 export interface DownloadResponse {
@@ -77,5 +93,5 @@ function parseDownloadFilename(contentDisposition?: string): string {
 
 // 下载类型映射
 export function mapDownloadType(type: 'video' | 'audio'): string {
-    return type === 'video' ? 'quick_download' : 'audio_only';
+    return type === 'video' ? 'quick_download' : 'quick_download';
 }

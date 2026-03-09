@@ -67,7 +67,7 @@ export function formatViewCount(count: number): string {
  * Download type mapping (frontend type → backend mode)
  */
 export function mapDownloadType(type: 'video' | 'audio'): string {
-    return type === 'video' ? 'quick_download' : 'audio_only';
+    return type === 'video' ? 'quick_download' : 'quick_download';
 }
 
 /**

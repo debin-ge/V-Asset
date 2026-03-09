@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -64,6 +65,78 @@ func TestDownloadConcurrentCallbacksRemainIsolated(t *testing.T) {
 
 	assertProgressSequence(t, callbacks["task-a"], []float64{10, 50, 100}, "task-a")
 	assertProgressSequence(t, callbacks["task-b"], []float64{10, 50, 100}, "task-b")
+}
+
+func TestBuildCommandUsesExactSelectedFormat(t *testing.T) {
+	t.Parallel()
+
+	executor := NewExecutor(&downloadconfig.YtDLPConfig{
+		BinaryPath:          "/usr/local/bin/yt-dlp",
+		Timeout:             5,
+		ConcurrentFragments: 1,
+	})
+
+	task := &downloadmodels.DownloadTask{
+		TaskID:   "task-selected",
+		URL:      "https://example.com/video",
+		Format:   "webm",
+		FormatID: "248",
+		SelectedFormat: &downloadmodels.SelectedFormat{
+			FormatID:   "248",
+			Extension:  "webm",
+			VideoCodec: "vp09",
+			AudioCodec: "none",
+		},
+	}
+
+	cmd := executor.buildCommand(task, "", "/tmp/output.webm", "")
+	args := strings.Join(cmd.Args, " ")
+
+	if !strings.Contains(args, "--format 248+bestaudio[ext=webm]/248+bestaudio/248/best") {
+		t.Fatalf("expected exact selected format to be used, got %q", args)
+	}
+	if !strings.Contains(args, "--merge-output-format webm") {
+		t.Fatalf("expected merge output format to match selected extension, got %q", args)
+	}
+	if !strings.Contains(args, "--print before_dl:[format-trace] format_id=%(format_id)s") {
+		t.Fatalf("expected before_dl trace print to be configured, got %q", args)
+	}
+	if !strings.Contains(args, "--print after_move:[file-trace] filepath=%(filepath)s") {
+		t.Fatalf("expected after_move trace print to be configured, got %q", args)
+	}
+}
+
+func TestBuildCommandSkipsMergeForExactAudioFormat(t *testing.T) {
+	t.Parallel()
+
+	executor := NewExecutor(&downloadconfig.YtDLPConfig{
+		BinaryPath:          "/usr/local/bin/yt-dlp",
+		Timeout:             5,
+		ConcurrentFragments: 1,
+	})
+
+	task := &downloadmodels.DownloadTask{
+		TaskID:   "task-audio",
+		URL:      "https://example.com/audio",
+		Format:   "m4a",
+		FormatID: "140",
+		SelectedFormat: &downloadmodels.SelectedFormat{
+			FormatID:   "140",
+			Extension:  "m4a",
+			VideoCodec: "none",
+			AudioCodec: "mp4a.40.2",
+		},
+	}
+
+	cmd := executor.buildCommand(task, "", "/tmp/output.m4a", "")
+	args := strings.Join(cmd.Args, " ")
+
+	if strings.Contains(args, "--merge-output-format") {
+		t.Fatalf("did not expect merge output format for exact audio download, got %q", args)
+	}
+	if !strings.Contains(args, "--format 140") {
+		t.Fatalf("expected exact audio format to be used, got %q", args)
+	}
 }
 
 func assertProgressSequence(t *testing.T, got, want []float64, taskID string) {

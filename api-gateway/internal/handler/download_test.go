@@ -145,6 +145,18 @@ func TestSubmitDownloadAcceptedWithoutCompensation(t *testing.T) {
 	if len(publisher.tasks) != 1 {
 		t.Fatalf("expected exactly one published task, got %d", len(publisher.tasks))
 	}
+	if publisher.tasks[0].FormatID != "137" {
+		t.Fatalf("expected format_id 137, got %q", publisher.tasks[0].FormatID)
+	}
+	if publisher.tasks[0].SelectedFormat == nil {
+		t.Fatal("expected selected format payload to be forwarded")
+	}
+	if publisher.tasks[0].Quality != "1080p" {
+		t.Fatalf("expected selected quality to override request quality, got %q", publisher.tasks[0].Quality)
+	}
+	if publisher.tasks[0].Format != "webm" {
+		t.Fatalf("expected selected extension to override request format, got %q", publisher.tasks[0].Format)
+	}
 
 	var resp models.Response
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
@@ -184,7 +196,7 @@ func performSubmitDownload(t *testing.T, handler *DownloadHandler) *httptest.Res
 
 	gin.SetMode(gin.TestMode)
 
-	body := bytes.NewBufferString(`{"url":"https://example.com/video","mode":"quick_download","quality":"720p","format":"mp4"}`)
+	body := bytes.NewBufferString(`{"url":"https://example.com/video","mode":"quick_download","quality":"best","format":"mp4","format_id":"137","selected_format":{"format_id":"137","quality":"1080p","extension":"webm","height":1080,"video_codec":"vp09","audio_codec":"none"}}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/download", body)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()

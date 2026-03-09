@@ -4,14 +4,14 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { Download, Film, Headphones } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { VideoInfo, VideoFormat } from "@/lib/api/parse"
+import type { VideoInfo, VideoFormat } from "@/lib/api/parse"
 import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 import { RemoteThumbnail } from "@/components/common/RemoteThumbnail"
 
 interface ResultCardProps {
     info: VideoInfo
-    onDownload: (type: 'video' | 'audio', formatId?: string) => void
+    onDownload: (type: 'video' | 'audio', selectedFormat?: VideoFormat) => void
 }
 
 export function ResultCard({ info, onDownload }: ResultCardProps) {
@@ -82,12 +82,12 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
         return acc
     }, {} as Record<string, VideoFormat[]>)
 
-    const handleDownload = (type: 'video' | 'audio', formatId?: string) => {
+    const handleDownload = (type: 'video' | 'audio', selectedFormat?: VideoFormat) => {
         if (!user) {
             openAuthModal()
             return
         }
-        onDownload(type, formatId)
+        onDownload(type, selectedFormat)
     }
 
     const formatFileSize = (bytes?: number) => {
@@ -258,7 +258,7 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                                     </div>
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => handleDownload('video', format.format_id)}
+                                                        onClick={() => handleDownload('video', format)}
                                                         className="bg-blue-600 hover:bg-blue-700 text-white"
                                                     >
                                                         <Download className="w-3 h-3 mr-1" />
@@ -310,7 +310,7 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                     </div>
                                     <Button
                                         size="sm"
-                                        onClick={() => handleDownload('audio', format.format_id)}
+                                        onClick={() => handleDownload('audio', format)}
                                         className="bg-green-600 hover:bg-green-700 text-white"
                                     >
                                         <Download className="w-3 h-3 mr-1" />

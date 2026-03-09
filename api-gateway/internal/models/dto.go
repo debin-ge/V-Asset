@@ -78,12 +78,30 @@ type VideoFormat struct {
 	ASR        int32   `json:"asr,omitempty"`
 }
 
+// SelectedFormat 选中的精确格式信息
+type SelectedFormat struct {
+	FormatID   string  `json:"format_id"`
+	Quality    string  `json:"quality,omitempty"`
+	Extension  string  `json:"extension,omitempty"`
+	Filesize   int64   `json:"filesize,omitempty"`
+	Height     int32   `json:"height,omitempty"`
+	Width      int32   `json:"width,omitempty"`
+	FPS        float64 `json:"fps,omitempty"`
+	VideoCodec string  `json:"video_codec,omitempty"`
+	AudioCodec string  `json:"audio_codec,omitempty"`
+	VBR        float64 `json:"vbr,omitempty"`
+	ABR        float64 `json:"abr,omitempty"`
+	ASR        int32   `json:"asr,omitempty"`
+}
+
 // DownloadRequest 下载请求
 type DownloadRequest struct {
-	URL     string `json:"url" binding:"required"`
-	Mode    string `json:"mode" binding:"required,oneof=quick_download archive"` // quick_download 或 archive
-	Quality string `json:"quality"`                                              // 1080p, 720p, 480p, etc.
-	Format  string `json:"format"`                                               // mp4, webm
+	URL            string          `json:"url" binding:"required"`
+	Mode           string          `json:"mode" binding:"required,oneof=quick_download archive"` // quick_download 或 archive
+	Quality        string          `json:"quality"`                                              // 1080p, 720p, 160kbps, etc.
+	Format         string          `json:"format"`                                               // mp4, webm, m4a
+	FormatID       string          `json:"format_id"`
+	SelectedFormat *SelectedFormat `json:"selected_format,omitempty"`
 }
 
 // DownloadResponse 下载响应

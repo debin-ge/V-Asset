@@ -4,7 +4,7 @@ import * as React from "react"
 import { AxiosError } from "axios"
 import { toast } from "sonner"
 import { parseApi } from "@/lib/api/parse"
-import type { VideoInfo } from "@/lib/api/parse"
+import type { VideoFormat, VideoInfo } from "@/lib/api/parse"
 import { downloadApi, mapDownloadType } from "@/lib/api/download"
 import type { DownloadRequest } from "@/lib/api/download"
 import { wsClient, ProgressData } from "@/lib/ws-client"
@@ -103,23 +103,38 @@ export function useDownload() {
     }
 
     // Start download
-    const startDownload = async (type: 'video' | 'audio', formatId?: string) => {
+    const startDownload = async (type: 'video' | 'audio', selectedFormat?: VideoFormat) => {
         if (!videoInfo) return
 
         setStatus("downloading")
         setProgress(0)
 
         try {
+            const quality = getSelectedQuality(type, selectedFormat)
+            const outputFormat = selectedFormat?.extension || (type === "audio" ? "m4a" : "mp4")
             const downloadParams: DownloadRequest = {
                 url: videoInfo.url,
                 mode: mapDownloadType(type),
-                quality: "best",
-                format: "mp4", // 默认使用 mp4 格式
+                quality,
+                format: outputFormat,
             }
 
-            // Add format_id to request params if specified
-            if (formatId) {
-                downloadParams.format_id = formatId
+            if (selectedFormat) {
+                downloadParams.format_id = selectedFormat.format_id
+                downloadParams.selected_format = {
+                    format_id: selectedFormat.format_id,
+                    quality: quality,
+                    extension: selectedFormat.extension,
+                    filesize: selectedFormat.filesize,
+                    height: selectedFormat.height,
+                    width: selectedFormat.width,
+                    fps: selectedFormat.fps,
+                    video_codec: selectedFormat.video_codec,
+                    audio_codec: selectedFormat.audio_codec,
+                    vbr: selectedFormat.vbr,
+                    abr: selectedFormat.abr,
+                    asr: selectedFormat.asr,
+                }
             }
 
             const response = await downloadApi.submitDownload(downloadParams)
@@ -185,4 +200,29 @@ export function useDownload() {
         historyId,
         autoDownloadAttempted,
     }
+}
+
+function getSelectedQuality(type: 'video' | 'audio', selectedFormat?: VideoFormat): string {
+    if (!selectedFormat) {
+        return type === "audio" ? "audio" : "best"
+    }
+
+    if (type === "audio") {
+        if (selectedFormat.abr && selectedFormat.abr > 0) {
+            return `${Math.round(selectedFormat.abr)}kbps`
+        }
+        if (selectedFormat.asr && selectedFormat.asr > 0) {
+            return `${(selectedFormat.asr / 1000).toFixed(1)}kHz`
+        }
+    }
+
+    if (selectedFormat.quality && selectedFormat.quality !== "audio") {
+        return selectedFormat.quality
+    }
+
+    if (selectedFormat.height && selectedFormat.height > 0) {
+        return `${selectedFormat.height}p`
+    }
+
+    return selectedFormat.extension || (type === "audio" ? "audio" : "best")
 }

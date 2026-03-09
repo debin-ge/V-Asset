@@ -64,6 +64,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		models.BadRequest(c, "invalid request: "+err.Error())
 		return
 	}
+	normalizeDownloadRequest(&req)
 	log.Printf("[Download] ✓ Request parsed - URL: %s, Mode: %s, Quality: %s, Format: %s",
 		req.URL, req.Mode, req.Quality, req.Format)
 
@@ -164,19 +165,21 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	log.Printf("[Download] Step 7/7: Publishing task %s to RabbitMQ...", taskID)
 	// 7. 发布下载任务到 RabbitMQ
 	task := &mq.DownloadTask{
-		TaskID:        taskID,
-		UserID:        userID,
-		HistoryID:     historyResp.HistoryId,
-		URL:           req.URL,
-		Mode:          req.Mode,
-		Quality:       req.Quality,
-		Format:        req.Format,
-		Platform:      validateResp.Platform,
-		Title:         parseResp.Title,
-		CookieID:      parseResp.CookieId, // 传递 parser 使用的 cookie ID
-		ProxyURL:      parseResp.ProxyUrl, // 传递 parser 使用的 proxy URL
-		ProxyLeaseID:  parseResp.ProxyLeaseId,
-		ProxyExpireAt: parseResp.ProxyExpireAt,
+		TaskID:         taskID,
+		UserID:         userID,
+		HistoryID:      historyResp.HistoryId,
+		URL:            req.URL,
+		Mode:           req.Mode,
+		Quality:        req.Quality,
+		Format:         req.Format,
+		FormatID:       req.FormatID,
+		SelectedFormat: toSelectedFormatMessage(req.SelectedFormat),
+		Platform:       validateResp.Platform,
+		Title:          parseResp.Title,
+		CookieID:       parseResp.CookieId, // 传递 parser 使用的 cookie ID
+		ProxyURL:       parseResp.ProxyUrl, // 传递 parser 使用的 proxy URL
+		ProxyLeaseID:   parseResp.ProxyLeaseId,
+		ProxyExpireAt:  parseResp.ProxyExpireAt,
 	}
 
 	if err := h.publisher.Publish(ctx, task); err != nil {
@@ -195,6 +198,52 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		HistoryID:     historyResp.HistoryId,
 		EstimatedTime: estimatedTime,
 	})
+}
+
+func normalizeDownloadRequest(req *models.DownloadRequest) {
+	if req == nil {
+		return
+	}
+
+	if req.SelectedFormat != nil {
+		if req.SelectedFormat.FormatID != "" {
+			req.FormatID = req.SelectedFormat.FormatID
+		}
+		if req.SelectedFormat.Quality != "" {
+			req.Quality = req.SelectedFormat.Quality
+		}
+		if req.SelectedFormat.Extension != "" {
+			req.Format = req.SelectedFormat.Extension
+		}
+	}
+
+	if req.Format == "" {
+		req.Format = "mp4"
+	}
+	if req.Quality == "" {
+		req.Quality = "best"
+	}
+}
+
+func toSelectedFormatMessage(selected *models.SelectedFormat) *mq.SelectedFormatMessage {
+	if selected == nil {
+		return nil
+	}
+
+	return &mq.SelectedFormatMessage{
+		FormatID:   selected.FormatID,
+		Quality:    selected.Quality,
+		Extension:  selected.Extension,
+		Filesize:   selected.Filesize,
+		Height:     selected.Height,
+		Width:      selected.Width,
+		FPS:        selected.FPS,
+		VideoCodec: selected.VideoCodec,
+		AudioCodec: selected.AudioCodec,
+		VBR:        selected.VBR,
+		ABR:        selected.ABR,
+		ASR:        selected.ASR,
+	}
 }
 
 func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64, refundQuota bool) {
