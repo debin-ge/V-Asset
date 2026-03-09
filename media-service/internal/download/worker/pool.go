@@ -13,6 +13,7 @@ import (
 	"vasset/media-service/internal/download/storage"
 	"vasset/media-service/internal/download/ytdlp"
 	"vasset/media-service/internal/platformpolicy"
+	"vasset/media-service/internal/redact"
 )
 
 // AssetClientInterface Asset 服务客户端接口
@@ -200,12 +201,12 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 
 	log.Printf("[Worker] [Task %s] Step 3/10: Getting proxy IP...", taskID)
 	// 3. 使用 Parser 阶段传递的 proxy，确保解析和下载代理一致
-	if task.ProxyURL == "" || task.ProxyLeaseID == "" {
-		log.Printf("[Worker] [Task %s] ❌ Missing proxy lease in task payload", taskID)
-		return p.handleError(ctx, task, ErrProxyMissing)
-	}
 	proxyURL := task.ProxyURL
-	log.Printf("[Worker] [Task %s] ✓ Using proxy from parser: %s (lease_id=%s, expire_at=%s)", taskID, proxyURL, task.ProxyLeaseID, task.ProxyExpireAt)
+	if proxyURL == "" {
+		log.Printf("[Worker] [Task %s] ✓ No proxy lease attached, using direct connection", taskID)
+	} else {
+		log.Printf("[Worker] [Task %s] ✓ Using proxy from parser: %s (lease_id=%s, expire_at=%s)", taskID, redact.ProxyURL(proxyURL), task.ProxyLeaseID, task.ProxyExpireAt)
+	}
 
 	log.Printf("[Worker] [Task %s] Step 4/10: Generating output path...", taskID)
 	// 4. 生成文件路径
@@ -218,13 +219,13 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 
 	log.Printf("[Worker] [Task %s] Step 5/10: Setting up progress callback...", taskID)
 	// 5. 设置进度回调
-	p.executor.SetProgressCallback(func(progress *models.Progress) {
+	progressCallback := func(progress *models.Progress) {
 		log.Printf("[Worker] [Task %s] Progress: %.1f%%, Speed: %s, ETA: %s",
 			taskID, progress.Percent, progress.Speed, progress.ETA)
 		if err := p.progressPublisher.PublishDownloading(ctx, taskID, progress); err != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to publish progress: %v", taskID, err)
 		}
-	})
+	}
 
 	log.Printf("[Worker] [Task %s] Step 6/10: Starting download...", taskID)
 	if err := p.progressPublisher.PublishStarted(ctx, taskID, "Download started"); err != nil {
@@ -256,9 +257,9 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 		}
 	}
 
-	downloadErr := p.executor.Download(ctx, task, proxyURL, outputPath, cookieFile)
+	downloadErr := p.executor.Download(ctx, task, proxyURL, outputPath, cookieFile, progressCallback)
 
-	if task.ProxyLeaseID != "" && p.assetClient != nil {
+	if proxyURL != "" && task.ProxyLeaseID != "" && p.assetClient != nil {
 		success := downloadErr == nil
 		if reportErr := p.assetClient.ReportProxyUsage(task.TaskID, task.ProxyLeaseID, "download", success); reportErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to report proxy usage: %v", taskID, reportErr)

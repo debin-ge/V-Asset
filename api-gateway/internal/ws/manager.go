@@ -6,19 +6,42 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+
+	"vasset/api-gateway/internal/middleware"
+	pb "vasset/api-gateway/proto"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		return true // 允许所有来源，生产环境应该限制
+		origin := strings.TrimSpace(r.Header.Get("Origin"))
+		if origin == "" {
+			return true
+		}
+
+		parsedOrigin, err := url.Parse(origin)
+		if err != nil {
+			return false
+		}
+
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+
+		return parsedOrigin.Host == r.Host && parsedOrigin.Scheme == scheme
 	},
 }
 
@@ -47,32 +70,59 @@ type ProgressMessage struct {
 type Manager struct {
 	connections sync.Map // map[taskID]*websocket.Conn
 	rdb         *redis.Client
+	authClient  authVerifier
+	assetClient taskAccessChecker
+}
+
+type authVerifier interface {
+	VerifyToken(ctx context.Context, in *pb.VerifyTokenRequest, opts ...grpc.CallOption) (*pb.VerifyTokenResponse, error)
+}
+
+type taskAccessChecker interface {
+	GetHistoryByTask(ctx context.Context, in *pb.GetHistoryByTaskRequest, opts ...grpc.CallOption) (*pb.GetHistoryByTaskResponse, error)
 }
 
 // NewManager 创建 WebSocket 管理器
-func NewManager(rdb *redis.Client) *Manager {
+func NewManager(rdb *redis.Client, authClient authVerifier, assetClient taskAccessChecker) *Manager {
 	return &Manager{
-		rdb: rdb,
+		rdb:         rdb,
+		authClient:  authClient,
+		assetClient: assetClient,
 	}
 }
 
 // HandleConnection 处理 WebSocket 连接
 func (m *Manager) HandleConnection(c *gin.Context) {
-	// 获取 Token (从查询参数或头获取)
-	token := c.Query("token")
+	token := strings.TrimSpace(c.Query("token"))
 	if token == "" {
-		token = c.GetHeader("Authorization")
+		token = strings.TrimSpace(c.GetHeader("Authorization"))
 	}
-	if token == "" {
+
+	claims, err := middleware.AuthenticateToken(c.Request.Context(), m.authClient, m.rdb, token)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"code":    401,
-			"message": "token is required",
+			"message": err.Error(),
 		})
 		return
 	}
 
-	// 可选: 获取特定任务 ID (如果为空，则监听用户所有任务)
-	taskID := c.Query("task_id")
+	taskID := strings.TrimSpace(c.Query("task_id"))
+	if taskID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "task_id is required",
+		})
+		return
+	}
+
+	if err := m.validateTaskAccess(c.Request.Context(), claims.UserID, taskID); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    403,
+			"message": err.Error(),
+		})
+		return
+	}
 
 	// 升级到 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -92,7 +142,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 
 	// 保存连接
 	m.connections.Store(connID, conn)
-	log.Printf("[WS] Connection established: %s (taskID: %s)", connID, taskID)
+	log.Printf("[WS] Connection established: %s (taskID: %s userID: %s)", connID, taskID, claims.UserID)
 
 	// 设置 Pong 处理
 	conn.SetReadDeadline(time.Now().Add(wsReadTimeout))
@@ -106,75 +156,64 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	go m.readPump(connID, conn, done)
 
 	ctx := context.Background()
+	channelName := fmt.Sprintf("progress:%s", taskID)
+	pubsub := m.rdb.Subscribe(ctx, channelName)
+	defer pubsub.Close()
 
-	if taskID != "" {
-		// 模式1: 监听特定任务
-		channelName := fmt.Sprintf("progress:%s", taskID)
-		pubsub := m.rdb.Subscribe(ctx, channelName)
-		defer pubsub.Close()
+	log.Printf("[WS] Subscribed to channel: %s", channelName)
 
-		log.Printf("[WS] Subscribed to channel: %s", channelName)
-
-		ch := pubsub.Channel()
-		for {
-			select {
-			case <-done:
+	ch := pubsub.Channel()
+	for {
+		select {
+		case <-done:
+			return
+		case msg, ok := <-ch:
+			if !ok {
 				return
-			case msg, ok := <-ch:
-				if !ok {
-					return
-				}
-
-				var progress ProgressMessage
-				if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
-					log.Printf("[WS] Failed to parse message: %v", err)
-					continue
-				}
-
-				conn.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
-				if err := conn.WriteJSON(progress); err != nil {
-					log.Printf("[WS] Failed to send message: %v", err)
-					return
-				}
-				log.Printf("[WS] Forwarded progress to %s: task=%s status=%s percent=%.2f", connID, progress.TaskID, progress.Status, progress.Percent)
-
-				if progress.Status == "completed" || progress.Status == "failed" {
-					return
-				}
 			}
-		}
-	} else {
-		// 模式2: 使用 pattern 订阅所有进度消息
-		pubsub := m.rdb.PSubscribe(ctx, "progress:*")
-		defer pubsub.Close()
 
-		log.Printf("[WS] Subscribed to pattern: progress:*")
+			var progress ProgressMessage
+			if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
+				log.Printf("[WS] Failed to parse message: %v", err)
+				continue
+			}
 
-		ch := pubsub.Channel()
-		for {
-			select {
-			case <-done:
+			conn.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
+			if err := conn.WriteJSON(progress); err != nil {
+				log.Printf("[WS] Failed to send message: %v", err)
 				return
-			case msg, ok := <-ch:
-				if !ok {
-					return
-				}
+			}
+			log.Printf("[WS] Forwarded progress to %s: task=%s status=%s percent=%.2f", connID, progress.TaskID, progress.Status, progress.Percent)
 
-				var progress ProgressMessage
-				if err := json.Unmarshal([]byte(msg.Payload), &progress); err != nil {
-					log.Printf("[WS] Failed to parse message: %v", err)
-					continue
-				}
-
-				conn.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
-				if err := conn.WriteJSON(progress); err != nil {
-					log.Printf("[WS] Failed to send message: %v", err)
-					return
-				}
-				log.Printf("[WS] Forwarded progress to %s: task=%s status=%s percent=%.2f", connID, progress.TaskID, progress.Status, progress.Percent)
+			if progress.Status == "completed" || progress.Status == "failed" {
+				return
 			}
 		}
 	}
+}
+
+func (m *Manager) validateTaskAccess(ctx context.Context, userID, taskID string) error {
+	if m.assetClient == nil {
+		return fmt.Errorf("task validation service unavailable")
+	}
+
+	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := m.assetClient.GetHistoryByTask(checkCtx, &pb.GetHistoryByTaskRequest{
+		TaskId: taskID,
+		UserId: userID,
+	})
+	if err == nil {
+		return nil
+	}
+
+	if grpcstatus.Code(err) == codes.NotFound {
+		return fmt.Errorf("task not found or access denied")
+	}
+
+	log.Printf("[WS] Failed to validate task ownership: user=%s task=%s err=%v", userID, taskID, err)
+	return fmt.Errorf("failed to validate task access")
 }
 
 // heartbeat 发送心跳

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"vasset/media-service/internal/config"
+	"vasset/media-service/internal/redact"
 	"vasset/media-service/internal/utils"
 )
 
@@ -154,7 +155,7 @@ func (w *Wrapper) ExtractInfo(ctx context.Context, url string, cookieFile string
 	args := w.buildArgs(url, cookieFile, extraArgs)
 
 	// 记录完整命令
-	log.Printf("[YT-DLP] Executing command: %s %s", w.binaryPath, strings.Join(args, " "))
+	log.Printf("[YT-DLP] Executing command: %s %s", w.binaryPath, strings.Join(redact.ProxyArgs(args), " "))
 	log.Printf("[YT-DLP] URL: %s", url)
 	if cookieFile != "" {
 		log.Printf("[YT-DLP] Cookie file: %s", cookieFile)
@@ -213,8 +214,8 @@ func (w *Wrapper) ExtractInfoWithProxy(ctx context.Context, url, proxyURL, cooki
 	args = append(args, url)
 
 	// 记录完整命令
-	log.Printf("[YT-DLP-PROXY] Executing command: %s %s", w.binaryPath, strings.Join(args, " "))
-	log.Printf("[YT-DLP-PROXY] URL: %s, Proxy: %s", url, proxyURL)
+	log.Printf("[YT-DLP-PROXY] Executing command: %s %s", w.binaryPath, strings.Join(redact.ProxyArgs(args), " "))
+	log.Printf("[YT-DLP-PROXY] URL: %s, Proxy: %s", url, redact.ProxyURL(proxyURL))
 	if cookieFile != "" {
 		log.Printf("[YT-DLP-PROXY] Cookie file: %s", cookieFile)
 	}

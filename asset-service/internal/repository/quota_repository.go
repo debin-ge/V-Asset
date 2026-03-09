@@ -201,6 +201,80 @@ func (r *QuotaRepository) ConsumeQuotaSafe(ctx context.Context, userID string, d
 	return &quota, nil
 }
 
+// RefundQuotaSafe 安全退还配额(带行锁)
+func (r *QuotaRepository) RefundQuotaSafe(ctx context.Context, userID string, defaultLimit int) (*models.UserQuota, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	var quota models.UserQuota
+	query := `
+		SELECT id, user_id, daily_limit, daily_used, reset_at, updated_at
+		FROM user_quotas
+		WHERE user_id = $1
+		FOR UPDATE
+	`
+
+	err = tx.QueryRowContext(ctx, query, userID).Scan(
+		&quota.ID, &quota.UserID, &quota.DailyLimit, &quota.DailyUsed, &quota.ResetAt, &quota.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		now := time.Now()
+		quota = models.UserQuota{
+			UserID:     userID,
+			DailyLimit: defaultLimit,
+			DailyUsed:  0,
+			ResetAt:    getNextMidnight(now),
+		}
+
+		insertQuery := `
+			INSERT INTO user_quotas (user_id, daily_limit, daily_used, reset_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING id
+		`
+		err = tx.QueryRowContext(ctx, insertQuery,
+			quota.UserID, quota.DailyLimit, quota.DailyUsed, quota.ResetAt, now,
+		).Scan(&quota.ID)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	if now.After(quota.ResetAt) {
+		quota.DailyUsed = 0
+		quota.ResetAt = getNextMidnight(now)
+	}
+
+	if quota.DailyUsed > 0 {
+		quota.DailyUsed--
+	}
+
+	updateQuery := `
+		UPDATE user_quotas
+		SET daily_used = $1, reset_at = $2, updated_at = $3
+		WHERE id = $4
+	`
+	_, err = tx.ExecContext(ctx, updateQuery, quota.DailyUsed, quota.ResetAt, now, quota.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &quota, nil
+}
+
 // getNextMidnight 获取下一个午夜时间
 func getNextMidnight(t time.Time) time.Time {
 	year, month, day := t.Add(24 * time.Hour).Date()

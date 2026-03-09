@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"vasset/media-service/internal/redact"
 	pb "vasset/media-service/proto"
 )
 
@@ -150,7 +151,7 @@ func (c *AssetClient) GetAvailableProxy(ctx context.Context) (*ProxyLease, error
 		return nil, nil
 	}
 
-	log.Printf("[AssetClient] ✓ Got proxy lease: %s (lease_id=%s, expire_at=%s)", resp.ProxyUrl, resp.ProxyLeaseId, resp.ExpireAt)
+	log.Printf("[AssetClient] ✓ Got proxy lease: %s (lease_id=%s, expire_at=%s)", redact.ProxyURL(resp.ProxyUrl), resp.ProxyLeaseId, resp.ExpireAt)
 	return &ProxyLease{
 		URL:      resp.ProxyUrl,
 		LeaseID:  resp.ProxyLeaseId,

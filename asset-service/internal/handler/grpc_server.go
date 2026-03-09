@@ -159,6 +159,27 @@ func (s *GRPCServer) DeleteHistory(ctx context.Context, req *pb.DeleteHistoryReq
 	return &pb.DeleteHistoryResponse{Success: true}, nil
 }
 
+// GetHistoryByTask 按任务查询历史记录并验证归属
+func (s *GRPCServer) GetHistoryByTask(ctx context.Context, req *pb.GetHistoryByTaskRequest) (*pb.GetHistoryByTaskResponse, error) {
+	if req.TaskId == "" || req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "任务ID和用户ID不能为空")
+	}
+
+	record, err := s.historyService.GetHistoryByTask(ctx, req.TaskId, req.UserId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, "记录不存在")
+		}
+		log.Printf("GetHistoryByTask error: %v", err)
+		return nil, status.Error(codes.Internal, "查询历史记录失败")
+	}
+
+	return &pb.GetHistoryByTaskResponse{
+		HistoryId: record.ID,
+		Status:    int32(record.Status),
+	}, nil
+}
+
 // CreateHistory 创建历史记录
 func (s *GRPCServer) CreateHistory(ctx context.Context, req *pb.CreateHistoryRequest) (*pb.CreateHistoryResponse, error) {
 	log.Printf("[GRPCServer] CreateHistory called for user %s, task %s", req.UserId, req.TaskId)
@@ -275,6 +296,24 @@ func (s *GRPCServer) ConsumeQuota(ctx context.Context, req *pb.ConsumeQuotaReque
 	return &pb.ConsumeQuotaResponse{
 		Success:   true,
 		Remaining: int32(remaining),
+	}, nil
+}
+
+// RefundQuota 退还提交失败时已消费的配额
+func (s *GRPCServer) RefundQuota(ctx context.Context, req *pb.RefundQuotaRequest) (*pb.RefundQuotaResponse, error) {
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "用户ID不能为空")
+	}
+
+	quota, err := s.quotaService.RefundQuota(ctx, req.UserId)
+	if err != nil {
+		log.Printf("RefundQuota error: %v", err)
+		return nil, status.Error(codes.Internal, "退还配额失败")
+	}
+
+	return &pb.RefundQuotaResponse{
+		Success:   true,
+		Remaining: int32(s.quotaService.GetRemaining(quota)),
 	}, nil
 }
 

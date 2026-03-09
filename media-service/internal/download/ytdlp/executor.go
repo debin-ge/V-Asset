@@ -16,6 +16,7 @@ import (
 	"vasset/media-service/internal/download/config"
 	"vasset/media-service/internal/download/models"
 	"vasset/media-service/internal/platformpolicy"
+	"vasset/media-service/internal/redact"
 )
 
 // Executor yt-dlp 执行器
@@ -26,7 +27,6 @@ type Executor struct {
 	cookiesDir          string
 	defaultArgs         []string
 	platformArgs        map[string][]string
-	progressCallback    func(*models.Progress)
 	youtubePolicy       platformpolicy.YouTubePolicy
 }
 
@@ -43,14 +43,9 @@ func NewExecutor(cfg *config.YtDLPConfig) *Executor {
 	}
 }
 
-// SetProgressCallback 设置进度回调
-func (e *Executor) SetProgressCallback(callback func(*models.Progress)) {
-	e.progressCallback = callback
-}
-
 // Download 执行下载
 // cookieFile: 可选的 cookie 文件路径，如果非空则优先使用
-func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, proxyURL, outputPath, cookieFile string) error {
+func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, proxyURL, outputPath, cookieFile string, progressCallback func(*models.Progress)) error {
 	log.Printf("[YtDLP] [Task %s] Preparing download for URL: %s", task.TaskID, task.URL)
 	log.Printf("[YtDLP] [Task %s] Download parameters - Quality: %s, Format: %s, Output: %s, Cookie: %s",
 		task.TaskID, task.Quality, task.Format, outputPath, cookieFile)
@@ -105,8 +100,8 @@ func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, prox
 	for scanner.Scan() {
 		line := scanner.Text()
 		progress := parseProgress(line)
-		if progress != nil && e.progressCallback != nil {
-			e.progressCallback(progress)
+		if progress != nil && progressCallback != nil {
+			progressCallback(progress)
 		}
 	}
 
@@ -191,7 +186,7 @@ func (e *Executor) buildCommand(task *models.DownloadTask, proxyURL, outputPath,
 	args = append(args, task.URL)
 
 	cmd := exec.Command(e.binaryPath, args...)
-	log.Printf("[YtDLP] [Task %s] Command: %s %s", task.TaskID, e.binaryPath, strings.Join(args, " "))
+	log.Printf("[YtDLP] [Task %s] Command: %s %s", task.TaskID, e.binaryPath, strings.Join(redact.ProxyArgs(args), " "))
 	return cmd
 }
 

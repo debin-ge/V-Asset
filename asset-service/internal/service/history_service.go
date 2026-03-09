@@ -34,6 +34,11 @@ func (s *HistoryService) CreateHistory(ctx context.Context, history *models.Down
 	return s.historyRepo.Create(ctx, history)
 }
 
+// GetHistoryByTask 获取指定任务的历史记录并校验归属
+func (s *HistoryService) GetHistoryByTask(ctx context.Context, taskID, userID string) (*models.DownloadHistory, error) {
+	return s.historyRepo.GetByTaskIDAndUserID(ctx, taskID, userID)
+}
+
 // UpdateHistoryStatus 按任务 ID 更新下载历史状态
 func (s *HistoryService) UpdateHistoryStatus(ctx context.Context, taskID string, status models.HistoryStatus, fileInfo *models.FileInfo, errorMessage string) error {
 	switch status {

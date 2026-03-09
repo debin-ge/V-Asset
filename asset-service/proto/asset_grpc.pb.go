@@ -21,8 +21,10 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	AssetService_GetHistory_FullMethodName              = "/asset.AssetService/GetHistory"
 	AssetService_DeleteHistory_FullMethodName           = "/asset.AssetService/DeleteHistory"
+	AssetService_GetHistoryByTask_FullMethodName        = "/asset.AssetService/GetHistoryByTask"
 	AssetService_CheckQuota_FullMethodName              = "/asset.AssetService/CheckQuota"
 	AssetService_ConsumeQuota_FullMethodName            = "/asset.AssetService/ConsumeQuota"
+	AssetService_RefundQuota_FullMethodName             = "/asset.AssetService/RefundQuota"
 	AssetService_GetUserStats_FullMethodName            = "/asset.AssetService/GetUserStats"
 	AssetService_GetPlatformStats_FullMethodName        = "/asset.AssetService/GetPlatformStats"
 	AssetService_GetRequestTrend_FullMethodName         = "/asset.AssetService/GetRequestTrend"
@@ -57,10 +59,14 @@ type AssetServiceClient interface {
 	GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*GetHistoryResponse, error)
 	// 删除历史记录
 	DeleteHistory(ctx context.Context, in *DeleteHistoryRequest, opts ...grpc.CallOption) (*DeleteHistoryResponse, error)
+	// 按任务查询历史记录（用于权限校验）
+	GetHistoryByTask(ctx context.Context, in *GetHistoryByTaskRequest, opts ...grpc.CallOption) (*GetHistoryByTaskResponse, error)
 	// 检查配额
 	CheckQuota(ctx context.Context, in *CheckQuotaRequest, opts ...grpc.CallOption) (*CheckQuotaResponse, error)
 	// 消费配额
 	ConsumeQuota(ctx context.Context, in *ConsumeQuotaRequest, opts ...grpc.CallOption) (*ConsumeQuotaResponse, error)
+	// 退还配额（用于提交补偿）
+	RefundQuota(ctx context.Context, in *RefundQuotaRequest, opts ...grpc.CallOption) (*RefundQuotaResponse, error)
 	// 获取用户统计
 	GetUserStats(ctx context.Context, in *GetUserStatsRequest, opts ...grpc.CallOption) (*GetUserStatsResponse, error)
 	// 获取平台统计
@@ -141,6 +147,16 @@ func (c *assetServiceClient) DeleteHistory(ctx context.Context, in *DeleteHistor
 	return out, nil
 }
 
+func (c *assetServiceClient) GetHistoryByTask(ctx context.Context, in *GetHistoryByTaskRequest, opts ...grpc.CallOption) (*GetHistoryByTaskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetHistoryByTaskResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetHistoryByTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *assetServiceClient) CheckQuota(ctx context.Context, in *CheckQuotaRequest, opts ...grpc.CallOption) (*CheckQuotaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CheckQuotaResponse)
@@ -155,6 +171,16 @@ func (c *assetServiceClient) ConsumeQuota(ctx context.Context, in *ConsumeQuotaR
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ConsumeQuotaResponse)
 	err := c.cc.Invoke(ctx, AssetService_ConsumeQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) RefundQuota(ctx context.Context, in *RefundQuotaRequest, opts ...grpc.CallOption) (*RefundQuotaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RefundQuotaResponse)
+	err := c.cc.Invoke(ctx, AssetService_RefundQuota_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -409,10 +435,14 @@ type AssetServiceServer interface {
 	GetHistory(context.Context, *GetHistoryRequest) (*GetHistoryResponse, error)
 	// 删除历史记录
 	DeleteHistory(context.Context, *DeleteHistoryRequest) (*DeleteHistoryResponse, error)
+	// 按任务查询历史记录（用于权限校验）
+	GetHistoryByTask(context.Context, *GetHistoryByTaskRequest) (*GetHistoryByTaskResponse, error)
 	// 检查配额
 	CheckQuota(context.Context, *CheckQuotaRequest) (*CheckQuotaResponse, error)
 	// 消费配额
 	ConsumeQuota(context.Context, *ConsumeQuotaRequest) (*ConsumeQuotaResponse, error)
+	// 退还配额（用于提交补偿）
+	RefundQuota(context.Context, *RefundQuotaRequest) (*RefundQuotaResponse, error)
 	// 获取用户统计
 	GetUserStats(context.Context, *GetUserStatsRequest) (*GetUserStatsResponse, error)
 	// 获取平台统计
@@ -479,11 +509,17 @@ func (UnimplementedAssetServiceServer) GetHistory(context.Context, *GetHistoryRe
 func (UnimplementedAssetServiceServer) DeleteHistory(context.Context, *DeleteHistoryRequest) (*DeleteHistoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteHistory not implemented")
 }
+func (UnimplementedAssetServiceServer) GetHistoryByTask(context.Context, *GetHistoryByTaskRequest) (*GetHistoryByTaskResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetHistoryByTask not implemented")
+}
 func (UnimplementedAssetServiceServer) CheckQuota(context.Context, *CheckQuotaRequest) (*CheckQuotaResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckQuota not implemented")
 }
 func (UnimplementedAssetServiceServer) ConsumeQuota(context.Context, *ConsumeQuotaRequest) (*ConsumeQuotaResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ConsumeQuota not implemented")
+}
+func (UnimplementedAssetServiceServer) RefundQuota(context.Context, *RefundQuotaRequest) (*RefundQuotaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RefundQuota not implemented")
 }
 func (UnimplementedAssetServiceServer) GetUserStats(context.Context, *GetUserStatsRequest) (*GetUserStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserStats not implemented")
@@ -614,6 +650,24 @@ func _AssetService_DeleteHistory_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_GetHistoryByTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHistoryByTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetHistoryByTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetHistoryByTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetHistoryByTask(ctx, req.(*GetHistoryByTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AssetService_CheckQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckQuotaRequest)
 	if err := dec(in); err != nil {
@@ -646,6 +700,24 @@ func _AssetService_ConsumeQuota_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).ConsumeQuota(ctx, req.(*ConsumeQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_RefundQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefundQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).RefundQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_RefundQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).RefundQuota(ctx, req.(*RefundQuotaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1098,12 +1170,20 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AssetService_DeleteHistory_Handler,
 		},
 		{
+			MethodName: "GetHistoryByTask",
+			Handler:    _AssetService_GetHistoryByTask_Handler,
+		},
+		{
 			MethodName: "CheckQuota",
 			Handler:    _AssetService_CheckQuota_Handler,
 		},
 		{
 			MethodName: "ConsumeQuota",
 			Handler:    _AssetService_ConsumeQuota_Handler,
+		},
+		{
+			MethodName: "RefundQuota",
+			Handler:    _AssetService_RefundQuota_Handler,
 		},
 		{
 			MethodName: "GetUserStats",

@@ -12,12 +12,18 @@ service AssetService {
   
   // 删除历史记录
   rpc DeleteHistory(DeleteHistoryRequest) returns (DeleteHistoryResponse);
+
+  // 按任务查询历史记录（用于权限校验）
+  rpc GetHistoryByTask(GetHistoryByTaskRequest) returns (GetHistoryByTaskResponse);
   
   // 检查配额
   rpc CheckQuota(CheckQuotaRequest) returns (CheckQuotaResponse);
   
   // 消费配额
   rpc ConsumeQuota(ConsumeQuotaRequest) returns (ConsumeQuotaResponse);
+
+  // 退还配额（用于提交补偿）
+  rpc RefundQuota(RefundQuotaRequest) returns (RefundQuotaResponse);
   
   // 获取用户统计
   rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
@@ -105,6 +111,16 @@ message DeleteHistoryResponse {
   bool success = 1;
 }
 
+message GetHistoryByTaskRequest {
+  string task_id = 1;
+  string user_id = 2;
+}
+
+message GetHistoryByTaskResponse {
+  int64 history_id = 1;
+  int32 status = 2;
+}
+
 // 检查配额请求
 message CheckQuotaRequest {
   string user_id = 1;
@@ -123,6 +139,15 @@ message ConsumeQuotaRequest {
 }
 
 message ConsumeQuotaResponse {
+  bool success = 1;
+  int32 remaining = 2;
+}
+
+message RefundQuotaRequest {
+  string user_id = 1;
+}
+
+message RefundQuotaResponse {
   bool success = 1;
   int32 remaining = 2;
 }

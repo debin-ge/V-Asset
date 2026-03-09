@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"google.golang.org/grpc"
 
 	"vasset/api-gateway/internal/middleware"
 	"vasset/api-gateway/internal/models"
@@ -16,17 +17,34 @@ import (
 
 // DownloadHandler 下载处理器
 type DownloadHandler struct {
-	assetClient pb.AssetServiceClient
-	mediaClient pb.MediaServiceClient
-	publisher   *mq.Publisher
+	assetClient assetDownloadClient
+	mediaClient mediaDownloadClient
+	publisher   downloadPublisher
 	timeout     time.Duration
+}
+
+type assetDownloadClient interface {
+	CheckQuota(ctx context.Context, in *pb.CheckQuotaRequest, opts ...grpc.CallOption) (*pb.CheckQuotaResponse, error)
+	CreateHistory(ctx context.Context, in *pb.CreateHistoryRequest, opts ...grpc.CallOption) (*pb.CreateHistoryResponse, error)
+	ConsumeQuota(ctx context.Context, in *pb.ConsumeQuotaRequest, opts ...grpc.CallOption) (*pb.ConsumeQuotaResponse, error)
+	RefundQuota(ctx context.Context, in *pb.RefundQuotaRequest, opts ...grpc.CallOption) (*pb.RefundQuotaResponse, error)
+	DeleteHistory(ctx context.Context, in *pb.DeleteHistoryRequest, opts ...grpc.CallOption) (*pb.DeleteHistoryResponse, error)
+}
+
+type mediaDownloadClient interface {
+	ValidateURL(ctx context.Context, in *pb.ValidateURLRequest, opts ...grpc.CallOption) (*pb.ValidateURLResponse, error)
+	ParseURL(ctx context.Context, in *pb.ParseURLRequest, opts ...grpc.CallOption) (*pb.ParseURLResponse, error)
+}
+
+type downloadPublisher interface {
+	Publish(ctx context.Context, task *mq.DownloadTask) error
 }
 
 // NewDownloadHandler 创建下载处理器
 func NewDownloadHandler(
-	assetClient pb.AssetServiceClient,
-	mediaClient pb.MediaServiceClient,
-	publisher *mq.Publisher,
+	assetClient assetDownloadClient,
+	mediaClient mediaDownloadClient,
+	publisher downloadPublisher,
 	timeout time.Duration,
 ) *DownloadHandler {
 	return &DownloadHandler{
@@ -137,6 +155,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to consume quota: %v", err)
+		h.cleanupFailedSubmission(userID, historyResp.HistoryId, false)
 		models.InternalError(c, "failed to consume quota: "+err.Error())
 		return
 	}
@@ -162,6 +181,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 
 	if err := h.publisher.Publish(ctx, task); err != nil {
 		log.Printf("[Download] ❌ Failed to publish task to RabbitMQ: %v", err)
+		h.cleanupFailedSubmission(userID, historyResp.HistoryId, true)
 		models.InternalError(c, "failed to submit task: "+err.Error())
 		return
 	}
@@ -175,6 +195,34 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		HistoryID:     historyResp.HistoryId,
 		EstimatedTime: estimatedTime,
 	})
+}
+
+func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64, refundQuota bool) {
+	compensateCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
+	defer cancel()
+
+	if refundQuota {
+		if _, err := h.assetClient.RefundQuota(compensateCtx, &pb.RefundQuotaRequest{
+			UserId: userID,
+		}); err != nil {
+			log.Printf("[Download] ⚠ Failed to refund quota for user %s during compensation: %v", userID, err)
+		} else {
+			log.Printf("[Download] ✓ Refunded quota for user %s during compensation", userID)
+		}
+	}
+
+	if historyID == 0 {
+		return
+	}
+
+	if _, err := h.assetClient.DeleteHistory(compensateCtx, &pb.DeleteHistoryRequest{
+		HistoryId: historyID,
+		UserId:    userID,
+	}); err != nil {
+		log.Printf("[Download] ⚠ Failed to delete history %d during compensation: %v", historyID, err)
+	} else {
+		log.Printf("[Download] ✓ Deleted history %d during compensation", historyID)
+	}
 }
 
 // estimateDownloadTime 估算下载时间

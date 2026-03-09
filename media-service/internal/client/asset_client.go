@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"vasset/media-service/internal/redact"
 	pb "vasset/media-service/proto"
 )
 
@@ -143,7 +144,7 @@ func (c *AssetClient) GetAvailableProxy() (*ProxyLease, error) {
 		return nil, nil
 	}
 
-	log.Printf("[AssetClient] ✓ Got proxy lease: %s (lease_id=%s, expire_at=%s)", resp.ProxyUrl, resp.ProxyLeaseId, resp.ExpireAt)
+	log.Printf("[AssetClient] ✓ Got proxy lease: %s (lease_id=%s, expire_at=%s)", redact.ProxyURL(resp.ProxyUrl), resp.ProxyLeaseId, resp.ExpireAt)
 	return &ProxyLease{
 		URL:      resp.ProxyUrl,
 		LeaseID:  resp.ProxyLeaseId,
@@ -172,10 +173,11 @@ func (c *AssetClient) AcquireProxyForTask(ctx context.Context, taskID, platform 
 	}
 
 	if resp.ProxyUrl == "" {
-		return nil, fmt.Errorf("proxy binding is empty for task %s", taskID)
+		log.Printf("[AssetClient] No task-bound proxy available for task %s, using direct connection", taskID)
+		return nil, nil
 	}
 
-	log.Printf("[AssetClient] ✓ Got task-bound proxy: task_id=%s, lease_id=%s, expire_at=%s", taskID, resp.ProxyLeaseId, resp.ExpireAt)
+	log.Printf("[AssetClient] ✓ Got task-bound proxy: task_id=%s, proxy=%s, lease_id=%s, expire_at=%s", taskID, redact.ProxyURL(resp.ProxyUrl), resp.ProxyLeaseId, resp.ExpireAt)
 	return &ProxyLease{
 		URL:      resp.ProxyUrl,
 		LeaseID:  resp.ProxyLeaseId,

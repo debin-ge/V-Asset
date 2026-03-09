@@ -1,0 +1,198 @@
+package handler
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
+
+	"vasset/api-gateway/internal/models"
+	"vasset/api-gateway/internal/mq"
+	pb "vasset/api-gateway/proto"
+)
+
+type fakeAssetDownloadClient struct {
+	checkQuotaResp    *pb.CheckQuotaResponse
+	checkQuotaErr     error
+	createHistoryResp *pb.CreateHistoryResponse
+	createHistoryErr  error
+	consumeQuotaResp  *pb.ConsumeQuotaResponse
+	consumeQuotaErr   error
+	refundQuotaResp   *pb.RefundQuotaResponse
+	refundQuotaErr    error
+	deleteHistoryResp *pb.DeleteHistoryResponse
+	deleteHistoryErr  error
+
+	refundCalls []string
+	deleteCalls []int64
+}
+
+func (f *fakeAssetDownloadClient) CheckQuota(context.Context, *pb.CheckQuotaRequest, ...grpc.CallOption) (*pb.CheckQuotaResponse, error) {
+	return f.checkQuotaResp, f.checkQuotaErr
+}
+
+func (f *fakeAssetDownloadClient) CreateHistory(_ context.Context, _ *pb.CreateHistoryRequest, _ ...grpc.CallOption) (*pb.CreateHistoryResponse, error) {
+	return f.createHistoryResp, f.createHistoryErr
+}
+
+func (f *fakeAssetDownloadClient) ConsumeQuota(context.Context, *pb.ConsumeQuotaRequest, ...grpc.CallOption) (*pb.ConsumeQuotaResponse, error) {
+	return f.consumeQuotaResp, f.consumeQuotaErr
+}
+
+func (f *fakeAssetDownloadClient) RefundQuota(_ context.Context, req *pb.RefundQuotaRequest, _ ...grpc.CallOption) (*pb.RefundQuotaResponse, error) {
+	f.refundCalls = append(f.refundCalls, req.UserId)
+	return f.refundQuotaResp, f.refundQuotaErr
+}
+
+func (f *fakeAssetDownloadClient) DeleteHistory(_ context.Context, req *pb.DeleteHistoryRequest, _ ...grpc.CallOption) (*pb.DeleteHistoryResponse, error) {
+	f.deleteCalls = append(f.deleteCalls, req.HistoryId)
+	return f.deleteHistoryResp, f.deleteHistoryErr
+}
+
+type fakeMediaDownloadClient struct {
+	validateResp *pb.ValidateURLResponse
+	validateErr  error
+	parseResp    *pb.ParseURLResponse
+	parseErr     error
+}
+
+func (f *fakeMediaDownloadClient) ValidateURL(context.Context, *pb.ValidateURLRequest, ...grpc.CallOption) (*pb.ValidateURLResponse, error) {
+	return f.validateResp, f.validateErr
+}
+
+func (f *fakeMediaDownloadClient) ParseURL(context.Context, *pb.ParseURLRequest, ...grpc.CallOption) (*pb.ParseURLResponse, error) {
+	return f.parseResp, f.parseErr
+}
+
+type fakeDownloadPublisher struct {
+	publishErr error
+	tasks      []*mq.DownloadTask
+}
+
+func (f *fakeDownloadPublisher) Publish(_ context.Context, task *mq.DownloadTask) error {
+	f.tasks = append(f.tasks, task)
+	return f.publishErr
+}
+
+func TestSubmitDownloadCompensatesWhenConsumeQuotaFails(t *testing.T) {
+	t.Parallel()
+
+	handler, assetClient, _ := newTestDownloadHandler()
+	assetClient.consumeQuotaErr = errors.New("quota broken")
+
+	w := performSubmitDownload(t, handler)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d", w.Code)
+	}
+
+	if len(assetClient.deleteCalls) != 1 || assetClient.deleteCalls[0] != 101 {
+		t.Fatalf("expected history compensation for 101, got %#v", assetClient.deleteCalls)
+	}
+
+	if len(assetClient.refundCalls) != 0 {
+		t.Fatalf("did not expect refund on consume failure, got %#v", assetClient.refundCalls)
+	}
+}
+
+func TestSubmitDownloadCompensatesWhenPublishFails(t *testing.T) {
+	t.Parallel()
+
+	handler, assetClient, publisher := newTestDownloadHandler()
+	publisher.publishErr = errors.New("mq unavailable")
+
+	w := performSubmitDownload(t, handler)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d", w.Code)
+	}
+
+	if len(assetClient.deleteCalls) != 1 || assetClient.deleteCalls[0] != 101 {
+		t.Fatalf("expected history deletion for 101, got %#v", assetClient.deleteCalls)
+	}
+
+	if len(assetClient.refundCalls) != 1 || assetClient.refundCalls[0] != "user-1" {
+		t.Fatalf("expected quota refund for user-1, got %#v", assetClient.refundCalls)
+	}
+}
+
+func TestSubmitDownloadAcceptedWithoutCompensation(t *testing.T) {
+	t.Parallel()
+
+	handler, assetClient, publisher := newTestDownloadHandler()
+
+	w := performSubmitDownload(t, handler)
+
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("expected status 202, got %d", w.Code)
+	}
+
+	if len(assetClient.deleteCalls) != 0 {
+		t.Fatalf("did not expect history compensation, got %#v", assetClient.deleteCalls)
+	}
+
+	if len(assetClient.refundCalls) != 0 {
+		t.Fatalf("did not expect quota refund, got %#v", assetClient.refundCalls)
+	}
+
+	if len(publisher.tasks) != 1 {
+		t.Fatalf("expected exactly one published task, got %d", len(publisher.tasks))
+	}
+
+	var resp models.Response
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to parse response: %v", err)
+	}
+	if resp.Code != 0 {
+		t.Fatalf("expected code 0, got %d", resp.Code)
+	}
+}
+
+func newTestDownloadHandler() (*DownloadHandler, *fakeAssetDownloadClient, *fakeDownloadPublisher) {
+	assetClient := &fakeAssetDownloadClient{
+		checkQuotaResp: &pb.CheckQuotaResponse{Remaining: 3},
+		createHistoryResp: &pb.CreateHistoryResponse{
+			HistoryId: 101,
+		},
+		consumeQuotaResp: &pb.ConsumeQuotaResponse{Success: true, Remaining: 2},
+		refundQuotaResp:  &pb.RefundQuotaResponse{Success: true, Remaining: 3},
+		deleteHistoryResp: &pb.DeleteHistoryResponse{
+			Success: true,
+		},
+	}
+	mediaClient := &fakeMediaDownloadClient{
+		validateResp: &pb.ValidateURLResponse{Valid: true, Platform: "youtube"},
+		parseResp: &pb.ParseURLResponse{
+			Title:    "Example",
+			Duration: 120,
+		},
+	}
+	publisher := &fakeDownloadPublisher{}
+
+	return NewDownloadHandler(assetClient, mediaClient, publisher, time.Second), assetClient, publisher
+}
+
+func performSubmitDownload(t *testing.T, handler *DownloadHandler) *httptest.ResponseRecorder {
+	t.Helper()
+
+	gin.SetMode(gin.TestMode)
+
+	body := bytes.NewBufferString(`{"url":"https://example.com/video","mode":"quick_download","quality":"720p","format":"mp4"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/download", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+	c.Set("user_id", "user-1")
+
+	handler.SubmitDownload(c)
+	return w
+}

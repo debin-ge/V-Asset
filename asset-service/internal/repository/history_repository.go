@@ -23,8 +23,8 @@ func NewHistoryRepository(db *sql.DB) *HistoryRepository {
 // GetByID 根据ID获取历史记录
 func (r *HistoryRepository) GetByID(ctx context.Context, id int64) (*models.DownloadHistory, error) {
 	query := `
-		SELECT id, task_id, user_id, url, platform, title, mode, quality, 
-		       file_size, file_path, file_name, file_hash, status, error_message, 
+		SELECT id, task_id, user_id, url, platform, title, mode, quality,
+		       file_size, file_path, file_name, file_hash, status, error_message,
 		       created_at, started_at, completed_at
 		FROM download_history
 		WHERE id = $1
@@ -69,6 +69,35 @@ func (r *HistoryRepository) GetByIDAndUserID(ctx context.Context, id int64, user
 		&h.FileHash, &h.Status, &h.ErrorMessage, &h.CreatedAt, &h.StartedAt, &completedAt,
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
+	if completedAt.Valid {
+		h.CompletedAt = &completedAt.Time
+	}
+
+	return &h, nil
+}
+
+// GetByTaskIDAndUserID 根据任务ID和用户ID获取历史记录(权限校验)
+func (r *HistoryRepository) GetByTaskIDAndUserID(ctx context.Context, taskID, userID string) (*models.DownloadHistory, error) {
+	query := `
+			SELECT id, task_id, user_id, url, platform, title, mode, quality,
+			       file_size, file_path, file_name, file_hash, status, error_message,
+			       created_at, started_at, completed_at
+			FROM download_history
+			WHERE task_id = $1 AND user_id = $2
+		`
+
+	var h models.DownloadHistory
+	var completedAt sql.NullTime
+
+	err := r.db.QueryRowContext(ctx, query, taskID, userID).Scan(
+		&h.ID, &h.TaskID, &h.UserID, &h.URL, &h.Platform, &h.Title,
+		&h.Mode, &h.Quality, &h.FileSize, &h.FilePath, &h.FileName,
+		&h.FileHash, &h.Status, &h.ErrorMessage, &h.CreatedAt, &h.StartedAt, &completedAt,
+	)
 	if err != nil {
 		return nil, err
 	}

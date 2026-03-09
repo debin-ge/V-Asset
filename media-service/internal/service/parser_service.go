@@ -13,6 +13,7 @@ import (
 	"vasset/media-service/internal/config"
 	"vasset/media-service/internal/detector"
 	"vasset/media-service/internal/platformpolicy"
+	"vasset/media-service/internal/redact"
 	"vasset/media-service/internal/utils"
 	"vasset/media-service/internal/ytdlp"
 )
@@ -20,13 +21,27 @@ import (
 // ParserService 解析服务
 type ParserService struct {
 	detector      *detector.PlatformDetector
-	cache         *cache.Service
+	cache         parserCache
 	adapters      map[string]adapter.Adapter
 	limiter       *utils.ConcurrencyLimiter
 	logger        *zap.Logger
-	assetClient   *client.AssetClient
+	assetClient   parserAssetClient
 	enableCookies bool
 	youtubePolicy platformpolicy.YouTubePolicy
+}
+
+type parserCache interface {
+	Get(ctx context.Context, url string) (*cache.ParseResult, error)
+	Set(ctx context.Context, url string, result *cache.ParseResult) error
+}
+
+type parserAssetClient interface {
+	GetAvailableCookie(platform string) (string, int64, error)
+	AcquireProxyForTask(ctx context.Context, taskID, platform string) (*client.ProxyLease, error)
+	GetAvailableProxy() (*client.ProxyLease, error)
+	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error
+	ReportCookieUsage(cookieID int64, success bool) error
+	CleanupCookieFile(cookieFile string) error
 }
 
 type parseAccessContext struct {
@@ -167,7 +182,16 @@ func (s *ParserService) ParseURL(ctx context.Context, taskID, url string, skipCa
 		zap.Bool("has_cookie", accessCtx.cookieFile != ""),
 		zap.Bool("has_proxy", accessCtx.proxyLease != nil && accessCtx.proxyLease.URL != ""))
 
-	videoInfo, err := adpt.ParseWithProxyAndCookie(ctx, url, accessCtx.proxyLease.URL, accessCtx.cookieFile)
+	proxyURL := ""
+	proxyLeaseID := ""
+	proxyExpireAt := ""
+	if accessCtx.proxyLease != nil {
+		proxyURL = accessCtx.proxyLease.URL
+		proxyLeaseID = accessCtx.proxyLease.LeaseID
+		proxyExpireAt = accessCtx.proxyLease.ExpireAt
+	}
+
+	videoInfo, err := adpt.ParseWithProxyAndCookie(ctx, url, proxyURL, accessCtx.cookieFile)
 
 	// 报告代理使用结果
 	if accessCtx.proxyLease != nil && s.assetClient != nil {
@@ -219,9 +243,9 @@ func (s *ParserService) ParseURL(ctx context.Context, taskID, url string, skipCa
 		ViewCount:     videoInfo.ViewCount,
 		Formats:       formats,
 		CookieID:      accessCtx.cookieID,
-		ProxyURL:      accessCtx.proxyLease.URL,
-		ProxyLeaseID:  accessCtx.proxyLease.LeaseID,
-		ProxyExpireAt: accessCtx.proxyLease.ExpireAt,
+		ProxyURL:      proxyURL,
+		ProxyLeaseID:  proxyLeaseID,
+		ProxyExpireAt: proxyExpireAt,
 	}
 
 	// 10. 写入缓存（使用独立的 context 避免超时）
@@ -263,7 +287,8 @@ func (s *ParserService) getParseAccessContext(ctx context.Context, taskID, platf
 	}
 
 	if s.assetClient == nil {
-		return nil, fmt.Errorf("asset service is not configured for proxy acquisition")
+		s.logger.Info("asset service not configured, using direct connection for parsing")
+		return accessCtx, nil
 	}
 
 	s.logger.Info("attempting to get proxy lease from Asset Service", zap.String("task_id", taskID))
@@ -278,11 +303,12 @@ func (s *ParserService) getParseAccessContext(ctx context.Context, taskID, platf
 		return nil, fmt.Errorf("failed to get proxy lease: %w", err)
 	}
 	if proxyLease == nil || proxyLease.URL == "" {
-		return nil, fmt.Errorf("proxy lease is empty")
+		s.logger.Info("no proxy lease available, using direct connection", zap.String("task_id", taskID))
+		return accessCtx, nil
 	}
 
 	s.logger.Info("using proxy for parsing",
-		zap.String("proxy_url", proxyLease.URL),
+		zap.String("proxy_url", redact.ProxyURL(proxyLease.URL)),
 		zap.String("proxy_lease_id", proxyLease.LeaseID),
 		zap.String("proxy_expire_at", proxyLease.ExpireAt))
 
@@ -298,9 +324,15 @@ func (s *ParserService) attachDynamicAccess(result *cache.ParseResult, taskID st
 	}
 
 	result.CookieID = accessCtx.cookieID
-	result.ProxyURL = accessCtx.proxyLease.URL
-	result.ProxyLeaseID = accessCtx.proxyLease.LeaseID
-	result.ProxyExpireAt = accessCtx.proxyLease.ExpireAt
+	if accessCtx.proxyLease != nil {
+		result.ProxyURL = accessCtx.proxyLease.URL
+		result.ProxyLeaseID = accessCtx.proxyLease.LeaseID
+		result.ProxyExpireAt = accessCtx.proxyLease.ExpireAt
+	} else {
+		result.ProxyURL = ""
+		result.ProxyLeaseID = ""
+		result.ProxyExpireAt = ""
+	}
 	s.cleanupCookieFile(accessCtx.cookieFile)
 	return nil
 }

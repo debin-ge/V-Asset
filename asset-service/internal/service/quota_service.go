@@ -11,9 +11,16 @@ import (
 	"vasset/asset-service/internal/repository"
 )
 
+type quotaRepository interface {
+	GetOrCreate(ctx context.Context, userID string, defaultLimit int) (*models.UserQuota, error)
+	Update(ctx context.Context, quota *models.UserQuota) error
+	ConsumeQuotaSafe(ctx context.Context, userID string, defaultLimit int) (*models.UserQuota, error)
+	RefundQuotaSafe(ctx context.Context, userID string, defaultLimit int) (*models.UserQuota, error)
+}
+
 // QuotaService 配额服务
 type QuotaService struct {
-	quotaRepo *repository.QuotaRepository
+	quotaRepo quotaRepository
 	cfg       *config.QuotaConfig
 }
 
@@ -55,6 +62,11 @@ func (s *QuotaService) ConsumeQuota(ctx context.Context, userID string) (*models
 		return nil, err
 	}
 	return quota, nil
+}
+
+// RefundQuota 退还一次已消费的配额
+func (s *QuotaService) RefundQuota(ctx context.Context, userID string) (*models.UserQuota, error) {
+	return s.quotaRepo.RefundQuotaSafe(ctx, userID, s.cfg.DefaultDailyLimit)
 }
 
 // GetRemaining 获取剩余配额

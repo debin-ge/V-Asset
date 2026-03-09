@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// 5. 创建 WebSocket 管理器
-	wsManager := ws.NewManager(redisClient)
+	wsManager := ws.NewManager(redisClient, grpcClients.AuthClient, grpcClients.AssetClient)
 	log.Println("✓ WebSocket manager initialized")
 
 	// 6. 设置路由
