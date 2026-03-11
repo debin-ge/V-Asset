@@ -103,7 +103,12 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 	// 6. 支持断点续传
 	c.Header("Accept-Ranges", "bytes")
 
-	// 7. 流式传输文件
+	// 7. 解除当前请求的全局 WriteTimeout 限制 (Go 1.20+)
+	// 这样只要数据在源源不断传输（且不发生 10 分钟以上的网络停滞停摆 nginx），下载可以耗时无限长
+	rc := http.NewResponseController(c.Writer)
+	_ = rc.SetWriteDeadline(time.Time{})
+
+	// 8. 流式传输文件
 	c.Status(http.StatusOK)
 
 	// 使用缓冲区流式传输

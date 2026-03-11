@@ -1,8 +1,8 @@
 server:
   port: 8080
   mode: debug  # debug, release
-  read_timeout: 330s   # 必须覆盖 YouTube 解析的长尾耗时
-  write_timeout: 330s  # 必须 >= grpc.timeout，否则响应写入会超时导致 500 错误
+  read_timeout: 600s  # 放宽：允许缓慢连接或长时间下载 (1小时)
+  write_timeout: 600s # 放宽：必须极大允许长时间流式传输大文件
   max_header_bytes: 1048576  # 1MB
 
 grpc:
