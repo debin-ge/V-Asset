@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"vasset/media-service/internal/download/models"
+	"vasset/media-service/internal/download/ytdlp"
 )
 
 // ProgressPublisher 进度发布器
@@ -36,18 +37,50 @@ func (p *ProgressPublisher) Publish(ctx context.Context, msg *models.ProgressMes
 		return fmt.Errorf("failed to publish progress: %w", err)
 	}
 
-	log.Printf("[Progress] Published to %s: %.2f%%", channel, msg.Percent)
+	log.Printf("[Progress] Published to %s: %.2f%% phase=%s", channel, msg.Percent, msg.Phase)
 	return nil
 }
 
-// PublishDownloading 发布下载中状态
-func (p *ProgressPublisher) PublishDownloading(ctx context.Context, taskID string, progress *models.Progress) error {
+// phaseLabel 阶段中文标签映射
+func phaseLabel(phase ytdlp.DownloadPhase) string {
+	switch phase {
+	case ytdlp.PhaseDownloadingVideo:
+		return "正在下载视频流"
+	case ytdlp.PhaseDownloadingAudio:
+		return "正在下载音频流"
+	case ytdlp.PhaseDownloading:
+		return "正在下载"
+	case ytdlp.PhaseMerging:
+		return "正在合并音视频"
+	case ytdlp.PhaseProcessing:
+		return "正在处理文件"
+	default:
+		return "下载中"
+	}
+}
+
+// PublishDownloading 发布下载中状态（带阶段和加权进度）
+func (p *ProgressPublisher) PublishDownloading(ctx context.Context, taskID string, progress *models.Progress, phase ytdlp.DownloadPhase, overallPercent float64) error {
 	msg := &models.ProgressMessage{
-		TaskID:  taskID,
-		Status:  "downloading",
-		Percent: progress.Percent,
-		Speed:   progress.Speed,
-		ETA:     progress.ETA,
+		TaskID:     taskID,
+		Status:     "downloading",
+		Percent:    overallPercent,
+		Phase:      string(phase),
+		PhaseLabel: phaseLabel(phase),
+		Speed:      progress.Speed,
+		ETA:        progress.ETA,
+	}
+	return p.Publish(ctx, msg)
+}
+
+// PublishPhase 发布阶段切换消息（无具体下载进度时使用）
+func (p *ProgressPublisher) PublishPhase(ctx context.Context, taskID string, phase ytdlp.DownloadPhase, percent float64) error {
+	msg := &models.ProgressMessage{
+		TaskID:     taskID,
+		Status:     "downloading",
+		Percent:    percent,
+		Phase:      string(phase),
+		PhaseLabel: phaseLabel(phase),
 	}
 	return p.Publish(ctx, msg)
 }

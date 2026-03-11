@@ -24,6 +24,39 @@ const (
 	fileTracePrefix   = "[file-trace]"
 )
 
+// DownloadPhase 下载阶段
+type DownloadPhase string
+
+const (
+	PhaseDownloadingVideo DownloadPhase = "downloading_video"
+	PhaseDownloadingAudio DownloadPhase = "downloading_audio"
+	PhaseDownloading      DownloadPhase = "downloading"
+	PhaseMerging          DownloadPhase = "merging"
+	PhaseProcessing       DownloadPhase = "processing"
+)
+
+// OutputEvent 表示从 yt-dlp stdout 解析出的一个事件
+type OutputEvent struct {
+	Type     string           // "progress" 或 "merger"
+	Progress *models.Progress // Type=="progress" 时有值
+}
+
+// NeedsMerge 判断任务是否需要音视频合流
+func NeedsMerge(task *models.DownloadTask) bool {
+	sel := task.SelectedFormat
+	if sel == nil {
+		// 无精确选择，走 buildFormatString 路径
+		switch task.Quality {
+		case "best", "audio", "":
+			return false
+		default:
+			return true // 720p/1080p 等大概率需要 video+audio
+		}
+	}
+	// 有精确选择：有视频但无音频 → 需要合流
+	return hasVideo(sel) && !hasAudio(sel)
+}
+
 // Executor yt-dlp 执行器
 type Executor struct {
 	binaryPath          string
@@ -50,7 +83,7 @@ func NewExecutor(cfg *config.YtDLPConfig) *Executor {
 
 // Download 执行下载
 // cookieFile: 可选的 cookie 文件路径，如果非空则优先使用
-func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, proxyURL, outputPath, cookieFile string, progressCallback func(*models.Progress)) error {
+func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, proxyURL, outputPath, cookieFile string, callback func(*OutputEvent)) error {
 	log.Printf("[YtDLP] [Task %s] Preparing download for URL: %s", task.TaskID, task.URL)
 	log.Printf("[YtDLP] [Task %s] Download parameters - Quality: %s, Format: %s, Output: %s, Cookie: %s",
 		task.TaskID, task.Quality, task.Format, outputPath, cookieFile)
@@ -108,9 +141,9 @@ func (e *Executor) Download(ctx context.Context, task *models.DownloadTask, prox
 			log.Printf("[YtDLP] [Task %s] %s", task.TaskID, line)
 			continue
 		}
-		progress := parseProgress(line)
-		if progress != nil && progressCallback != nil {
-			progressCallback(progress)
+		event := parseOutput(line)
+		if event != nil && callback != nil {
+			callback(event)
 		}
 	}
 
@@ -325,9 +358,23 @@ func hasAudio(selected *models.SelectedFormat) bool {
 	return selected != nil && selected.AudioCodec != "" && selected.AudioCodec != "none"
 }
 
-// parseProgress 解析 yt-dlp 进度输出
+// parseOutput 解析 yt-dlp stdout 输出为事件
+func parseOutput(line string) *OutputEvent {
+	// 识别 [Merger] 行
+	if strings.Contains(line, "[Merger]") {
+		return &OutputEvent{Type: "merger"}
+	}
+	// 识别 [download] 进度行
+	progress := parseDownloadProgress(line)
+	if progress != nil {
+		return &OutputEvent{Type: "progress", Progress: progress}
+	}
+	return nil
+}
+
+// parseDownloadProgress 解析 yt-dlp 进度输出
 // 格式: [download]  45.2% of 100.00MiB at 2.50MiB/s ETA 00:22
-func parseProgress(line string) *models.Progress {
+func parseDownloadProgress(line string) *models.Progress {
 	if !strings.Contains(line, "[download]") {
 		return nil
 	}

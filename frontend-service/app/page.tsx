@@ -19,6 +19,8 @@ export default function Home() {
     downloadFile,
     reset,
     autoDownloadAttempted,
+    phase,
+    phaseLabel,
   } = useDownload()
 
   return (
@@ -46,7 +48,7 @@ export default function Home() {
       )}
 
       {(status === "downloading" || status === "completed") && (
-        <ProgressBar progress={progress} speed={speed} timeLeft={timeLeft} />
+        <ProgressBar progress={progress} speed={speed} timeLeft={timeLeft} phase={phase} phaseLabel={phaseLabel} />
       )}
 
       {status === "completed" && (

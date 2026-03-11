@@ -32,6 +32,8 @@ export interface ProgressData {
     status: number | string;   // 0=待处理, 1=下载中, 2=完成, 3=失败 或 "pending"/"downloading"/"completed"/"failed"
     status_text: string;
     percent: number;
+    phase?: string;            // downloading_video, downloading_audio, downloading, merging, processing
+    phase_label?: string;      // 中文阶段标签
     downloaded_bytes: number;
     total_bytes: number;
     speed: string;

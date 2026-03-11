@@ -218,12 +218,51 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	log.Printf("[Worker] [Task %s] ✓ Output path: %s", taskID, outputPath)
 
 	log.Printf("[Worker] [Task %s] Step 5/10: Setting up progress callback...", taskID)
-	// 5. 设置进度回调
-	progressCallback := func(progress *models.Progress) {
-		log.Printf("[Worker] [Task %s] Progress: %.1f%%, Speed: %s, ETA: %s",
-			taskID, progress.Percent, progress.Speed, progress.ETA)
-		if err := p.progressPublisher.PublishDownloading(ctx, taskID, progress); err != nil {
-			log.Printf("[Worker] [Task %s] ⚠ Failed to publish progress: %v", taskID, err)
+	// 5. 设置进度回调（带阶段跟踪）
+	needsMerge := ytdlp.NeedsMerge(task)
+	downloadRound := 0
+	lastRawPercent := 0.0
+	log.Printf("[Worker] [Task %s] NeedsMerge: %v", taskID, needsMerge)
+
+	progressCallback := func(event *ytdlp.OutputEvent) {
+		switch event.Type {
+		case "merger":
+			// 合流阶段
+			phase := ytdlp.PhaseMerging
+			percent := 85.0
+			log.Printf("[Worker] [Task %s] Phase: %s, Percent: %.1f%%", taskID, phase, percent)
+			if err := p.progressPublisher.PublishPhase(ctx, taskID, phase, percent); err != nil {
+				log.Printf("[Worker] [Task %s] ⚠ Failed to publish merger phase: %v", taskID, err)
+			}
+
+		case "progress":
+			raw := event.Progress.Percent
+
+			// 检测是否进入新一轮下载（进度大幅回退说明开始下载第二个流）
+			if raw < lastRawPercent-10 && lastRawPercent > 90 {
+				downloadRound++
+				log.Printf("[Worker] [Task %s] Detected new download round: %d", taskID, downloadRound)
+			}
+			lastRawPercent = raw
+
+			// 确定当前阶段
+			var phase ytdlp.DownloadPhase
+			if !needsMerge {
+				phase = ytdlp.PhaseDownloading
+			} else if downloadRound == 0 {
+				phase = ytdlp.PhaseDownloadingVideo
+			} else {
+				phase = ytdlp.PhaseDownloadingAudio
+			}
+
+			// 计算加权整体进度
+			overall := calcOverallPercent(raw, phase, needsMerge)
+
+			log.Printf("[Worker] [Task %s] Progress: %.1f%% (raw) → %.1f%% (overall), Phase: %s, Speed: %s, ETA: %s",
+				taskID, raw, overall, phase, event.Progress.Speed, event.Progress.ETA)
+			if err := p.progressPublisher.PublishDownloading(ctx, taskID, event.Progress, phase, overall); err != nil {
+				log.Printf("[Worker] [Task %s] ⚠ Failed to publish progress: %v", taskID, err)
+			}
 		}
 	}
 
@@ -281,6 +320,15 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 		return p.handleError(ctx, task, downloadErr)
 	}
 	log.Printf("[Worker] [Task %s] ✓ Download completed", taskID)
+
+	// 发布 processing 阶段
+	processingStart := 85.0
+	if needsMerge {
+		processingStart = 92.0
+	}
+	if err := p.progressPublisher.PublishPhase(ctx, taskID, ytdlp.PhaseProcessing, processingStart); err != nil {
+		log.Printf("[Worker] [Task %s] ⚠ Failed to publish processing phase: %v", taskID, err)
+	}
 
 	log.Printf("[Worker] [Task %s] Step 7/10: Calculating file information...", taskID)
 	// 7. 计算文件信息
@@ -373,4 +421,22 @@ func (p *Pool) handleError(ctx context.Context, task *models.DownloadTask, err e
 	}
 
 	return err
+}
+
+// calcOverallPercent 计算加权整体进度
+func calcOverallPercent(rawPercent float64, phase ytdlp.DownloadPhase, needsMerge bool) float64 {
+	if !needsMerge {
+		// 单流：[0–85%]
+		return rawPercent * 0.85
+	}
+	switch phase {
+	case ytdlp.PhaseDownloadingVideo:
+		// 视频流：[0–65%]
+		return rawPercent * 0.65
+	case ytdlp.PhaseDownloadingAudio:
+		// 音频流：[65–85%]
+		return 65.0 + rawPercent*0.20
+	default:
+		return rawPercent * 0.85
+	}
 }

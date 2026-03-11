@@ -21,6 +21,8 @@ export function useDownload() {
     const [currentTaskId, setCurrentTaskId] = React.useState<string | null>(null)
     const [historyId, setHistoryId] = React.useState<number | null>(null)
     const [autoDownloadAttempted, setAutoDownloadAttempted] = React.useState(false)
+    const [phase, setPhase] = React.useState<string>("")
+    const [phaseLabel, setPhaseLabel] = React.useState<string>("")
 
     // Use ref to store historyId for access in callbacks
     const historyIdRef = React.useRef<number | null>(null)
@@ -54,14 +56,17 @@ export function useDownload() {
         setProgress(data.percent)
         setSpeed(data.speed || "0 MB/s")
         setTimeLeft(data.eta || "")
+        if (data.phase) setPhase(data.phase)
+        if (data.phase_label) setPhaseLabel(data.phase_label)
 
         // 支持字符串和数字两种 status 格式
         const isCompleted = data.status === 2 || data.status === "completed" || data.status_text === "completed"
         const isFailed = data.status === 3 || data.status === "failed" || data.status_text === "failed"
 
         if (isCompleted) {
-            setStatus("completed")
-            toast.success("服务端下载完成！正在传输到本地...")
+            setPhase("transferring")
+            setPhaseLabel("正在传输到本地...")
+            setProgress(100)
             if (currentTaskId) {
                 wsClient.unsubscribe(currentTaskId)
             }
@@ -69,10 +74,13 @@ export function useDownload() {
             const hId = historyIdRef.current
             console.log('[Download] Triggering file download, historyId:', hId)
             if (hId) {
-                triggerFileDownload(hId)
+                triggerFileDownload(hId).finally(() => {
+                    setStatus("completed")
+                })
             } else {
                 console.error('[Download] historyId is null, cannot trigger download')
                 toast.error("无法获取下载文件信息，请重新提交下载任务")
+                setStatus("completed")
             }
         } else if (isFailed) {
             setStatus("error")
@@ -183,6 +191,8 @@ export function useDownload() {
         setCurrentTaskId(null)
         setHistoryId(null)
         setAutoDownloadAttempted(false)
+        setPhase("")
+        setPhaseLabel("")
     }
 
     return {
@@ -199,6 +209,8 @@ export function useDownload() {
         reset,
         historyId,
         autoDownloadAttempted,
+        phase,
+        phaseLabel,
     }
 }
 

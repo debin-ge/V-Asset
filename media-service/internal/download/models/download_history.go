@@ -96,6 +96,8 @@ type ProgressMessage struct {
 	TaskID          string  `json:"task_id"`
 	Status          string  `json:"status"` // downloading, completed, failed
 	Percent         float64 `json:"percent"`
+	Phase           string  `json:"phase,omitempty"`       // downloading_video, downloading_audio, downloading, merging, processing
+	PhaseLabel      string  `json:"phase_label,omitempty"` // 中文阶段标签
 	DownloadedBytes int64   `json:"downloaded_bytes"`
 	TotalBytes      int64   `json:"total_bytes"`
 	Speed           string  `json:"speed"`

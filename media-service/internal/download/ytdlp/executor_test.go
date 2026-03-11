@@ -33,11 +33,14 @@ func TestDownloadConcurrentCallbacksRemainIsolated(t *testing.T) {
 		"task-b": {},
 	}
 
-	record := func(taskID string) func(*downloadmodels.Progress) {
-		return func(progress *downloadmodels.Progress) {
+	record := func(taskID string) func(*OutputEvent) {
+		return func(event *OutputEvent) {
+			if event.Type != "progress" || event.Progress == nil {
+				return
+			}
 			mu.Lock()
 			defer mu.Unlock()
-			callbacks[taskID] = append(callbacks[taskID], progress.Percent)
+			callbacks[taskID] = append(callbacks[taskID], event.Progress.Percent)
 		}
 	}
 
