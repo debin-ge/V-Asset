@@ -37,27 +37,12 @@ export const downloadApi = {
         return response.data as DownloadResponse;
     },
 
-    // 下载文件（blob流）
+    // 下载文件（浏览器原生下载，不通过 blob 缓冲内存）
     downloadFile: async (historyId: number): Promise<void> => {
-        const response = await apiClient.get('/api/v1/download/file', {
-            params: { history_id: historyId },
-            responseType: 'blob',
-        });
-
-        // 从响应头获取文件名
-        const contentDisposition = response.headers['content-disposition'];
-        const filename = parseDownloadFilename(contentDisposition);
-
-        // 创建下载链接
-        const blob = new Blob([response.data]);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+        const token = localStorage.getItem('v-asset-token');
+        const baseURL = apiClient.defaults.baseURL || '';
+        const url = `${baseURL}/api/v1/download/file?history_id=${historyId}&token=${encodeURIComponent(token || '')}`;
+        window.open(url, '_blank');
     },
 };
 

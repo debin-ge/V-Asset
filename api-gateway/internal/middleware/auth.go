@@ -14,7 +14,15 @@ import (
 // JWTAuth JWT 认证中间件
 func JWTAuth(authClient pb.AuthServiceClient, redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := AuthenticateToken(c.Request.Context(), authClient, redisClient, c.GetHeader("Authorization"))
+		authHeader := c.GetHeader("Authorization")
+		// Fallback: 从 query 参数 token 读取（用于浏览器直接下载场景）
+		if authHeader == "" {
+			if queryToken := c.Query("token"); queryToken != "" {
+				authHeader = "Bearer " + queryToken
+			}
+		}
+
+		claims, err := AuthenticateToken(c.Request.Context(), authClient, redisClient, authHeader)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"code":    401,
