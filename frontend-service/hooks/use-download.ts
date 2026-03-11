@@ -74,9 +74,11 @@ export function useDownload() {
             const hId = historyIdRef.current
             console.log('[Download] Triggering file download, historyId:', hId)
             if (hId) {
-                triggerFileDownload(hId).finally(() => {
-                    setStatus("completed")
-                })
+                setTimeout(() => {
+                    triggerFileDownload(hId).finally(() => {
+                        setStatus("completed")
+                    })
+                }, 1000)
             } else {
                 console.error('[Download] historyId is null, cannot trigger download')
                 toast.error("Unable to get download file information, please re-submit the download task")
