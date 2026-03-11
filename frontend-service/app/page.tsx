@@ -53,18 +53,16 @@ export default function Home() {
 
       {status === "completed" && (
         <div className="mt-8 text-center animate-fade-in">
-          <p className="text-green-600 font-medium mb-4">Download Completed!</p>
-          {autoDownloadAttempted && (
-            <p className="text-sm text-gray-500 mb-4">
-              If your browser blocked the automatic download, click the button below.
-            </p>
-          )}
+          <p className="text-green-600 font-medium mb-4">Ready and downloading to your local device!</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Please check your browser's download manager. If it doesn't start automatically, please click the button below to download manually.
+          </p>
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={downloadFile}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
-              Download file
+              Download manually
             </button>
             <button
               onClick={reset}

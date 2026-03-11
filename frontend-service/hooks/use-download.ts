@@ -44,10 +44,10 @@ export function useDownload() {
         try {
             setAutoDownloadAttempted(true)
             await downloadApi.downloadFile(hId)
-            toast.success("文件下载已开始")
+            toast.success("File download started")
         } catch (error) {
             console.error("[Download] Automatic download did not start", error)
-            toast.info("自动下载未生效，请点击下方按钮手动下载")
+            toast.info("Automatic download failed, please click the button below to download manually")
         }
     }, [])
 
@@ -65,7 +65,7 @@ export function useDownload() {
 
         if (isCompleted) {
             setPhase("transferring")
-            setPhaseLabel("正在传输到本地...")
+            setPhaseLabel("Service ready, starting file download...")
             setProgress(100)
             if (currentTaskId) {
                 wsClient.unsubscribe(currentTaskId)
@@ -79,7 +79,7 @@ export function useDownload() {
                 })
             } else {
                 console.error('[Download] historyId is null, cannot trigger download')
-                toast.error("无法获取下载文件信息，请重新提交下载任务")
+                toast.error("Unable to get download file information, please re-submit the download task")
                 setStatus("completed")
             }
         } else if (isFailed) {
@@ -104,7 +104,7 @@ export function useDownload() {
             setStatus("error")
             let message = error instanceof Error ? error.message : "Parse failed, please check the link"
             if (error instanceof AxiosError && error.code === "ECONNABORTED") {
-                message = "解析耗时较长，请稍后重试，或联系管理员增加解析超时时间"
+                message = "Parsing took too long, please try again later or contact the administrator to increase the parsing timeout"
             }
             toast.error(message)
         }
@@ -153,7 +153,7 @@ export function useDownload() {
             // Subscribe to progress
             wsClient.subscribe(response.task_id, handleProgress)
 
-            toast.info(`Download task submitted, estimated time: ${response.estimated_time}s`)
+            toast.info(`Download task submitted`)
         } catch (error) {
             setStatus("error")
             const message = error instanceof Error ? error.message : "Failed to submit download task"
