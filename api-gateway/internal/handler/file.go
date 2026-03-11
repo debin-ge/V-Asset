@@ -128,6 +128,15 @@ func buildContentDispositionFilename(filename string) string {
 		filename = "download"
 	}
 
+	// 附加时间戳（格式：YYYYMMDD_HHMMSS）
+	timestamp := time.Now().Format("20060102_150405")
+	lastDot := strings.LastIndex(filename, ".")
+	if lastDot == -1 || lastDot == 0 {
+		filename = fmt.Sprintf("%s_%s", filename, timestamp)
+	} else {
+		filename = fmt.Sprintf("%s_%s%s", filename[:lastDot], timestamp, filename[lastDot:])
+	}
+
 	fallback := buildASCIIFilename(filename)
 	encoded := url.PathEscape(filename)
 
