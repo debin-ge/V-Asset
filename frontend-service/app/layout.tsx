@@ -5,6 +5,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { Header } from "@/components/common/Header";
 import { Footer } from "@/components/common/Footer";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { VersionGuard } from "@/components/common/VersionGuard";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -40,6 +41,7 @@ export default function RootLayout({
         </div>
 
         <AuthProvider>
+          <VersionGuard />
           <Header />
           <main className="flex-1 flex flex-col pt-16">
             {children}
