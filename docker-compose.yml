@@ -28,8 +28,8 @@ services:
       POSTGRES_DB: ${DB_NAME:-vasset}
       TZ: Asia/Shanghai
       PGTZ: Asia/Shanghai
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -200,14 +200,7 @@ services:
 
   # Frontend Service - 前端服务
   frontend-service:
-    build:
-      context: ./frontend-service
-      args:
-        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
-        - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-}
-        - API_GATEWAY_INTERNAL_URL=${API_GATEWAY_INTERNAL_URL:-http://api-gateway:8080}
-        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-}
-        - NEXT_PUBLIC_PARSE_TIMEOUT_MS=${NEXT_PUBLIC_PARSE_TIMEOUT_MS:-300000}
+    build: ./frontend-service
     container_name: vasset-frontend
     expose:
       - "3000"
@@ -216,17 +209,14 @@ services:
       - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-}
       - API_GATEWAY_INTERNAL_URL=${API_GATEWAY_INTERNAL_URL:-http://api-gateway:8080}
       - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-}
+      - NEXT_PUBLIC_PARSE_TIMEOUT_MS=${NEXT_PUBLIC_PARSE_TIMEOUT_MS:-300000}
     depends_on:
       - api-gateway
     restart: unless-stopped
 
   # Admin Frontend - 管理后台前端
   admin-frontend:
-    build:
-      context: ./admin-frontend
-      args:
-        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
-        - API_GATEWAY_INTERNAL_URL=${API_GATEWAY_INTERNAL_URL:-http://api-gateway:8080}
+    build: ./admin-frontend
     container_name: vasset-admin-frontend
     expose:
       - "3001"

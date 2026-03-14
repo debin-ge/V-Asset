@@ -52,6 +52,7 @@ func main() {
 	proxyPolicyRepo := repository.NewProxyPolicyRepository(db)
 	taskProxyBindingRepo := repository.NewTaskProxyBindingRepository(db)
 	cookieRepo := repository.NewCookieRepository(db)
+	billingRepo := repository.NewBillingRepository(db)
 
 	// 4. 初始化 Service
 	historyService := service.NewHistoryService(historyRepo)
@@ -59,13 +60,14 @@ func main() {
 	statsService := service.NewStatsService(historyRepo)
 	proxyService := service.NewProxyService(proxyRepo, proxyPolicyRepo, taskProxyBindingRepo, cfg)
 	cookieService := service.NewCookieService(cookieRepo, cfg)
+	billingService := service.NewBillingService(billingRepo)
 
 	// 5. 初始化 Handler
 	proxyHandler := handler.NewProxyHandler(proxyService)
 	cookieHandler := handler.NewCookieHandler(cookieService)
 
 	// 6. 初始化 gRPC 服务器
-	grpcServer := handler.NewGRPCServer(historyService, quotaService, statsService, proxyHandler, cookieHandler, cfg)
+	grpcServer := handler.NewGRPCServer(historyService, quotaService, statsService, billingService, proxyHandler, cookieHandler, cfg)
 
 	// 6. 启动 gRPC 服务
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Server.Port))

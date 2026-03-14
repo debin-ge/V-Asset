@@ -51,6 +51,7 @@ func main() {
 	statsService := service.NewStatsService(grpcClients.AuthClient, grpcClients.AssetClient)
 	proxyService := service.NewProxyService(grpcClients.AssetClient)
 	cookieService := service.NewCookieService(grpcClients.AssetClient)
+	billingService := service.NewBillingService(grpcClients.AuthClient, grpcClients.AssetClient)
 
 	lis, err := net.Listen("tcp", net.JoinHostPort("", formatPort(cfg.Server.Port)))
 	if err != nil {
@@ -58,7 +59,7 @@ func main() {
 	}
 
 	grpcSrv := grpc.NewServer()
-	pb.RegisterAdminServiceServer(grpcSrv, grpcserver.NewAdminServer(authService, statsService, proxyService, cookieService))
+	pb.RegisterAdminServiceServer(grpcSrv, grpcserver.NewAdminServer(authService, statsService, proxyService, cookieService, billingService))
 
 	go func() {
 		log.Printf("admin-service gRPC listening on :%d", cfg.Server.Port)

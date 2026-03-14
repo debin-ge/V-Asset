@@ -225,6 +225,65 @@ func (s *GRPCServer) ChangePassword(ctx context.Context, req *pb.ChangePasswordR
 	}, nil
 }
 
+func (s *GRPCServer) SearchUsers(ctx context.Context, req *pb.SearchUsersRequest) (*pb.SearchUsersResponse, error) {
+	page := req.GetPage()
+	if page <= 0 {
+		page = 1
+	}
+	pageSize := req.GetPageSize()
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	users, total, err := s.userService.SearchUsers(ctx, req.GetQuery(), int(page), int(pageSize))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	items := make([]*pb.User, 0, len(users))
+	for _, user := range users {
+		items = append(items, &pb.User{
+			UserId:    user.ID,
+			Email:     user.Email,
+			Nickname:  user.Nickname,
+			AvatarUrl: user.AvatarURL,
+			Role:      int32(user.Role),
+			CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	return &pb.SearchUsersResponse{
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+		Users:    items,
+	}, nil
+}
+
+func (s *GRPCServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetUsersRequest) (*pb.BatchGetUsersResponse, error) {
+	users, err := s.userService.BatchGetUsers(ctx, req.GetUserIds())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	items := make([]*pb.User, 0, len(users))
+	for _, user := range users {
+		items = append(items, &pb.User{
+			UserId:    user.ID,
+			Email:     user.Email,
+			Nickname:  user.Nickname,
+			AvatarUrl: user.AvatarURL,
+			Role:      int32(user.Role),
+			CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	return &pb.BatchGetUsersResponse{Users: items}, nil
+}
+
 // HealthCheck 健康检查
 func (s *GRPCServer) HealthCheck(ctx context.Context) error {
 	// 可以添加数据库和 Redis 连接检查

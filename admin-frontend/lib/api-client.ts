@@ -17,7 +17,13 @@ apiClient.interceptors.response.use(
     }
     return { ...response, data };
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    const responseData = error.response?.data as { message?: string } | undefined;
+    if (responseData?.message) {
+      return Promise.reject(new Error(responseData.message));
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default apiClient;

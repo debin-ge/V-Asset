@@ -1,13 +1,12 @@
+import path from "path";
 import type { NextConfig } from "next";
-
-const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION ?? `build-${new Date().toISOString()}`;
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: path.join(__dirname),
   reactCompiler: true,
-  env: {
-    NEXT_PUBLIC_APP_VERSION: appVersion,
+  turbopack: {
+    root: path.join(__dirname),
   },
   images: {
     remotePatterns: [

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -395,6 +396,16 @@ func parseDownloadProgress(line string) *models.Progress {
 		Percent: percent,
 	}
 
+	sizeRe := regexp.MustCompile(`of\s+~?\s*(\d+\.?\d*)([KMGT]?i?B)`)
+	sizeMatch := sizeRe.FindStringSubmatch(line)
+	if len(sizeMatch) >= 3 {
+		totalBytes, err := parseSizeBytes(sizeMatch[1], sizeMatch[2])
+		if err == nil {
+			progress.TotalBytes = totalBytes
+			progress.DownloadedBytes = int64(math.Round(float64(totalBytes) * percent / 100.0))
+		}
+	}
+
 	// 解析速度
 	speedRe := regexp.MustCompile(`at\s+(\d+\.?\d*\w+/s)`)
 	speedMatch := speedRe.FindStringSubmatch(line)
@@ -410,6 +421,39 @@ func parseDownloadProgress(line string) *models.Progress {
 	}
 
 	return progress
+}
+
+func parseSizeBytes(value, unit string) (int64, error) {
+	number, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	multiplier := float64(1)
+	switch strings.ToUpper(unit) {
+	case "B":
+		multiplier = 1
+	case "KIB":
+		multiplier = 1024
+	case "MIB":
+		multiplier = 1024 * 1024
+	case "GIB":
+		multiplier = 1024 * 1024 * 1024
+	case "TIB":
+		multiplier = 1024 * 1024 * 1024 * 1024
+	case "KB":
+		multiplier = 1000
+	case "MB":
+		multiplier = 1000 * 1000
+	case "GB":
+		multiplier = 1000 * 1000 * 1000
+	case "TB":
+		multiplier = 1000 * 1000 * 1000 * 1000
+	default:
+		return 0, fmt.Errorf("unsupported size unit: %s", unit)
+	}
+
+	return int64(math.Round(number * multiplier)), nil
 }
 
 // detectPlatform 从 URL 检测平台

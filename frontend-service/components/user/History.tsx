@@ -2,17 +2,21 @@
 
 import * as React from "react"
 import { historyApi, HistoryItem } from "@/lib/api/history"
+import { downloadApi } from "@/lib/api/download"
 import { formatDate, formatFileSize, formatDuration, getStatusText } from "@/lib/format"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Trash2, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
+import { Trash2, Loader2, CheckCircle, XCircle, Clock, Download } from "lucide-react"
 import { toast } from "sonner"
 import { RemoteThumbnail } from "@/components/common/RemoteThumbnail"
+import { useAuth } from "@/hooks/use-auth"
 
 export function History() {
+    const { refreshBillingAccount } = useAuth()
     const [history, setHistory] = React.useState<HistoryItem[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
     const [deletingId, setDeletingId] = React.useState<number | null>(null)
+    const [downloadingId, setDownloadingId] = React.useState<number | null>(null)
 
     const loadHistory = React.useCallback(async () => {
         try {
@@ -40,6 +44,21 @@ export function History() {
             toast.error("Delete failed")
         } finally {
             setDeletingId(null)
+        }
+    }
+
+    const handleDownload = async (item: HistoryItem) => {
+        setDownloadingId(item.history_id)
+        try {
+            await downloadApi.downloadFile(item.history_id)
+            await refreshBillingAccount()
+            toast.success("Download started")
+        } catch (error) {
+            await refreshBillingAccount()
+            const message = error instanceof Error ? error.message : "Download failed"
+            toast.error(message)
+        } finally {
+            setDownloadingId(null)
         }
     }
 
@@ -114,6 +133,21 @@ export function History() {
                                 )}
                             </div>
                             <div className="flex gap-2 mt-4 sm:mt-0 justify-end">
+                                {canRedownload(item) ? (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => void handleDownload(item)}
+                                        disabled={downloadingId === item.history_id}
+                                    >
+                                        {downloadingId === item.history_id ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Download className="w-4 h-4" />
+                                        )}
+                                        Download again
+                                    </Button>
+                                ) : null}
                                 <Button
                                     size="sm"
                                     variant="ghost"
@@ -134,4 +168,8 @@ export function History() {
             ))}
         </div>
     )
+}
+
+function canRedownload(item: HistoryItem) {
+    return item.file_size > 0 && (item.status === 2 || item.status === 4)
 }

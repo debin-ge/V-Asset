@@ -24,6 +24,8 @@ type AssetClientInterface interface {
 	CleanupCookieFile(cookieFile string) error
 	UpdateHistoryCompleted(taskID, filePath, fileName, fileHash string, fileSize int64, pendingCleanup bool) error
 	UpdateHistoryFailed(taskID, errorMessage string) error
+	CaptureIngressUsage(taskID string, actualIngressBytes int64) error
+	ReleaseInitialDownload(taskID, reason string) error
 }
 
 // Pool Worker 池
@@ -222,6 +224,8 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	needsMerge := ytdlp.NeedsMerge(task)
 	downloadRound := 0
 	lastRawPercent := 0.0
+	accumulatedIngressBytes := int64(0)
+	currentRoundPeakBytes := int64(0)
 	log.Printf("[Worker] [Task %s] NeedsMerge: %v", taskID, needsMerge)
 
 	progressCallback := func(event *ytdlp.OutputEvent) {
@@ -240,10 +244,15 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 
 			// 检测是否进入新一轮下载（进度大幅回退说明开始下载第二个流）
 			if raw < lastRawPercent-10 && lastRawPercent > 90 {
+				accumulatedIngressBytes += currentRoundPeakBytes
+				currentRoundPeakBytes = 0
 				downloadRound++
 				log.Printf("[Worker] [Task %s] Detected new download round: %d", taskID, downloadRound)
 			}
 			lastRawPercent = raw
+			if event.Progress.DownloadedBytes > currentRoundPeakBytes {
+				currentRoundPeakBytes = event.Progress.DownloadedBytes
+			}
 
 			// 确定当前阶段
 			var phase ytdlp.DownloadPhase
@@ -320,6 +329,7 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 		return p.handleError(ctx, task, downloadErr)
 	}
 	log.Printf("[Worker] [Task %s] ✓ Download completed", taskID)
+	actualIngressBytes := accumulatedIngressBytes + currentRoundPeakBytes
 
 	// 发布 processing 阶段
 	processingStart := 85.0
@@ -350,6 +360,16 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	fileName := filepath.Base(outputPath)
 	log.Printf("[Worker] [Task %s] ✓ File name: %s", taskID, fileName)
 
+	if actualIngressBytes <= 0 {
+		switch {
+		case task.SelectedFormat != nil && task.SelectedFormat.Filesize > 0:
+			actualIngressBytes = task.SelectedFormat.Filesize
+		case fileSize > 0:
+			actualIngressBytes = fileSize
+		}
+	}
+	log.Printf("[Worker] [Task %s] ✓ Actual ingress bytes: %d", taskID, actualIngressBytes)
+
 	log.Printf("[Worker] [Task %s] Step 9/10: Setting expiration time...", taskID)
 	// 8. 计算过期时间 (仅 quick_download 模式)
 	var expireAt *time.Time
@@ -370,6 +390,12 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	log.Printf("[Worker] [Task %s] ✓ Database updated", taskID)
 
 	if p.assetClient != nil {
+		if err := p.assetClient.CaptureIngressUsage(taskID, actualIngressBytes); err != nil {
+			log.Printf("[Worker] [Task %s] ❌ Failed to capture ingress usage: %v", taskID, err)
+			return p.handleError(ctx, task, err)
+		}
+		log.Printf("[Worker] [Task %s] ✓ Ingress usage captured", taskID)
+
 		if err := p.assetClient.UpdateHistoryCompleted(taskID, outputPath, fileName, fileHash, fileSize, expireAt != nil); err != nil {
 			log.Printf("[Worker] [Task %s] ❌ Failed to sync completed history to asset service: %v", taskID, err)
 			return p.handleError(ctx, task, err)
@@ -413,6 +439,12 @@ func (p *Pool) handleError(ctx context.Context, task *models.DownloadTask, err e
 	}
 
 	if p.assetClient != nil {
+		if releaseErr := p.assetClient.ReleaseInitialDownload(taskID, err.Error()); releaseErr != nil {
+			log.Printf("[Worker] [Task %s] ⚠ Failed to release initial billing hold: %v", taskID, releaseErr)
+		} else {
+			log.Printf("[Worker] [Task %s] ✓ Initial billing hold released", taskID)
+		}
+
 		if syncErr := p.assetClient.UpdateHistoryFailed(taskID, err.Error()); syncErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to sync failed status to asset service: %v", taskID, syncErr)
 		} else {

@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
 	"vasset/media-service/internal/redact"
 	pb "vasset/media-service/proto"
@@ -224,6 +226,46 @@ func (c *AssetClient) UpdateHistoryFailed(taskID, errorMessage string) error {
 	})
 	if err != nil {
 		log.Printf("[AssetClient] ERROR: Failed to sync failed history for task %s: %v", taskID, err)
+		return err
+	}
+
+	return nil
+}
+
+// CaptureIngressUsage 结算真实入流量。
+func (c *AssetClient) CaptureIngressUsage(taskID string, actualIngressBytes int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	_, err := c.client.CaptureIngressUsage(ctx, &pb.CaptureIngressUsageRequest{
+		TaskId:             taskID,
+		ActualIngressBytes: actualIngressBytes,
+	})
+	if err != nil {
+		if code := status.Code(err); code == codes.NotFound || code == codes.Unimplemented {
+			return nil
+		}
+		log.Printf("[AssetClient] ERROR: Failed to capture ingress usage for task %s: %v", taskID, err)
+		return err
+	}
+
+	return nil
+}
+
+// ReleaseInitialDownload 释放首次下载预占。
+func (c *AssetClient) ReleaseInitialDownload(taskID, reason string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	_, err := c.client.ReleaseInitialDownload(ctx, &pb.ReleaseInitialDownloadRequest{
+		TaskId: taskID,
+		Reason: reason,
+	})
+	if err != nil {
+		if code := status.Code(err); code == codes.NotFound || code == codes.Unimplemented {
+			return nil
+		}
+		log.Printf("[AssetClient] ERROR: Failed to release initial download billing for task %s: %v", taskID, err)
 		return err
 	}
 

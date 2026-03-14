@@ -6,7 +6,10 @@ option go_package = "vasset/admin-service/proto;pb";
 
 service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse);
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
   rpc GetPlatformUserStats(GetPlatformUserStatsRequest) returns (GetPlatformUserStatsResponse);
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse);
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse);
 }
 
 message LoginRequest {
@@ -29,6 +32,35 @@ message GetPlatformUserStatsResponse {
   int64 total_users = 1;
 }
 
+message GetUserInfoRequest {
+  string user_id = 1;
+}
+
+message GetUserInfoResponse {
+  User user = 1;
+}
+
+message SearchUsersRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message SearchUsersResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated User users = 4;
+}
+
+message BatchGetUsersRequest {
+  repeated string user_ids = 1;
+}
+
+message BatchGetUsersResponse {
+  repeated User users = 1;
+}
+
 message User {
   string user_id = 1;
   string email = 2;
@@ -37,4 +69,3 @@ message User {
   int32 role = 5;
   string created_at = 6;
 }
-

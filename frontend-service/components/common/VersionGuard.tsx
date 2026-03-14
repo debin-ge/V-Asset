@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { resolveAppVersion } from "@/lib/runtime-config";
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
-const currentVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown";
 
 type VersionResponse = {
   version?: string;
@@ -33,7 +33,21 @@ export function VersionGuard() {
       return;
     }
 
+    let currentVersion = resolveAppVersion();
     let isChecking = false;
+
+    const ensureCurrentVersion = async (signal?: AbortSignal) => {
+      if (currentVersion !== "unknown") {
+        return currentVersion;
+      }
+
+      const initialVersion = await fetchLatestVersion(signal);
+      if (initialVersion) {
+        currentVersion = initialVersion;
+      }
+
+      return currentVersion;
+    };
 
     const checkForUpdate = async () => {
       if (isChecking) {
@@ -44,6 +58,7 @@ export function VersionGuard() {
       const controller = new AbortController();
 
       try {
+        await ensureCurrentVersion(controller.signal);
         const latestVersion = await fetchLatestVersion(controller.signal);
 
         if (!latestVersion || latestVersion === currentVersion) {

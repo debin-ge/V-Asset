@@ -35,6 +35,8 @@ func writeGRPCError(c *gin.Context, err error) {
 		models.NotFound(c, grpcErrorMessage(err))
 	case codes.AlreadyExists:
 		models.Conflict(c, grpcErrorMessage(err))
+	case codes.ResourceExhausted:
+		models.Forbidden(c, grpcErrorMessage(err))
 	case codes.Unauthenticated:
 		models.Unauthorized(c, grpcErrorMessage(err))
 	case codes.PermissionDenied:

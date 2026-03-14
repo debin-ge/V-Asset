@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"vasset/api-gateway/internal/middleware"
 	"vasset/api-gateway/internal/models"
@@ -17,10 +19,11 @@ import (
 
 // DownloadHandler 下载处理器
 type DownloadHandler struct {
-	assetClient assetDownloadClient
-	mediaClient mediaDownloadClient
-	publisher   downloadPublisher
-	timeout     time.Duration
+	assetClient    assetDownloadClient
+	mediaClient    mediaDownloadClient
+	publisher      downloadPublisher
+	timeout        time.Duration
+	billingEnabled bool
 }
 
 type assetDownloadClient interface {
@@ -29,6 +32,9 @@ type assetDownloadClient interface {
 	ConsumeQuota(ctx context.Context, in *pb.ConsumeQuotaRequest, opts ...grpc.CallOption) (*pb.ConsumeQuotaResponse, error)
 	RefundQuota(ctx context.Context, in *pb.RefundQuotaRequest, opts ...grpc.CallOption) (*pb.RefundQuotaResponse, error)
 	DeleteHistory(ctx context.Context, in *pb.DeleteHistoryRequest, opts ...grpc.CallOption) (*pb.DeleteHistoryResponse, error)
+	EstimateDownloadBilling(ctx context.Context, in *pb.EstimateDownloadBillingRequest, opts ...grpc.CallOption) (*pb.EstimateDownloadBillingResponse, error)
+	HoldInitialDownload(ctx context.Context, in *pb.HoldInitialDownloadRequest, opts ...grpc.CallOption) (*pb.HoldInitialDownloadResponse, error)
+	ReleaseInitialDownload(ctx context.Context, in *pb.ReleaseInitialDownloadRequest, opts ...grpc.CallOption) (*pb.ReleaseInitialDownloadResponse, error)
 }
 
 type mediaDownloadClient interface {
@@ -46,12 +52,14 @@ func NewDownloadHandler(
 	mediaClient mediaDownloadClient,
 	publisher downloadPublisher,
 	timeout time.Duration,
+	billingEnabled bool,
 ) *DownloadHandler {
 	return &DownloadHandler{
-		assetClient: assetClient,
-		mediaClient: mediaClient,
-		publisher:   publisher,
-		timeout:     timeout,
+		assetClient:    assetClient,
+		mediaClient:    mediaClient,
+		publisher:      publisher,
+		timeout:        timeout,
+		billingEnabled: billingEnabled,
 	}
 }
 
@@ -79,28 +87,24 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
-	log.Printf("[Download] Step 1/7: Checking quota for user %s...", userID)
-	// 1. 检查配额
-	quotaResp, err := h.assetClient.CheckQuota(ctx, &pb.CheckQuotaRequest{
-		UserId: userID,
-	})
-	if err != nil {
-		log.Printf("[Download] ❌ Failed to check quota: %v", err)
-		models.InternalError(c, "failed to check quota: "+err.Error())
-		return
-	}
-	log.Printf("[Download] ✓ Quota check passed - Remaining: %d", quotaResp.Remaining)
-	if quotaResp.Remaining <= 0 {
-		log.Printf("[Download] ❌ Quota exceeded for user %s", userID)
-		models.Forbidden(c, "quota exceeded, please try again tomorrow")
-		return
+	if !h.billingEnabled {
+		log.Printf("[Download] Step 1/8: Checking quota for user %s...", userID)
+		quotaResp, err := h.assetClient.CheckQuota(ctx, &pb.CheckQuotaRequest{UserId: userID})
+		if err != nil {
+			log.Printf("[Download] ❌ Failed to check quota: %v", err)
+			models.InternalError(c, "failed to check quota: "+err.Error())
+			return
+		}
+		log.Printf("[Download] ✓ Quota check passed - Remaining: %d", quotaResp.Remaining)
+		if quotaResp.Remaining <= 0 {
+			log.Printf("[Download] ❌ Quota exceeded for user %s", userID)
+			models.Forbidden(c, "quota exceeded, please try again tomorrow")
+			return
+		}
 	}
 
-	log.Printf("[Download] Step 2/7: Validating URL: %s...", req.URL)
-	// 2. 验证 URL
-	validateResp, err := h.mediaClient.ValidateURL(ctx, &pb.ValidateURLRequest{
-		Url: req.URL,
-	})
+	log.Printf("[Download] Step 2/8: Validating URL: %s...", req.URL)
+	validateResp, err := h.mediaClient.ValidateURL(ctx, &pb.ValidateURLRequest{Url: req.URL})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to validate URL: %v", err)
 		models.InternalError(c, "failed to validate URL: "+err.Error())
@@ -113,13 +117,11 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	}
 	log.Printf("[Download] ✓ URL validated - Platform: %s", validateResp.Platform)
 
-	log.Printf("[Download] Step 3/7: Generating task ID...")
-	// 3. 生成任务 ID
+	log.Printf("[Download] Step 3/8: Generating task ID...")
 	taskID := uuid.New().String()
 	log.Printf("[Download] ✓ Task ID generated: %s", taskID)
 
-	log.Printf("[Download] Step 4/7: Parsing URL to get metadata with task %s...", taskID)
-	// 4. 解析获取标题，并绑定任务级代理
+	log.Printf("[Download] Step 4/8: Parsing URL to get metadata with task %s...", taskID)
 	parseResp, err := h.mediaClient.ParseURL(ctx, &pb.ParseURLRequest{
 		Url:    req.URL,
 		TaskId: taskID,
@@ -131,16 +133,18 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	}
 	log.Printf("[Download] ✓ URL parsed - Title: %s, Duration: %ds", parseResp.Title, parseResp.Duration)
 
-	log.Printf("[Download] Step 5/7: Creating download history for task %s...", taskID)
-	// 5. 创建下载历史
+	log.Printf("[Download] Step 5/8: Creating download history for task %s...", taskID)
 	historyResp, err := h.assetClient.CreateHistory(ctx, &pb.CreateHistoryRequest{
-		UserId:   userID,
-		TaskId:   taskID,
-		Url:      req.URL,
-		Platform: validateResp.Platform,
-		Title:    parseResp.Title,
-		Mode:     req.Mode,
-		Quality:  req.Quality,
+		UserId:    userID,
+		TaskId:    taskID,
+		Url:       req.URL,
+		Platform:  validateResp.Platform,
+		Title:     parseResp.Title,
+		Mode:      req.Mode,
+		Quality:   req.Quality,
+		Thumbnail: parseResp.Thumbnail,
+		Duration:  parseResp.Duration,
+		Author:    parseResp.Author,
 	})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to create history: %v", err)
@@ -149,21 +153,57 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	}
 	log.Printf("[Download] ✓ History created - HistoryID: %d", historyResp.HistoryId)
 
-	log.Printf("[Download] Step 6/7: Consuming quota for user %s...", userID)
-	// 6. 消费配额
-	_, err = h.assetClient.ConsumeQuota(ctx, &pb.ConsumeQuotaRequest{
-		UserId: userID,
-	})
-	if err != nil {
-		log.Printf("[Download] ❌ Failed to consume quota: %v", err)
-		h.cleanupFailedSubmission(userID, historyResp.HistoryId, false)
-		models.InternalError(c, "failed to consume quota: "+err.Error())
-		return
-	}
-	log.Printf("[Download] ✓ Quota consumed")
+	if h.billingEnabled {
+		log.Printf("[Download] Step 6/8: Estimating billing for task %s...", taskID)
+		estimateResp, err := h.assetClient.EstimateDownloadBilling(ctx, &pb.EstimateDownloadBillingRequest{
+			UserId:         userID,
+			Url:            req.URL,
+			Platform:       validateResp.Platform,
+			Mode:           req.Mode,
+			SelectedFormat: toBillingSelectedFormat(req.SelectedFormat),
+		})
+		if err != nil {
+			log.Printf("[Download] ❌ Failed to estimate billing: %v", err)
+			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
+			models.InternalError(c, "failed to estimate billing: "+grpcErrorMessage(err))
+			return
+		}
 
-	log.Printf("[Download] Step 7/7: Publishing task %s to RabbitMQ...", taskID)
-	// 7. 发布下载任务到 RabbitMQ
+		log.Printf("[Download] Step 7/8: Holding initial billing for task %s...", taskID)
+		_, err = h.assetClient.HoldInitialDownload(ctx, &pb.HoldInitialDownloadRequest{
+			UserId:                userID,
+			HistoryId:             historyResp.HistoryId,
+			TaskId:                taskID,
+			EstimatedIngressBytes: estimateResp.GetEstimatedIngressBytes(),
+			EstimatedEgressBytes:  estimateResp.GetEstimatedEgressBytes(),
+			EstimatedTrafficBytes: estimateResp.GetEstimatedTrafficBytes(),
+			EstimatedCostFen:      estimateResp.GetEstimatedCostFen(),
+			PricingVersion:        estimateResp.GetPricingVersion(),
+		})
+		if err != nil {
+			log.Printf("[Download] ❌ Failed to hold initial billing: %v", err)
+			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
+			if status.Code(err) == codes.ResourceExhausted {
+				models.Forbidden(c, grpcErrorMessage(err))
+				return
+			}
+			models.InternalError(c, "failed to hold billing: "+grpcErrorMessage(err))
+			return
+		}
+		log.Printf("[Download] ✓ Billing hold created")
+	} else {
+		log.Printf("[Download] Step 6/8: Consuming quota for user %s...", userID)
+		_, err = h.assetClient.ConsumeQuota(ctx, &pb.ConsumeQuotaRequest{UserId: userID})
+		if err != nil {
+			log.Printf("[Download] ❌ Failed to consume quota: %v", err)
+			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
+			models.InternalError(c, "failed to consume quota: "+err.Error())
+			return
+		}
+		log.Printf("[Download] ✓ Quota consumed")
+	}
+
+	log.Printf("[Download] Step 8/8: Publishing task %s to RabbitMQ...", taskID)
 	task := &mq.DownloadTask{
 		TaskID:         taskID,
 		UserID:         userID,
@@ -176,21 +216,20 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		SelectedFormat: toSelectedFormatMessage(req.SelectedFormat),
 		Platform:       validateResp.Platform,
 		Title:          parseResp.Title,
-		CookieID:       parseResp.CookieId, // 传递 parser 使用的 cookie ID
-		ProxyURL:       parseResp.ProxyUrl, // 传递 parser 使用的 proxy URL
+		CookieID:       parseResp.CookieId,
+		ProxyURL:       parseResp.ProxyUrl,
 		ProxyLeaseID:   parseResp.ProxyLeaseId,
 		ProxyExpireAt:  parseResp.ProxyExpireAt,
 	}
 
 	if err := h.publisher.Publish(ctx, task); err != nil {
 		log.Printf("[Download] ❌ Failed to publish task to RabbitMQ: %v", err)
-		h.cleanupFailedSubmission(userID, historyResp.HistoryId, true)
+		h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, !h.billingEnabled, h.billingEnabled)
 		models.InternalError(c, "failed to submit task: "+err.Error())
 		return
 	}
 	log.Printf("[Download] ✓ Task %s published to RabbitMQ", taskID)
 
-	// 8. 返回响应
 	estimatedTime := estimateDownloadTime(parseResp.Duration, req.Quality)
 	log.Printf("[Download] ✅ Download request completed successfully - TaskID: %s, EstimatedTime: %ds", taskID, estimatedTime)
 	models.Accepted(c, models.DownloadResponse{
@@ -246,7 +285,28 @@ func toSelectedFormatMessage(selected *models.SelectedFormat) *mq.SelectedFormat
 	}
 }
 
-func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64, refundQuota bool) {
+func toBillingSelectedFormat(selected *models.SelectedFormat) *pb.BillingSelectedFormat {
+	if selected == nil {
+		return nil
+	}
+
+	return &pb.BillingSelectedFormat{
+		FormatId:   selected.FormatID,
+		Quality:    selected.Quality,
+		Extension:  selected.Extension,
+		Filesize:   selected.Filesize,
+		Height:     selected.Height,
+		Width:      selected.Width,
+		Fps:        selected.FPS,
+		VideoCodec: selected.VideoCodec,
+		AudioCodec: selected.AudioCodec,
+		Vbr:        selected.VBR,
+		Abr:        selected.ABR,
+		Asr:        selected.ASR,
+	}
+}
+
+func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64, taskID string, refundQuota bool, releaseBilling bool) {
 	compensateCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
 	defer cancel()
 
@@ -257,6 +317,17 @@ func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64
 			log.Printf("[Download] ⚠ Failed to refund quota for user %s during compensation: %v", userID, err)
 		} else {
 			log.Printf("[Download] ✓ Refunded quota for user %s during compensation", userID)
+		}
+	}
+
+	if releaseBilling && taskID != "" {
+		if _, err := h.assetClient.ReleaseInitialDownload(compensateCtx, &pb.ReleaseInitialDownloadRequest{
+			TaskId: taskID,
+			Reason: "submit compensation",
+		}); err != nil && status.Code(err) != codes.NotFound {
+			log.Printf("[Download] ⚠ Failed to release billing hold for task %s during compensation: %v", taskID, err)
+		} else {
+			log.Printf("[Download] ✓ Released billing hold for task %s during compensation", taskID)
 		}
 	}
 
@@ -276,7 +347,6 @@ func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64
 
 // estimateDownloadTime 估算下载时间
 func estimateDownloadTime(duration int64, quality string) int {
-	// 简单估算：视频时长 / 10 + 基础时间，根据质量调整
 	base := int(duration / 10)
 	if base < 30 {
 		base = 30

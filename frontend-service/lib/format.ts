@@ -46,6 +46,18 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
+ * Format amount in fen to CNY.
+ */
+export function formatCurrencyFen(amountFen: number): string {
+    const amount = amountFen / 100;
+    return new Intl.NumberFormat('zh-CN', {
+        style: 'currency',
+        currency: 'CNY',
+        minimumFractionDigits: 2,
+    }).format(amount);
+}
+
+/**
  * Format view count
  */
 export function formatViewCount(count: number): string {

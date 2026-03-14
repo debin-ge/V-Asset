@@ -19,6 +19,7 @@ type Config struct {
 	CORS         CORSConfig         `yaml:"cors"`
 	RateLimit    RateLimitConfig    `yaml:"rate_limit"`
 	FileDownload FileDownloadConfig `yaml:"file_download"`
+	Billing      BillingConfig      `yaml:"billing"`
 	Logging      LoggingConfig      `yaml:"logging"`
 }
 
@@ -83,6 +84,10 @@ type RateLimitConfig struct {
 type FileDownloadConfig struct {
 	MaxConcurrent int `yaml:"max_concurrent"`
 	BufferSize    int `yaml:"buffer_size"`
+}
+
+type BillingConfig struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 // LoggingConfig 日志配置

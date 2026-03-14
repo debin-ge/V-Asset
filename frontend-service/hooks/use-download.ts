@@ -8,10 +8,12 @@ import type { VideoFormat, VideoInfo } from "@/lib/api/parse"
 import { downloadApi, mapDownloadType } from "@/lib/api/download"
 import type { DownloadRequest } from "@/lib/api/download"
 import { wsClient, ProgressData } from "@/lib/ws-client"
+import { useAuth } from "@/hooks/use-auth"
 
 export type DownloadStatus = "idle" | "parsing" | "parsed" | "downloading" | "completed" | "error"
 
 export function useDownload() {
+    const { refreshBillingAccount } = useAuth()
     const [url, setUrl] = React.useState("")
     const [status, setStatus] = React.useState<DownloadStatus>("idle")
     const [videoInfo, setVideoInfo] = React.useState<VideoInfo | null>(null)
@@ -44,12 +46,14 @@ export function useDownload() {
         try {
             setAutoDownloadAttempted(true)
             await downloadApi.downloadFile(hId)
+            await refreshBillingAccount()
             toast.success("File download started")
         } catch (error) {
+            await refreshBillingAccount()
             console.error("[Download] Automatic download did not start", error)
             toast.info("Automatic download failed, please click the button below to download manually")
         }
-    }, [])
+    }, [refreshBillingAccount])
 
     // Handle progress update
     const handleProgress = React.useCallback((data: ProgressData) => {
@@ -72,7 +76,6 @@ export function useDownload() {
             }
             // Auto trigger file download to browser
             const hId = historyIdRef.current
-            console.log('[Download] Triggering file download, historyId:', hId)
             if (hId) {
                 setTimeout(() => {
                     triggerFileDownload(hId).finally(() => {
@@ -80,7 +83,6 @@ export function useDownload() {
                     })
                 }, 1000)
             } else {
-                console.error('[Download] historyId is null, cannot trigger download')
                 toast.error("Unable to get download file information, please re-submit the download task")
                 setStatus("completed")
             }
@@ -151,6 +153,7 @@ export function useDownload() {
 
             setCurrentTaskId(response.task_id)
             setHistoryId(response.history_id)
+            await refreshBillingAccount()
 
             // Subscribe to progress
             wsClient.subscribe(response.task_id, handleProgress)
@@ -158,6 +161,7 @@ export function useDownload() {
             toast.info(`Download task submitted`)
         } catch (error) {
             setStatus("error")
+            await refreshBillingAccount()
             const message = error instanceof Error ? error.message : "Failed to submit download task"
             toast.error(message)
         }
@@ -172,8 +176,10 @@ export function useDownload() {
 
         try {
             await downloadApi.downloadFile(historyId)
+            await refreshBillingAccount()
             toast.success("File download started")
         } catch (error) {
+            await refreshBillingAccount()
             const message = error instanceof Error ? error.message : "File download failed"
             toast.error(message)
         }

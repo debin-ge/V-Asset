@@ -20,23 +20,24 @@ import (
 
 // FileHandler 文件下载处理器
 type FileHandler struct {
-	assetClient pb.AssetServiceClient
-	timeout     time.Duration
-	bufferSize  int
+	assetClient    pb.AssetServiceClient
+	timeout        time.Duration
+	bufferSize     int
+	billingEnabled bool
 }
 
 // NewFileHandler 创建文件下载处理器
-func NewFileHandler(assetClient pb.AssetServiceClient, timeout time.Duration, bufferSize int) *FileHandler {
+func NewFileHandler(assetClient pb.AssetServiceClient, timeout time.Duration, bufferSize int, billingEnabled bool) *FileHandler {
 	return &FileHandler{
-		assetClient: assetClient,
-		timeout:     timeout,
-		bufferSize:  bufferSize,
+		assetClient:    assetClient,
+		timeout:        timeout,
+		bufferSize:     bufferSize,
+		billingEnabled: billingEnabled,
 	}
 }
 
 // DownloadFile 下载文件
 func (h *FileHandler) DownloadFile(c *gin.Context) {
-	// 获取历史 ID
 	historyIDStr := c.Query("history_id")
 	if historyIDStr == "" {
 		models.BadRequest(c, "history_id is required")
@@ -58,7 +59,6 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
-	// 1. 获取文件信息
 	resp, err := h.assetClient.GetFileInfo(ctx, &pb.GetFileInfoRequest{
 		HistoryId: historyID,
 		UserId:    userID,
@@ -68,13 +68,11 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 		return
 	}
 
-	// 2. 验证文件存在
 	if resp.FilePath == "" {
 		models.NotFound(c, "file not found")
 		return
 	}
 
-	// 3. 打开文件
 	file, err := os.Open(resp.FilePath)
 	if err != nil {
 		models.NotFound(c, "file not found on disk")
@@ -82,14 +80,26 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 	}
 	defer file.Close()
 
-	// 4. 获取文件信息
 	fileInfo, err := file.Stat()
 	if err != nil {
 		models.InternalError(c, "failed to get file info")
 		return
 	}
 
-	// 5. 设置响应头
+	transferID := ""
+	if h.billingEnabled {
+		billingResp, err := h.assetClient.PrepareFileTransferBilling(ctx, &pb.PrepareFileTransferBillingRequest{
+			UserId:        userID,
+			HistoryId:     historyID,
+			FileSizeBytes: fileInfo.Size(),
+		})
+		if err != nil {
+			writeGRPCError(c, err)
+			return
+		}
+		transferID = billingResp.GetTransferId()
+	}
+
 	dispositionFilename := buildContentDispositionFilename(resp.FileName)
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
@@ -99,32 +109,62 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Header("Pragma", "no-cache")
 	c.Header("Expires", "0")
-
-	// 6. 支持断点续传
 	c.Header("Accept-Ranges", "bytes")
 
-	// 7. 解除当前请求的全局 WriteTimeout 限制 (Go 1.20+)
-	// 这样只要数据在源源不断传输（且不发生 10 分钟以上的网络停滞停摆 nginx），下载可以耗时无限长
 	rc := http.NewResponseController(c.Writer)
 	_ = rc.SetWriteDeadline(time.Time{})
 
-	// 8. 流式传输文件
 	c.Status(http.StatusOK)
 
-	// 使用缓冲区流式传输
 	buffer := make([]byte, h.bufferSize)
+	var bytesSent int64
 	for {
 		n, err := file.Read(buffer)
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
+			h.abortTransferBilling(transferID, "read file failed")
 			return
 		}
-		if _, err := c.Writer.Write(buffer[:n]); err != nil {
+		written, writeErr := c.Writer.Write(buffer[:n])
+		bytesSent += int64(written)
+		if writeErr != nil {
+			h.abortTransferBilling(transferID, "client disconnected")
 			return
 		}
 		c.Writer.Flush()
+	}
+
+	if h.billingEnabled && transferID != "" {
+		if bytesSent == fileInfo.Size() {
+			completeCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
+			defer cancel()
+			if _, err := h.assetClient.CompleteFileTransferBilling(completeCtx, &pb.CompleteFileTransferBillingRequest{
+				TransferId:        transferID,
+				ActualEgressBytes: bytesSent,
+			}); err != nil {
+				// 下载已经发给用户，账务补记失败只能记录日志
+				fmt.Printf("[File] failed to complete transfer billing %s: %v\n", transferID, err)
+			}
+		} else {
+			h.abortTransferBilling(transferID, "incomplete transfer")
+		}
+	}
+}
+
+func (h *FileHandler) abortTransferBilling(transferID, reason string) {
+	if !h.billingEnabled || transferID == "" {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.timeout)
+	defer cancel()
+	if _, err := h.assetClient.AbortFileTransferBilling(ctx, &pb.AbortFileTransferBillingRequest{
+		TransferId: transferID,
+		Reason:     reason,
+	}); err != nil {
+		fmt.Printf("[File] failed to abort transfer billing %s: %v\n", transferID, err)
 	}
 }
 
@@ -133,7 +173,6 @@ func buildContentDispositionFilename(filename string) string {
 		filename = "download"
 	}
 
-	// 附加时间戳（格式：YYYYMMDD_HHMMSS）
 	timestamp := time.Now().Format("20060102_150405")
 	lastDot := strings.LastIndex(filename, ".")
 	if lastDot == -1 || lastDot == 0 {

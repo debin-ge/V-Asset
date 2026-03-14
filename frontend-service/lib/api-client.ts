@@ -1,19 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-function resolveApiBaseUrl(): string {
-    const explicitBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (explicitBaseUrl) {
-        return explicitBaseUrl;
-    }
-
-    if (typeof window !== 'undefined') {
-        return window.location.origin;
-    }
-
-    return 'http://localhost:8080';
-}
-
-const API_BASE_URL = resolveApiBaseUrl();
+import { resolveApiBaseUrl } from './runtime-config';
 
 // Token存储键名
 const TOKEN_KEY = 'v-asset-token';
@@ -21,7 +8,7 @@ const REFRESH_TOKEN_KEY = 'v-asset-refresh-token';
 
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: '',
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
@@ -31,6 +18,8 @@ const apiClient: AxiosInstance = axios.create({
 // 请求拦截器 - 添加Token
 apiClient.interceptors.request.use(
     (config) => {
+        config.baseURL = resolveApiBaseUrl();
+
         const token = localStorage.getItem(TOKEN_KEY);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -64,6 +53,12 @@ apiClient.interceptors.response.use(
             // 触发事件通知组件
             window.dispatchEvent(new CustomEvent('auth:logout'));
         }
+
+        const responseData = error.response?.data as { message?: string } | undefined;
+        if (responseData?.message) {
+            return Promise.reject(new Error(responseData.message));
+        }
+
         return Promise.reject(error);
     }
 );

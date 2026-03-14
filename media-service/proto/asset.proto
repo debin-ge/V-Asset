@@ -2,11 +2,9 @@ syntax = "proto3";
 
 package asset;
 
-option go_package = "vasset/asset-service/proto;pb";
+option go_package = "vasset/media-service/proto;pb";
 
 service AssetService {
-  // 按任务获取或复用代理绑定
-  rpc AcquireProxyForTask(AcquireProxyForTaskRequest) returns (AcquireProxyForTaskResponse);
   // 获取下载历史
   rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
   
@@ -27,6 +25,12 @@ service AssetService {
   
   // 获取用户统计
   rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
+
+  // 获取平台统计
+  rpc GetPlatformStats(GetPlatformStatsRequest) returns (GetPlatformStatsResponse);
+
+  // 获取平台请求趋势
+  rpc GetRequestTrend(GetRequestTrendRequest) returns (GetRequestTrendResponse);
   
   // 获取文件信息(用于下载)
   rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
@@ -37,11 +41,65 @@ service AssetService {
   // 更新下载历史状态
   rpc UpdateHistoryStatus(UpdateHistoryStatusRequest) returns (UpdateHistoryStatusResponse);
 
+  // ========== Billing ==========
+  // 获取用户账务账户
+  rpc GetBillingAccount(GetBillingAccountRequest) returns (GetBillingAccountResponse);
+  // 获取用户账单列表（聚合视图）
+  rpc ListBillingStatements(ListBillingStatementsRequest) returns (ListBillingStatementsResponse);
+  // 预估下载成本
+  rpc EstimateDownloadBilling(EstimateDownloadBillingRequest) returns (EstimateDownloadBillingResponse);
+  // 首次下载预占
+  rpc HoldInitialDownload(HoldInitialDownloadRequest) returns (HoldInitialDownloadResponse);
+  // 结算入流量
+  rpc CaptureIngressUsage(CaptureIngressUsageRequest) returns (CaptureIngressUsageResponse);
+  // 释放首次下载预占
+  rpc ReleaseInitialDownload(ReleaseInitialDownloadRequest) returns (ReleaseInitialDownloadResponse);
+  // 准备文件传输计费
+  rpc PrepareFileTransferBilling(PrepareFileTransferBillingRequest) returns (PrepareFileTransferBillingResponse);
+  // 完成文件传输计费
+  rpc CompleteFileTransferBilling(CompleteFileTransferBillingRequest) returns (CompleteFileTransferBillingResponse);
+  // 中止文件传输计费
+  rpc AbortFileTransferBilling(AbortFileTransferBillingRequest) returns (AbortFileTransferBillingResponse);
+  // 后台：列出账务账户
+  rpc ListBillingAccounts(ListBillingAccountsRequest) returns (ListBillingAccountsResponse);
+  // 后台：获取账户详情
+  rpc GetBillingAccountDetail(GetBillingAccountDetailRequest) returns (GetBillingAccountDetailResponse);
+  // 后台：人工调整余额
+  rpc AdjustBillingBalance(AdjustBillingBalanceRequest) returns (AdjustBillingBalanceResponse);
+  // 后台：查询原始账务流水
+  rpc ListBillingLedger(ListBillingLedgerRequest) returns (ListBillingLedgerResponse);
+  // 后台：查询方向级流量记录
+  rpc ListTrafficUsageRecords(ListTrafficUsageRecordsRequest) returns (ListTrafficUsageRecordsResponse);
+  // 获取当前生效费率
+  rpc GetBillingPricing(GetBillingPricingRequest) returns (GetBillingPricingResponse);
+  // 更新费率
+  rpc UpdateBillingPricing(UpdateBillingPricingRequest) returns (UpdateBillingPricingResponse);
+  // 后台：查询待补扣短款订单
+  rpc ListBillingShortfalls(ListBillingShortfallsRequest) returns (ListBillingShortfallsResponse);
+  // 后台：手动补扣短款订单
+  rpc ReconcileBillingShortfall(ReconcileBillingShortfallRequest) returns (ReconcileBillingShortfallResponse);
+
   // ========== 代理管理 ==========
+  // 按任务获取或复用代理绑定
+  rpc AcquireProxyForTask(AcquireProxyForTaskRequest) returns (AcquireProxyForTaskResponse);
   // 获取可用代理（供其他服务调用）
   rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
   // 报告代理使用结果
   rpc ReportProxyUsage(ReportProxyUsageRequest) returns (ReportProxyUsageResponse);
+  // 获取当前代理来源策略
+  rpc GetProxySourcePolicy(GetProxySourcePolicyRequest) returns (GetProxySourcePolicyResponse);
+  // 更新当前代理来源策略
+  rpc UpdateProxySourcePolicy(UpdateProxySourcePolicyRequest) returns (UpdateProxySourcePolicyResponse);
+  // 获取手动代理池
+  rpc ListProxies(ListProxiesRequest) returns (ListProxiesResponse);
+  // 创建手动代理
+  rpc CreateProxy(CreateProxyRequest) returns (CreateProxyResponse);
+  // 更新手动代理
+  rpc UpdateProxy(UpdateProxyRequest) returns (UpdateProxyResponse);
+  // 更新手动代理状态
+  rpc UpdateProxyStatus(UpdateProxyStatusRequest) returns (UpdateProxyStatusResponse);
+  // 删除手动代理
+  rpc DeleteProxy(DeleteProxyRequest) returns (DeleteProxyResponse);
 
   // ========== Cookie 管理 ==========
   // 创建 Cookie
@@ -176,6 +234,32 @@ message DailyActivity {
   int64 count = 2;
 }
 
+message GetPlatformStatsRequest {}
+
+message GetPlatformStatsResponse {
+  int64 total_downloads = 1;
+  int64 success_downloads = 2;
+  int64 failed_downloads = 3;
+  int64 downloads_today = 4;
+  int64 daily_active_users = 5;
+  int64 weekly_active_users = 6;
+}
+
+message GetRequestTrendRequest {
+  string granularity = 1; // day/hour
+  int32 limit = 2;
+}
+
+message TrendPoint {
+  string label = 1;
+  int64 count = 2;
+}
+
+message GetRequestTrendResponse {
+  string granularity = 1;
+  repeated TrendPoint points = 2;
+}
+
 // 获取文件信息请求
 message GetFileInfoRequest {
   int64 history_id = 1;
@@ -221,23 +305,372 @@ message UpdateHistoryStatusResponse {
   bool success = 1;
 }
 
+// ========== Billing 消息 ==========
+
+message BillingAccountSnapshot {
+  string user_id = 1;
+  string currency_code = 2;
+  int64 available_balance_fen = 3;
+  int64 reserved_balance_fen = 4;
+  int64 total_recharged_fen = 5;
+  int64 total_spent_fen = 6;
+  int64 total_traffic_bytes = 7;
+  int32 status = 8;
+  int32 version = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message GetBillingAccountRequest {
+  string user_id = 1;
+  bool auto_create = 2;
+}
+
+message GetBillingAccountResponse {
+  BillingAccountSnapshot account = 1;
+}
+
+message BillingStatementItem {
+  string statement_id = 1;
+  int32 type = 2;
+  int64 history_id = 3;
+  int64 traffic_bytes = 4;
+  int64 amount_fen = 5;
+  int32 status = 6;
+  string remark = 7;
+  string created_at = 8;
+}
+
+message ListBillingStatementsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 type = 4;
+  int32 status = 5;
+}
+
+message ListBillingStatementsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated BillingStatementItem items = 4;
+}
+
+message BillingSelectedFormat {
+  string format_id = 1;
+  string quality = 2;
+  string extension = 3;
+  int64 filesize = 4;
+  int32 height = 5;
+  int32 width = 6;
+  double fps = 7;
+  string video_codec = 8;
+  string audio_codec = 9;
+  double vbr = 10;
+  double abr = 11;
+  int32 asr = 12;
+}
+
+message EstimateDownloadBillingRequest {
+  string user_id = 1;
+  string url = 2;
+  string platform = 3;
+  string mode = 4;
+  BillingSelectedFormat selected_format = 5;
+}
+
+message EstimateDownloadBillingResponse {
+  int64 estimated_ingress_bytes = 1;
+  int64 estimated_egress_bytes = 2;
+  int64 estimated_traffic_bytes = 3;
+  int64 estimated_cost_fen = 4;
+  int32 pricing_version = 5;
+  bool is_estimated = 6;
+  string estimate_reason = 7;
+}
+
+message HoldInitialDownloadRequest {
+  string user_id = 1;
+  int64 history_id = 2;
+  string task_id = 3;
+  int64 estimated_ingress_bytes = 4;
+  int64 estimated_egress_bytes = 5;
+  int64 estimated_traffic_bytes = 6;
+  int64 estimated_cost_fen = 7;
+  int32 pricing_version = 8;
+}
+
+message HoldInitialDownloadResponse {
+  string order_no = 1;
+  string hold_no = 2;
+  int64 held_amount_fen = 3;
+  int64 available_balance_fen = 4;
+  int64 reserved_balance_fen = 5;
+}
+
+message CaptureIngressUsageRequest {
+  string task_id = 1;
+  int64 actual_ingress_bytes = 2;
+}
+
+message CaptureIngressUsageResponse {
+  string order_no = 1;
+  int64 captured_amount_fen = 2;
+  int64 remaining_reserved_fen = 3;
+  int64 actual_ingress_bytes = 4;
+  int64 actual_traffic_bytes = 5;
+  int32 order_status = 6;
+}
+
+message ReleaseInitialDownloadRequest {
+  string task_id = 1;
+  string reason = 2;
+}
+
+message ReleaseInitialDownloadResponse {
+  bool success = 1;
+  string order_no = 2;
+  int64 released_amount_fen = 3;
+}
+
+message PrepareFileTransferBillingRequest {
+  string user_id = 1;
+  int64 history_id = 2;
+  int64 file_size_bytes = 3;
+}
+
+message PrepareFileTransferBillingResponse {
+  string transfer_id = 1;
+  string order_no = 2;
+  string hold_no = 3;
+  int32 scene = 4;
+  int64 hold_amount_fen = 5;
+  int32 pricing_version = 6;
+  int64 available_balance_fen = 7;
+  int64 reserved_balance_fen = 8;
+}
+
+message CompleteFileTransferBillingRequest {
+  string transfer_id = 1;
+  int64 actual_egress_bytes = 2;
+}
+
+message CompleteFileTransferBillingResponse {
+  string order_no = 1;
+  int64 captured_amount_fen = 2;
+  int64 actual_traffic_bytes = 3;
+  int64 total_captured_amount_fen = 4;
+  int32 order_status = 5;
+}
+
+message AbortFileTransferBillingRequest {
+  string transfer_id = 1;
+  string reason = 2;
+}
+
+message AbortFileTransferBillingResponse {
+  bool success = 1;
+  string order_no = 2;
+  int64 released_amount_fen = 3;
+}
+
+message ListBillingAccountsRequest {
+  repeated string user_ids = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 status = 4;
+}
+
+message ListBillingAccountsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated BillingAccountSnapshot items = 4;
+}
+
+message GetBillingAccountDetailRequest {
+  string user_id = 1;
+}
+
+message GetBillingAccountDetailResponse {
+  BillingAccountSnapshot account = 1;
+}
+
+message AdjustBillingBalanceRequest {
+  string user_id = 1;
+  string operation_id = 2;
+  int64 amount_fen = 3;
+  string remark = 4;
+  string operator_user_id = 5;
+}
+
+message AdjustBillingBalanceResponse {
+  bool success = 1;
+  BillingAccountSnapshot account = 2;
+  string entry_no = 3;
+}
+
+message LedgerEntryItem {
+  string entry_no = 1;
+  string user_id = 2;
+  string order_no = 3;
+  string hold_no = 4;
+  int64 history_id = 5;
+  string task_id = 6;
+  string transfer_id = 7;
+  string operation_id = 8;
+  int32 entry_type = 9;
+  int32 scene = 10;
+  int64 action_amount_fen = 11;
+  int64 available_delta_fen = 12;
+  int64 reserved_delta_fen = 13;
+  int64 balance_after_available_fen = 14;
+  int64 balance_after_reserved_fen = 15;
+  string operator_user_id = 16;
+  string remark = 17;
+  string created_at = 18;
+}
+
+message ListBillingLedgerRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 entry_type = 4;
+}
+
+message ListBillingLedgerResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated LedgerEntryItem items = 4;
+}
+
+message TrafficUsageRecordItem {
+  string usage_no = 1;
+  string order_no = 2;
+  string user_id = 3;
+  int64 history_id = 4;
+  string task_id = 5;
+  string transfer_id = 6;
+  int32 direction = 7;
+  int64 traffic_bytes = 8;
+  string unit_price_fen_per_gib = 9;
+  int64 amount_fen = 10;
+  int32 pricing_version = 11;
+  string source_service = 12;
+  int32 status = 13;
+  string created_at = 14;
+  string confirmed_at = 15;
+}
+
+message ListTrafficUsageRecordsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 direction = 4;
+}
+
+message ListTrafficUsageRecordsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated TrafficUsageRecordItem items = 4;
+}
+
+message BillingPricing {
+  int32 version = 1;
+  string ingress_price_fen_per_gib = 2;
+  string egress_price_fen_per_gib = 3;
+  int64 default_estimate_bytes = 4;
+  bool enabled = 5;
+  string remark = 6;
+  string updated_by_user_id = 7;
+  string effective_at = 8;
+  string created_at = 9;
+}
+
+message GetBillingPricingRequest {}
+
+message GetBillingPricingResponse {
+  BillingPricing pricing = 1;
+}
+
+message UpdateBillingPricingRequest {
+  string ingress_price_fen_per_gib = 1;
+  string egress_price_fen_per_gib = 2;
+  int64 default_estimate_bytes = 3;
+  string remark = 4;
+  string operator_user_id = 5;
+}
+
+message UpdateBillingPricingResponse {
+  bool success = 1;
+  BillingPricing pricing = 2;
+}
+
+message BillingShortfallOrderItem {
+  string order_no = 1;
+  string user_id = 2;
+  int64 history_id = 3;
+  string task_id = 4;
+  int32 scene = 5;
+  int32 status = 6;
+  int32 pricing_version = 7;
+  int64 actual_ingress_bytes = 8;
+  int64 actual_egress_bytes = 9;
+  int64 actual_traffic_bytes = 10;
+  int64 held_amount_fen = 11;
+  int64 captured_amount_fen = 12;
+  int64 released_amount_fen = 13;
+  int64 shortfall_fen = 14;
+  string remark = 15;
+  string created_at = 16;
+  string updated_at = 17;
+}
+
+message ListBillingShortfallsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListBillingShortfallsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated BillingShortfallOrderItem items = 4;
+}
+
+message ReconcileBillingShortfallRequest {
+  string order_no = 1;
+  string operator_user_id = 2;
+  string remark = 3;
+}
+
+message ReconcileBillingShortfallResponse {
+  bool success = 1;
+  BillingShortfallOrderItem order = 2;
+  BillingAccountSnapshot account = 3;
+  string entry_no = 4;
+}
+
 // ========== 代理管理消息 ==========
 
 message AcquireProxyForTaskRequest {
   string task_id = 1;
-  string protocol = 2;
-  string region = 3;
-  string platform = 4;
+  string protocol = 2;      // 可选：协议过滤
+  string region = 3;        // 可选：地区过滤
+  string platform = 4;      // 可选：平台
 }
 
 message AcquireProxyForTaskResponse {
-  string proxy_url = 1;
-  string proxy_lease_id = 2;
-  string expire_at = 3;
-  string source_type = 4;
-  bool is_degraded = 5;
-  string degrade_reason = 6;
-  int64 proxy_id = 7;
+  string proxy_url = 1;          // 代理完整 URL
+  string proxy_lease_id = 2;     // 动态代理租约 ID 或静态代理伪租约 ID
+  string expire_at = 3;          // 代理过期时间（RFC3339，可选）
+  string source_type = 4;        // dynamic_api/manual_pool
+  bool is_degraded = 5;          // 是否发生降级
+  string degrade_reason = 6;     // 降级原因
+  int64 proxy_id = 7;            // 手动池代理 ID（可选）
 }
 
 // 获取可用代理
@@ -257,13 +690,125 @@ message ReportProxyUsageRequest {
   string proxy_lease_id = 1;
   bool success = 2;
   string task_id = 3;
-  string stage = 4;
-  int64 proxy_id = 5;
-  string source_type = 6;
-  string error_message = 7;
+  string stage = 4;         // parse/download
+  int64 proxy_id = 5;       // 可选
+  string source_type = 6;   // 可选
+  string error_message = 7; // 可选
 }
 
 message ReportProxyUsageResponse {
+  bool success = 1;
+}
+
+message GetProxySourcePolicyRequest {}
+
+message GetProxySourcePolicyResponse {
+  int64 id = 1;
+  string scope_type = 2;
+  string scope_value = 3;
+  string primary_source = 4;
+  string fallback_source = 5;
+  bool fallback_enabled = 6;
+  int32 dynamic_timeout_ms = 7;
+  int32 dynamic_retry_count = 8;
+  int32 dynamic_circuit_breaker_sec = 9;
+  int32 min_lease_ttl_sec = 10;
+  string manual_selection_strategy = 11;
+}
+
+message UpdateProxySourcePolicyRequest {
+  int64 id = 1;
+  string primary_source = 2;
+  string fallback_source = 3;
+  bool fallback_enabled = 4;
+  int32 dynamic_timeout_ms = 5;
+  int32 dynamic_retry_count = 6;
+  int32 dynamic_circuit_breaker_sec = 7;
+  int32 min_lease_ttl_sec = 8;
+  string manual_selection_strategy = 9;
+}
+
+message UpdateProxySourcePolicyResponse {
+  bool success = 1;
+}
+
+message ProxyInfo {
+  int64 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string username = 5;
+  string region = 6;
+  int32 priority = 7;
+  string platform_tags = 8;
+  string remark = 9;
+  int32 status = 10;
+  string last_used_at = 11;
+  int32 success_count = 12;
+  int32 fail_count = 13;
+  string created_at = 14;
+  string updated_at = 15;
+}
+
+message ListProxiesRequest {
+  string search = 1;
+  string protocol = 2;
+  string region = 3;
+  int32 status = 4; // -1 表示不过滤
+}
+
+message ListProxiesResponse {
+  repeated ProxyInfo items = 1;
+}
+
+message CreateProxyRequest {
+  string host = 1;
+  int32 port = 2;
+  string protocol = 3;
+  string username = 4;
+  string password = 5;
+  string region = 6;
+  int32 priority = 7;
+  string platform_tags = 8;
+  string remark = 9;
+  int32 status = 10;
+}
+
+message CreateProxyResponse {
+  int64 id = 1;
+}
+
+message UpdateProxyRequest {
+  int64 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string username = 5;
+  string password = 6;
+  string region = 7;
+  int32 priority = 8;
+  string platform_tags = 9;
+  string remark = 10;
+}
+
+message UpdateProxyResponse {
+  bool success = 1;
+}
+
+message UpdateProxyStatusRequest {
+  int64 id = 1;
+  int32 status = 2;
+}
+
+message UpdateProxyStatusResponse {
+  bool success = 1;
+}
+
+message DeleteProxyRequest {
+  int64 id = 1;
+}
+
+message DeleteProxyResponse {
   bool success = 1;
 }
 

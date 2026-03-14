@@ -62,13 +62,15 @@ func phaseLabel(phase ytdlp.DownloadPhase) string {
 // PublishDownloading 发布下载中状态（带阶段和加权进度）
 func (p *ProgressPublisher) PublishDownloading(ctx context.Context, taskID string, progress *models.Progress, phase ytdlp.DownloadPhase, overallPercent float64) error {
 	msg := &models.ProgressMessage{
-		TaskID:     taskID,
-		Status:     "downloading",
-		Percent:    overallPercent,
-		Phase:      string(phase),
-		PhaseLabel: phaseLabel(phase),
-		Speed:      progress.Speed,
-		ETA:        progress.ETA,
+		TaskID:          taskID,
+		Status:          "downloading",
+		Percent:         overallPercent,
+		Phase:           string(phase),
+		PhaseLabel:      phaseLabel(phase),
+		DownloadedBytes: progress.DownloadedBytes,
+		TotalBytes:      progress.TotalBytes,
+		Speed:           progress.Speed,
+		ETA:             progress.ETA,
 	}
 	return p.Publish(ctx, msg)
 }

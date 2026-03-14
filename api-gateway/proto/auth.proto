@@ -28,6 +28,12 @@ service AuthService {
 
   // 修改密码
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  // 搜索用户（供后台使用）
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse);
+
+  // 批量获取用户
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse);
 }
 
 // 注册请求
@@ -117,6 +123,27 @@ message ChangePasswordRequest {
 
 message ChangePasswordResponse {
   bool success = 1;
+}
+
+message SearchUsersRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message SearchUsersResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated User users = 4;
+}
+
+message BatchGetUsersRequest {
+  repeated string user_ids = 1;
+}
+
+message BatchGetUsersResponse {
+  repeated User users = 1;
 }
 
 // 用户信息

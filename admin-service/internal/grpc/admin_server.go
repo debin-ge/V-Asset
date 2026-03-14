@@ -14,10 +14,11 @@ import (
 
 type AdminServer struct {
 	pb.UnimplementedAdminServiceServer
-	authService   *service.AuthService
-	statsService  *service.StatsService
-	proxyService  *service.ProxyService
-	cookieService *service.CookieService
+	authService    *service.AuthService
+	statsService   *service.StatsService
+	proxyService   *service.ProxyService
+	cookieService  *service.CookieService
+	billingService *service.BillingService
 }
 
 func NewAdminServer(
@@ -25,12 +26,14 @@ func NewAdminServer(
 	statsService *service.StatsService,
 	proxyService *service.ProxyService,
 	cookieService *service.CookieService,
+	billingService *service.BillingService,
 ) *AdminServer {
 	return &AdminServer{
-		authService:   authService,
-		statsService:  statsService,
-		proxyService:  proxyService,
-		cookieService: cookieService,
+		authService:    authService,
+		statsService:   statsService,
+		proxyService:   proxyService,
+		cookieService:  cookieService,
+		billingService: billingService,
 	}
 }
 
@@ -309,6 +312,283 @@ func (s *AdminServer) FreezeCookie(ctx context.Context, req *pb.AdminFreezeCooki
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &pb.AdminFreezeCookieResponse{Success: resp.Success, FrozenUntil: resp.FrozenUntil}, nil
+}
+
+func (s *AdminServer) ListBillingAccounts(ctx context.Context, req *pb.AdminListBillingAccountsRequest) (*pb.AdminListBillingAccountsResponse, error) {
+	resp, err := s.billingService.ListAccounts(ctx, req.GetQuery(), req.GetPage(), req.GetPageSize(), req.GetStatus())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	items := make([]*pb.AdminBillingAccount, 0, len(resp.Items))
+	for _, item := range resp.Items {
+		items = append(items, &pb.AdminBillingAccount{
+			UserId:              item.UserID,
+			Email:               item.Email,
+			Nickname:            item.Nickname,
+			AvailableBalanceFen: item.AvailableBalanceFen,
+			ReservedBalanceFen:  item.ReservedBalanceFen,
+			TotalRechargedFen:   item.TotalRechargedFen,
+			TotalSpentFen:       item.TotalSpentFen,
+			TotalTrafficBytes:   item.TotalTrafficBytes,
+			Status:              item.Status,
+			Version:             item.Version,
+			UpdatedAt:           item.UpdatedAt,
+		})
+	}
+
+	return &pb.AdminListBillingAccountsResponse{
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+		Items:    items,
+	}, nil
+}
+
+func (s *AdminServer) GetBillingAccountDetail(ctx context.Context, req *pb.AdminGetBillingAccountDetailRequest) (*pb.AdminGetBillingAccountDetailResponse, error) {
+	account, err := s.billingService.GetAccountDetail(ctx, req.GetUserId())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	return &pb.AdminGetBillingAccountDetailResponse{
+		Account: &pb.AdminBillingAccount{
+			UserId:              account.UserID,
+			Email:               account.Email,
+			Nickname:            account.Nickname,
+			AvailableBalanceFen: account.AvailableBalanceFen,
+			ReservedBalanceFen:  account.ReservedBalanceFen,
+			TotalRechargedFen:   account.TotalRechargedFen,
+			TotalSpentFen:       account.TotalSpentFen,
+			TotalTrafficBytes:   account.TotalTrafficBytes,
+			Status:              account.Status,
+			Version:             account.Version,
+			UpdatedAt:           account.UpdatedAt,
+		},
+	}, nil
+}
+
+func (s *AdminServer) AdjustBillingBalance(ctx context.Context, req *pb.AdminAdjustBillingBalanceRequest) (*pb.AdminAdjustBillingBalanceResponse, error) {
+	account, entryNo, err := s.billingService.AdjustBalance(ctx, req.GetUserId(), req.GetOperationId(), req.GetAmountFen(), req.GetRemark(), req.GetOperatorUserId())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	return &pb.AdminAdjustBillingBalanceResponse{
+		Success: true,
+		Account: &pb.AdminBillingAccount{
+			UserId:              account.UserID,
+			Email:               account.Email,
+			Nickname:            account.Nickname,
+			AvailableBalanceFen: account.AvailableBalanceFen,
+			ReservedBalanceFen:  account.ReservedBalanceFen,
+			TotalRechargedFen:   account.TotalRechargedFen,
+			TotalSpentFen:       account.TotalSpentFen,
+			TotalTrafficBytes:   account.TotalTrafficBytes,
+			Status:              account.Status,
+			Version:             account.Version,
+			UpdatedAt:           account.UpdatedAt,
+		},
+		EntryNo: entryNo,
+	}, nil
+}
+
+func (s *AdminServer) ListBillingShortfalls(ctx context.Context, req *pb.AdminListBillingShortfallsRequest) (*pb.AdminListBillingShortfallsResponse, error) {
+	resp, err := s.billingService.ListShortfalls(ctx, req.GetUserId(), req.GetPage(), req.GetPageSize())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	items := make([]*pb.AdminBillingShortfallOrder, 0, len(resp.Items))
+	for _, item := range resp.Items {
+		items = append(items, &pb.AdminBillingShortfallOrder{
+			OrderNo:            item.OrderNo,
+			UserId:             item.UserID,
+			Email:              item.Email,
+			Nickname:           item.Nickname,
+			HistoryId:          item.HistoryID,
+			TaskId:             item.TaskID,
+			Scene:              item.Scene,
+			Status:             item.Status,
+			PricingVersion:     item.PricingVersion,
+			ActualIngressBytes: item.ActualIngressBytes,
+			ActualEgressBytes:  item.ActualEgressBytes,
+			ActualTrafficBytes: item.ActualTrafficBytes,
+			HeldAmountFen:      item.HeldAmountFen,
+			CapturedAmountFen:  item.CapturedAmountFen,
+			ReleasedAmountFen:  item.ReleasedAmountFen,
+			ShortfallFen:       item.ShortfallFen,
+			Remark:             item.Remark,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
+		})
+	}
+
+	return &pb.AdminListBillingShortfallsResponse{
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+		Items:    items,
+	}, nil
+}
+
+func (s *AdminServer) ReconcileBillingShortfall(ctx context.Context, req *pb.AdminReconcileBillingShortfallRequest) (*pb.AdminReconcileBillingShortfallResponse, error) {
+	order, account, entryNo, err := s.billingService.ReconcileShortfall(ctx, req.GetOrderNo(), req.GetRemark(), req.GetOperatorUserId())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	return &pb.AdminReconcileBillingShortfallResponse{
+		Success: true,
+		Order: &pb.AdminBillingShortfallOrder{
+			OrderNo:            order.OrderNo,
+			UserId:             order.UserID,
+			Email:              order.Email,
+			Nickname:           order.Nickname,
+			HistoryId:          order.HistoryID,
+			TaskId:             order.TaskID,
+			Scene:              order.Scene,
+			Status:             order.Status,
+			PricingVersion:     order.PricingVersion,
+			ActualIngressBytes: order.ActualIngressBytes,
+			ActualEgressBytes:  order.ActualEgressBytes,
+			ActualTrafficBytes: order.ActualTrafficBytes,
+			HeldAmountFen:      order.HeldAmountFen,
+			CapturedAmountFen:  order.CapturedAmountFen,
+			ReleasedAmountFen:  order.ReleasedAmountFen,
+			ShortfallFen:       order.ShortfallFen,
+			Remark:             order.Remark,
+			CreatedAt:          order.CreatedAt,
+			UpdatedAt:          order.UpdatedAt,
+		},
+		Account: &pb.AdminBillingAccount{
+			UserId:              account.UserID,
+			Email:               account.Email,
+			Nickname:            account.Nickname,
+			AvailableBalanceFen: account.AvailableBalanceFen,
+			ReservedBalanceFen:  account.ReservedBalanceFen,
+			TotalRechargedFen:   account.TotalRechargedFen,
+			TotalSpentFen:       account.TotalSpentFen,
+			TotalTrafficBytes:   account.TotalTrafficBytes,
+			Status:              account.Status,
+			Version:             account.Version,
+			UpdatedAt:           account.UpdatedAt,
+		},
+		EntryNo: entryNo,
+	}, nil
+}
+
+func (s *AdminServer) ListBillingLedger(ctx context.Context, req *pb.AdminListBillingLedgerRequest) (*pb.AdminListBillingLedgerResponse, error) {
+	resp, err := s.billingService.ListLedger(ctx, req.GetUserId(), req.GetPage(), req.GetPageSize(), req.GetEntryType())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	items := make([]*pb.AdminBillingLedgerEntry, 0, len(resp.Items))
+	for _, item := range resp.Items {
+		items = append(items, &pb.AdminBillingLedgerEntry{
+			EntryNo:                  item.EntryNo,
+			UserId:                   item.UserID,
+			Email:                    item.Email,
+			Nickname:                 item.Nickname,
+			OrderNo:                  item.OrderNo,
+			HoldNo:                   item.HoldNo,
+			HistoryId:                item.HistoryID,
+			TaskId:                   item.TaskID,
+			TransferId:               item.TransferID,
+			OperationId:              item.OperationID,
+			EntryType:                item.EntryType,
+			Scene:                    item.Scene,
+			ActionAmountFen:          item.ActionAmountFen,
+			AvailableDeltaFen:        item.AvailableDeltaFen,
+			ReservedDeltaFen:         item.ReservedDeltaFen,
+			BalanceAfterAvailableFen: item.BalanceAfterAvailableFen,
+			BalanceAfterReservedFen:  item.BalanceAfterReservedFen,
+			OperatorUserId:           item.OperatorUserID,
+			Remark:                   item.Remark,
+			CreatedAt:                item.CreatedAt,
+		})
+	}
+
+	return &pb.AdminListBillingLedgerResponse{
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+		Items:    items,
+	}, nil
+}
+
+func (s *AdminServer) ListBillingUsageRecords(ctx context.Context, req *pb.AdminListBillingUsageRecordsRequest) (*pb.AdminListBillingUsageRecordsResponse, error) {
+	resp, err := s.billingService.ListUsageRecords(ctx, req.GetUserId(), req.GetPage(), req.GetPageSize(), req.GetDirection())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	items := make([]*pb.AdminBillingUsageRecord, 0, len(resp.Items))
+	for _, item := range resp.Items {
+		items = append(items, &pb.AdminBillingUsageRecord{
+			UsageNo:            item.UsageNo,
+			OrderNo:            item.OrderNo,
+			UserId:             item.UserID,
+			Email:              item.Email,
+			Nickname:           item.Nickname,
+			HistoryId:          item.HistoryID,
+			TaskId:             item.TaskID,
+			TransferId:         item.TransferID,
+			Direction:          item.Direction,
+			TrafficBytes:       item.TrafficBytes,
+			UnitPriceFenPerGib: item.UnitPriceFenPerGiB,
+			AmountFen:          item.AmountFen,
+			PricingVersion:     item.PricingVersion,
+			SourceService:      item.SourceService,
+			Status:             item.Status,
+			CreatedAt:          item.CreatedAt,
+			ConfirmedAt:        item.ConfirmedAt,
+		})
+	}
+
+	return &pb.AdminListBillingUsageRecordsResponse{
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+		Items:    items,
+	}, nil
+}
+
+func (s *AdminServer) GetBillingPricing(ctx context.Context, _ *pb.AdminEmpty) (*pb.AdminBillingPricingResponse, error) {
+	pricing, err := s.billingService.GetPricing(ctx)
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+	return &pb.AdminBillingPricingResponse{
+		Version:               pricing.Version,
+		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
+		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
+		DefaultEstimateBytes:  pricing.DefaultEstimateBytes,
+		Enabled:               pricing.Enabled,
+		Remark:                pricing.Remark,
+		UpdatedByUserId:       pricing.UpdatedByUserID,
+		EffectiveAt:           pricing.EffectiveAt,
+		CreatedAt:             pricing.CreatedAt,
+	}, nil
+}
+
+func (s *AdminServer) UpdateBillingPricing(ctx context.Context, req *pb.AdminUpdateBillingPricingRequest) (*pb.AdminBillingPricingResponse, error) {
+	pricing, err := s.billingService.UpdatePricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetDefaultEstimateBytes(), req.GetRemark(), req.GetOperatorUserId())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+	return &pb.AdminBillingPricingResponse{
+		Version:               pricing.Version,
+		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
+		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
+		DefaultEstimateBytes:  pricing.DefaultEstimateBytes,
+		Enabled:               pricing.Enabled,
+		Remark:                pricing.Remark,
+		UpdatedByUserId:       pricing.UpdatedByUserID,
+		EffectiveAt:           pricing.EffectiveAt,
+		CreatedAt:             pricing.CreatedAt,
+	}, nil
 }
 
 func adminUserToProto(user models.AdminUser) *pb.AdminUser {

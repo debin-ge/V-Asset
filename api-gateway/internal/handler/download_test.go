@@ -29,9 +29,16 @@ type fakeAssetDownloadClient struct {
 	refundQuotaErr    error
 	deleteHistoryResp *pb.DeleteHistoryResponse
 	deleteHistoryErr  error
+	estimateResp      *pb.EstimateDownloadBillingResponse
+	estimateErr       error
+	holdResp          *pb.HoldInitialDownloadResponse
+	holdErr           error
+	releaseResp       *pb.ReleaseInitialDownloadResponse
+	releaseErr        error
 
-	refundCalls []string
-	deleteCalls []int64
+	refundCalls  []string
+	deleteCalls  []int64
+	releaseCalls []string
 }
 
 func (f *fakeAssetDownloadClient) CheckQuota(context.Context, *pb.CheckQuotaRequest, ...grpc.CallOption) (*pb.CheckQuotaResponse, error) {
@@ -54,6 +61,19 @@ func (f *fakeAssetDownloadClient) RefundQuota(_ context.Context, req *pb.RefundQ
 func (f *fakeAssetDownloadClient) DeleteHistory(_ context.Context, req *pb.DeleteHistoryRequest, _ ...grpc.CallOption) (*pb.DeleteHistoryResponse, error) {
 	f.deleteCalls = append(f.deleteCalls, req.HistoryId)
 	return f.deleteHistoryResp, f.deleteHistoryErr
+}
+
+func (f *fakeAssetDownloadClient) EstimateDownloadBilling(context.Context, *pb.EstimateDownloadBillingRequest, ...grpc.CallOption) (*pb.EstimateDownloadBillingResponse, error) {
+	return f.estimateResp, f.estimateErr
+}
+
+func (f *fakeAssetDownloadClient) HoldInitialDownload(context.Context, *pb.HoldInitialDownloadRequest, ...grpc.CallOption) (*pb.HoldInitialDownloadResponse, error) {
+	return f.holdResp, f.holdErr
+}
+
+func (f *fakeAssetDownloadClient) ReleaseInitialDownload(_ context.Context, req *pb.ReleaseInitialDownloadRequest, _ ...grpc.CallOption) (*pb.ReleaseInitialDownloadResponse, error) {
+	f.releaseCalls = append(f.releaseCalls, req.TaskId)
+	return f.releaseResp, f.releaseErr
 }
 
 type fakeMediaDownloadClient struct {
@@ -178,6 +198,25 @@ func newTestDownloadHandler() (*DownloadHandler, *fakeAssetDownloadClient, *fake
 		deleteHistoryResp: &pb.DeleteHistoryResponse{
 			Success: true,
 		},
+		estimateResp: &pb.EstimateDownloadBillingResponse{
+			EstimatedIngressBytes: 100,
+			EstimatedEgressBytes:  100,
+			EstimatedTrafficBytes: 200,
+			EstimatedCostFen:      10,
+			PricingVersion:        1,
+		},
+		holdResp: &pb.HoldInitialDownloadResponse{
+			OrderNo:             "ord-1",
+			HoldNo:              "hold-1",
+			HeldAmountFen:       10,
+			AvailableBalanceFen: 90,
+			ReservedBalanceFen:  10,
+		},
+		releaseResp: &pb.ReleaseInitialDownloadResponse{
+			Success:           true,
+			OrderNo:           "ord-1",
+			ReleasedAmountFen: 10,
+		},
 	}
 	mediaClient := &fakeMediaDownloadClient{
 		validateResp: &pb.ValidateURLResponse{Valid: true, Platform: "youtube"},
@@ -188,7 +227,7 @@ func newTestDownloadHandler() (*DownloadHandler, *fakeAssetDownloadClient, *fake
 	}
 	publisher := &fakeDownloadPublisher{}
 
-	return NewDownloadHandler(assetClient, mediaClient, publisher, time.Second), assetClient, publisher
+	return NewDownloadHandler(assetClient, mediaClient, publisher, time.Second, false), assetClient, publisher
 }
 
 func performSubmitDownload(t *testing.T, handler *DownloadHandler) *httptest.ResponseRecorder {

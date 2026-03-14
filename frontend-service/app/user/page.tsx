@@ -8,7 +8,7 @@ import { Profile } from "@/components/user/Profile"
 import { History } from "@/components/user/History"
 import { Stats } from "@/components/user/Stats"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, History as HistoryIcon, BarChart } from "lucide-react"
+import { User, History as HistoryIcon, Wallet } from "lucide-react"
 
 function UserPageContent() {
     const { user, isLoading } = useAuth()
@@ -29,6 +29,18 @@ function UserPageContent() {
 
     const handleTabChange = (value: string) => {
         router.push(`/user?tab=${value}`)
+    }
+
+    const titleMap: Record<string, string> = {
+        profile: "Profile",
+        history: "History",
+        stats: "Account",
+    }
+
+    const descriptionMap: Record<string, string> = {
+        profile: "Manage your profile details and account settings.",
+        history: "Review your download history and completed files.",
+        stats: "Track your balance, billing statements, and traffic usage.",
     }
 
     return (
@@ -66,8 +78,8 @@ function UserPageContent() {
                                     value="stats"
                                     className="w-full justify-start px-4 py-3 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 hover:bg-gray-50 transition-colors"
                                 >
-                                    <BarChart className="w-4 h-4 mr-3" />
-                                    Stats
+                                    <Wallet className="w-4 h-4 mr-3" />
+                                    Account
                                 </TabsTrigger>
                             </TabsList>
                         </Tabs>
@@ -76,8 +88,8 @@ function UserPageContent() {
 
                 <main className="flex-1 min-w-0">
                     <div className="mb-6">
-                        <h1 className="text-2xl font-bold capitalize">{tab}</h1>
-                        <p className="text-gray-500">Manage your {tab} settings and view details.</p>
+                        <h1 className="text-2xl font-bold">{titleMap[tab] ?? "Account"}</h1>
+                        <p className="text-gray-500">{descriptionMap[tab] ?? "Manage your account."}</p>
                     </div>
 
                     <Tabs value={tab} className="w-full">

@@ -2,19 +2,20 @@
 
 import * as React from "react"
 import { authApi, User } from "@/lib/api/auth"
-import { historyApi } from "@/lib/api/history"
+import { billingApi, BillingAccount } from "@/lib/api/billing"
 import { tokenManager } from "@/lib/api-client"
 
 interface AuthContextType {
     user: User | null
     setUser: (user: User | null) => void
-    quota: number
+    billingAccount: BillingAccount | null
     isLoading: boolean
     isAuthenticated: boolean
     login: (email: string, password: string) => Promise<void>
     register: (email: string, password: string, nickname: string) => Promise<void>
     logout: () => Promise<void>
     refreshUser: () => Promise<void>
+    refreshBillingAccount: () => Promise<void>
     isAuthModalOpen: boolean
     openAuthModal: () => void
     closeAuthModal: () => void
@@ -24,11 +25,21 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = React.useState<User | null>(null)
-    const [quota, setQuota] = React.useState(0)
+    const [billingAccount, setBillingAccount] = React.useState<BillingAccount | null>(null)
     const [isLoading, setIsLoading] = React.useState(false)
     const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false)
 
     const isAuthenticated = !!user && tokenManager.isAuthenticated()
+
+    const loadBillingAccount = React.useCallback(async () => {
+        try {
+            const account = await billingApi.getAccount()
+            setBillingAccount(account)
+        } catch (error) {
+            console.error("Failed to load billing account:", error)
+            setBillingAccount(null)
+        }
+    }, [])
 
     // 初始化时检查登录状态
     React.useEffect(() => {
@@ -37,8 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                     const profile = await authApi.getProfile()
                     setUser(profile)
-                    const quotaData = await historyApi.getQuota()
-                    setQuota(quotaData.remaining)
+                    await loadBillingAccount()
                 } catch (error) {
                     console.error("Failed to restore session:", error)
                     tokenManager.clearTokens()
@@ -50,20 +60,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // 监听登出事件
         const handleLogout = () => {
             setUser(null)
-            setQuota(0)
+            setBillingAccount(null)
         }
         window.addEventListener('auth:logout', handleLogout)
         return () => window.removeEventListener('auth:logout', handleLogout)
-    }, [])
+    }, [loadBillingAccount])
 
     const login = async (email: string, password: string) => {
         setIsLoading(true)
         try {
             const response = await authApi.login(email, password)
             setUser(response.user)
-            // 获取配额
-            const quotaData = await historyApi.getQuota()
-            setQuota(quotaData.remaining)
+            await loadBillingAccount()
             closeAuthModal()
         } finally {
             setIsLoading(false)
@@ -87,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await authApi.logout()
         } finally {
             setUser(null)
-            setQuota(0)
+            setBillingAccount(null)
             setIsLoading(false)
         }
     }
@@ -96,8 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (tokenManager.isAuthenticated()) {
             const profile = await authApi.getProfile()
             setUser(profile)
-            const quotaData = await historyApi.getQuota()
-            setQuota(quotaData.remaining)
+            await loadBillingAccount()
         }
     }
 
@@ -109,13 +116,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             value={{
                 user,
                 setUser,
-                quota,
+                billingAccount,
                 isLoading,
                 isAuthenticated,
                 login,
                 register,
                 logout,
                 refreshUser,
+                refreshBillingAccount: loadBillingAccount,
                 isAuthModalOpen,
                 openAuthModal,
                 closeAuthModal,

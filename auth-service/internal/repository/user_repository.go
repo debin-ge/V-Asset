@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -195,4 +196,127 @@ func (r *UserRepository) CountTotalUsers(ctx context.Context) (int64, error) {
 	}
 
 	return count, nil
+}
+
+// Search 搜索用户（支持 user_id / email / nickname）
+func (r *UserRepository) Search(ctx context.Context, query string, page, pageSize int) ([]models.User, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	baseConditions := []string{}
+	args := []interface{}{}
+	if trimmed := strings.TrimSpace(query); trimmed != "" {
+		pattern := "%" + trimmed + "%"
+		baseConditions = append(baseConditions, "(id ILIKE $1 OR email ILIKE $1 OR nickname ILIKE $1)")
+		args = append(args, pattern)
+	}
+
+	whereClause := ""
+	if len(baseConditions) > 0 {
+		whereClause = " WHERE " + strings.Join(baseConditions, " AND ")
+	}
+
+	countQuery := `SELECT COUNT(*) FROM users` + whereClause
+	var total int64
+	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	offset := (page - 1) * pageSize
+	querySQL := `
+		SELECT id, email, password_hash, nickname, avatar_url, role, status,
+		       created_at, updated_at, last_login_at
+		FROM users` + whereClause + `
+		ORDER BY created_at DESC
+		LIMIT $` + fmt.Sprintf("%d", len(args)+1) + ` OFFSET $` + fmt.Sprintf("%d", len(args)+2)
+	args = append(args, pageSize, offset)
+
+	rows, err := r.db.QueryContext(ctx, querySQL, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search users: %w", err)
+	}
+	defer rows.Close()
+
+	users := make([]models.User, 0)
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.PasswordHash,
+			&user.Nickname,
+			&user.AvatarURL,
+			&user.Role,
+			&user.Status,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.LastLoginAt,
+		); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan searched user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("failed to iterate searched users: %w", err)
+	}
+
+	return users, total, nil
+}
+
+// FindByIDs 批量按 ID 查询用户
+func (r *UserRepository) FindByIDs(ctx context.Context, ids []string) ([]models.User, error) {
+	if len(ids) == 0 {
+		return []models.User{}, nil
+	}
+
+	placeholders := make([]string, 0, len(ids))
+	args := make([]interface{}, 0, len(ids))
+	for i, id := range ids {
+		placeholders = append(placeholders, fmt.Sprintf("$%d", i+1))
+		args = append(args, id)
+	}
+
+	query := `
+		SELECT id, email, password_hash, nickname, avatar_url, role, status,
+		       created_at, updated_at, last_login_at
+		FROM users
+		WHERE id IN (` + strings.Join(placeholders, ",") + `)
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query users by ids: %w", err)
+	}
+	defer rows.Close()
+
+	users := make([]models.User, 0, len(ids))
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.PasswordHash,
+			&user.Nickname,
+			&user.AvatarURL,
+			&user.Role,
+			&user.Status,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.LastLoginAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan user by ids: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate users by ids: %w", err)
+	}
+
+	return users, nil
 }

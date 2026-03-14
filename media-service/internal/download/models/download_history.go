@@ -107,7 +107,9 @@ type ProgressMessage struct {
 
 // Progress yt-dlp 解析的进度
 type Progress struct {
-	Percent float64
-	Speed   string
-	ETA     string
+	Percent         float64
+	DownloadedBytes int64
+	TotalBytes      int64
+	Speed           string
+	ETA             string
 }

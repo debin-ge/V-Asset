@@ -41,6 +41,44 @@ service AssetService {
   // 更新下载历史状态
   rpc UpdateHistoryStatus(UpdateHistoryStatusRequest) returns (UpdateHistoryStatusResponse);
 
+  // ========== Billing ==========
+  // 获取用户账务账户
+  rpc GetBillingAccount(GetBillingAccountRequest) returns (GetBillingAccountResponse);
+  // 获取用户账单列表（聚合视图）
+  rpc ListBillingStatements(ListBillingStatementsRequest) returns (ListBillingStatementsResponse);
+  // 预估下载成本
+  rpc EstimateDownloadBilling(EstimateDownloadBillingRequest) returns (EstimateDownloadBillingResponse);
+  // 首次下载预占
+  rpc HoldInitialDownload(HoldInitialDownloadRequest) returns (HoldInitialDownloadResponse);
+  // 结算入流量
+  rpc CaptureIngressUsage(CaptureIngressUsageRequest) returns (CaptureIngressUsageResponse);
+  // 释放首次下载预占
+  rpc ReleaseInitialDownload(ReleaseInitialDownloadRequest) returns (ReleaseInitialDownloadResponse);
+  // 准备文件传输计费
+  rpc PrepareFileTransferBilling(PrepareFileTransferBillingRequest) returns (PrepareFileTransferBillingResponse);
+  // 完成文件传输计费
+  rpc CompleteFileTransferBilling(CompleteFileTransferBillingRequest) returns (CompleteFileTransferBillingResponse);
+  // 中止文件传输计费
+  rpc AbortFileTransferBilling(AbortFileTransferBillingRequest) returns (AbortFileTransferBillingResponse);
+  // 后台：列出账务账户
+  rpc ListBillingAccounts(ListBillingAccountsRequest) returns (ListBillingAccountsResponse);
+  // 后台：获取账户详情
+  rpc GetBillingAccountDetail(GetBillingAccountDetailRequest) returns (GetBillingAccountDetailResponse);
+  // 后台：人工调整余额
+  rpc AdjustBillingBalance(AdjustBillingBalanceRequest) returns (AdjustBillingBalanceResponse);
+  // 后台：查询原始账务流水
+  rpc ListBillingLedger(ListBillingLedgerRequest) returns (ListBillingLedgerResponse);
+  // 后台：查询方向级流量记录
+  rpc ListTrafficUsageRecords(ListTrafficUsageRecordsRequest) returns (ListTrafficUsageRecordsResponse);
+  // 获取当前生效费率
+  rpc GetBillingPricing(GetBillingPricingRequest) returns (GetBillingPricingResponse);
+  // 更新费率
+  rpc UpdateBillingPricing(UpdateBillingPricingRequest) returns (UpdateBillingPricingResponse);
+  // 后台：查询待补扣短款订单
+  rpc ListBillingShortfalls(ListBillingShortfallsRequest) returns (ListBillingShortfallsResponse);
+  // 后台：手动补扣短款订单
+  rpc ReconcileBillingShortfall(ReconcileBillingShortfallRequest) returns (ReconcileBillingShortfallResponse);
+
   // ========== 代理管理 ==========
   // 按任务获取或复用代理绑定
   rpc AcquireProxyForTask(AcquireProxyForTaskRequest) returns (AcquireProxyForTaskResponse);
@@ -265,6 +303,355 @@ message UpdateHistoryStatusRequest {
 
 message UpdateHistoryStatusResponse {
   bool success = 1;
+}
+
+// ========== Billing 消息 ==========
+
+message BillingAccountSnapshot {
+  string user_id = 1;
+  string currency_code = 2;
+  int64 available_balance_fen = 3;
+  int64 reserved_balance_fen = 4;
+  int64 total_recharged_fen = 5;
+  int64 total_spent_fen = 6;
+  int64 total_traffic_bytes = 7;
+  int32 status = 8;
+  int32 version = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message GetBillingAccountRequest {
+  string user_id = 1;
+  bool auto_create = 2;
+}
+
+message GetBillingAccountResponse {
+  BillingAccountSnapshot account = 1;
+}
+
+message BillingStatementItem {
+  string statement_id = 1;
+  int32 type = 2;
+  int64 history_id = 3;
+  int64 traffic_bytes = 4;
+  int64 amount_fen = 5;
+  int32 status = 6;
+  string remark = 7;
+  string created_at = 8;
+}
+
+message ListBillingStatementsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 type = 4;
+  int32 status = 5;
+}
+
+message ListBillingStatementsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated BillingStatementItem items = 4;
+}
+
+message BillingSelectedFormat {
+  string format_id = 1;
+  string quality = 2;
+  string extension = 3;
+  int64 filesize = 4;
+  int32 height = 5;
+  int32 width = 6;
+  double fps = 7;
+  string video_codec = 8;
+  string audio_codec = 9;
+  double vbr = 10;
+  double abr = 11;
+  int32 asr = 12;
+}
+
+message EstimateDownloadBillingRequest {
+  string user_id = 1;
+  string url = 2;
+  string platform = 3;
+  string mode = 4;
+  BillingSelectedFormat selected_format = 5;
+}
+
+message EstimateDownloadBillingResponse {
+  int64 estimated_ingress_bytes = 1;
+  int64 estimated_egress_bytes = 2;
+  int64 estimated_traffic_bytes = 3;
+  int64 estimated_cost_fen = 4;
+  int32 pricing_version = 5;
+  bool is_estimated = 6;
+  string estimate_reason = 7;
+}
+
+message HoldInitialDownloadRequest {
+  string user_id = 1;
+  int64 history_id = 2;
+  string task_id = 3;
+  int64 estimated_ingress_bytes = 4;
+  int64 estimated_egress_bytes = 5;
+  int64 estimated_traffic_bytes = 6;
+  int64 estimated_cost_fen = 7;
+  int32 pricing_version = 8;
+}
+
+message HoldInitialDownloadResponse {
+  string order_no = 1;
+  string hold_no = 2;
+  int64 held_amount_fen = 3;
+  int64 available_balance_fen = 4;
+  int64 reserved_balance_fen = 5;
+}
+
+message CaptureIngressUsageRequest {
+  string task_id = 1;
+  int64 actual_ingress_bytes = 2;
+}
+
+message CaptureIngressUsageResponse {
+  string order_no = 1;
+  int64 captured_amount_fen = 2;
+  int64 remaining_reserved_fen = 3;
+  int64 actual_ingress_bytes = 4;
+  int64 actual_traffic_bytes = 5;
+  int32 order_status = 6;
+}
+
+message ReleaseInitialDownloadRequest {
+  string task_id = 1;
+  string reason = 2;
+}
+
+message ReleaseInitialDownloadResponse {
+  bool success = 1;
+  string order_no = 2;
+  int64 released_amount_fen = 3;
+}
+
+message PrepareFileTransferBillingRequest {
+  string user_id = 1;
+  int64 history_id = 2;
+  int64 file_size_bytes = 3;
+}
+
+message PrepareFileTransferBillingResponse {
+  string transfer_id = 1;
+  string order_no = 2;
+  string hold_no = 3;
+  int32 scene = 4;
+  int64 hold_amount_fen = 5;
+  int32 pricing_version = 6;
+  int64 available_balance_fen = 7;
+  int64 reserved_balance_fen = 8;
+}
+
+message CompleteFileTransferBillingRequest {
+  string transfer_id = 1;
+  int64 actual_egress_bytes = 2;
+}
+
+message CompleteFileTransferBillingResponse {
+  string order_no = 1;
+  int64 captured_amount_fen = 2;
+  int64 actual_traffic_bytes = 3;
+  int64 total_captured_amount_fen = 4;
+  int32 order_status = 5;
+}
+
+message AbortFileTransferBillingRequest {
+  string transfer_id = 1;
+  string reason = 2;
+}
+
+message AbortFileTransferBillingResponse {
+  bool success = 1;
+  string order_no = 2;
+  int64 released_amount_fen = 3;
+}
+
+message ListBillingAccountsRequest {
+  repeated string user_ids = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 status = 4;
+}
+
+message ListBillingAccountsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated BillingAccountSnapshot items = 4;
+}
+
+message GetBillingAccountDetailRequest {
+  string user_id = 1;
+}
+
+message GetBillingAccountDetailResponse {
+  BillingAccountSnapshot account = 1;
+}
+
+message AdjustBillingBalanceRequest {
+  string user_id = 1;
+  string operation_id = 2;
+  int64 amount_fen = 3;
+  string remark = 4;
+  string operator_user_id = 5;
+}
+
+message AdjustBillingBalanceResponse {
+  bool success = 1;
+  BillingAccountSnapshot account = 2;
+  string entry_no = 3;
+}
+
+message LedgerEntryItem {
+  string entry_no = 1;
+  string user_id = 2;
+  string order_no = 3;
+  string hold_no = 4;
+  int64 history_id = 5;
+  string task_id = 6;
+  string transfer_id = 7;
+  string operation_id = 8;
+  int32 entry_type = 9;
+  int32 scene = 10;
+  int64 action_amount_fen = 11;
+  int64 available_delta_fen = 12;
+  int64 reserved_delta_fen = 13;
+  int64 balance_after_available_fen = 14;
+  int64 balance_after_reserved_fen = 15;
+  string operator_user_id = 16;
+  string remark = 17;
+  string created_at = 18;
+}
+
+message ListBillingLedgerRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 entry_type = 4;
+}
+
+message ListBillingLedgerResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated LedgerEntryItem items = 4;
+}
+
+message TrafficUsageRecordItem {
+  string usage_no = 1;
+  string order_no = 2;
+  string user_id = 3;
+  int64 history_id = 4;
+  string task_id = 5;
+  string transfer_id = 6;
+  int32 direction = 7;
+  int64 traffic_bytes = 8;
+  string unit_price_fen_per_gib = 9;
+  int64 amount_fen = 10;
+  int32 pricing_version = 11;
+  string source_service = 12;
+  int32 status = 13;
+  string created_at = 14;
+  string confirmed_at = 15;
+}
+
+message ListTrafficUsageRecordsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 direction = 4;
+}
+
+message ListTrafficUsageRecordsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated TrafficUsageRecordItem items = 4;
+}
+
+message BillingPricing {
+  int32 version = 1;
+  string ingress_price_fen_per_gib = 2;
+  string egress_price_fen_per_gib = 3;
+  int64 default_estimate_bytes = 4;
+  bool enabled = 5;
+  string remark = 6;
+  string updated_by_user_id = 7;
+  string effective_at = 8;
+  string created_at = 9;
+}
+
+message GetBillingPricingRequest {}
+
+message GetBillingPricingResponse {
+  BillingPricing pricing = 1;
+}
+
+message UpdateBillingPricingRequest {
+  string ingress_price_fen_per_gib = 1;
+  string egress_price_fen_per_gib = 2;
+  int64 default_estimate_bytes = 3;
+  string remark = 4;
+  string operator_user_id = 5;
+}
+
+message UpdateBillingPricingResponse {
+  bool success = 1;
+  BillingPricing pricing = 2;
+}
+
+message BillingShortfallOrderItem {
+  string order_no = 1;
+  string user_id = 2;
+  int64 history_id = 3;
+  string task_id = 4;
+  int32 scene = 5;
+  int32 status = 6;
+  int32 pricing_version = 7;
+  int64 actual_ingress_bytes = 8;
+  int64 actual_egress_bytes = 9;
+  int64 actual_traffic_bytes = 10;
+  int64 held_amount_fen = 11;
+  int64 captured_amount_fen = 12;
+  int64 released_amount_fen = 13;
+  int64 shortfall_fen = 14;
+  string remark = 15;
+  string created_at = 16;
+  string updated_at = 17;
+}
+
+message ListBillingShortfallsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListBillingShortfallsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated BillingShortfallOrderItem items = 4;
+}
+
+message ReconcileBillingShortfallRequest {
+  string order_no = 1;
+  string operator_user_id = 2;
+  string remark = 3;
+}
+
+message ReconcileBillingShortfallResponse {
+  bool success = 1;
+  BillingShortfallOrderItem order = 2;
+  BillingAccountSnapshot account = 3;
+  string entry_no = 4;
 }
 
 // ========== 代理管理消息 ==========

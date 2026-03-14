@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Cookie, Globe, LayoutDashboard } from "lucide-react";
+import { Cookie, CreditCard, Globe, LayoutDashboard } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, note: "Overview" },
+  { href: "/billing", label: "Billing", icon: CreditCard, note: "Accounts & pricing" },
   { href: "/proxies", label: "Proxies", icon: Globe, note: "Pool & policy" },
   { href: "/cookies", label: "Cookies", icon: Cookie, note: "Session assets" },
 ];

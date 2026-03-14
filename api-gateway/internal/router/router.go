@@ -52,8 +52,13 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		deps.GRPCClients.MediaClient,
 		deps.MQPublisher,
 		deps.Config.GRPC.Timeout,
+		deps.Config.Billing.Enabled,
 	)
 	historyHandler := handler.NewHistoryHandler(
+		deps.GRPCClients.AssetClient,
+		deps.Config.GRPC.Timeout,
+	)
+	billingHandler := handler.NewBillingHandler(
 		deps.GRPCClients.AssetClient,
 		deps.Config.GRPC.Timeout,
 	)
@@ -61,6 +66,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		deps.GRPCClients.AssetClient,
 		deps.Config.GRPC.Timeout,
 		deps.Config.FileDownload.BufferSize,
+		deps.Config.Billing.Enabled,
 	)
 	healthHandler := handler.NewHealthHandler(
 		deps.GRPCClients,
@@ -84,6 +90,10 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		deps.Config.GRPC.Timeout,
 	)
 	adminCookieHandler := handler.NewAdminCookieHandler(
+		deps.GRPCClients.AdminClient,
+		deps.Config.GRPC.Timeout,
+	)
+	adminBillingHandler := handler.NewAdminBillingHandler(
 		deps.GRPCClients.AdminClient,
 		deps.Config.GRPC.Timeout,
 	)
@@ -126,6 +136,9 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		protectedV1.GET("/user/history", historyHandler.GetHistory)
 		protectedV1.GET("/user/quota", historyHandler.GetQuota)
 		protectedV1.GET("/user/stats", historyHandler.GetUserStats)
+		protectedV1.GET("/user/account", billingHandler.GetAccount)
+		protectedV1.GET("/user/billing/ledger", billingHandler.ListStatements)
+		protectedV1.POST("/user/billing/estimate", billingHandler.Estimate)
 		protectedV1.DELETE("/user/history/:id", historyHandler.DeleteHistory)
 
 		// 文件下载
@@ -159,6 +172,16 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		adminV1.PUT("/cookies/:id", adminCookieHandler.Update)
 		adminV1.DELETE("/cookies/:id", adminCookieHandler.Delete)
 		adminV1.POST("/cookies/:id/freeze", adminCookieHandler.Freeze)
+
+		adminV1.GET("/billing/accounts", adminBillingHandler.ListAccounts)
+		adminV1.GET("/billing/accounts/:userId", adminBillingHandler.GetAccountDetail)
+		adminV1.POST("/billing/accounts/:userId/adjustments", adminBillingHandler.AdjustBalance)
+		adminV1.GET("/billing/shortfalls", adminBillingHandler.ListShortfalls)
+		adminV1.POST("/billing/shortfalls/:orderNo/reconcile", adminBillingHandler.ReconcileShortfall)
+		adminV1.GET("/billing/ledger", adminBillingHandler.ListLedger)
+		adminV1.GET("/billing/usage-records", adminBillingHandler.ListUsageRecords)
+		adminV1.GET("/billing/pricing", adminBillingHandler.GetPricing)
+		adminV1.PUT("/billing/pricing", adminBillingHandler.UpdatePricing)
 	}
 
 	// ==================== WebSocket 路由 ====================

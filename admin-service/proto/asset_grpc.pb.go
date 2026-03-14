@@ -19,43 +19,158 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AssetService_GetPlatformStats_FullMethodName        = "/asset.AssetService/GetPlatformStats"
-	AssetService_GetRequestTrend_FullMethodName         = "/asset.AssetService/GetRequestTrend"
-	AssetService_GetAvailableProxy_FullMethodName       = "/asset.AssetService/GetAvailableProxy"
-	AssetService_GetProxySourcePolicy_FullMethodName    = "/asset.AssetService/GetProxySourcePolicy"
-	AssetService_UpdateProxySourcePolicy_FullMethodName = "/asset.AssetService/UpdateProxySourcePolicy"
-	AssetService_ListProxies_FullMethodName             = "/asset.AssetService/ListProxies"
-	AssetService_CreateProxy_FullMethodName             = "/asset.AssetService/CreateProxy"
-	AssetService_UpdateProxy_FullMethodName             = "/asset.AssetService/UpdateProxy"
-	AssetService_UpdateProxyStatus_FullMethodName       = "/asset.AssetService/UpdateProxyStatus"
-	AssetService_DeleteProxy_FullMethodName             = "/asset.AssetService/DeleteProxy"
-	AssetService_CreateCookie_FullMethodName            = "/asset.AssetService/CreateCookie"
-	AssetService_UpdateCookie_FullMethodName            = "/asset.AssetService/UpdateCookie"
-	AssetService_DeleteCookie_FullMethodName            = "/asset.AssetService/DeleteCookie"
-	AssetService_GetCookie_FullMethodName               = "/asset.AssetService/GetCookie"
-	AssetService_ListCookies_FullMethodName             = "/asset.AssetService/ListCookies"
-	AssetService_FreezeCookie_FullMethodName            = "/asset.AssetService/FreezeCookie"
+	AssetService_GetHistory_FullMethodName                  = "/asset.AssetService/GetHistory"
+	AssetService_DeleteHistory_FullMethodName               = "/asset.AssetService/DeleteHistory"
+	AssetService_GetHistoryByTask_FullMethodName            = "/asset.AssetService/GetHistoryByTask"
+	AssetService_CheckQuota_FullMethodName                  = "/asset.AssetService/CheckQuota"
+	AssetService_ConsumeQuota_FullMethodName                = "/asset.AssetService/ConsumeQuota"
+	AssetService_RefundQuota_FullMethodName                 = "/asset.AssetService/RefundQuota"
+	AssetService_GetUserStats_FullMethodName                = "/asset.AssetService/GetUserStats"
+	AssetService_GetPlatformStats_FullMethodName            = "/asset.AssetService/GetPlatformStats"
+	AssetService_GetRequestTrend_FullMethodName             = "/asset.AssetService/GetRequestTrend"
+	AssetService_GetFileInfo_FullMethodName                 = "/asset.AssetService/GetFileInfo"
+	AssetService_CreateHistory_FullMethodName               = "/asset.AssetService/CreateHistory"
+	AssetService_UpdateHistoryStatus_FullMethodName         = "/asset.AssetService/UpdateHistoryStatus"
+	AssetService_GetBillingAccount_FullMethodName           = "/asset.AssetService/GetBillingAccount"
+	AssetService_ListBillingStatements_FullMethodName       = "/asset.AssetService/ListBillingStatements"
+	AssetService_EstimateDownloadBilling_FullMethodName     = "/asset.AssetService/EstimateDownloadBilling"
+	AssetService_HoldInitialDownload_FullMethodName         = "/asset.AssetService/HoldInitialDownload"
+	AssetService_CaptureIngressUsage_FullMethodName         = "/asset.AssetService/CaptureIngressUsage"
+	AssetService_ReleaseInitialDownload_FullMethodName      = "/asset.AssetService/ReleaseInitialDownload"
+	AssetService_PrepareFileTransferBilling_FullMethodName  = "/asset.AssetService/PrepareFileTransferBilling"
+	AssetService_CompleteFileTransferBilling_FullMethodName = "/asset.AssetService/CompleteFileTransferBilling"
+	AssetService_AbortFileTransferBilling_FullMethodName    = "/asset.AssetService/AbortFileTransferBilling"
+	AssetService_ListBillingAccounts_FullMethodName         = "/asset.AssetService/ListBillingAccounts"
+	AssetService_GetBillingAccountDetail_FullMethodName     = "/asset.AssetService/GetBillingAccountDetail"
+	AssetService_AdjustBillingBalance_FullMethodName        = "/asset.AssetService/AdjustBillingBalance"
+	AssetService_ListBillingLedger_FullMethodName           = "/asset.AssetService/ListBillingLedger"
+	AssetService_ListTrafficUsageRecords_FullMethodName     = "/asset.AssetService/ListTrafficUsageRecords"
+	AssetService_GetBillingPricing_FullMethodName           = "/asset.AssetService/GetBillingPricing"
+	AssetService_UpdateBillingPricing_FullMethodName        = "/asset.AssetService/UpdateBillingPricing"
+	AssetService_ListBillingShortfalls_FullMethodName       = "/asset.AssetService/ListBillingShortfalls"
+	AssetService_ReconcileBillingShortfall_FullMethodName   = "/asset.AssetService/ReconcileBillingShortfall"
+	AssetService_AcquireProxyForTask_FullMethodName         = "/asset.AssetService/AcquireProxyForTask"
+	AssetService_GetAvailableProxy_FullMethodName           = "/asset.AssetService/GetAvailableProxy"
+	AssetService_ReportProxyUsage_FullMethodName            = "/asset.AssetService/ReportProxyUsage"
+	AssetService_GetProxySourcePolicy_FullMethodName        = "/asset.AssetService/GetProxySourcePolicy"
+	AssetService_UpdateProxySourcePolicy_FullMethodName     = "/asset.AssetService/UpdateProxySourcePolicy"
+	AssetService_ListProxies_FullMethodName                 = "/asset.AssetService/ListProxies"
+	AssetService_CreateProxy_FullMethodName                 = "/asset.AssetService/CreateProxy"
+	AssetService_UpdateProxy_FullMethodName                 = "/asset.AssetService/UpdateProxy"
+	AssetService_UpdateProxyStatus_FullMethodName           = "/asset.AssetService/UpdateProxyStatus"
+	AssetService_DeleteProxy_FullMethodName                 = "/asset.AssetService/DeleteProxy"
+	AssetService_CreateCookie_FullMethodName                = "/asset.AssetService/CreateCookie"
+	AssetService_UpdateCookie_FullMethodName                = "/asset.AssetService/UpdateCookie"
+	AssetService_DeleteCookie_FullMethodName                = "/asset.AssetService/DeleteCookie"
+	AssetService_GetCookie_FullMethodName                   = "/asset.AssetService/GetCookie"
+	AssetService_ListCookies_FullMethodName                 = "/asset.AssetService/ListCookies"
+	AssetService_GetAvailableCookie_FullMethodName          = "/asset.AssetService/GetAvailableCookie"
+	AssetService_ReportCookieUsage_FullMethodName           = "/asset.AssetService/ReportCookieUsage"
+	AssetService_FreezeCookie_FullMethodName                = "/asset.AssetService/FreezeCookie"
 )
 
 // AssetServiceClient is the client API for AssetService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AssetServiceClient interface {
+	// 获取下载历史
+	GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*GetHistoryResponse, error)
+	// 删除历史记录
+	DeleteHistory(ctx context.Context, in *DeleteHistoryRequest, opts ...grpc.CallOption) (*DeleteHistoryResponse, error)
+	// 按任务查询历史记录（用于权限校验）
+	GetHistoryByTask(ctx context.Context, in *GetHistoryByTaskRequest, opts ...grpc.CallOption) (*GetHistoryByTaskResponse, error)
+	// 检查配额
+	CheckQuota(ctx context.Context, in *CheckQuotaRequest, opts ...grpc.CallOption) (*CheckQuotaResponse, error)
+	// 消费配额
+	ConsumeQuota(ctx context.Context, in *ConsumeQuotaRequest, opts ...grpc.CallOption) (*ConsumeQuotaResponse, error)
+	// 退还配额（用于提交补偿）
+	RefundQuota(ctx context.Context, in *RefundQuotaRequest, opts ...grpc.CallOption) (*RefundQuotaResponse, error)
+	// 获取用户统计
+	GetUserStats(ctx context.Context, in *GetUserStatsRequest, opts ...grpc.CallOption) (*GetUserStatsResponse, error)
+	// 获取平台统计
 	GetPlatformStats(ctx context.Context, in *GetPlatformStatsRequest, opts ...grpc.CallOption) (*GetPlatformStatsResponse, error)
+	// 获取平台请求趋势
 	GetRequestTrend(ctx context.Context, in *GetRequestTrendRequest, opts ...grpc.CallOption) (*GetRequestTrendResponse, error)
+	// 获取文件信息(用于下载)
+	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
+	// 创建下载历史
+	CreateHistory(ctx context.Context, in *CreateHistoryRequest, opts ...grpc.CallOption) (*CreateHistoryResponse, error)
+	// 更新下载历史状态
+	UpdateHistoryStatus(ctx context.Context, in *UpdateHistoryStatusRequest, opts ...grpc.CallOption) (*UpdateHistoryStatusResponse, error)
+	// ========== Billing ==========
+	// 获取用户账务账户
+	GetBillingAccount(ctx context.Context, in *GetBillingAccountRequest, opts ...grpc.CallOption) (*GetBillingAccountResponse, error)
+	// 获取用户账单列表（聚合视图）
+	ListBillingStatements(ctx context.Context, in *ListBillingStatementsRequest, opts ...grpc.CallOption) (*ListBillingStatementsResponse, error)
+	// 预估下载成本
+	EstimateDownloadBilling(ctx context.Context, in *EstimateDownloadBillingRequest, opts ...grpc.CallOption) (*EstimateDownloadBillingResponse, error)
+	// 首次下载预占
+	HoldInitialDownload(ctx context.Context, in *HoldInitialDownloadRequest, opts ...grpc.CallOption) (*HoldInitialDownloadResponse, error)
+	// 结算入流量
+	CaptureIngressUsage(ctx context.Context, in *CaptureIngressUsageRequest, opts ...grpc.CallOption) (*CaptureIngressUsageResponse, error)
+	// 释放首次下载预占
+	ReleaseInitialDownload(ctx context.Context, in *ReleaseInitialDownloadRequest, opts ...grpc.CallOption) (*ReleaseInitialDownloadResponse, error)
+	// 准备文件传输计费
+	PrepareFileTransferBilling(ctx context.Context, in *PrepareFileTransferBillingRequest, opts ...grpc.CallOption) (*PrepareFileTransferBillingResponse, error)
+	// 完成文件传输计费
+	CompleteFileTransferBilling(ctx context.Context, in *CompleteFileTransferBillingRequest, opts ...grpc.CallOption) (*CompleteFileTransferBillingResponse, error)
+	// 中止文件传输计费
+	AbortFileTransferBilling(ctx context.Context, in *AbortFileTransferBillingRequest, opts ...grpc.CallOption) (*AbortFileTransferBillingResponse, error)
+	// 后台：列出账务账户
+	ListBillingAccounts(ctx context.Context, in *ListBillingAccountsRequest, opts ...grpc.CallOption) (*ListBillingAccountsResponse, error)
+	// 后台：获取账户详情
+	GetBillingAccountDetail(ctx context.Context, in *GetBillingAccountDetailRequest, opts ...grpc.CallOption) (*GetBillingAccountDetailResponse, error)
+	// 后台：人工调整余额
+	AdjustBillingBalance(ctx context.Context, in *AdjustBillingBalanceRequest, opts ...grpc.CallOption) (*AdjustBillingBalanceResponse, error)
+	// 后台：查询原始账务流水
+	ListBillingLedger(ctx context.Context, in *ListBillingLedgerRequest, opts ...grpc.CallOption) (*ListBillingLedgerResponse, error)
+	// 后台：查询方向级流量记录
+	ListTrafficUsageRecords(ctx context.Context, in *ListTrafficUsageRecordsRequest, opts ...grpc.CallOption) (*ListTrafficUsageRecordsResponse, error)
+	// 获取当前生效费率
+	GetBillingPricing(ctx context.Context, in *GetBillingPricingRequest, opts ...grpc.CallOption) (*GetBillingPricingResponse, error)
+	// 更新费率
+	UpdateBillingPricing(ctx context.Context, in *UpdateBillingPricingRequest, opts ...grpc.CallOption) (*UpdateBillingPricingResponse, error)
+	// 后台：查询待补扣短款订单
+	ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error)
+	// 后台：手动补扣短款订单
+	ReconcileBillingShortfall(ctx context.Context, in *ReconcileBillingShortfallRequest, opts ...grpc.CallOption) (*ReconcileBillingShortfallResponse, error)
+	// ========== 代理管理 ==========
+	// 按任务获取或复用代理绑定
+	AcquireProxyForTask(ctx context.Context, in *AcquireProxyForTaskRequest, opts ...grpc.CallOption) (*AcquireProxyForTaskResponse, error)
+	// 获取可用代理（供其他服务调用）
 	GetAvailableProxy(ctx context.Context, in *GetAvailableProxyRequest, opts ...grpc.CallOption) (*GetAvailableProxyResponse, error)
+	// 报告代理使用结果
+	ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error)
+	// 获取当前代理来源策略
 	GetProxySourcePolicy(ctx context.Context, in *GetProxySourcePolicyRequest, opts ...grpc.CallOption) (*GetProxySourcePolicyResponse, error)
+	// 更新当前代理来源策略
 	UpdateProxySourcePolicy(ctx context.Context, in *UpdateProxySourcePolicyRequest, opts ...grpc.CallOption) (*UpdateProxySourcePolicyResponse, error)
+	// 获取手动代理池
 	ListProxies(ctx context.Context, in *ListProxiesRequest, opts ...grpc.CallOption) (*ListProxiesResponse, error)
+	// 创建手动代理
 	CreateProxy(ctx context.Context, in *CreateProxyRequest, opts ...grpc.CallOption) (*CreateProxyResponse, error)
+	// 更新手动代理
 	UpdateProxy(ctx context.Context, in *UpdateProxyRequest, opts ...grpc.CallOption) (*UpdateProxyResponse, error)
+	// 更新手动代理状态
 	UpdateProxyStatus(ctx context.Context, in *UpdateProxyStatusRequest, opts ...grpc.CallOption) (*UpdateProxyStatusResponse, error)
+	// 删除手动代理
 	DeleteProxy(ctx context.Context, in *DeleteProxyRequest, opts ...grpc.CallOption) (*DeleteProxyResponse, error)
+	// ========== Cookie 管理 ==========
+	// 创建 Cookie
 	CreateCookie(ctx context.Context, in *CreateCookieRequest, opts ...grpc.CallOption) (*CreateCookieResponse, error)
+	// 更新 Cookie
 	UpdateCookie(ctx context.Context, in *UpdateCookieRequest, opts ...grpc.CallOption) (*UpdateCookieResponse, error)
+	// 删除 Cookie
 	DeleteCookie(ctx context.Context, in *DeleteCookieRequest, opts ...grpc.CallOption) (*DeleteCookieResponse, error)
+	// 获取 Cookie
 	GetCookie(ctx context.Context, in *GetCookieRequest, opts ...grpc.CallOption) (*GetCookieResponse, error)
+	// 列表 Cookie
 	ListCookies(ctx context.Context, in *ListCookiesRequest, opts ...grpc.CallOption) (*ListCookiesResponse, error)
+	// 获取可用 Cookie（考虑过期和冷冻）
+	GetAvailableCookie(ctx context.Context, in *GetAvailableCookieRequest, opts ...grpc.CallOption) (*GetAvailableCookieResponse, error)
+	// 报告 Cookie 使用结果
+	ReportCookieUsage(ctx context.Context, in *ReportCookieUsageRequest, opts ...grpc.CallOption) (*ReportCookieUsageResponse, error)
+	// 手动冷冻 Cookie
 	FreezeCookie(ctx context.Context, in *FreezeCookieRequest, opts ...grpc.CallOption) (*FreezeCookieResponse, error)
 }
 
@@ -65,6 +180,76 @@ type assetServiceClient struct {
 
 func NewAssetServiceClient(cc grpc.ClientConnInterface) AssetServiceClient {
 	return &assetServiceClient{cc}
+}
+
+func (c *assetServiceClient) GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*GetHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetHistoryResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) DeleteHistory(ctx context.Context, in *DeleteHistoryRequest, opts ...grpc.CallOption) (*DeleteHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteHistoryResponse)
+	err := c.cc.Invoke(ctx, AssetService_DeleteHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetHistoryByTask(ctx context.Context, in *GetHistoryByTaskRequest, opts ...grpc.CallOption) (*GetHistoryByTaskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetHistoryByTaskResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetHistoryByTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) CheckQuota(ctx context.Context, in *CheckQuotaRequest, opts ...grpc.CallOption) (*CheckQuotaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckQuotaResponse)
+	err := c.cc.Invoke(ctx, AssetService_CheckQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ConsumeQuota(ctx context.Context, in *ConsumeQuotaRequest, opts ...grpc.CallOption) (*ConsumeQuotaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ConsumeQuotaResponse)
+	err := c.cc.Invoke(ctx, AssetService_ConsumeQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) RefundQuota(ctx context.Context, in *RefundQuotaRequest, opts ...grpc.CallOption) (*RefundQuotaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RefundQuotaResponse)
+	err := c.cc.Invoke(ctx, AssetService_RefundQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetUserStats(ctx context.Context, in *GetUserStatsRequest, opts ...grpc.CallOption) (*GetUserStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserStatsResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetUserStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *assetServiceClient) GetPlatformStats(ctx context.Context, in *GetPlatformStatsRequest, opts ...grpc.CallOption) (*GetPlatformStatsResponse, error) {
@@ -87,10 +272,240 @@ func (c *assetServiceClient) GetRequestTrend(ctx context.Context, in *GetRequest
 	return out, nil
 }
 
+func (c *assetServiceClient) GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetFileInfoResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetFileInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) CreateHistory(ctx context.Context, in *CreateHistoryRequest, opts ...grpc.CallOption) (*CreateHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateHistoryResponse)
+	err := c.cc.Invoke(ctx, AssetService_CreateHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateHistoryStatus(ctx context.Context, in *UpdateHistoryStatusRequest, opts ...grpc.CallOption) (*UpdateHistoryStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateHistoryStatusResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateHistoryStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetBillingAccount(ctx context.Context, in *GetBillingAccountRequest, opts ...grpc.CallOption) (*GetBillingAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBillingAccountResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetBillingAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListBillingStatements(ctx context.Context, in *ListBillingStatementsRequest, opts ...grpc.CallOption) (*ListBillingStatementsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBillingStatementsResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListBillingStatements_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) EstimateDownloadBilling(ctx context.Context, in *EstimateDownloadBillingRequest, opts ...grpc.CallOption) (*EstimateDownloadBillingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EstimateDownloadBillingResponse)
+	err := c.cc.Invoke(ctx, AssetService_EstimateDownloadBilling_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) HoldInitialDownload(ctx context.Context, in *HoldInitialDownloadRequest, opts ...grpc.CallOption) (*HoldInitialDownloadResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HoldInitialDownloadResponse)
+	err := c.cc.Invoke(ctx, AssetService_HoldInitialDownload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) CaptureIngressUsage(ctx context.Context, in *CaptureIngressUsageRequest, opts ...grpc.CallOption) (*CaptureIngressUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CaptureIngressUsageResponse)
+	err := c.cc.Invoke(ctx, AssetService_CaptureIngressUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReleaseInitialDownload(ctx context.Context, in *ReleaseInitialDownloadRequest, opts ...grpc.CallOption) (*ReleaseInitialDownloadResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReleaseInitialDownloadResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReleaseInitialDownload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) PrepareFileTransferBilling(ctx context.Context, in *PrepareFileTransferBillingRequest, opts ...grpc.CallOption) (*PrepareFileTransferBillingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PrepareFileTransferBillingResponse)
+	err := c.cc.Invoke(ctx, AssetService_PrepareFileTransferBilling_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) CompleteFileTransferBilling(ctx context.Context, in *CompleteFileTransferBillingRequest, opts ...grpc.CallOption) (*CompleteFileTransferBillingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CompleteFileTransferBillingResponse)
+	err := c.cc.Invoke(ctx, AssetService_CompleteFileTransferBilling_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) AbortFileTransferBilling(ctx context.Context, in *AbortFileTransferBillingRequest, opts ...grpc.CallOption) (*AbortFileTransferBillingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AbortFileTransferBillingResponse)
+	err := c.cc.Invoke(ctx, AssetService_AbortFileTransferBilling_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListBillingAccounts(ctx context.Context, in *ListBillingAccountsRequest, opts ...grpc.CallOption) (*ListBillingAccountsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBillingAccountsResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListBillingAccounts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetBillingAccountDetail(ctx context.Context, in *GetBillingAccountDetailRequest, opts ...grpc.CallOption) (*GetBillingAccountDetailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBillingAccountDetailResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetBillingAccountDetail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) AdjustBillingBalance(ctx context.Context, in *AdjustBillingBalanceRequest, opts ...grpc.CallOption) (*AdjustBillingBalanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdjustBillingBalanceResponse)
+	err := c.cc.Invoke(ctx, AssetService_AdjustBillingBalance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListBillingLedger(ctx context.Context, in *ListBillingLedgerRequest, opts ...grpc.CallOption) (*ListBillingLedgerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBillingLedgerResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListBillingLedger_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListTrafficUsageRecords(ctx context.Context, in *ListTrafficUsageRecordsRequest, opts ...grpc.CallOption) (*ListTrafficUsageRecordsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListTrafficUsageRecordsResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListTrafficUsageRecords_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetBillingPricing(ctx context.Context, in *GetBillingPricingRequest, opts ...grpc.CallOption) (*GetBillingPricingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBillingPricingResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetBillingPricing_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateBillingPricing(ctx context.Context, in *UpdateBillingPricingRequest, opts ...grpc.CallOption) (*UpdateBillingPricingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateBillingPricingResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateBillingPricing_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBillingShortfallsResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListBillingShortfalls_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReconcileBillingShortfall(ctx context.Context, in *ReconcileBillingShortfallRequest, opts ...grpc.CallOption) (*ReconcileBillingShortfallResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReconcileBillingShortfallResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReconcileBillingShortfall_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) AcquireProxyForTask(ctx context.Context, in *AcquireProxyForTaskRequest, opts ...grpc.CallOption) (*AcquireProxyForTaskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AcquireProxyForTaskResponse)
+	err := c.cc.Invoke(ctx, AssetService_AcquireProxyForTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *assetServiceClient) GetAvailableProxy(ctx context.Context, in *GetAvailableProxyRequest, opts ...grpc.CallOption) (*GetAvailableProxyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAvailableProxyResponse)
 	err := c.cc.Invoke(ctx, AssetService_GetAvailableProxy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportProxyUsageResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReportProxyUsage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +632,26 @@ func (c *assetServiceClient) ListCookies(ctx context.Context, in *ListCookiesReq
 	return out, nil
 }
 
+func (c *assetServiceClient) GetAvailableCookie(ctx context.Context, in *GetAvailableCookieRequest, opts ...grpc.CallOption) (*GetAvailableCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAvailableCookieResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetAvailableCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReportCookieUsage(ctx context.Context, in *ReportCookieUsageRequest, opts ...grpc.CallOption) (*ReportCookieUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportCookieUsageResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReportCookieUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *assetServiceClient) FreezeCookie(ctx context.Context, in *FreezeCookieRequest, opts ...grpc.CallOption) (*FreezeCookieResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(FreezeCookieResponse)
@@ -231,21 +666,104 @@ func (c *assetServiceClient) FreezeCookie(ctx context.Context, in *FreezeCookieR
 // All implementations must embed UnimplementedAssetServiceServer
 // for forward compatibility.
 type AssetServiceServer interface {
+	// 获取下载历史
+	GetHistory(context.Context, *GetHistoryRequest) (*GetHistoryResponse, error)
+	// 删除历史记录
+	DeleteHistory(context.Context, *DeleteHistoryRequest) (*DeleteHistoryResponse, error)
+	// 按任务查询历史记录（用于权限校验）
+	GetHistoryByTask(context.Context, *GetHistoryByTaskRequest) (*GetHistoryByTaskResponse, error)
+	// 检查配额
+	CheckQuota(context.Context, *CheckQuotaRequest) (*CheckQuotaResponse, error)
+	// 消费配额
+	ConsumeQuota(context.Context, *ConsumeQuotaRequest) (*ConsumeQuotaResponse, error)
+	// 退还配额（用于提交补偿）
+	RefundQuota(context.Context, *RefundQuotaRequest) (*RefundQuotaResponse, error)
+	// 获取用户统计
+	GetUserStats(context.Context, *GetUserStatsRequest) (*GetUserStatsResponse, error)
+	// 获取平台统计
 	GetPlatformStats(context.Context, *GetPlatformStatsRequest) (*GetPlatformStatsResponse, error)
+	// 获取平台请求趋势
 	GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error)
+	// 获取文件信息(用于下载)
+	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
+	// 创建下载历史
+	CreateHistory(context.Context, *CreateHistoryRequest) (*CreateHistoryResponse, error)
+	// 更新下载历史状态
+	UpdateHistoryStatus(context.Context, *UpdateHistoryStatusRequest) (*UpdateHistoryStatusResponse, error)
+	// ========== Billing ==========
+	// 获取用户账务账户
+	GetBillingAccount(context.Context, *GetBillingAccountRequest) (*GetBillingAccountResponse, error)
+	// 获取用户账单列表（聚合视图）
+	ListBillingStatements(context.Context, *ListBillingStatementsRequest) (*ListBillingStatementsResponse, error)
+	// 预估下载成本
+	EstimateDownloadBilling(context.Context, *EstimateDownloadBillingRequest) (*EstimateDownloadBillingResponse, error)
+	// 首次下载预占
+	HoldInitialDownload(context.Context, *HoldInitialDownloadRequest) (*HoldInitialDownloadResponse, error)
+	// 结算入流量
+	CaptureIngressUsage(context.Context, *CaptureIngressUsageRequest) (*CaptureIngressUsageResponse, error)
+	// 释放首次下载预占
+	ReleaseInitialDownload(context.Context, *ReleaseInitialDownloadRequest) (*ReleaseInitialDownloadResponse, error)
+	// 准备文件传输计费
+	PrepareFileTransferBilling(context.Context, *PrepareFileTransferBillingRequest) (*PrepareFileTransferBillingResponse, error)
+	// 完成文件传输计费
+	CompleteFileTransferBilling(context.Context, *CompleteFileTransferBillingRequest) (*CompleteFileTransferBillingResponse, error)
+	// 中止文件传输计费
+	AbortFileTransferBilling(context.Context, *AbortFileTransferBillingRequest) (*AbortFileTransferBillingResponse, error)
+	// 后台：列出账务账户
+	ListBillingAccounts(context.Context, *ListBillingAccountsRequest) (*ListBillingAccountsResponse, error)
+	// 后台：获取账户详情
+	GetBillingAccountDetail(context.Context, *GetBillingAccountDetailRequest) (*GetBillingAccountDetailResponse, error)
+	// 后台：人工调整余额
+	AdjustBillingBalance(context.Context, *AdjustBillingBalanceRequest) (*AdjustBillingBalanceResponse, error)
+	// 后台：查询原始账务流水
+	ListBillingLedger(context.Context, *ListBillingLedgerRequest) (*ListBillingLedgerResponse, error)
+	// 后台：查询方向级流量记录
+	ListTrafficUsageRecords(context.Context, *ListTrafficUsageRecordsRequest) (*ListTrafficUsageRecordsResponse, error)
+	// 获取当前生效费率
+	GetBillingPricing(context.Context, *GetBillingPricingRequest) (*GetBillingPricingResponse, error)
+	// 更新费率
+	UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error)
+	// 后台：查询待补扣短款订单
+	ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error)
+	// 后台：手动补扣短款订单
+	ReconcileBillingShortfall(context.Context, *ReconcileBillingShortfallRequest) (*ReconcileBillingShortfallResponse, error)
+	// ========== 代理管理 ==========
+	// 按任务获取或复用代理绑定
+	AcquireProxyForTask(context.Context, *AcquireProxyForTaskRequest) (*AcquireProxyForTaskResponse, error)
+	// 获取可用代理（供其他服务调用）
 	GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error)
+	// 报告代理使用结果
+	ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error)
+	// 获取当前代理来源策略
 	GetProxySourcePolicy(context.Context, *GetProxySourcePolicyRequest) (*GetProxySourcePolicyResponse, error)
+	// 更新当前代理来源策略
 	UpdateProxySourcePolicy(context.Context, *UpdateProxySourcePolicyRequest) (*UpdateProxySourcePolicyResponse, error)
+	// 获取手动代理池
 	ListProxies(context.Context, *ListProxiesRequest) (*ListProxiesResponse, error)
+	// 创建手动代理
 	CreateProxy(context.Context, *CreateProxyRequest) (*CreateProxyResponse, error)
+	// 更新手动代理
 	UpdateProxy(context.Context, *UpdateProxyRequest) (*UpdateProxyResponse, error)
+	// 更新手动代理状态
 	UpdateProxyStatus(context.Context, *UpdateProxyStatusRequest) (*UpdateProxyStatusResponse, error)
+	// 删除手动代理
 	DeleteProxy(context.Context, *DeleteProxyRequest) (*DeleteProxyResponse, error)
+	// ========== Cookie 管理 ==========
+	// 创建 Cookie
 	CreateCookie(context.Context, *CreateCookieRequest) (*CreateCookieResponse, error)
+	// 更新 Cookie
 	UpdateCookie(context.Context, *UpdateCookieRequest) (*UpdateCookieResponse, error)
+	// 删除 Cookie
 	DeleteCookie(context.Context, *DeleteCookieRequest) (*DeleteCookieResponse, error)
+	// 获取 Cookie
 	GetCookie(context.Context, *GetCookieRequest) (*GetCookieResponse, error)
+	// 列表 Cookie
 	ListCookies(context.Context, *ListCookiesRequest) (*ListCookiesResponse, error)
+	// 获取可用 Cookie（考虑过期和冷冻）
+	GetAvailableCookie(context.Context, *GetAvailableCookieRequest) (*GetAvailableCookieResponse, error)
+	// 报告 Cookie 使用结果
+	ReportCookieUsage(context.Context, *ReportCookieUsageRequest) (*ReportCookieUsageResponse, error)
+	// 手动冷冻 Cookie
 	FreezeCookie(context.Context, *FreezeCookieRequest) (*FreezeCookieResponse, error)
 	mustEmbedUnimplementedAssetServiceServer()
 }
@@ -257,14 +775,104 @@ type AssetServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAssetServiceServer struct{}
 
+func (UnimplementedAssetServiceServer) GetHistory(context.Context, *GetHistoryRequest) (*GetHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetHistory not implemented")
+}
+func (UnimplementedAssetServiceServer) DeleteHistory(context.Context, *DeleteHistoryRequest) (*DeleteHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteHistory not implemented")
+}
+func (UnimplementedAssetServiceServer) GetHistoryByTask(context.Context, *GetHistoryByTaskRequest) (*GetHistoryByTaskResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetHistoryByTask not implemented")
+}
+func (UnimplementedAssetServiceServer) CheckQuota(context.Context, *CheckQuotaRequest) (*CheckQuotaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckQuota not implemented")
+}
+func (UnimplementedAssetServiceServer) ConsumeQuota(context.Context, *ConsumeQuotaRequest) (*ConsumeQuotaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ConsumeQuota not implemented")
+}
+func (UnimplementedAssetServiceServer) RefundQuota(context.Context, *RefundQuotaRequest) (*RefundQuotaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RefundQuota not implemented")
+}
+func (UnimplementedAssetServiceServer) GetUserStats(context.Context, *GetUserStatsRequest) (*GetUserStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserStats not implemented")
+}
 func (UnimplementedAssetServiceServer) GetPlatformStats(context.Context, *GetPlatformStatsRequest) (*GetPlatformStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPlatformStats not implemented")
 }
 func (UnimplementedAssetServiceServer) GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRequestTrend not implemented")
 }
+func (UnimplementedAssetServiceServer) GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetFileInfo not implemented")
+}
+func (UnimplementedAssetServiceServer) CreateHistory(context.Context, *CreateHistoryRequest) (*CreateHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateHistory not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateHistoryStatus(context.Context, *UpdateHistoryStatusRequest) (*UpdateHistoryStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateHistoryStatus not implemented")
+}
+func (UnimplementedAssetServiceServer) GetBillingAccount(context.Context, *GetBillingAccountRequest) (*GetBillingAccountResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBillingAccount not implemented")
+}
+func (UnimplementedAssetServiceServer) ListBillingStatements(context.Context, *ListBillingStatementsRequest) (*ListBillingStatementsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingStatements not implemented")
+}
+func (UnimplementedAssetServiceServer) EstimateDownloadBilling(context.Context, *EstimateDownloadBillingRequest) (*EstimateDownloadBillingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method EstimateDownloadBilling not implemented")
+}
+func (UnimplementedAssetServiceServer) HoldInitialDownload(context.Context, *HoldInitialDownloadRequest) (*HoldInitialDownloadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method HoldInitialDownload not implemented")
+}
+func (UnimplementedAssetServiceServer) CaptureIngressUsage(context.Context, *CaptureIngressUsageRequest) (*CaptureIngressUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CaptureIngressUsage not implemented")
+}
+func (UnimplementedAssetServiceServer) ReleaseInitialDownload(context.Context, *ReleaseInitialDownloadRequest) (*ReleaseInitialDownloadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReleaseInitialDownload not implemented")
+}
+func (UnimplementedAssetServiceServer) PrepareFileTransferBilling(context.Context, *PrepareFileTransferBillingRequest) (*PrepareFileTransferBillingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PrepareFileTransferBilling not implemented")
+}
+func (UnimplementedAssetServiceServer) CompleteFileTransferBilling(context.Context, *CompleteFileTransferBillingRequest) (*CompleteFileTransferBillingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompleteFileTransferBilling not implemented")
+}
+func (UnimplementedAssetServiceServer) AbortFileTransferBilling(context.Context, *AbortFileTransferBillingRequest) (*AbortFileTransferBillingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AbortFileTransferBilling not implemented")
+}
+func (UnimplementedAssetServiceServer) ListBillingAccounts(context.Context, *ListBillingAccountsRequest) (*ListBillingAccountsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingAccounts not implemented")
+}
+func (UnimplementedAssetServiceServer) GetBillingAccountDetail(context.Context, *GetBillingAccountDetailRequest) (*GetBillingAccountDetailResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBillingAccountDetail not implemented")
+}
+func (UnimplementedAssetServiceServer) AdjustBillingBalance(context.Context, *AdjustBillingBalanceRequest) (*AdjustBillingBalanceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdjustBillingBalance not implemented")
+}
+func (UnimplementedAssetServiceServer) ListBillingLedger(context.Context, *ListBillingLedgerRequest) (*ListBillingLedgerResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingLedger not implemented")
+}
+func (UnimplementedAssetServiceServer) ListTrafficUsageRecords(context.Context, *ListTrafficUsageRecordsRequest) (*ListTrafficUsageRecordsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListTrafficUsageRecords not implemented")
+}
+func (UnimplementedAssetServiceServer) GetBillingPricing(context.Context, *GetBillingPricingRequest) (*GetBillingPricingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBillingPricing not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateBillingPricing not implemented")
+}
+func (UnimplementedAssetServiceServer) ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingShortfalls not implemented")
+}
+func (UnimplementedAssetServiceServer) ReconcileBillingShortfall(context.Context, *ReconcileBillingShortfallRequest) (*ReconcileBillingShortfallResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReconcileBillingShortfall not implemented")
+}
+func (UnimplementedAssetServiceServer) AcquireProxyForTask(context.Context, *AcquireProxyForTaskRequest) (*AcquireProxyForTaskResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcquireProxyForTask not implemented")
+}
 func (UnimplementedAssetServiceServer) GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAvailableProxy not implemented")
+}
+func (UnimplementedAssetServiceServer) ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportProxyUsage not implemented")
 }
 func (UnimplementedAssetServiceServer) GetProxySourcePolicy(context.Context, *GetProxySourcePolicyRequest) (*GetProxySourcePolicyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProxySourcePolicy not implemented")
@@ -302,6 +910,12 @@ func (UnimplementedAssetServiceServer) GetCookie(context.Context, *GetCookieRequ
 func (UnimplementedAssetServiceServer) ListCookies(context.Context, *ListCookiesRequest) (*ListCookiesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListCookies not implemented")
 }
+func (UnimplementedAssetServiceServer) GetAvailableCookie(context.Context, *GetAvailableCookieRequest) (*GetAvailableCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAvailableCookie not implemented")
+}
+func (UnimplementedAssetServiceServer) ReportCookieUsage(context.Context, *ReportCookieUsageRequest) (*ReportCookieUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportCookieUsage not implemented")
+}
 func (UnimplementedAssetServiceServer) FreezeCookie(context.Context, *FreezeCookieRequest) (*FreezeCookieResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method FreezeCookie not implemented")
 }
@@ -324,6 +938,132 @@ func RegisterAssetServiceServer(s grpc.ServiceRegistrar, srv AssetServiceServer)
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AssetService_ServiceDesc, srv)
+}
+
+func _AssetService_GetHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetHistory(ctx, req.(*GetHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_DeleteHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).DeleteHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_DeleteHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).DeleteHistory(ctx, req.(*DeleteHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetHistoryByTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHistoryByTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetHistoryByTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetHistoryByTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetHistoryByTask(ctx, req.(*GetHistoryByTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_CheckQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CheckQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CheckQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CheckQuota(ctx, req.(*CheckQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ConsumeQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConsumeQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ConsumeQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ConsumeQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ConsumeQuota(ctx, req.(*ConsumeQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_RefundQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefundQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).RefundQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_RefundQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).RefundQuota(ctx, req.(*RefundQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetUserStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetUserStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetUserStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetUserStats(ctx, req.(*GetUserStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AssetService_GetPlatformStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -362,6 +1102,402 @@ func _AssetService_GetRequestTrend_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_GetFileInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFileInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetFileInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetFileInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetFileInfo(ctx, req.(*GetFileInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_CreateHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CreateHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CreateHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CreateHistory(ctx, req.(*CreateHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateHistoryStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHistoryStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateHistoryStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateHistoryStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateHistoryStatus(ctx, req.(*UpdateHistoryStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetBillingAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBillingAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetBillingAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetBillingAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetBillingAccount(ctx, req.(*GetBillingAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListBillingStatements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBillingStatementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListBillingStatements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListBillingStatements_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListBillingStatements(ctx, req.(*ListBillingStatementsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_EstimateDownloadBilling_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EstimateDownloadBillingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).EstimateDownloadBilling(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_EstimateDownloadBilling_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).EstimateDownloadBilling(ctx, req.(*EstimateDownloadBillingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_HoldInitialDownload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HoldInitialDownloadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).HoldInitialDownload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_HoldInitialDownload_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).HoldInitialDownload(ctx, req.(*HoldInitialDownloadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_CaptureIngressUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CaptureIngressUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CaptureIngressUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CaptureIngressUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CaptureIngressUsage(ctx, req.(*CaptureIngressUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReleaseInitialDownload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReleaseInitialDownloadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReleaseInitialDownload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReleaseInitialDownload_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReleaseInitialDownload(ctx, req.(*ReleaseInitialDownloadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_PrepareFileTransferBilling_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareFileTransferBillingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).PrepareFileTransferBilling(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_PrepareFileTransferBilling_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).PrepareFileTransferBilling(ctx, req.(*PrepareFileTransferBillingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_CompleteFileTransferBilling_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompleteFileTransferBillingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CompleteFileTransferBilling(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CompleteFileTransferBilling_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CompleteFileTransferBilling(ctx, req.(*CompleteFileTransferBillingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_AbortFileTransferBilling_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AbortFileTransferBillingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).AbortFileTransferBilling(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_AbortFileTransferBilling_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).AbortFileTransferBilling(ctx, req.(*AbortFileTransferBillingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListBillingAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBillingAccountsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListBillingAccounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListBillingAccounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListBillingAccounts(ctx, req.(*ListBillingAccountsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetBillingAccountDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBillingAccountDetailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetBillingAccountDetail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetBillingAccountDetail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetBillingAccountDetail(ctx, req.(*GetBillingAccountDetailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_AdjustBillingBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdjustBillingBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).AdjustBillingBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_AdjustBillingBalance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).AdjustBillingBalance(ctx, req.(*AdjustBillingBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListBillingLedger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBillingLedgerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListBillingLedger(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListBillingLedger_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListBillingLedger(ctx, req.(*ListBillingLedgerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListTrafficUsageRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTrafficUsageRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListTrafficUsageRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListTrafficUsageRecords_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListTrafficUsageRecords(ctx, req.(*ListTrafficUsageRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetBillingPricing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBillingPricingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetBillingPricing(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetBillingPricing_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetBillingPricing(ctx, req.(*GetBillingPricingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateBillingPricing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateBillingPricingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateBillingPricing(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateBillingPricing_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateBillingPricing(ctx, req.(*UpdateBillingPricingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListBillingShortfalls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBillingShortfallsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListBillingShortfalls(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListBillingShortfalls_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListBillingShortfalls(ctx, req.(*ListBillingShortfallsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReconcileBillingShortfall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReconcileBillingShortfallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReconcileBillingShortfall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReconcileBillingShortfall_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReconcileBillingShortfall(ctx, req.(*ReconcileBillingShortfallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_AcquireProxyForTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcquireProxyForTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).AcquireProxyForTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_AcquireProxyForTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).AcquireProxyForTask(ctx, req.(*AcquireProxyForTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AssetService_GetAvailableProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAvailableProxyRequest)
 	if err := dec(in); err != nil {
@@ -376,6 +1512,24 @@ func _AssetService_GetAvailableProxy_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).GetAvailableProxy(ctx, req.(*GetAvailableProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReportProxyUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportProxyUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReportProxyUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReportProxyUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReportProxyUsage(ctx, req.(*ReportProxyUsageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -596,6 +1750,42 @@ func _AssetService_ListCookies_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_GetAvailableCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAvailableCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetAvailableCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetAvailableCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetAvailableCookie(ctx, req.(*GetAvailableCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReportCookieUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportCookieUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReportCookieUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReportCookieUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReportCookieUsage(ctx, req.(*ReportCookieUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AssetService_FreezeCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FreezeCookieRequest)
 	if err := dec(in); err != nil {
@@ -622,6 +1812,34 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AssetServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "GetHistory",
+			Handler:    _AssetService_GetHistory_Handler,
+		},
+		{
+			MethodName: "DeleteHistory",
+			Handler:    _AssetService_DeleteHistory_Handler,
+		},
+		{
+			MethodName: "GetHistoryByTask",
+			Handler:    _AssetService_GetHistoryByTask_Handler,
+		},
+		{
+			MethodName: "CheckQuota",
+			Handler:    _AssetService_CheckQuota_Handler,
+		},
+		{
+			MethodName: "ConsumeQuota",
+			Handler:    _AssetService_ConsumeQuota_Handler,
+		},
+		{
+			MethodName: "RefundQuota",
+			Handler:    _AssetService_RefundQuota_Handler,
+		},
+		{
+			MethodName: "GetUserStats",
+			Handler:    _AssetService_GetUserStats_Handler,
+		},
+		{
 			MethodName: "GetPlatformStats",
 			Handler:    _AssetService_GetPlatformStats_Handler,
 		},
@@ -630,8 +1848,100 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AssetService_GetRequestTrend_Handler,
 		},
 		{
+			MethodName: "GetFileInfo",
+			Handler:    _AssetService_GetFileInfo_Handler,
+		},
+		{
+			MethodName: "CreateHistory",
+			Handler:    _AssetService_CreateHistory_Handler,
+		},
+		{
+			MethodName: "UpdateHistoryStatus",
+			Handler:    _AssetService_UpdateHistoryStatus_Handler,
+		},
+		{
+			MethodName: "GetBillingAccount",
+			Handler:    _AssetService_GetBillingAccount_Handler,
+		},
+		{
+			MethodName: "ListBillingStatements",
+			Handler:    _AssetService_ListBillingStatements_Handler,
+		},
+		{
+			MethodName: "EstimateDownloadBilling",
+			Handler:    _AssetService_EstimateDownloadBilling_Handler,
+		},
+		{
+			MethodName: "HoldInitialDownload",
+			Handler:    _AssetService_HoldInitialDownload_Handler,
+		},
+		{
+			MethodName: "CaptureIngressUsage",
+			Handler:    _AssetService_CaptureIngressUsage_Handler,
+		},
+		{
+			MethodName: "ReleaseInitialDownload",
+			Handler:    _AssetService_ReleaseInitialDownload_Handler,
+		},
+		{
+			MethodName: "PrepareFileTransferBilling",
+			Handler:    _AssetService_PrepareFileTransferBilling_Handler,
+		},
+		{
+			MethodName: "CompleteFileTransferBilling",
+			Handler:    _AssetService_CompleteFileTransferBilling_Handler,
+		},
+		{
+			MethodName: "AbortFileTransferBilling",
+			Handler:    _AssetService_AbortFileTransferBilling_Handler,
+		},
+		{
+			MethodName: "ListBillingAccounts",
+			Handler:    _AssetService_ListBillingAccounts_Handler,
+		},
+		{
+			MethodName: "GetBillingAccountDetail",
+			Handler:    _AssetService_GetBillingAccountDetail_Handler,
+		},
+		{
+			MethodName: "AdjustBillingBalance",
+			Handler:    _AssetService_AdjustBillingBalance_Handler,
+		},
+		{
+			MethodName: "ListBillingLedger",
+			Handler:    _AssetService_ListBillingLedger_Handler,
+		},
+		{
+			MethodName: "ListTrafficUsageRecords",
+			Handler:    _AssetService_ListTrafficUsageRecords_Handler,
+		},
+		{
+			MethodName: "GetBillingPricing",
+			Handler:    _AssetService_GetBillingPricing_Handler,
+		},
+		{
+			MethodName: "UpdateBillingPricing",
+			Handler:    _AssetService_UpdateBillingPricing_Handler,
+		},
+		{
+			MethodName: "ListBillingShortfalls",
+			Handler:    _AssetService_ListBillingShortfalls_Handler,
+		},
+		{
+			MethodName: "ReconcileBillingShortfall",
+			Handler:    _AssetService_ReconcileBillingShortfall_Handler,
+		},
+		{
+			MethodName: "AcquireProxyForTask",
+			Handler:    _AssetService_AcquireProxyForTask_Handler,
+		},
+		{
 			MethodName: "GetAvailableProxy",
 			Handler:    _AssetService_GetAvailableProxy_Handler,
+		},
+		{
+			MethodName: "ReportProxyUsage",
+			Handler:    _AssetService_ReportProxyUsage_Handler,
 		},
 		{
 			MethodName: "GetProxySourcePolicy",
@@ -680,6 +1990,14 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListCookies",
 			Handler:    _AssetService_ListCookies_Handler,
+		},
+		{
+			MethodName: "GetAvailableCookie",
+			Handler:    _AssetService_GetAvailableCookie_Handler,
+		},
+		{
+			MethodName: "ReportCookieUsage",
+			Handler:    _AssetService_ReportCookieUsage_Handler,
 		},
 		{
 			MethodName: "FreezeCookie",

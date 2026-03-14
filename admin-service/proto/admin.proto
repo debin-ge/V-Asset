@@ -28,6 +28,16 @@ service AdminService {
   rpc UpdateCookie(AdminUpdateCookieRequest) returns (AdminOperationResponse);
   rpc DeleteCookie(AdminDeleteRequest) returns (AdminOperationResponse);
   rpc FreezeCookie(AdminFreezeCookieRequest) returns (AdminFreezeCookieResponse);
+
+  rpc ListBillingAccounts(AdminListBillingAccountsRequest) returns (AdminListBillingAccountsResponse);
+  rpc GetBillingAccountDetail(AdminGetBillingAccountDetailRequest) returns (AdminGetBillingAccountDetailResponse);
+  rpc AdjustBillingBalance(AdminAdjustBillingBalanceRequest) returns (AdminAdjustBillingBalanceResponse);
+  rpc ListBillingShortfalls(AdminListBillingShortfallsRequest) returns (AdminListBillingShortfallsResponse);
+  rpc ReconcileBillingShortfall(AdminReconcileBillingShortfallRequest) returns (AdminReconcileBillingShortfallResponse);
+  rpc ListBillingLedger(AdminListBillingLedgerRequest) returns (AdminListBillingLedgerResponse);
+  rpc ListBillingUsageRecords(AdminListBillingUsageRecordsRequest) returns (AdminListBillingUsageRecordsResponse);
+  rpc GetBillingPricing(AdminEmpty) returns (AdminBillingPricingResponse);
+  rpc UpdateBillingPricing(AdminUpdateBillingPricingRequest) returns (AdminBillingPricingResponse);
 }
 
 message AdminEmpty {}
@@ -270,4 +280,193 @@ message AdminCreateResourceResponse {
 
 message AdminOperationResponse {
   bool success = 1;
+}
+
+message AdminBillingAccount {
+  string user_id = 1;
+  string email = 2;
+  string nickname = 3;
+  int64 available_balance_fen = 4;
+  int64 reserved_balance_fen = 5;
+  int64 total_recharged_fen = 6;
+  int64 total_spent_fen = 7;
+  int64 total_traffic_bytes = 8;
+  int32 status = 9;
+  int32 version = 10;
+  string updated_at = 11;
+}
+
+message AdminListBillingAccountsRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 status = 4;
+}
+
+message AdminListBillingAccountsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated AdminBillingAccount items = 4;
+}
+
+message AdminGetBillingAccountDetailRequest {
+  string user_id = 1;
+}
+
+message AdminGetBillingAccountDetailResponse {
+  AdminBillingAccount account = 1;
+}
+
+message AdminAdjustBillingBalanceRequest {
+  string user_id = 1;
+  string operation_id = 2;
+  int64 amount_fen = 3;
+  string remark = 4;
+  string operator_user_id = 5;
+}
+
+message AdminAdjustBillingBalanceResponse {
+  bool success = 1;
+  AdminBillingAccount account = 2;
+  string entry_no = 3;
+}
+
+message AdminBillingShortfallOrder {
+  string order_no = 1;
+  string user_id = 2;
+  string email = 3;
+  string nickname = 4;
+  int64 history_id = 5;
+  string task_id = 6;
+  int32 scene = 7;
+  int32 status = 8;
+  int32 pricing_version = 9;
+  int64 actual_ingress_bytes = 10;
+  int64 actual_egress_bytes = 11;
+  int64 actual_traffic_bytes = 12;
+  int64 held_amount_fen = 13;
+  int64 captured_amount_fen = 14;
+  int64 released_amount_fen = 15;
+  int64 shortfall_fen = 16;
+  string remark = 17;
+  string created_at = 18;
+  string updated_at = 19;
+}
+
+message AdminListBillingShortfallsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message AdminListBillingShortfallsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated AdminBillingShortfallOrder items = 4;
+}
+
+message AdminReconcileBillingShortfallRequest {
+  string order_no = 1;
+  string operator_user_id = 2;
+  string remark = 3;
+}
+
+message AdminReconcileBillingShortfallResponse {
+  bool success = 1;
+  AdminBillingShortfallOrder order = 2;
+  AdminBillingAccount account = 3;
+  string entry_no = 4;
+}
+
+message AdminBillingLedgerEntry {
+  string entry_no = 1;
+  string user_id = 2;
+  string email = 3;
+  string nickname = 4;
+  string order_no = 5;
+  string hold_no = 6;
+  int64 history_id = 7;
+  string task_id = 8;
+  string transfer_id = 9;
+  string operation_id = 10;
+  int32 entry_type = 11;
+  int32 scene = 12;
+  int64 action_amount_fen = 13;
+  int64 available_delta_fen = 14;
+  int64 reserved_delta_fen = 15;
+  int64 balance_after_available_fen = 16;
+  int64 balance_after_reserved_fen = 17;
+  string operator_user_id = 18;
+  string remark = 19;
+  string created_at = 20;
+}
+
+message AdminListBillingLedgerRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 entry_type = 4;
+}
+
+message AdminListBillingLedgerResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated AdminBillingLedgerEntry items = 4;
+}
+
+message AdminBillingUsageRecord {
+  string usage_no = 1;
+  string order_no = 2;
+  string user_id = 3;
+  string email = 4;
+  string nickname = 5;
+  int64 history_id = 6;
+  string task_id = 7;
+  string transfer_id = 8;
+  int32 direction = 9;
+  int64 traffic_bytes = 10;
+  string unit_price_fen_per_gib = 11;
+  int64 amount_fen = 12;
+  int32 pricing_version = 13;
+  string source_service = 14;
+  int32 status = 15;
+  string created_at = 16;
+  string confirmed_at = 17;
+}
+
+message AdminListBillingUsageRecordsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  int32 direction = 4;
+}
+
+message AdminListBillingUsageRecordsResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  repeated AdminBillingUsageRecord items = 4;
+}
+
+message AdminBillingPricingResponse {
+  int32 version = 1;
+  string ingress_price_fen_per_gib = 2;
+  string egress_price_fen_per_gib = 3;
+  int64 default_estimate_bytes = 4;
+  bool enabled = 5;
+  string remark = 6;
+  string updated_by_user_id = 7;
+  string effective_at = 8;
+  string created_at = 9;
+}
+
+message AdminUpdateBillingPricingRequest {
+  string ingress_price_fen_per_gib = 1;
+  string egress_price_fen_per_gib = 2;
+  int64 default_estimate_bytes = 3;
+  string remark = 4;
+  string operator_user_id = 5;
 }

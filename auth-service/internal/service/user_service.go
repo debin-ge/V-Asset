@@ -143,3 +143,13 @@ func (s *UserService) GetPlatformUserStats(ctx context.Context) (int64, error) {
 
 	return totalUsers, nil
 }
+
+// SearchUsers 搜索用户
+func (s *UserService) SearchUsers(ctx context.Context, query string, page, pageSize int) ([]models.User, int64, error) {
+	return s.userRepo.Search(ctx, query, page, pageSize)
+}
+
+// BatchGetUsers 批量获取用户
+func (s *UserService) BatchGetUsers(ctx context.Context, userIDs []string) ([]models.User, error) {
+	return s.userRepo.FindByIDs(ctx, userIDs)
+}

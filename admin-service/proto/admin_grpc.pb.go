@@ -19,26 +19,35 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminService_Login_FullMethodName                   = "/admin.AdminService/Login"
-	AdminService_Logout_FullMethodName                  = "/admin.AdminService/Logout"
-	AdminService_GetCurrentUser_FullMethodName          = "/admin.AdminService/GetCurrentUser"
-	AdminService_GetOverview_FullMethodName             = "/admin.AdminService/GetOverview"
-	AdminService_GetRequestTrend_FullMethodName         = "/admin.AdminService/GetRequestTrend"
-	AdminService_GetUserStats_FullMethodName            = "/admin.AdminService/GetUserStats"
-	AdminService_GetProxySourceStatus_FullMethodName    = "/admin.AdminService/GetProxySourceStatus"
-	AdminService_GetProxySourcePolicy_FullMethodName    = "/admin.AdminService/GetProxySourcePolicy"
-	AdminService_UpdateProxySourcePolicy_FullMethodName = "/admin.AdminService/UpdateProxySourcePolicy"
-	AdminService_ListProxies_FullMethodName             = "/admin.AdminService/ListProxies"
-	AdminService_CreateProxy_FullMethodName             = "/admin.AdminService/CreateProxy"
-	AdminService_UpdateProxy_FullMethodName             = "/admin.AdminService/UpdateProxy"
-	AdminService_UpdateProxyStatus_FullMethodName       = "/admin.AdminService/UpdateProxyStatus"
-	AdminService_DeleteProxy_FullMethodName             = "/admin.AdminService/DeleteProxy"
-	AdminService_ListCookies_FullMethodName             = "/admin.AdminService/ListCookies"
-	AdminService_GetCookie_FullMethodName               = "/admin.AdminService/GetCookie"
-	AdminService_CreateCookie_FullMethodName            = "/admin.AdminService/CreateCookie"
-	AdminService_UpdateCookie_FullMethodName            = "/admin.AdminService/UpdateCookie"
-	AdminService_DeleteCookie_FullMethodName            = "/admin.AdminService/DeleteCookie"
-	AdminService_FreezeCookie_FullMethodName            = "/admin.AdminService/FreezeCookie"
+	AdminService_Login_FullMethodName                     = "/admin.AdminService/Login"
+	AdminService_Logout_FullMethodName                    = "/admin.AdminService/Logout"
+	AdminService_GetCurrentUser_FullMethodName            = "/admin.AdminService/GetCurrentUser"
+	AdminService_GetOverview_FullMethodName               = "/admin.AdminService/GetOverview"
+	AdminService_GetRequestTrend_FullMethodName           = "/admin.AdminService/GetRequestTrend"
+	AdminService_GetUserStats_FullMethodName              = "/admin.AdminService/GetUserStats"
+	AdminService_GetProxySourceStatus_FullMethodName      = "/admin.AdminService/GetProxySourceStatus"
+	AdminService_GetProxySourcePolicy_FullMethodName      = "/admin.AdminService/GetProxySourcePolicy"
+	AdminService_UpdateProxySourcePolicy_FullMethodName   = "/admin.AdminService/UpdateProxySourcePolicy"
+	AdminService_ListProxies_FullMethodName               = "/admin.AdminService/ListProxies"
+	AdminService_CreateProxy_FullMethodName               = "/admin.AdminService/CreateProxy"
+	AdminService_UpdateProxy_FullMethodName               = "/admin.AdminService/UpdateProxy"
+	AdminService_UpdateProxyStatus_FullMethodName         = "/admin.AdminService/UpdateProxyStatus"
+	AdminService_DeleteProxy_FullMethodName               = "/admin.AdminService/DeleteProxy"
+	AdminService_ListCookies_FullMethodName               = "/admin.AdminService/ListCookies"
+	AdminService_GetCookie_FullMethodName                 = "/admin.AdminService/GetCookie"
+	AdminService_CreateCookie_FullMethodName              = "/admin.AdminService/CreateCookie"
+	AdminService_UpdateCookie_FullMethodName              = "/admin.AdminService/UpdateCookie"
+	AdminService_DeleteCookie_FullMethodName              = "/admin.AdminService/DeleteCookie"
+	AdminService_FreezeCookie_FullMethodName              = "/admin.AdminService/FreezeCookie"
+	AdminService_ListBillingAccounts_FullMethodName       = "/admin.AdminService/ListBillingAccounts"
+	AdminService_GetBillingAccountDetail_FullMethodName   = "/admin.AdminService/GetBillingAccountDetail"
+	AdminService_AdjustBillingBalance_FullMethodName      = "/admin.AdminService/AdjustBillingBalance"
+	AdminService_ListBillingShortfalls_FullMethodName     = "/admin.AdminService/ListBillingShortfalls"
+	AdminService_ReconcileBillingShortfall_FullMethodName = "/admin.AdminService/ReconcileBillingShortfall"
+	AdminService_ListBillingLedger_FullMethodName         = "/admin.AdminService/ListBillingLedger"
+	AdminService_ListBillingUsageRecords_FullMethodName   = "/admin.AdminService/ListBillingUsageRecords"
+	AdminService_GetBillingPricing_FullMethodName         = "/admin.AdminService/GetBillingPricing"
+	AdminService_UpdateBillingPricing_FullMethodName      = "/admin.AdminService/UpdateBillingPricing"
 )
 
 // AdminServiceClient is the client API for AdminService service.
@@ -65,6 +74,15 @@ type AdminServiceClient interface {
 	UpdateCookie(ctx context.Context, in *AdminUpdateCookieRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	DeleteCookie(ctx context.Context, in *AdminDeleteRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	FreezeCookie(ctx context.Context, in *AdminFreezeCookieRequest, opts ...grpc.CallOption) (*AdminFreezeCookieResponse, error)
+	ListBillingAccounts(ctx context.Context, in *AdminListBillingAccountsRequest, opts ...grpc.CallOption) (*AdminListBillingAccountsResponse, error)
+	GetBillingAccountDetail(ctx context.Context, in *AdminGetBillingAccountDetailRequest, opts ...grpc.CallOption) (*AdminGetBillingAccountDetailResponse, error)
+	AdjustBillingBalance(ctx context.Context, in *AdminAdjustBillingBalanceRequest, opts ...grpc.CallOption) (*AdminAdjustBillingBalanceResponse, error)
+	ListBillingShortfalls(ctx context.Context, in *AdminListBillingShortfallsRequest, opts ...grpc.CallOption) (*AdminListBillingShortfallsResponse, error)
+	ReconcileBillingShortfall(ctx context.Context, in *AdminReconcileBillingShortfallRequest, opts ...grpc.CallOption) (*AdminReconcileBillingShortfallResponse, error)
+	ListBillingLedger(ctx context.Context, in *AdminListBillingLedgerRequest, opts ...grpc.CallOption) (*AdminListBillingLedgerResponse, error)
+	ListBillingUsageRecords(ctx context.Context, in *AdminListBillingUsageRecordsRequest, opts ...grpc.CallOption) (*AdminListBillingUsageRecordsResponse, error)
+	GetBillingPricing(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminBillingPricingResponse, error)
+	UpdateBillingPricing(ctx context.Context, in *AdminUpdateBillingPricingRequest, opts ...grpc.CallOption) (*AdminBillingPricingResponse, error)
 }
 
 type adminServiceClient struct {
@@ -275,6 +293,96 @@ func (c *adminServiceClient) FreezeCookie(ctx context.Context, in *AdminFreezeCo
 	return out, nil
 }
 
+func (c *adminServiceClient) ListBillingAccounts(ctx context.Context, in *AdminListBillingAccountsRequest, opts ...grpc.CallOption) (*AdminListBillingAccountsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListBillingAccountsResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListBillingAccounts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetBillingAccountDetail(ctx context.Context, in *AdminGetBillingAccountDetailRequest, opts ...grpc.CallOption) (*AdminGetBillingAccountDetailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminGetBillingAccountDetailResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetBillingAccountDetail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) AdjustBillingBalance(ctx context.Context, in *AdminAdjustBillingBalanceRequest, opts ...grpc.CallOption) (*AdminAdjustBillingBalanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminAdjustBillingBalanceResponse)
+	err := c.cc.Invoke(ctx, AdminService_AdjustBillingBalance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ListBillingShortfalls(ctx context.Context, in *AdminListBillingShortfallsRequest, opts ...grpc.CallOption) (*AdminListBillingShortfallsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListBillingShortfallsResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListBillingShortfalls_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ReconcileBillingShortfall(ctx context.Context, in *AdminReconcileBillingShortfallRequest, opts ...grpc.CallOption) (*AdminReconcileBillingShortfallResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminReconcileBillingShortfallResponse)
+	err := c.cc.Invoke(ctx, AdminService_ReconcileBillingShortfall_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ListBillingLedger(ctx context.Context, in *AdminListBillingLedgerRequest, opts ...grpc.CallOption) (*AdminListBillingLedgerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListBillingLedgerResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListBillingLedger_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ListBillingUsageRecords(ctx context.Context, in *AdminListBillingUsageRecordsRequest, opts ...grpc.CallOption) (*AdminListBillingUsageRecordsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListBillingUsageRecordsResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListBillingUsageRecords_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetBillingPricing(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminBillingPricingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminBillingPricingResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetBillingPricing_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) UpdateBillingPricing(ctx context.Context, in *AdminUpdateBillingPricingRequest, opts ...grpc.CallOption) (*AdminBillingPricingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminBillingPricingResponse)
+	err := c.cc.Invoke(ctx, AdminService_UpdateBillingPricing_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility.
@@ -299,6 +407,15 @@ type AdminServiceServer interface {
 	UpdateCookie(context.Context, *AdminUpdateCookieRequest) (*AdminOperationResponse, error)
 	DeleteCookie(context.Context, *AdminDeleteRequest) (*AdminOperationResponse, error)
 	FreezeCookie(context.Context, *AdminFreezeCookieRequest) (*AdminFreezeCookieResponse, error)
+	ListBillingAccounts(context.Context, *AdminListBillingAccountsRequest) (*AdminListBillingAccountsResponse, error)
+	GetBillingAccountDetail(context.Context, *AdminGetBillingAccountDetailRequest) (*AdminGetBillingAccountDetailResponse, error)
+	AdjustBillingBalance(context.Context, *AdminAdjustBillingBalanceRequest) (*AdminAdjustBillingBalanceResponse, error)
+	ListBillingShortfalls(context.Context, *AdminListBillingShortfallsRequest) (*AdminListBillingShortfallsResponse, error)
+	ReconcileBillingShortfall(context.Context, *AdminReconcileBillingShortfallRequest) (*AdminReconcileBillingShortfallResponse, error)
+	ListBillingLedger(context.Context, *AdminListBillingLedgerRequest) (*AdminListBillingLedgerResponse, error)
+	ListBillingUsageRecords(context.Context, *AdminListBillingUsageRecordsRequest) (*AdminListBillingUsageRecordsResponse, error)
+	GetBillingPricing(context.Context, *AdminEmpty) (*AdminBillingPricingResponse, error)
+	UpdateBillingPricing(context.Context, *AdminUpdateBillingPricingRequest) (*AdminBillingPricingResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -368,6 +485,33 @@ func (UnimplementedAdminServiceServer) DeleteCookie(context.Context, *AdminDelet
 }
 func (UnimplementedAdminServiceServer) FreezeCookie(context.Context, *AdminFreezeCookieRequest) (*AdminFreezeCookieResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method FreezeCookie not implemented")
+}
+func (UnimplementedAdminServiceServer) ListBillingAccounts(context.Context, *AdminListBillingAccountsRequest) (*AdminListBillingAccountsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingAccounts not implemented")
+}
+func (UnimplementedAdminServiceServer) GetBillingAccountDetail(context.Context, *AdminGetBillingAccountDetailRequest) (*AdminGetBillingAccountDetailResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBillingAccountDetail not implemented")
+}
+func (UnimplementedAdminServiceServer) AdjustBillingBalance(context.Context, *AdminAdjustBillingBalanceRequest) (*AdminAdjustBillingBalanceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdjustBillingBalance not implemented")
+}
+func (UnimplementedAdminServiceServer) ListBillingShortfalls(context.Context, *AdminListBillingShortfallsRequest) (*AdminListBillingShortfallsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingShortfalls not implemented")
+}
+func (UnimplementedAdminServiceServer) ReconcileBillingShortfall(context.Context, *AdminReconcileBillingShortfallRequest) (*AdminReconcileBillingShortfallResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReconcileBillingShortfall not implemented")
+}
+func (UnimplementedAdminServiceServer) ListBillingLedger(context.Context, *AdminListBillingLedgerRequest) (*AdminListBillingLedgerResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingLedger not implemented")
+}
+func (UnimplementedAdminServiceServer) ListBillingUsageRecords(context.Context, *AdminListBillingUsageRecordsRequest) (*AdminListBillingUsageRecordsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBillingUsageRecords not implemented")
+}
+func (UnimplementedAdminServiceServer) GetBillingPricing(context.Context, *AdminEmpty) (*AdminBillingPricingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBillingPricing not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateBillingPricing(context.Context, *AdminUpdateBillingPricingRequest) (*AdminBillingPricingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateBillingPricing not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 func (UnimplementedAdminServiceServer) testEmbeddedByValue()                      {}
@@ -750,6 +894,168 @@ func _AdminService_FreezeCookie_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_ListBillingAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListBillingAccountsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListBillingAccounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListBillingAccounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListBillingAccounts(ctx, req.(*AdminListBillingAccountsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetBillingAccountDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetBillingAccountDetailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetBillingAccountDetail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetBillingAccountDetail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetBillingAccountDetail(ctx, req.(*AdminGetBillingAccountDetailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_AdjustBillingBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminAdjustBillingBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).AdjustBillingBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_AdjustBillingBalance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).AdjustBillingBalance(ctx, req.(*AdminAdjustBillingBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ListBillingShortfalls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListBillingShortfallsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListBillingShortfalls(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListBillingShortfalls_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListBillingShortfalls(ctx, req.(*AdminListBillingShortfallsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ReconcileBillingShortfall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminReconcileBillingShortfallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ReconcileBillingShortfall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ReconcileBillingShortfall_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ReconcileBillingShortfall(ctx, req.(*AdminReconcileBillingShortfallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ListBillingLedger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListBillingLedgerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListBillingLedger(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListBillingLedger_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListBillingLedger(ctx, req.(*AdminListBillingLedgerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ListBillingUsageRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListBillingUsageRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListBillingUsageRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListBillingUsageRecords_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListBillingUsageRecords(ctx, req.(*AdminListBillingUsageRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetBillingPricing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminEmpty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetBillingPricing(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetBillingPricing_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetBillingPricing(ctx, req.(*AdminEmpty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_UpdateBillingPricing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminUpdateBillingPricingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateBillingPricing(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_UpdateBillingPricing_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateBillingPricing(ctx, req.(*AdminUpdateBillingPricingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -836,6 +1142,42 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FreezeCookie",
 			Handler:    _AdminService_FreezeCookie_Handler,
+		},
+		{
+			MethodName: "ListBillingAccounts",
+			Handler:    _AdminService_ListBillingAccounts_Handler,
+		},
+		{
+			MethodName: "GetBillingAccountDetail",
+			Handler:    _AdminService_GetBillingAccountDetail_Handler,
+		},
+		{
+			MethodName: "AdjustBillingBalance",
+			Handler:    _AdminService_AdjustBillingBalance_Handler,
+		},
+		{
+			MethodName: "ListBillingShortfalls",
+			Handler:    _AdminService_ListBillingShortfalls_Handler,
+		},
+		{
+			MethodName: "ReconcileBillingShortfall",
+			Handler:    _AdminService_ReconcileBillingShortfall_Handler,
+		},
+		{
+			MethodName: "ListBillingLedger",
+			Handler:    _AdminService_ListBillingLedger_Handler,
+		},
+		{
+			MethodName: "ListBillingUsageRecords",
+			Handler:    _AdminService_ListBillingUsageRecords_Handler,
+		},
+		{
+			MethodName: "GetBillingPricing",
+			Handler:    _AdminService_GetBillingPricing_Handler,
+		},
+		{
+			MethodName: "UpdateBillingPricing",
+			Handler:    _AdminService_UpdateBillingPricing_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

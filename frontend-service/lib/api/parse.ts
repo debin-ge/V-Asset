@@ -1,7 +1,6 @@
 import apiClient from '../api-client';
 import { formatDuration } from '../format';
-
-const PARSE_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_PARSE_TIMEOUT_MS || 300000);
+import { resolveParseTimeoutMs } from '../runtime-config';
 
 export interface VideoFormat {
     format_id: string;
@@ -43,7 +42,7 @@ export const parseApi = {
         const response = await apiClient.post<ParseApiVideoInfo>(
             '/api/v1/parse',
             { url, skip_cache: skipCache },
-            { timeout: PARSE_TIMEOUT_MS }
+            { timeout: resolveParseTimeoutMs() }
         );
         const data = response.data;
 

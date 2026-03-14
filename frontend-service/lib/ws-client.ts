@@ -1,31 +1,5 @@
 import { tokenManager } from './api-client';
-
-function resolveWsBaseUrl(): string {
-    const explicitWsUrl = process.env.NEXT_PUBLIC_WS_URL;
-    if (explicitWsUrl) {
-        return explicitWsUrl;
-    }
-
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (apiBaseUrl) {
-        try {
-            const apiUrl = new URL(apiBaseUrl);
-            apiUrl.protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-            return apiUrl.origin;
-        } catch (error) {
-            console.warn('Invalid NEXT_PUBLIC_API_BASE_URL for WebSocket resolution:', error);
-        }
-    }
-
-    if (typeof window !== 'undefined') {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        return `${protocol}//${window.location.host}`;
-    }
-
-    return 'ws://localhost:8080';
-}
-
-const WS_BASE_URL = resolveWsBaseUrl();
+import { resolveWsBaseUrl } from './runtime-config';
 
 export interface ProgressData {
     task_id: string;
@@ -65,7 +39,8 @@ class ProgressWebSocket {
         }
 
         this.connectingTasks.add(taskId);
-        const wsUrl = `${WS_BASE_URL}/api/v1/ws/progress?task_id=${encodeURIComponent(taskId)}`;
+        const wsBaseUrl = resolveWsBaseUrl();
+        const wsUrl = `${wsBaseUrl}/api/v1/ws/progress?task_id=${encodeURIComponent(taskId)}`;
 
         try {
             const ws = new WebSocket(wsUrl, ["bearer", token]);
@@ -121,7 +96,7 @@ class ProgressWebSocket {
     // 订阅任务进度
     subscribe(taskId: string, callback: ProgressCallback): void {
         this.listeners.set(taskId, callback);
-        console.log('Subscribing to progress updates for task:', taskId, 'via', WS_BASE_URL);
+        console.log('Subscribing to progress updates for task:', taskId, 'via', resolveWsBaseUrl());
 
         this.connect(taskId);
     }
