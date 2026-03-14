@@ -1,65 +1,148 @@
 # Auth Service
 
-V-Asset 认证鉴权服务,提供用户注册、登录、Token 验证等功能。
+`auth-service` 是 V-Asset 的用户认证服务，负责用户账户、登录、JWT、Refresh Token 和用户会话管理。
 
-## 功能特性
+## 当前职责
 
-- ✅ 用户注册和登录
-- ✅ JWT Token 认证(Access Token + Refresh Token)
-- ✅ bcrypt 密码加密
-- ✅ Redis 缓存优化
-- ✅ 登录失败限制(5次锁定30分钟)
-- ✅ 会话管理(最多5个并发会话)
-- ✅ 自动清理过期会话
+- 用户注册和登录
+- Access Token / Refresh Token 生成
+- Token 验证
+- Token 刷新
+- 用户登出
+- 用户资料查询与修改
+- 密码修改
+- 平台用户数统计
+- 用户 session 清理
 
-## 技术栈
+## 当前实现特点
 
-- **语言**: Go 1.21
-- **框架**: gRPC
-- **数据库**: PostgreSQL 15
-- **缓存**: Redis 7
-- **认证**: JWT (golang-jwt/jwt)
-- **密码**: bcrypt
+### 1. Token 验证是 session-backed 的
 
-## 快速开始
+当前 `VerifyToken` 不只是“JWT 能解析就算合法”，还要求：
 
-### 1. 启动服务
+- token 对应的 session 仍然存在
+- session 未过期
+- token 所属用户与 session 用户一致
+
+这意味着：
+
+- 用户登出后，access token 不会继续在 session 删除后长期有效
+- 刷新 token 时，会同步轮换 session 里保存的 `token_hash`
+
+关键代码：
+
+- `internal/service/token_service.go`
+- `internal/repository/session_repository.go`
+
+### 2. Auth Service 只提供 gRPC
+
+浏览器不会直接访问这个服务；用户侧所有 HTTP 请求都先到 `api-gateway`。
+
+## 核心 RPC
+
+定义位于 `proto/auth.proto`。
+
+常用方法包括：
+
+- `Register`
+- `Login`
+- `VerifyToken`
+- `RefreshToken`
+- `Logout`
+- `GetUserInfo`
+- `UpdateProfile`
+- `ChangePassword`
+- `GetPlatformUserStats`
+
+## 运行依赖
+
+- PostgreSQL
+- Redis
+
+默认端口：`9001`
+
+## 数据职责
+
+Auth Service 负责的数据主要包括：
+
+- 用户账号
+- 用户密码哈希
+- 登录失败状态
+- 用户 session
+
+Redis 主要用于：
+
+- token claims 缓存
+- 登录失败计数
+
+## 启动方式
 
 ```bash
-# 使用 Docker Compose 启动所有服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f auth-service
+make proto
+make build
+make run
 ```
 
-### 2. 数据库迁移
-
-数据库表会在 PostgreSQL 容器启动时自动创建(通过 `migrations/001_init.sql`)。
-
-如果需要手动执行迁移:
+测试：
 
 ```bash
-docker exec -i auth-postgres psql -U vasset -d vasset < migrations/001_init.sql
+go test ./...
 ```
 
-### 3. 测试接口
+## 关键目录
 
-安装 grpcurl:
-```bash
-brew install grpcurl
+```text
+auth-service/
+├── cmd/main.go
+├── internal/
+│   ├── config/
+│   ├── database/
+│   ├── handler/
+│   ├── models/
+│   ├── repository/
+│   ├── service/
+│   └── utils/
+├── migrations/
+├── proto/
+└── config/
 ```
 
-#### 注册用户
+## 配置重点
+
+配置文件：`config/dev.yaml`
+
+重点配置：
+
+- `database.*`
+- `redis.*`
+- `jwt.secret`
+- `jwt.access_token_ttl`
+- `jwt.refresh_token_ttl`
+- `session.max_sessions`
+- `session.cleanup_interval`
+- `password.*`
+
+常见环境变量：
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `REDIS_ADDR`
+- `REDIS_PASSWORD`
+- `JWT_SECRET`
+
+## 本地调试示例
+
 ```bash
 grpcurl -plaintext -d '{
   "email": "test@example.com",
   "password": "Test1234",
-  "nickname": "测试用户"
+  "nickname": "tester"
 }' localhost:9001 auth.AuthService/Register
 ```
 
-#### 登录
 ```bash
 grpcurl -plaintext -d '{
   "email": "test@example.com",
@@ -67,203 +150,18 @@ grpcurl -plaintext -d '{
 }' localhost:9001 auth.AuthService/Login
 ```
 
-#### 验证 Token
-```bash
-grpcurl -plaintext -d '{
-  "token": "<your_access_token>"
-}' localhost:9001 auth.AuthService/VerifyToken
-```
+## 代码阅读建议
 
-#### 刷新 Token
-```bash
-grpcurl -plaintext -d '{
-  "refresh_token": "<your_refresh_token>"
-}' localhost:9001 auth.AuthService/RefreshToken
-```
+推荐阅读顺序：
 
-## 项目结构
+1. `cmd/main.go`
+2. `internal/handler/grpc_server.go`
+3. `internal/service/auth_service.go`
+4. `internal/service/token_service.go`
+5. `internal/repository/`
 
-```
-auth-service/
-├── cmd/
-│   └── main.go              # 主程序入口
-├── internal/
-│   ├── config/              # 配置管理
-│   ├── handler/             # gRPC 处理器
-│   ├── models/              # 数据模型
-│   ├── repository/          # 数据访问层
-│   ├── service/             # 业务逻辑层
-│   └── utils/               # 工具函数
-├── proto/                   # Proto 定义
-├── migrations/              # 数据库迁移
-├── config/                  # 配置文件
-├── Dockerfile
-├── docker-compose.yml
-└── Makefile
-```
+## 安全提示
 
-## 配置说明
-
-配置文件位于 `config/dev.yaml`:
-
-```yaml
-server:
-  port: 9001                 # gRPC 服务端口
-
-database:
-  host: localhost
-  port: 5432
-  user: vasset
-  password: password         # 可通过环境变量 DB_PASSWORD 覆盖
-  dbname: vasset
-
-redis:
-  addr: localhost:6379
-  password: ""               # 可通过环境变量 REDIS_PASSWORD 覆盖
-
-jwt:
-  secret: "..."              # 可通过环境变量 JWT_SECRET 覆盖
-  access_token_ttl: 86400    # Access Token 有效期(24小时)
-  refresh_token_ttl: 604800  # Refresh Token 有效期(7天)
-
-password:
-  bcrypt_cost: 10
-  min_length: 8
-  require_uppercase: true
-  require_lowercase: true
-  require_number: true
-```
-
-## 开发指南
-
-### 本地开发
-
-```bash
-# 安装依赖
-go mod download
-
-# 生成 Proto 代码
-make proto
-
-# 编译
-make build
-
-# 运行
-make run
-```
-
-### 修改 Proto 定义
-
-1. 编辑 `proto/auth.proto`
-2. 重新生成代码: `make proto`
-3. 更新对应的处理器代码
-
-## API 文档
-
-### gRPC 服务
-
-服务定义在 `proto/auth.proto`,包含以下 RPC 方法:
-
-- `Register`: 用户注册
-- `Login`: 用户登录
-- `VerifyToken`: Token 验证
-- `RefreshToken`: Token 刷新
-- `Logout`: 用户登出
-- `GetUserInfo`: 获取用户信息
-
-详细的请求/响应格式请查看 Proto 定义文件。
-
-## 安全说明
-
-### 生产环境配置
-
-⚠️ **重要**: 在生产环境中,必须修改以下配置:
-
-1. **JWT Secret**: 使用强随机字符串
-   ```bash
-   export JWT_SECRET=$(openssl rand -base64 32)
-   ```
-
-2. **数据库密码**: 使用强密码
-   ```bash
-   export DB_PASSWORD=<strong_password>
-   ```
-
-3. **Redis 密码**: 配置 Redis 密码
-   ```bash
-   export REDIS_PASSWORD=<redis_password>
-   ```
-
-### 密码策略
-
-- 最短 8 字符
-- 至少包含 1 个大写字母
-- 至少包含 1 个小写字母
-- 至少包含 1 个数字
-
-### Token 安全
-
-- Access Token 有效期: 24 小时
-- Refresh Token 有效期: 7 天
-- Token 使用 HS256 签名算法
-- Token 验证结果缓存 5 分钟(Redis)
-
-### 防暴力破解
-
-- 登录失败 5 次后锁定账号 30 分钟
-- 使用 Redis 记录登录失败次数
-
-## 监控
-
-### 日志
-
-服务使用结构化日志,输出格式:
-
-```json
-{
-  "timestamp": "2025-12-03T10:30:00Z",
-  "level": "info",
-  "service": "auth-service",
-  "method": "Login",
-  "user_id": 1001,
-  "email": "user@example.com",
-  "success": true
-}
-```
-
-### 健康检查
-
-```bash
-# 检查服务是否运行
-docker ps | grep auth-service
-
-# 检查数据库连接
-docker exec auth-postgres pg_isready -U vasset
-
-# 检查 Redis 连接
-docker exec auth-redis redis-cli ping
-```
-
-## 故障排查
-
-### 服务无法启动
-
-1. 检查端口是否被占用: `lsof -i :9001`
-2. 检查数据库连接: `docker logs auth-postgres`
-3. 检查 Redis 连接: `docker logs auth-redis`
-
-### Token 验证失败
-
-1. 检查 JWT Secret 是否一致
-2. 检查 Token 是否过期
-3. 检查 Redis 连接是否正常
-
-### 登录失败
-
-1. 检查用户是否存在
-2. 检查密码是否正确
-3. 检查账号是否被锁定(登录失败次数)
-
-## License
-
-MIT
+- 生产环境必须替换 `JWT_SECRET`
+- `refresh_token_ttl` 不应短于 `access_token_ttl`
+- 网关和 Auth Service 必须使用同一套鉴权约定，尤其是 token 刷新和登出行为

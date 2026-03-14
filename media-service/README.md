@@ -1,221 +1,213 @@
 # Media Service
 
-Media Service 是 V-Asset 视频资产管理平台的解析+下载融合服务，负责视频 URL 解析、任务消费与下载执行。
+`media-service` 是 V-Asset 的解析与下载执行服务。
 
-## 功能特性
+它既承担同步的“链接解析”能力，也承担异步的“下载任务消费与执行”能力。
 
-- **多平台支持**: YouTube、TikTok、Bilibili、Twitter/X、Instagram 等1000+视频平台
-- **智能缓存**: Redis缓存解析结果,提高响应速度
-- **并发控制**: 限制并发解析数量,防止资源耗尽
-- **格式标准化**: 自动标准化视频格式信息,提供质量标签
-- **错误处理**: 完善的错误分类和处理机制
+## 当前职责
 
-## 技术栈
+- 校验和解析视频链接
+- 基于 yt-dlp 获取元数据与格式信息
+- 缓存解析结果
+- 消费 RabbitMQ 下载任务
+- 下载文件并写入本地磁盘
+- 发布 Redis 进度消息
+- 与 `asset-service` 协作获取代理和 Cookie
+- 回写下载状态与完成结果
+- 周期清理临时文件
+- 周期检测 yt-dlp 更新
 
-- **语言**: Go 1.21
-- **协议**: gRPC
-- **缓存**: Redis
-- **解析工具**: yt-dlp
+## 两条核心链路
 
-## 快速开始
+### 1. 解析链路
 
-### 前置要求
+同步 gRPC 请求：
 
-- Go 1.21+
+```text
+api-gateway -> media-service ParseURL / ValidateURL
+```
+
+处理过程：
+
+1. 识别平台
+2. 查询 Redis 缓存
+3. 未命中时调用 yt-dlp
+4. 标准化格式信息并返回
+
+### 2. 下载链路
+
+异步任务消费：
+
+```text
+api-gateway -> RabbitMQ
+media-service task consumer -> worker pool -> yt-dlp download
+```
+
+处理过程：
+
+1. 消费下载消息
+2. 更新下载状态
+3. 必要时从 `asset-service` 获取代理和 Cookie
+4. 执行下载并写入本地磁盘
+5. 将进度通过 Redis PubSub 发布
+6. 更新下载结果和历史状态
+
+## 当前实现特点
+
+### 1. 解析和下载共用一个服务
+
+这不是单一 Parser 服务，而是“解析 + 下载融合服务”。
+
+优点是：
+
+- 解析阶段和下载阶段可以共享平台识别、yt-dlp 能力和部分配置
+- 代理 / Cookie 策略可以在执行侧统一落地
+
+### 2. 下载任务已按最大重试次数控制
+
+当前任务消费者会读取 `retry.max_attempts`：
+
+- 未达到上限时重新发布任务
+- 达到上限后确认终态失败
+
+这避免了永久失败任务无限重入队。
+
+### 3. 进度推送走 Redis PubSub
+
+Media Service 不直接与浏览器通信，而是：
+
+- 发布 `progress:<task_id>` 消息到 Redis
+- 由 `api-gateway` 的 WebSocket 管理器转发给前端
+
+## 运行依赖
+
+- PostgreSQL
 - Redis
-- yt-dlp (本地运行时需要)
-- protoc (如需重新生成proto代码)
+- RabbitMQ
+- yt-dlp
+- 可选：Asset Service（用于代理 / Cookie / 历史同步）
 
-### 本地开发
+默认端口：`9002`
 
-1. **安装yt-dlp**
-```bash
-# macOS
-brew install yt-dlp
+## 关键目录
 
-# 或使用pip
-pip install yt-dlp
+```text
+media-service/
+├── cmd/main.go
+├── internal/
+│   ├── adapter/
+│   ├── cache/
+│   ├── config/
+│   ├── detector/
+│   ├── download/
+│   │   ├── cleanup/
+│   │   ├── client/
+│   │   ├── config/
+│   │   ├── database/
+│   │   ├── repository/
+│   │   ├── scheduler/
+│   │   ├── storage/
+│   │   ├── worker/
+│   │   └── ytdlp/
+│   ├── handler/
+│   ├── platformpolicy/
+│   ├── service/
+│   └── ytdlp/
+├── proto/
+└── config/
 ```
 
-2. **安装依赖**
-```bash
-make deps
-```
+## 启动方式
 
-3. **生成proto代码**
 ```bash
 make proto
-```
-
-4. **启动Redis**
-```bash
-docker run -d -p 6379:6379 redis:7-alpine
-```
-
-5. **运行服务**
-```bash
+make deps
+make build
 make run
 ```
 
-### Docker部署
+测试：
 
 ```bash
-# 构建并启动服务
-make docker-up
-
-# 停止服务
-make docker-down
+go test ./...
 ```
 
-## API接口
+## 配置重点
 
-### ParseURL
+配置文件：`config/dev.yaml`
 
-解析视频URL并获取元数据。
+重点配置项：
 
-**请求**:
-```protobuf
-message ParseURLRequest {
-  string url = 1;
-  bool skip_cache = 2;  // 可选:跳过缓存
-}
+- `redis.*`
+- `database.*`
+- `rabbitmq.*`
+- `worker.*`
+- `retry.*`
+- `ytdlp.*`
+- `storage.*`
+- `cleanup.*`
+- `asset_service.*`
+
+常见环境变量：
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `REDIS_ADDR`
+- `REDIS_PASSWORD`
+- `RABBITMQ_URL`
+- `ASSET_SERVICE_ADDR`
+
+## 本地调试
+
+### 解析接口
+
+```bash
+grpcurl -plaintext -d '{"url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}' \
+  localhost:9002 media.MediaService/ParseURL
 ```
 
-**响应**:
-```protobuf
-message ParseURLResponse {
-  string video_id = 1;
-  string platform = 2;
-  string title = 3;
-  string description = 4;
-  int64 duration = 5;
-  string thumbnail = 6;
-  string author = 7;
-  string upload_date = 8;
-  int64 view_count = 9;
-  repeated VideoFormat formats = 10;
-}
+### 运行前确认
+
+- `yt-dlp` 已安装且路径可用
+- Redis 可连接
+- RabbitMQ 可连接
+- PostgreSQL 可连接
+
+## 代码阅读建议
+
+推荐阅读顺序：
+
+1. `cmd/main.go`
+2. `internal/handler/grpc_server.go`
+3. `internal/service/`
+4. `internal/download/worker/task_consumer.go`
+5. `internal/download/worker/pool.go`
+6. `internal/download/ytdlp/`
+
+## 常见问题
+
+### yt-dlp 不可用
+
+请先确认：
+
+```bash
+which yt-dlp
 ```
 
-### ValidateURL
-
-验证URL是否有效。
-
-**请求**:
-```protobuf
-message ValidateURLRequest {
-  string url = 1;
-}
-```
-
-**响应**:
-```protobuf
-message ValidateURLResponse {
-  bool valid = 1;
-  string platform = 2;
-  string message = 3;
-}
-```
-
-## 配置说明
-
-配置文件位于 `config/dev.yaml`:
+必要时在配置中显式指定：
 
 ```yaml
-server:
-  port: 9002              # gRPC端口
-
-redis:
-  addr: localhost:6379    # Redis地址
-  
-ytdlp:
-  timeout: 30             # 解析超时(秒)
-  max_concurrent: 10      # 最大并发数
-  
-cache:
-  ttl: 3600              # 缓存TTL(秒)
-```
-
-## 使用示例
-
-使用grpcurl测试:
-
-```bash
-# 解析YouTube视频
-grpcurl -plaintext -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}' \
-  localhost:9002 media.MediaService/ParseURL
-
-# 验证URL
-grpcurl -plaintext -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}' \
-  localhost:9002 media.MediaService/ValidateURL
-```
-
-## 项目结构
-
-```
-media-service/
-├── cmd/
-│   └── main.go                 # 服务入口
-├── internal/
-│   ├── adapter/                # 平台适配器
-│   ├── cache/                  # 缓存服务
-│   ├── config/                 # 配置管理
-│   ├── detector/               # 平台检测
-│   ├── handler/                # gRPC处理器
-│   ├── service/                # 业务逻辑
-│   ├── utils/                  # 工具函数
-│   └── ytdlp/                  # yt-dlp封装
-├── proto/                      # Proto定义
-├── config/                     # 配置文件
-├── Dockerfile
-├── docker-compose.yml
-└── Makefile
-```
-
-## 支持的平台
-
-- YouTube (youtube.com, youtu.be)
-- TikTok (tiktok.com)
-- Bilibili (bilibili.com)
-- Twitter/X (twitter.com, x.com)
-- Instagram (instagram.com)
-- 更多通过yt-dlp支持的平台
-
-## Cookie配置
-
-某些平台(如Bilibili)可能需要Cookie才能访问完整信息:
-
-1. 导出浏览器Cookie到文件
-2. 将Cookie文件放到 `/etc/vasset/cookies/` 目录
-3. 在配置文件中指定Cookie文件路径
-
-## 监控指标
-
-服务提供以下监控指标:
-
-- 解析请求总数(按平台分类)
-- 解析成功/失败数
-- 缓存命中/未命中数
-- 解析耗时(P50/P95/P99)
-
-## 故障排查
-
-### yt-dlp未找到
-```bash
-# 确认yt-dlp已安装
-which yt-dlp
-
-# 或在配置文件中指定完整路径
 ytdlp:
   binary_path: "/usr/local/bin/yt-dlp"
 ```
 
-### Redis连接失败
-服务会在Redis不可用时跳过缓存,但仍能正常工作。
+### 下载任务没有被消费
 
-### 解析超时
-增加timeout配置值或检查网络连接。
+优先检查：
 
-## 许可证
-
-MIT
+- RabbitMQ 是否可用
+- `rabbitmq.queue` 是否与 Gateway 发布配置一致
+- worker pool 是否正常启动
