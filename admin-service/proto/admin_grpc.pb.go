@@ -34,6 +34,7 @@ const (
 	AdminService_UpdateProxyStatus_FullMethodName       = "/admin.AdminService/UpdateProxyStatus"
 	AdminService_DeleteProxy_FullMethodName             = "/admin.AdminService/DeleteProxy"
 	AdminService_ListCookies_FullMethodName             = "/admin.AdminService/ListCookies"
+	AdminService_GetCookie_FullMethodName               = "/admin.AdminService/GetCookie"
 	AdminService_CreateCookie_FullMethodName            = "/admin.AdminService/CreateCookie"
 	AdminService_UpdateCookie_FullMethodName            = "/admin.AdminService/UpdateCookie"
 	AdminService_DeleteCookie_FullMethodName            = "/admin.AdminService/DeleteCookie"
@@ -59,6 +60,7 @@ type AdminServiceClient interface {
 	UpdateProxyStatus(ctx context.Context, in *AdminUpdateProxyStatusRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	DeleteProxy(ctx context.Context, in *AdminDeleteRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	ListCookies(ctx context.Context, in *AdminListCookiesRequest, opts ...grpc.CallOption) (*AdminListCookiesResponse, error)
+	GetCookie(ctx context.Context, in *AdminGetCookieRequest, opts ...grpc.CallOption) (*AdminGetCookieResponse, error)
 	CreateCookie(ctx context.Context, in *AdminCreateCookieRequest, opts ...grpc.CallOption) (*AdminCreateResourceResponse, error)
 	UpdateCookie(ctx context.Context, in *AdminUpdateCookieRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	DeleteCookie(ctx context.Context, in *AdminDeleteRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
@@ -223,6 +225,16 @@ func (c *adminServiceClient) ListCookies(ctx context.Context, in *AdminListCooki
 	return out, nil
 }
 
+func (c *adminServiceClient) GetCookie(ctx context.Context, in *AdminGetCookieRequest, opts ...grpc.CallOption) (*AdminGetCookieResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminGetCookieResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetCookie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminServiceClient) CreateCookie(ctx context.Context, in *AdminCreateCookieRequest, opts ...grpc.CallOption) (*AdminCreateResourceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AdminCreateResourceResponse)
@@ -282,6 +294,7 @@ type AdminServiceServer interface {
 	UpdateProxyStatus(context.Context, *AdminUpdateProxyStatusRequest) (*AdminOperationResponse, error)
 	DeleteProxy(context.Context, *AdminDeleteRequest) (*AdminOperationResponse, error)
 	ListCookies(context.Context, *AdminListCookiesRequest) (*AdminListCookiesResponse, error)
+	GetCookie(context.Context, *AdminGetCookieRequest) (*AdminGetCookieResponse, error)
 	CreateCookie(context.Context, *AdminCreateCookieRequest) (*AdminCreateResourceResponse, error)
 	UpdateCookie(context.Context, *AdminUpdateCookieRequest) (*AdminOperationResponse, error)
 	DeleteCookie(context.Context, *AdminDeleteRequest) (*AdminOperationResponse, error)
@@ -340,6 +353,9 @@ func (UnimplementedAdminServiceServer) DeleteProxy(context.Context, *AdminDelete
 }
 func (UnimplementedAdminServiceServer) ListCookies(context.Context, *AdminListCookiesRequest) (*AdminListCookiesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListCookies not implemented")
+}
+func (UnimplementedAdminServiceServer) GetCookie(context.Context, *AdminGetCookieRequest) (*AdminGetCookieResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCookie not implemented")
 }
 func (UnimplementedAdminServiceServer) CreateCookie(context.Context, *AdminCreateCookieRequest) (*AdminCreateResourceResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateCookie not implemented")
@@ -644,6 +660,24 @@ func _AdminService_ListCookies_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_GetCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetCookieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetCookie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetCookie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetCookie(ctx, req.(*AdminGetCookieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AdminService_CreateCookie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AdminCreateCookieRequest)
 	if err := dec(in); err != nil {
@@ -782,6 +816,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListCookies",
 			Handler:    _AdminService_ListCookies_Handler,
+		},
+		{
+			MethodName: "GetCookie",
+			Handler:    _AdminService_GetCookie_Handler,
 		},
 		{
 			MethodName: "CreateCookie",

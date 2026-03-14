@@ -20,20 +20,12 @@ func CORS(cfg *config.CORSConfig) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
+		originAllowed := false
 
 		// 检查来源是否被允许
-		if len(cfg.AllowedOrigins) > 0 {
-			if allowedOrigins[origin] {
-				c.Header("Access-Control-Allow-Origin", origin)
-			}
-		} else {
-			// 如果没有配置，则允许所有来源
-			// 注意：与 credentials 一起使用时，不能用 *，必须返回具体的 origin
-			if origin != "" {
-				c.Header("Access-Control-Allow-Origin", origin)
-			} else {
-				c.Header("Access-Control-Allow-Origin", "*")
-			}
+		if len(cfg.AllowedOrigins) > 0 && allowedOrigins[origin] {
+			originAllowed = true
+			c.Header("Access-Control-Allow-Origin", origin)
 		}
 
 		// 设置允许的方法
@@ -50,8 +42,10 @@ func CORS(cfg *config.CORSConfig) gin.HandlerFunc {
 			c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Request-ID, Accept, Origin")
 		}
 
-		// 允许携带凭证
-		c.Header("Access-Control-Allow-Credentials", "true")
+		// 仅对显式允许的来源开放带凭证的跨域访问。
+		if originAllowed {
+			c.Header("Access-Control-Allow-Credentials", "true")
+		}
 
 		// 暴露响应头给前端（用于文件下载获取文件名等）
 		c.Header("Access-Control-Expose-Headers", "Content-Disposition, Content-Length, Content-Type")

@@ -154,6 +154,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		adminV1.DELETE("/proxies/:id", adminProxyHandler.Delete)
 
 		adminV1.GET("/cookies", adminCookieHandler.List)
+		adminV1.GET("/cookies/:id", adminCookieHandler.Get)
 		adminV1.POST("/cookies", adminCookieHandler.Create)
 		adminV1.PUT("/cookies/:id", adminCookieHandler.Update)
 		adminV1.DELETE("/cookies/:id", adminCookieHandler.Delete)
@@ -161,7 +162,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 	}
 
 	// ==================== WebSocket 路由 ====================
-	// WebSocket 进度推送 (Token 通过查询参数验证)
+	// WebSocket 进度推送 (浏览器通过子协议传递 bearer token)
 	r.GET("/api/v1/ws/progress", wsHandler.Progress)
 
 	return r

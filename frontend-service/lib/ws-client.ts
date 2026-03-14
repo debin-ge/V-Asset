@@ -65,10 +65,10 @@ class ProgressWebSocket {
         }
 
         this.connectingTasks.add(taskId);
-        const wsUrl = `${WS_BASE_URL}/api/v1/ws/progress?token=${encodeURIComponent(token)}&task_id=${encodeURIComponent(taskId)}`;
+        const wsUrl = `${WS_BASE_URL}/api/v1/ws/progress?task_id=${encodeURIComponent(taskId)}`;
 
         try {
-            const ws = new WebSocket(wsUrl);
+            const ws = new WebSocket(wsUrl, ["bearer", token]);
             this.sockets.set(taskId, ws);
 
             ws.onopen = () => {

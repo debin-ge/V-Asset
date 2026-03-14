@@ -18,7 +18,6 @@ export default function Home() {
     startDownload,
     downloadFile,
     reset,
-    autoDownloadAttempted,
     phase,
     phaseLabel,
   } = useDownload()

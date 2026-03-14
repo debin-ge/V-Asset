@@ -15,12 +15,6 @@ import (
 func JWTAuth(authClient pb.AuthServiceClient, redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		// Fallback: 从 query 参数 token 读取（用于浏览器直接下载场景）
-		if authHeader == "" {
-			if queryToken := c.Query("token"); queryToken != "" {
-				authHeader = "Bearer " + queryToken
-			}
-		}
 
 		claims, err := AuthenticateToken(c.Request.Context(), authClient, redisClient, authHeader)
 		if err != nil {

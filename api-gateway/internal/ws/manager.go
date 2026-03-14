@@ -101,10 +101,7 @@ func NewManager(rdb *redis.Client, authClient authVerifier, assetClient taskAcce
 
 // HandleConnection 处理 WebSocket 连接
 func (m *Manager) HandleConnection(c *gin.Context) {
-	token := strings.TrimSpace(c.Query("token"))
-	if token == "" {
-		token = strings.TrimSpace(c.GetHeader("Authorization"))
-	}
+	token, selectedProtocol := extractWebSocketToken(c.Request)
 
 	claims, err := middleware.AuthenticateToken(c.Request.Context(), m.authClient, m.rdb, token)
 	if err != nil {
@@ -136,7 +133,14 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	}
 
 	// 升级到 WebSocket
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	var responseHeader http.Header
+	if selectedProtocol != "" {
+		responseHeader = http.Header{
+			"Sec-WebSocket-Protocol": []string{selectedProtocol},
+		}
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
 	if err != nil {
 		log.Printf("[WS] Failed to upgrade connection from %s for user %s task %s: %v", c.ClientIP(), claims.UserID, taskID, err)
 		return
@@ -201,6 +205,20 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 			}
 		}
 	}
+}
+
+func extractWebSocketToken(r *http.Request) (string, string) {
+	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+	if authHeader != "" {
+		return authHeader, ""
+	}
+
+	subprotocols := websocket.Subprotocols(r)
+	if len(subprotocols) >= 2 && strings.EqualFold(subprotocols[0], "bearer") {
+		return strings.TrimSpace(subprotocols[1]), subprotocols[0]
+	}
+
+	return "", ""
 }
 
 func (m *Manager) validateTaskAccess(ctx context.Context, userID, taskID string) error {

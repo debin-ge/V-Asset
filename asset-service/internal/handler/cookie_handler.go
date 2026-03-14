@@ -140,7 +140,7 @@ func (h *CookieHandler) ListCookies(ctx context.Context, req *pb.ListCookiesRequ
 
 	items := make([]*pb.CookieInfo, 0, len(result.Items))
 	for _, c := range result.Items {
-		items = append(items, cookieToProto(&c))
+		items = append(items, cookieSummaryToProto(&c))
 	}
 
 	return &pb.ListCookiesResponse{
@@ -227,5 +227,11 @@ func cookieToProto(c *models.Cookie) *pb.CookieInfo {
 		info.LastUsedAt = c.LastUsedAt.Format("2006-01-02 15:04:05")
 	}
 
+	return info
+}
+
+func cookieSummaryToProto(c *models.Cookie) *pb.CookieInfo {
+	info := cookieToProto(c)
+	info.Content = ""
 	return info
 }

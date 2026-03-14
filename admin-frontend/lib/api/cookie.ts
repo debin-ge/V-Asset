@@ -1,10 +1,14 @@
 import apiClient from "@/lib/api-client";
-import type { CookieListResponse } from "@/types/cookie";
+import type { CookieInfo, CookieListResponse } from "@/types/cookie";
 
 export const cookieApi = {
   list: async (params?: Record<string, string | number>) => {
     const response = await apiClient.get("/api/v1/admin/cookies", { params });
     return response.data as CookieListResponse;
+  },
+  get: async (id: number) => {
+    const response = await apiClient.get(`/api/v1/admin/cookies/${id}`);
+    return response.data as CookieInfo;
   },
   create: async (data: Record<string, unknown>) => {
     const response = await apiClient.post("/api/v1/admin/cookies", data);
@@ -23,4 +27,3 @@ export const cookieApi = {
     return response.data as { success: boolean; frozen_until: string };
   },
 };
-

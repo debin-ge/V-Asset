@@ -99,16 +99,55 @@ func (r *SessionRepository) FindByRefreshToken(ctx context.Context, refreshToken
 func (r *SessionRepository) Update(ctx context.Context, session *models.UserSession) error {
 	query := `
 		UPDATE user_sessions
-		SET last_used_at = $1
-		WHERE id = $2
+		SET token_hash = $1,
+		    last_used_at = $2
+		WHERE id = $3
 	`
 
-	_, err := r.db.ExecContext(ctx, query, session.LastUsedAt, session.ID)
+	_, err := r.db.ExecContext(ctx, query, session.TokenHash, session.LastUsedAt, session.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update session: %w", err)
 	}
 
 	return nil
+}
+
+// FindByTokenHash 根据 Access Token Hash 查询会话
+func (r *SessionRepository) FindByTokenHash(ctx context.Context, tokenHash string) (*models.UserSession, error) {
+	query := `
+		SELECT id, user_id, refresh_token, token_hash, device_info, ip_address,
+		       expires_at, last_used_at, created_at
+		FROM user_sessions
+		WHERE token_hash = $1
+	`
+
+	session := &models.UserSession{}
+	var ipAddress sql.NullString
+
+	err := r.db.QueryRowContext(ctx, query, tokenHash).Scan(
+		&session.ID,
+		&session.UserID,
+		&session.RefreshToken,
+		&session.TokenHash,
+		&session.DeviceInfo,
+		&ipAddress,
+		&session.ExpiresAt,
+		&session.LastUsedAt,
+		&session.CreatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to find session by token hash: %w", err)
+	}
+
+	if ipAddress.Valid {
+		session.IPAddress = ipAddress.String
+	}
+
+	return session, nil
 }
 
 // DeleteByTokenHash 根据 Token Hash 删除会话

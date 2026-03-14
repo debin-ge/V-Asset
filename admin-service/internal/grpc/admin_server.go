@@ -255,6 +255,20 @@ func (s *AdminServer) ListCookies(ctx context.Context, req *pb.AdminListCookiesR
 	}, nil
 }
 
+func (s *AdminServer) GetCookie(ctx context.Context, req *pb.AdminGetCookieRequest) (*pb.AdminGetCookieResponse, error) {
+	resp, err := s.cookieService.Get(ctx, req.GetId())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+	if resp == nil {
+		return nil, status.Error(codes.NotFound, "cookie not found")
+	}
+
+	return &pb.AdminGetCookieResponse{
+		Cookie: cookieInfoToProto(*resp),
+	}, nil
+}
+
 func (s *AdminServer) CreateCookie(ctx context.Context, req *pb.AdminCreateCookieRequest) (*pb.AdminCreateResourceResponse, error) {
 	id, err := s.cookieService.Create(ctx, models.CreateCookieRequest{
 		Platform:      req.GetPlatform(),

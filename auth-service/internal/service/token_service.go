@@ -76,8 +76,22 @@ func (s *TokenService) GenerateTokenPair(ctx context.Context, user *models.User,
 
 // VerifyToken 验证 Token
 func (s *TokenService) VerifyToken(ctx context.Context, tokenString string) (*utils.Claims, error) {
+	tokenHash := utils.HashToken(tokenString)
+
+	// 1. 令牌必须仍然绑定到活动会话，才能视为有效。
+	session, err := s.sessionRepo.FindByTokenHash(ctx, tokenHash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify session: %w", err)
+	}
+	if session == nil {
+		return nil, fmt.Errorf("invalid token")
+	}
+	if session.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("token session expired")
+	}
+
 	// 1. 检查 Redis 缓存
-	cacheKey := fmt.Sprintf("auth:token:%s", utils.HashToken(tokenString))
+	cacheKey := fmt.Sprintf("auth:token:%s", tokenHash)
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
 
 	if err == nil {
@@ -101,6 +115,9 @@ func (s *TokenService) VerifyToken(ctx context.Context, tokenString string) (*ut
 	}
 	if user == nil {
 		return nil, fmt.Errorf("user not found")
+	}
+	if user.ID != session.UserID {
+		return nil, fmt.Errorf("invalid token")
 	}
 
 	// 4. 写入缓存(TTL=5分钟)
@@ -143,11 +160,16 @@ func (s *TokenService) RefreshToken(ctx context.Context, refreshToken string) (s
 	}
 
 	// 5. 更新会话的最后使用时间
+	session.TokenHash = utils.HashToken(newToken)
 	session.LastUsedAt = time.Now()
-	s.sessionRepo.Update(ctx, session)
+	if err := s.sessionRepo.Update(ctx, session); err != nil {
+		return "", fmt.Errorf("failed to update session: %w", err)
+	}
 
 	// 6. 缓存新 Token
-	s.CacheTokenClaims(ctx, newToken, user.ID, user.Email, roleStr)
+	if err := s.CacheTokenClaims(ctx, newToken, user.ID, user.Email, roleStr); err != nil {
+		return "", fmt.Errorf("failed to cache refreshed token: %w", err)
+	}
 
 	return newToken, nil
 }

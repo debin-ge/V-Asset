@@ -1929,6 +1929,94 @@ func (x *AdminListCookiesResponse) GetItems() []*AdminCookieInfo {
 	return nil
 }
 
+type AdminGetCookieRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminGetCookieRequest) Reset() {
+	*x = AdminGetCookieRequest{}
+	mi := &file_proto_admin_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminGetCookieRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminGetCookieRequest) ProtoMessage() {}
+
+func (x *AdminGetCookieRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminGetCookieRequest.ProtoReflect.Descriptor instead.
+func (*AdminGetCookieRequest) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *AdminGetCookieRequest) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type AdminGetCookieResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Cookie        *AdminCookieInfo       `protobuf:"bytes,1,opt,name=cookie,proto3" json:"cookie,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminGetCookieResponse) Reset() {
+	*x = AdminGetCookieResponse{}
+	mi := &file_proto_admin_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminGetCookieResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminGetCookieResponse) ProtoMessage() {}
+
+func (x *AdminGetCookieResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminGetCookieResponse.ProtoReflect.Descriptor instead.
+func (*AdminGetCookieResponse) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *AdminGetCookieResponse) GetCookie() *AdminCookieInfo {
+	if x != nil {
+		return x.Cookie
+	}
+	return nil
+}
+
 type AdminCreateCookieRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Platform      string                 `protobuf:"bytes,1,opt,name=platform,proto3" json:"platform,omitempty"`
@@ -1942,7 +2030,7 @@ type AdminCreateCookieRequest struct {
 
 func (x *AdminCreateCookieRequest) Reset() {
 	*x = AdminCreateCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[25]
+	mi := &file_proto_admin_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1954,7 +2042,7 @@ func (x *AdminCreateCookieRequest) String() string {
 func (*AdminCreateCookieRequest) ProtoMessage() {}
 
 func (x *AdminCreateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[25]
+	mi := &file_proto_admin_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1967,7 +2055,7 @@ func (x *AdminCreateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminCreateCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminCreateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{25}
+	return file_proto_admin_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *AdminCreateCookieRequest) GetPlatform() string {
@@ -2018,7 +2106,7 @@ type AdminUpdateCookieRequest struct {
 
 func (x *AdminUpdateCookieRequest) Reset() {
 	*x = AdminUpdateCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[26]
+	mi := &file_proto_admin_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2030,7 +2118,7 @@ func (x *AdminUpdateCookieRequest) String() string {
 func (*AdminUpdateCookieRequest) ProtoMessage() {}
 
 func (x *AdminUpdateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[26]
+	mi := &file_proto_admin_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2043,7 +2131,7 @@ func (x *AdminUpdateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpdateCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{26}
+	return file_proto_admin_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AdminUpdateCookieRequest) GetId() int64 {
@@ -2091,7 +2179,7 @@ type AdminFreezeCookieRequest struct {
 
 func (x *AdminFreezeCookieRequest) Reset() {
 	*x = AdminFreezeCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[27]
+	mi := &file_proto_admin_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2103,7 +2191,7 @@ func (x *AdminFreezeCookieRequest) String() string {
 func (*AdminFreezeCookieRequest) ProtoMessage() {}
 
 func (x *AdminFreezeCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[27]
+	mi := &file_proto_admin_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2116,7 +2204,7 @@ func (x *AdminFreezeCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminFreezeCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminFreezeCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{27}
+	return file_proto_admin_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AdminFreezeCookieRequest) GetId() int64 {
@@ -2143,7 +2231,7 @@ type AdminFreezeCookieResponse struct {
 
 func (x *AdminFreezeCookieResponse) Reset() {
 	*x = AdminFreezeCookieResponse{}
-	mi := &file_proto_admin_proto_msgTypes[28]
+	mi := &file_proto_admin_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2155,7 +2243,7 @@ func (x *AdminFreezeCookieResponse) String() string {
 func (*AdminFreezeCookieResponse) ProtoMessage() {}
 
 func (x *AdminFreezeCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[28]
+	mi := &file_proto_admin_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2168,7 +2256,7 @@ func (x *AdminFreezeCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminFreezeCookieResponse.ProtoReflect.Descriptor instead.
 func (*AdminFreezeCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{28}
+	return file_proto_admin_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AdminFreezeCookieResponse) GetSuccess() bool {
@@ -2194,7 +2282,7 @@ type AdminCreateResourceResponse struct {
 
 func (x *AdminCreateResourceResponse) Reset() {
 	*x = AdminCreateResourceResponse{}
-	mi := &file_proto_admin_proto_msgTypes[29]
+	mi := &file_proto_admin_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2206,7 +2294,7 @@ func (x *AdminCreateResourceResponse) String() string {
 func (*AdminCreateResourceResponse) ProtoMessage() {}
 
 func (x *AdminCreateResourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[29]
+	mi := &file_proto_admin_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2219,7 +2307,7 @@ func (x *AdminCreateResourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminCreateResourceResponse.ProtoReflect.Descriptor instead.
 func (*AdminCreateResourceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{29}
+	return file_proto_admin_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AdminCreateResourceResponse) GetId() int64 {
@@ -2238,7 +2326,7 @@ type AdminOperationResponse struct {
 
 func (x *AdminOperationResponse) Reset() {
 	*x = AdminOperationResponse{}
-	mi := &file_proto_admin_proto_msgTypes[30]
+	mi := &file_proto_admin_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2250,7 +2338,7 @@ func (x *AdminOperationResponse) String() string {
 func (*AdminOperationResponse) ProtoMessage() {}
 
 func (x *AdminOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[30]
+	mi := &file_proto_admin_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2263,7 +2351,7 @@ func (x *AdminOperationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminOperationResponse.ProtoReflect.Descriptor instead.
 func (*AdminOperationResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{30}
+	return file_proto_admin_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *AdminOperationResponse) GetSuccess() bool {
@@ -2455,7 +2543,11 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12,\n" +
-	"\x05items\x18\x04 \x03(\v2\x16.admin.AdminCookieInfoR\x05items\"\xa8\x01\n" +
+	"\x05items\x18\x04 \x03(\v2\x16.admin.AdminCookieInfoR\x05items\"'\n" +
+	"\x15AdminGetCookieRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"H\n" +
+	"\x16AdminGetCookieResponse\x12.\n" +
+	"\x06cookie\x18\x01 \x01(\v2\x16.admin.AdminCookieInfoR\x06cookie\"\xa8\x01\n" +
 	"\x18AdminCreateCookieRequest\x12\x1a\n" +
 	"\bplatform\x18\x01 \x01(\tR\bplatform\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -2477,7 +2569,7 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\x1bAdminCreateResourceResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"2\n" +
 	"\x16AdminOperationResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xe7\v\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb1\f\n" +
 	"\fAdminService\x12<\n" +
 	"\x05Login\x12\x18.admin.AdminLoginRequest\x1a\x19.admin.AdminLoginResponse\x12B\n" +
 	"\x06Logout\x12\x19.admin.AdminLogoutRequest\x1a\x1d.admin.AdminOperationResponse\x12M\n" +
@@ -2493,7 +2585,8 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\vUpdateProxy\x12\x1e.admin.AdminUpdateProxyRequest\x1a\x1d.admin.AdminOperationResponse\x12X\n" +
 	"\x11UpdateProxyStatus\x12$.admin.AdminUpdateProxyStatusRequest\x1a\x1d.admin.AdminOperationResponse\x12G\n" +
 	"\vDeleteProxy\x12\x19.admin.AdminDeleteRequest\x1a\x1d.admin.AdminOperationResponse\x12N\n" +
-	"\vListCookies\x12\x1e.admin.AdminListCookiesRequest\x1a\x1f.admin.AdminListCookiesResponse\x12S\n" +
+	"\vListCookies\x12\x1e.admin.AdminListCookiesRequest\x1a\x1f.admin.AdminListCookiesResponse\x12H\n" +
+	"\tGetCookie\x12\x1c.admin.AdminGetCookieRequest\x1a\x1d.admin.AdminGetCookieResponse\x12S\n" +
 	"\fCreateCookie\x12\x1f.admin.AdminCreateCookieRequest\x1a\".admin.AdminCreateResourceResponse\x12N\n" +
 	"\fUpdateCookie\x12\x1f.admin.AdminUpdateCookieRequest\x1a\x1d.admin.AdminOperationResponse\x12H\n" +
 	"\fDeleteCookie\x12\x19.admin.AdminDeleteRequest\x1a\x1d.admin.AdminOperationResponse\x12Q\n" +
@@ -2511,7 +2604,7 @@ func file_proto_admin_proto_rawDescGZIP() []byte {
 	return file_proto_admin_proto_rawDescData
 }
 
-var file_proto_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_proto_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_proto_admin_proto_goTypes = []any{
 	(*AdminEmpty)(nil),                          // 0: admin.AdminEmpty
 	(*AdminUser)(nil),                           // 1: admin.AdminUser
@@ -2538,12 +2631,14 @@ var file_proto_admin_proto_goTypes = []any{
 	(*AdminCookieInfo)(nil),                     // 22: admin.AdminCookieInfo
 	(*AdminListCookiesRequest)(nil),             // 23: admin.AdminListCookiesRequest
 	(*AdminListCookiesResponse)(nil),            // 24: admin.AdminListCookiesResponse
-	(*AdminCreateCookieRequest)(nil),            // 25: admin.AdminCreateCookieRequest
-	(*AdminUpdateCookieRequest)(nil),            // 26: admin.AdminUpdateCookieRequest
-	(*AdminFreezeCookieRequest)(nil),            // 27: admin.AdminFreezeCookieRequest
-	(*AdminFreezeCookieResponse)(nil),           // 28: admin.AdminFreezeCookieResponse
-	(*AdminCreateResourceResponse)(nil),         // 29: admin.AdminCreateResourceResponse
-	(*AdminOperationResponse)(nil),              // 30: admin.AdminOperationResponse
+	(*AdminGetCookieRequest)(nil),               // 25: admin.AdminGetCookieRequest
+	(*AdminGetCookieResponse)(nil),              // 26: admin.AdminGetCookieResponse
+	(*AdminCreateCookieRequest)(nil),            // 27: admin.AdminCreateCookieRequest
+	(*AdminUpdateCookieRequest)(nil),            // 28: admin.AdminUpdateCookieRequest
+	(*AdminFreezeCookieRequest)(nil),            // 29: admin.AdminFreezeCookieRequest
+	(*AdminFreezeCookieResponse)(nil),           // 30: admin.AdminFreezeCookieResponse
+	(*AdminCreateResourceResponse)(nil),         // 31: admin.AdminCreateResourceResponse
+	(*AdminOperationResponse)(nil),              // 32: admin.AdminOperationResponse
 }
 var file_proto_admin_proto_depIdxs = []int32{
 	1,  // 0: admin.AdminLoginResponse.user:type_name -> admin.AdminUser
@@ -2551,49 +2646,52 @@ var file_proto_admin_proto_depIdxs = []int32{
 	8,  // 2: admin.AdminRequestTrendResponse.points:type_name -> admin.AdminTrendPoint
 	15, // 3: admin.AdminListProxiesResponse.items:type_name -> admin.AdminProxyInfo
 	22, // 4: admin.AdminListCookiesResponse.items:type_name -> admin.AdminCookieInfo
-	2,  // 5: admin.AdminService.Login:input_type -> admin.AdminLoginRequest
-	4,  // 6: admin.AdminService.Logout:input_type -> admin.AdminLogoutRequest
-	5,  // 7: admin.AdminService.GetCurrentUser:input_type -> admin.AdminSessionRequest
-	0,  // 8: admin.AdminService.GetOverview:input_type -> admin.AdminEmpty
-	9,  // 9: admin.AdminService.GetRequestTrend:input_type -> admin.AdminRequestTrendRequest
-	0,  // 10: admin.AdminService.GetUserStats:input_type -> admin.AdminEmpty
-	0,  // 11: admin.AdminService.GetProxySourceStatus:input_type -> admin.AdminEmpty
-	0,  // 12: admin.AdminService.GetProxySourcePolicy:input_type -> admin.AdminEmpty
-	14, // 13: admin.AdminService.UpdateProxySourcePolicy:input_type -> admin.AdminUpdateProxySourcePolicyRequest
-	16, // 14: admin.AdminService.ListProxies:input_type -> admin.AdminListProxiesRequest
-	18, // 15: admin.AdminService.CreateProxy:input_type -> admin.AdminCreateProxyRequest
-	19, // 16: admin.AdminService.UpdateProxy:input_type -> admin.AdminUpdateProxyRequest
-	20, // 17: admin.AdminService.UpdateProxyStatus:input_type -> admin.AdminUpdateProxyStatusRequest
-	21, // 18: admin.AdminService.DeleteProxy:input_type -> admin.AdminDeleteRequest
-	23, // 19: admin.AdminService.ListCookies:input_type -> admin.AdminListCookiesRequest
-	25, // 20: admin.AdminService.CreateCookie:input_type -> admin.AdminCreateCookieRequest
-	26, // 21: admin.AdminService.UpdateCookie:input_type -> admin.AdminUpdateCookieRequest
-	21, // 22: admin.AdminService.DeleteCookie:input_type -> admin.AdminDeleteRequest
-	27, // 23: admin.AdminService.FreezeCookie:input_type -> admin.AdminFreezeCookieRequest
-	3,  // 24: admin.AdminService.Login:output_type -> admin.AdminLoginResponse
-	30, // 25: admin.AdminService.Logout:output_type -> admin.AdminOperationResponse
-	6,  // 26: admin.AdminService.GetCurrentUser:output_type -> admin.AdminCurrentUserResponse
-	7,  // 27: admin.AdminService.GetOverview:output_type -> admin.AdminOverviewResponse
-	10, // 28: admin.AdminService.GetRequestTrend:output_type -> admin.AdminRequestTrendResponse
-	11, // 29: admin.AdminService.GetUserStats:output_type -> admin.AdminUserStatsResponse
-	12, // 30: admin.AdminService.GetProxySourceStatus:output_type -> admin.AdminProxySourceStatusResponse
-	13, // 31: admin.AdminService.GetProxySourcePolicy:output_type -> admin.AdminProxySourcePolicyResponse
-	30, // 32: admin.AdminService.UpdateProxySourcePolicy:output_type -> admin.AdminOperationResponse
-	17, // 33: admin.AdminService.ListProxies:output_type -> admin.AdminListProxiesResponse
-	29, // 34: admin.AdminService.CreateProxy:output_type -> admin.AdminCreateResourceResponse
-	30, // 35: admin.AdminService.UpdateProxy:output_type -> admin.AdminOperationResponse
-	30, // 36: admin.AdminService.UpdateProxyStatus:output_type -> admin.AdminOperationResponse
-	30, // 37: admin.AdminService.DeleteProxy:output_type -> admin.AdminOperationResponse
-	24, // 38: admin.AdminService.ListCookies:output_type -> admin.AdminListCookiesResponse
-	29, // 39: admin.AdminService.CreateCookie:output_type -> admin.AdminCreateResourceResponse
-	30, // 40: admin.AdminService.UpdateCookie:output_type -> admin.AdminOperationResponse
-	30, // 41: admin.AdminService.DeleteCookie:output_type -> admin.AdminOperationResponse
-	28, // 42: admin.AdminService.FreezeCookie:output_type -> admin.AdminFreezeCookieResponse
-	24, // [24:43] is the sub-list for method output_type
-	5,  // [5:24] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	22, // 5: admin.AdminGetCookieResponse.cookie:type_name -> admin.AdminCookieInfo
+	2,  // 6: admin.AdminService.Login:input_type -> admin.AdminLoginRequest
+	4,  // 7: admin.AdminService.Logout:input_type -> admin.AdminLogoutRequest
+	5,  // 8: admin.AdminService.GetCurrentUser:input_type -> admin.AdminSessionRequest
+	0,  // 9: admin.AdminService.GetOverview:input_type -> admin.AdminEmpty
+	9,  // 10: admin.AdminService.GetRequestTrend:input_type -> admin.AdminRequestTrendRequest
+	0,  // 11: admin.AdminService.GetUserStats:input_type -> admin.AdminEmpty
+	0,  // 12: admin.AdminService.GetProxySourceStatus:input_type -> admin.AdminEmpty
+	0,  // 13: admin.AdminService.GetProxySourcePolicy:input_type -> admin.AdminEmpty
+	14, // 14: admin.AdminService.UpdateProxySourcePolicy:input_type -> admin.AdminUpdateProxySourcePolicyRequest
+	16, // 15: admin.AdminService.ListProxies:input_type -> admin.AdminListProxiesRequest
+	18, // 16: admin.AdminService.CreateProxy:input_type -> admin.AdminCreateProxyRequest
+	19, // 17: admin.AdminService.UpdateProxy:input_type -> admin.AdminUpdateProxyRequest
+	20, // 18: admin.AdminService.UpdateProxyStatus:input_type -> admin.AdminUpdateProxyStatusRequest
+	21, // 19: admin.AdminService.DeleteProxy:input_type -> admin.AdminDeleteRequest
+	23, // 20: admin.AdminService.ListCookies:input_type -> admin.AdminListCookiesRequest
+	25, // 21: admin.AdminService.GetCookie:input_type -> admin.AdminGetCookieRequest
+	27, // 22: admin.AdminService.CreateCookie:input_type -> admin.AdminCreateCookieRequest
+	28, // 23: admin.AdminService.UpdateCookie:input_type -> admin.AdminUpdateCookieRequest
+	21, // 24: admin.AdminService.DeleteCookie:input_type -> admin.AdminDeleteRequest
+	29, // 25: admin.AdminService.FreezeCookie:input_type -> admin.AdminFreezeCookieRequest
+	3,  // 26: admin.AdminService.Login:output_type -> admin.AdminLoginResponse
+	32, // 27: admin.AdminService.Logout:output_type -> admin.AdminOperationResponse
+	6,  // 28: admin.AdminService.GetCurrentUser:output_type -> admin.AdminCurrentUserResponse
+	7,  // 29: admin.AdminService.GetOverview:output_type -> admin.AdminOverviewResponse
+	10, // 30: admin.AdminService.GetRequestTrend:output_type -> admin.AdminRequestTrendResponse
+	11, // 31: admin.AdminService.GetUserStats:output_type -> admin.AdminUserStatsResponse
+	12, // 32: admin.AdminService.GetProxySourceStatus:output_type -> admin.AdminProxySourceStatusResponse
+	13, // 33: admin.AdminService.GetProxySourcePolicy:output_type -> admin.AdminProxySourcePolicyResponse
+	32, // 34: admin.AdminService.UpdateProxySourcePolicy:output_type -> admin.AdminOperationResponse
+	17, // 35: admin.AdminService.ListProxies:output_type -> admin.AdminListProxiesResponse
+	31, // 36: admin.AdminService.CreateProxy:output_type -> admin.AdminCreateResourceResponse
+	32, // 37: admin.AdminService.UpdateProxy:output_type -> admin.AdminOperationResponse
+	32, // 38: admin.AdminService.UpdateProxyStatus:output_type -> admin.AdminOperationResponse
+	32, // 39: admin.AdminService.DeleteProxy:output_type -> admin.AdminOperationResponse
+	24, // 40: admin.AdminService.ListCookies:output_type -> admin.AdminListCookiesResponse
+	26, // 41: admin.AdminService.GetCookie:output_type -> admin.AdminGetCookieResponse
+	31, // 42: admin.AdminService.CreateCookie:output_type -> admin.AdminCreateResourceResponse
+	32, // 43: admin.AdminService.UpdateCookie:output_type -> admin.AdminOperationResponse
+	32, // 44: admin.AdminService.DeleteCookie:output_type -> admin.AdminOperationResponse
+	30, // 45: admin.AdminService.FreezeCookie:output_type -> admin.AdminFreezeCookieResponse
+	26, // [26:46] is the sub-list for method output_type
+	6,  // [6:26] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_proto_admin_proto_init() }
@@ -2607,7 +2705,7 @@ func file_proto_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_admin_proto_rawDesc), len(file_proto_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   31,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

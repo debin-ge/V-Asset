@@ -39,6 +39,19 @@ func (s *CookieService) List(ctx context.Context, req models.ListCookiesRequest)
 	}, nil
 }
 
+func (s *CookieService) Get(ctx context.Context, id int64) (*models.CookieInfo, error) {
+	resp, err := s.assetClient.GetCookie(ctx, &pb.GetCookieRequest{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	if resp.GetCookie() == nil {
+		return nil, nil
+	}
+
+	item := cookieFromProto(resp.GetCookie())
+	return &item, nil
+}
+
 func (s *CookieService) Create(ctx context.Context, req models.CreateCookieRequest) (int64, error) {
 	resp, err := s.assetClient.CreateCookie(ctx, &pb.CreateCookieRequest{
 		Platform:      req.Platform,

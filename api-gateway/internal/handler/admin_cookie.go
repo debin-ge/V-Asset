@@ -67,6 +67,46 @@ func (h *AdminCookieHandler) List(c *gin.Context) {
 	})
 }
 
+func (h *AdminCookieHandler) Get(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		models.BadRequest(c, "invalid cookie id")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
+	defer cancel()
+
+	resp, err := h.adminClient.GetCookie(ctx, &pb.AdminGetCookieRequest{Id: id})
+	if err != nil {
+		writeGRPCError(c, err)
+		return
+	}
+
+	item := resp.GetCookie()
+	if item == nil {
+		models.NotFound(c, "cookie not found")
+		return
+	}
+
+	models.Success(c, models.CookieInfo{
+		ID:            item.GetId(),
+		Platform:      item.GetPlatform(),
+		Name:          item.GetName(),
+		Content:       item.GetContent(),
+		Status:        item.GetStatus(),
+		ExpireAt:      item.GetExpireAt(),
+		FrozenUntil:   item.GetFrozenUntil(),
+		FreezeSeconds: item.GetFreezeSeconds(),
+		LastUsedAt:    item.GetLastUsedAt(),
+		UseCount:      item.GetUseCount(),
+		SuccessCount:  item.GetSuccessCount(),
+		FailCount:     item.GetFailCount(),
+		CreatedAt:     item.GetCreatedAt(),
+		UpdatedAt:     item.GetUpdatedAt(),
+	})
+}
+
 func (h *AdminCookieHandler) Create(c *gin.Context) {
 	var req models.CreateCookieRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

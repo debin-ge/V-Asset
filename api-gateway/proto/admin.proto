@@ -23,6 +23,7 @@ service AdminService {
   rpc DeleteProxy(AdminDeleteRequest) returns (AdminOperationResponse);
 
   rpc ListCookies(AdminListCookiesRequest) returns (AdminListCookiesResponse);
+  rpc GetCookie(AdminGetCookieRequest) returns (AdminGetCookieResponse);
   rpc CreateCookie(AdminCreateCookieRequest) returns (AdminCreateResourceResponse);
   rpc UpdateCookie(AdminUpdateCookieRequest) returns (AdminOperationResponse);
   rpc DeleteCookie(AdminDeleteRequest) returns (AdminOperationResponse);
@@ -204,6 +205,15 @@ message AdminListCookiesResponse {
   int32 page_size = 3;
   repeated AdminCookieInfo items = 4;
 }
+
+message AdminGetCookieRequest {
+  int64 id = 1;
+}
+
+message AdminGetCookieResponse {
+  AdminCookieInfo cookie = 1;
+}
+
 message AdminCreateCookieRequest {
   string platform = 1;
   string name = 2;

@@ -69,7 +69,8 @@ func TestHandleConnectionRequiresTaskID(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/ws/progress?token=test-token", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/ws/progress", nil)
+	c.Request.Header.Set("Sec-WebSocket-Protocol", "bearer, test-token")
 
 	manager.HandleConnection(c)
 
@@ -91,7 +92,8 @@ func TestHandleConnectionRejectsUnauthorizedTaskAccess(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/ws/progress?token=test-token&task_id=task-1", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/ws/progress?task_id=task-1", nil)
+	c.Request.Header.Set("Sec-WebSocket-Protocol", "bearer, test-token")
 
 	manager.HandleConnection(c)
 

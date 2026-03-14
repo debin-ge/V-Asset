@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
@@ -117,8 +118,7 @@ func (c *TaskConsumer) Start(ctx context.Context) error {
 			c.pool.Submit(task, func(err error) {
 				if err != nil {
 					log.Printf("[TaskConsumer] ❌ Task %s failed: %v", task.TaskID, err)
-					log.Printf("[TaskConsumer] Nacking message for task %s (will requeue)", task.TaskID)
-					msg.Nack(false, true) // 重新入队
+					c.retryOrFinalize(msg, task)
 				} else {
 					log.Printf("[TaskConsumer] ✓ Task %s completed successfully", task.TaskID)
 					log.Printf("[TaskConsumer] Acking message for task %s", task.TaskID)
@@ -158,4 +158,100 @@ func parseTask(body []byte) (*models.DownloadTask, error) {
 		task.Metadata.Title = task.Title
 	}
 	return &task, nil
+}
+
+func (c *TaskConsumer) retryOrFinalize(msg amqp.Delivery, task *models.DownloadTask) {
+	currentAttempt := retryAttemptFromHeaders(msg.Headers)
+	nextAttempt := currentAttempt + 1
+	maxAttempts := c.maxAttempts()
+
+	if nextAttempt >= maxAttempts {
+		log.Printf("[TaskConsumer] Retry budget exhausted for task %s (%d/%d), acking terminal failure", task.TaskID, nextAttempt, maxAttempts)
+		if err := msg.Ack(false); err != nil {
+			log.Printf("[TaskConsumer] Failed to ack exhausted task %s: %v", task.TaskID, err)
+		}
+		return
+	}
+
+	headers := cloneHeaders(msg.Headers)
+	headers["x-retry-attempt"] = int32(nextAttempt)
+
+	publishCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := c.channel.PublishWithContext(
+		publishCtx,
+		"",
+		c.queue,
+		false,
+		false,
+		amqp.Publishing{
+			Headers:         headers,
+			ContentType:     msg.ContentType,
+			ContentEncoding: msg.ContentEncoding,
+			Body:            msg.Body,
+			DeliveryMode:    amqp.Persistent,
+			Priority:        msg.Priority,
+			Timestamp:       time.Now(),
+		},
+	); err != nil {
+		log.Printf("[TaskConsumer] Failed to republish retry for task %s: %v", task.TaskID, err)
+		if nackErr := msg.Nack(false, true); nackErr != nil {
+			log.Printf("[TaskConsumer] Failed to requeue original message for task %s: %v", task.TaskID, nackErr)
+		}
+		return
+	}
+
+	if c.pool != nil && c.pool.repo != nil {
+		retryCtx, retryCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := c.pool.repo.IncrementRetry(retryCtx, task.TaskID); err != nil {
+			log.Printf("[TaskConsumer] Failed to increment retry count for task %s: %v", task.TaskID, err)
+		}
+		retryCancel()
+	}
+
+	log.Printf("[TaskConsumer] Requeued task %s for retry attempt %d/%d", task.TaskID, nextAttempt+1, maxAttempts)
+	if err := msg.Ack(false); err != nil {
+		log.Printf("[TaskConsumer] Failed to ack original message for retried task %s: %v", task.TaskID, err)
+	}
+}
+
+func (c *TaskConsumer) maxAttempts() int {
+	if c.pool != nil && c.pool.retryCfg != nil && c.pool.retryCfg.MaxAttempts > 0 {
+		return c.pool.retryCfg.MaxAttempts
+	}
+	return 1
+}
+
+func retryAttemptFromHeaders(headers amqp.Table) int {
+	if headers == nil {
+		return 0
+	}
+
+	switch value := headers["x-retry-attempt"].(type) {
+	case int:
+		return value
+	case int8:
+		return int(value)
+	case int16:
+		return int(value)
+	case int32:
+		return int(value)
+	case int64:
+		return int(value)
+	default:
+		return 0
+	}
+}
+
+func cloneHeaders(headers amqp.Table) amqp.Table {
+	if len(headers) == 0 {
+		return amqp.Table{}
+	}
+
+	cloned := make(amqp.Table, len(headers))
+	for key, value := range headers {
+		cloned[key] = value
+	}
+	return cloned
 }
