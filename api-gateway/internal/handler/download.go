@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"log"
+	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -46,6 +48,17 @@ type downloadPublisher interface {
 	Publish(ctx context.Context, task *mq.DownloadTask) error
 }
 
+type unavailableDownloadPublisher struct {
+	reason string
+}
+
+func (p unavailableDownloadPublisher) Publish(context.Context, *mq.DownloadTask) error {
+	if p.reason != "" {
+		return status.Error(codes.Unavailable, p.reason)
+	}
+	return status.Error(codes.Unavailable, "download queue unavailable")
+}
+
 // NewDownloadHandler 创建下载处理器
 func NewDownloadHandler(
 	assetClient assetDownloadClient,
@@ -54,6 +67,11 @@ func NewDownloadHandler(
 	timeout time.Duration,
 	billingEnabled bool,
 ) *DownloadHandler {
+	if isNilDownloadPublisher(publisher) {
+		log.Printf("[Download] ⚠ MQ publisher is unavailable, download submissions will return 503 until RabbitMQ recovers")
+		publisher = unavailableDownloadPublisher{reason: "download queue unavailable"}
+	}
+
 	return &DownloadHandler{
 		assetClient:    assetClient,
 		mediaClient:    mediaClient,
@@ -225,6 +243,10 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	if err := h.publisher.Publish(ctx, task); err != nil {
 		log.Printf("[Download] ❌ Failed to publish task to RabbitMQ: %v", err)
 		h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, !h.billingEnabled, h.billingEnabled)
+		if status.Code(err) == codes.Unavailable {
+			models.Error(c, http.StatusServiceUnavailable, grpcErrorMessage(err))
+			return
+		}
 		models.InternalError(c, "failed to submit task: "+err.Error())
 		return
 	}
@@ -359,5 +381,19 @@ func estimateDownloadTime(duration int64, quality string) int {
 		return base + 30
 	default:
 		return base + 15
+	}
+}
+
+func isNilDownloadPublisher(publisher downloadPublisher) bool {
+	if publisher == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(publisher)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
 	}
 }

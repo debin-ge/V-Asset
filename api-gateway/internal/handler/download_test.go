@@ -143,6 +143,44 @@ func TestSubmitDownloadCompensatesWhenPublishFails(t *testing.T) {
 	}
 }
 
+func TestSubmitDownloadReturnsServiceUnavailableWhenPublisherIsTypedNil(t *testing.T) {
+	t.Parallel()
+
+	assetClient := &fakeAssetDownloadClient{
+		checkQuotaResp: &pb.CheckQuotaResponse{Remaining: 3},
+		createHistoryResp: &pb.CreateHistoryResponse{
+			HistoryId: 101,
+		},
+		consumeQuotaResp:  &pb.ConsumeQuotaResponse{Success: true, Remaining: 2},
+		refundQuotaResp:   &pb.RefundQuotaResponse{Success: true, Remaining: 3},
+		deleteHistoryResp: &pb.DeleteHistoryResponse{Success: true},
+	}
+	mediaClient := &fakeMediaDownloadClient{
+		validateResp: &pb.ValidateURLResponse{Valid: true, Platform: "youtube"},
+		parseResp: &pb.ParseURLResponse{
+			Title:    "Example",
+			Duration: 120,
+		},
+	}
+
+	var publisher *mq.Publisher
+	handler := NewDownloadHandler(assetClient, mediaClient, publisher, time.Second, false)
+
+	w := performSubmitDownload(t, handler)
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status 503, got %d", w.Code)
+	}
+
+	if len(assetClient.deleteCalls) != 1 || assetClient.deleteCalls[0] != 101 {
+		t.Fatalf("expected history deletion for 101, got %#v", assetClient.deleteCalls)
+	}
+
+	if len(assetClient.refundCalls) != 1 || assetClient.refundCalls[0] != "user-1" {
+		t.Fatalf("expected quota refund for user-1, got %#v", assetClient.refundCalls)
+	}
+}
+
 func TestSubmitDownloadAcceptedWithoutCompensation(t *testing.T) {
 	t.Parallel()
 
