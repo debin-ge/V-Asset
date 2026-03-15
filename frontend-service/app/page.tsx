@@ -54,7 +54,7 @@ export default function Home() {
         <div className="mt-8 text-center animate-fade-in">
           <p className="text-green-600 font-medium mb-4">Ready and downloading to your local device!</p>
           <p className="text-sm text-gray-500 mb-4">
-            Please check your browser&apos;s download manager. If it doesn&apos;t start automatically, please click the button below to download manually.
+            The browser is preparing the local download. For larger files this can take a little while. If it still doesn&apos;t start, click the button below to retry manually.
           </p>
           <div className="flex items-center justify-center gap-4">
             <button

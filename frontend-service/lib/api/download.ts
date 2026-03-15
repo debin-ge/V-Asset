@@ -1,4 +1,5 @@
-import apiClient from '../api-client';
+import apiClient, { tokenManager } from '../api-client';
+import { resolveApiBaseUrl } from '../runtime-config';
 
 export interface SelectedFormatPayload {
     format_id: string;
@@ -37,23 +38,34 @@ export const downloadApi = {
         return response.data as DownloadResponse;
     },
 
-    // 下载文件（通过带鉴权头的请求避免把 bearer token 暴露到 URL）
+    // 下载文件（使用 fetch 避免 axios 超时中断大文件下载）
     downloadFile: async (historyId: number): Promise<void> => {
-        const response = await apiClient.get('/api/v1/download/file', {
-            params: { history_id: historyId },
-            responseType: 'blob',
-        });
+        const token = tokenManager.getToken();
+        if (!token) {
+            throw new Error('User not authenticated');
+        }
 
-        const contentDisposition = response.headers['content-disposition'] as string | undefined;
+        const requestUrl = new URL('/api/v1/download/file', resolveApiBaseUrl());
+        requestUrl.searchParams.set('history_id', String(historyId));
+
+        const response = await fetch(requestUrl.toString(), {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (!response.ok) {
+            throw await toDownloadError(response);
+        }
+
+        const blob = await response.blob();
+        if (blob.size === 0) {
+            throw new Error('Downloaded file is empty');
+        }
+
+        const contentDisposition = response.headers.get('content-disposition') ?? undefined;
         const filename = parseDownloadFilename(contentDisposition);
-        const blobUrl = window.URL.createObjectURL(response.data as Blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
+        triggerBrowserDownload(blob, filename);
     },
 };
 
@@ -85,6 +97,48 @@ function parseDownloadFilename(contentDisposition?: string): string {
     }
 
     return 'download';
+}
+
+async function toDownloadError(response: Response): Promise<Error> {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        try {
+            const payload = await response.json() as { message?: string };
+            if (payload?.message) {
+                return new Error(payload.message);
+            }
+        } catch {
+            // fall through to generic error handling
+        }
+    }
+
+    try {
+        const text = await response.text();
+        if (text) {
+            return new Error(text);
+        }
+    } catch {
+        // ignore read failure
+    }
+
+    return new Error(`Download failed (${response.status})`);
+}
+
+function triggerBrowserDownload(blob: Blob, filename: string) {
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 某些浏览器在 click 后立即 revoke 会导致文件没有真正开始落盘。
+    window.setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+    }, 60_000);
 }
 
 // 下载类型映射

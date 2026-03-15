@@ -69,7 +69,7 @@ export function useDownload() {
 
         if (isCompleted) {
             setPhase("transferring")
-            setPhaseLabel("Service ready, starting file download...")
+            setPhaseLabel("Preparing browser download...")
             setProgress(100)
             if (currentTaskId) {
                 wsClient.unsubscribe(currentTaskId)
