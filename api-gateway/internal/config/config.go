@@ -156,6 +156,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	if adminSessionSecure := os.Getenv("ADMIN_SESSION_SECURE"); adminSessionSecure != "" {
 		cfg.AdminSession.Secure = adminSessionSecure == "1" || adminSessionSecure == "true" || adminSessionSecure == "TRUE"
 	}
+	if billingEnabled := os.Getenv("BILLING_ENABLED"); billingEnabled != "" {
+		cfg.Billing.Enabled = parseBoolEnv(billingEnabled)
+	}
 
 	// 设置默认值
 	if cfg.Server.Port == 0 {
@@ -211,4 +214,13 @@ func splitAndTrim(value string) []string {
 		}
 	}
 	return result
+}
+
+func parseBoolEnv(value string) bool {
+	switch strings.TrimSpace(strings.ToLower(value)) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }

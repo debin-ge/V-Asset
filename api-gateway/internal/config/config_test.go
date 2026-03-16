@@ -55,6 +55,23 @@ func TestLoadConfigUsesYamlWhenCORSEnvUnset(t *testing.T) {
 	if len(cfg.CORS.AllowedOrigins) != 0 {
 		t.Fatalf("AllowedOrigins = %#v, want empty slice from yaml", cfg.CORS.AllowedOrigins)
 	}
+
+	if !cfg.Billing.Enabled {
+		t.Fatal("Billing.Enabled = false, want true from yaml")
+	}
+}
+
+func TestLoadConfigOverridesBillingEnabledFromEnv(t *testing.T) {
+	t.Setenv("BILLING_ENABLED", "false")
+
+	cfg, err := LoadConfig(filepath.Join("..", "..", "config", "dev.yaml"))
+	if err != nil {
+		t.Fatalf("LoadConfig returned error: %v", err)
+	}
+
+	if cfg.Billing.Enabled {
+		t.Fatal("Billing.Enabled = true, want false from env override")
+	}
 }
 
 func unsetEnv(t *testing.T, key string) {

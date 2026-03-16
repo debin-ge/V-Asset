@@ -55,7 +55,7 @@ file_download:
   buffer_size: 32768  # 32KB
 
 billing:
-  enabled: false
+  enabled: true
 
 logging:
   level: debug
