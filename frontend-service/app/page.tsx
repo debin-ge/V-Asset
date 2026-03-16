@@ -52,9 +52,9 @@ export default function Home() {
 
       {status === "completed" && (
         <div className="mt-8 text-center animate-fade-in">
-          <p className="text-green-600 font-medium mb-4">Ready and downloading to your local device!</p>
+          <p className="text-green-600 font-medium mb-4">The browser download has been triggered.</p>
           <p className="text-sm text-gray-500 mb-4">
-            The browser is preparing the local download. For larger files this can take a little while. If it still doesn&apos;t start, click the button below to retry manually.
+            You should now see the transfer in your browser&apos;s download manager. If nothing appears, click the button below to request a new browser download ticket.
           </p>
           <div className="flex items-center justify-center gap-4">
             <button

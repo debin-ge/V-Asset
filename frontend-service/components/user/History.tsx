@@ -51,8 +51,8 @@ export function History() {
         setDownloadingId(item.history_id)
         try {
             await downloadApi.downloadFile(item.history_id)
-            await refreshBillingAccount()
-            toast.success("Download started")
+            scheduleBillingRefresh(refreshBillingAccount)
+            toast.success("Browser download started")
         } catch (error) {
             await refreshBillingAccount()
             const message = error instanceof Error ? error.message : "Download failed"
@@ -172,4 +172,14 @@ export function History() {
 
 function canRedownload(item: HistoryItem) {
     return item.file_size > 0 && (item.status === 2 || item.status === 4)
+}
+
+function scheduleBillingRefresh(refreshBillingAccount: () => Promise<void>) {
+    void refreshBillingAccount()
+    window.setTimeout(() => {
+        void refreshBillingAccount()
+    }, 2000)
+    window.setTimeout(() => {
+        void refreshBillingAccount()
+    }, 10000)
 }

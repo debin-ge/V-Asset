@@ -155,6 +155,17 @@ type FileDownloadRequest struct {
 	HistoryID int64 `form:"history_id" binding:"required"`
 }
 
+// FileDownloadTicketRequest 创建浏览器下载票据请求
+type FileDownloadTicketRequest struct {
+	HistoryID int64 `json:"history_id" binding:"required"`
+}
+
+// FileDownloadTicketResponse 浏览器下载票据响应
+type FileDownloadTicketResponse struct {
+	Ticket    string `json:"ticket"`
+	ExpiresIn int64  `json:"expires_in"`
+}
+
 // StatsResponse 用户统计响应
 type StatsResponse struct {
 	TotalDownloads   int64           `json:"total_downloads"`

@@ -46,8 +46,8 @@ export function useDownload() {
         try {
             setAutoDownloadAttempted(true)
             await downloadApi.downloadFile(hId)
-            await refreshBillingAccount()
-            toast.success("File download started")
+            scheduleBillingRefresh(refreshBillingAccount)
+            toast.success("Browser download started")
         } catch (error) {
             await refreshBillingAccount()
             console.error("[Download] Automatic download did not start", error)
@@ -69,7 +69,7 @@ export function useDownload() {
 
         if (isCompleted) {
             setPhase("transferring")
-            setPhaseLabel("Preparing browser download...")
+            setPhaseLabel("Starting browser download...")
             setProgress(100)
             if (currentTaskId) {
                 wsClient.unsubscribe(currentTaskId)
@@ -176,8 +176,8 @@ export function useDownload() {
 
         try {
             await downloadApi.downloadFile(historyId)
-            await refreshBillingAccount()
-            toast.success("File download started")
+            scheduleBillingRefresh(refreshBillingAccount)
+            toast.success("Browser download started")
         } catch (error) {
             await refreshBillingAccount()
             const message = error instanceof Error ? error.message : "File download failed"
@@ -220,6 +220,16 @@ export function useDownload() {
         phase,
         phaseLabel,
     }
+}
+
+function scheduleBillingRefresh(refreshBillingAccount: () => Promise<void>) {
+    void refreshBillingAccount()
+    window.setTimeout(() => {
+        void refreshBillingAccount()
+    }, 2000)
+    window.setTimeout(() => {
+        void refreshBillingAccount()
+    }, 10000)
 }
 
 function getSelectedQuality(type: 'video' | 'audio', selectedFormat?: VideoFormat): string {

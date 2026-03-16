@@ -12,31 +12,89 @@ import (
 	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"google.golang.org/grpc"
 
 	"vasset/api-gateway/internal/middleware"
 	"vasset/api-gateway/internal/models"
 	pb "vasset/api-gateway/proto"
 )
 
+const downloadTicketTTL = 90 * time.Second
+
+type fileAssetClient interface {
+	GetFileInfo(ctx context.Context, in *pb.GetFileInfoRequest, opts ...grpc.CallOption) (*pb.GetFileInfoResponse, error)
+	PrepareFileTransferBilling(ctx context.Context, in *pb.PrepareFileTransferBillingRequest, opts ...grpc.CallOption) (*pb.PrepareFileTransferBillingResponse, error)
+	CompleteFileTransferBilling(ctx context.Context, in *pb.CompleteFileTransferBillingRequest, opts ...grpc.CallOption) (*pb.CompleteFileTransferBillingResponse, error)
+	AbortFileTransferBilling(ctx context.Context, in *pb.AbortFileTransferBillingRequest, opts ...grpc.CallOption) (*pb.AbortFileTransferBillingResponse, error)
+}
+
 // FileHandler 文件下载处理器
 type FileHandler struct {
-	assetClient    pb.AssetServiceClient
+	assetClient    fileAssetClient
+	ticketStore    downloadTicketStore
 	timeout        time.Duration
 	bufferSize     int
 	billingEnabled bool
 }
 
 // NewFileHandler 创建文件下载处理器
-func NewFileHandler(assetClient pb.AssetServiceClient, timeout time.Duration, bufferSize int, billingEnabled bool) *FileHandler {
+func NewFileHandler(assetClient fileAssetClient, ticketStore downloadTicketStore, timeout time.Duration, bufferSize int, billingEnabled bool) *FileHandler {
 	return &FileHandler{
 		assetClient:    assetClient,
+		ticketStore:    ticketStore,
 		timeout:        timeout,
 		bufferSize:     bufferSize,
 		billingEnabled: billingEnabled,
 	}
 }
 
-// DownloadFile 下载文件
+// CreateDownloadTicket 创建浏览器原生下载票据。
+func (h *FileHandler) CreateDownloadTicket(c *gin.Context) {
+	var req models.FileDownloadTicketRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.HistoryID <= 0 {
+		models.BadRequest(c, "invalid history_id")
+		return
+	}
+
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		models.Unauthorized(c, "user not authenticated")
+		return
+	}
+	if h.ticketStore == nil {
+		models.InternalError(c, "download ticket service unavailable")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
+	defer cancel()
+
+	// 预先校验权限，避免发放无效票据。
+	if _, err := h.assetClient.GetFileInfo(ctx, &pb.GetFileInfoRequest{
+		HistoryId: req.HistoryID,
+		UserId:    userID,
+	}); err != nil {
+		models.Forbidden(c, "permission denied or file not found")
+		return
+	}
+
+	ticket := uuid.NewString()
+	if err := h.ticketStore.Save(ctx, ticket, &downloadTicketPayload{
+		UserID:    userID,
+		HistoryID: req.HistoryID,
+	}, downloadTicketTTL); err != nil {
+		models.InternalError(c, "failed to create download ticket")
+		return
+	}
+
+	models.Success(c, models.FileDownloadTicketResponse{
+		Ticket:    ticket,
+		ExpiresIn: int64(downloadTicketTTL / time.Second),
+	})
+}
+
+// DownloadFile 下载文件（需要 JWT）。
 func (h *FileHandler) DownloadFile(c *gin.Context) {
 	historyIDStr := c.Query("history_id")
 	if historyIDStr == "" {
@@ -56,6 +114,43 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 		return
 	}
 
+	h.streamFile(c, userID, historyID)
+}
+
+// DownloadFileByTicket 使用短期票据触发浏览器原生下载。
+func (h *FileHandler) DownloadFileByTicket(c *gin.Context) {
+	ticket := strings.TrimSpace(c.Query("ticket"))
+	if ticket == "" {
+		models.BadRequest(c, "ticket is required")
+		return
+	}
+	if h.ticketStore == nil {
+		models.InternalError(c, "download ticket service unavailable")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
+	defer cancel()
+
+	payload, err := h.ticketStore.Load(ctx, ticket)
+	if err != nil {
+		if err == errDownloadTicketNotFound {
+			models.Forbidden(c, "download ticket expired or invalid")
+			return
+		}
+		models.InternalError(c, "failed to validate download ticket")
+		return
+	}
+
+	if payload == nil || payload.UserID == "" || payload.HistoryID <= 0 {
+		models.Forbidden(c, "download ticket expired or invalid")
+		return
+	}
+
+	h.streamFile(c, payload.UserID, payload.HistoryID)
+}
+
+func (h *FileHandler) streamFile(c *gin.Context, userID string, historyID int64) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
@@ -144,7 +239,6 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 				TransferId:        transferID,
 				ActualEgressBytes: bytesSent,
 			}); err != nil {
-				// 下载已经发给用户，账务补记失败只能记录日志
 				fmt.Printf("[File] failed to complete transfer billing %s: %v\n", transferID, err)
 			}
 		} else {

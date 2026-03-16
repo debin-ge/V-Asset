@@ -64,6 +64,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 	)
 	fileHandler := handler.NewFileHandler(
 		deps.GRPCClients.AssetClient,
+		handler.NewRedisDownloadTicketStore(deps.RedisClient),
 		deps.Config.GRPC.Timeout,
 		deps.Config.FileDownload.BufferSize,
 		deps.Config.Billing.Enabled,
@@ -113,6 +114,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		publicV1.POST("/auth/register", authHandler.Register)
 		publicV1.POST("/auth/login", authHandler.Login)
 		publicV1.POST("/admin/auth/login", adminAuthHandler.Login)
+		publicV1.GET("/download/file/browser", fileHandler.DownloadFileByTicket)
 	}
 
 	// ==================== 认证路由 ====================
@@ -142,6 +144,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		protectedV1.DELETE("/user/history/:id", historyHandler.DeleteHistory)
 
 		// 文件下载
+		protectedV1.POST("/download/file-ticket", fileHandler.CreateDownloadTicket)
 		protectedV1.GET("/download/file", fileHandler.DownloadFile)
 
 	}

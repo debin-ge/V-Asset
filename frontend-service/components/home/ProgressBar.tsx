@@ -63,7 +63,7 @@ export function ProgressBar({ progress, speed, timeLeft, phase, phaseLabel }: Pr
                     <div className="flex items-center gap-2 text-blue-600 font-medium">
                         {phase === "merging" && "Merging video and audio, please wait..."}
                         {phase === "processing" && "Processing the final details, almost there..."}
-                        {phase === "transferring" && "Preparing browser download. Large files may take a while before the save dialog appears."}
+                        {phase === "transferring" && "Browser download is being handed off. You should see it in your browser's download manager."}
                     </div>
                 )}
             </div>
