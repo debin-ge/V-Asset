@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"vasset/asset-service/internal/models"
+	"vasset/asset-service/internal/money"
 )
 
 func TestSetOrderAwaitingShortfallMarksOrder(t *testing.T) {
@@ -11,15 +12,15 @@ func TestSetOrderAwaitingShortfallMarksOrder(t *testing.T) {
 
 	order := &models.BillingChargeOrder{
 		Scene:             models.BillingSceneDownload,
-		HeldAmountFen:     100,
-		CapturedAmountFen: 20,
-		ReleasedAmountFen: 10,
+		HeldAmountFen:     money.FromInt64(100),
+		CapturedAmountFen: money.FromInt64(20),
+		ReleasedAmountFen: money.FromInt64(10),
 	}
 
-	setOrderAwaitingShortfall(order, 35, "awaiting shortfall resolution: ingress capture")
+	setOrderAwaitingShortfall(order, money.FromInt64(35), "awaiting shortfall resolution: ingress capture")
 
-	if order.ShortfallFen != 35 {
-		t.Fatalf("expected shortfall 35, got %d", order.ShortfallFen)
+	if order.ShortfallFen.Cmp(money.FromInt64(35)) != 0 {
+		t.Fatalf("expected shortfall 35, got %s", order.ShortfallFen.String())
 	}
 	if order.Status != models.BillingOrderStatusAwaitingShortfall {
 		t.Fatalf("expected awaiting shortfall status, got %d", order.Status)
@@ -35,7 +36,7 @@ func TestCanUseInitialOrderRejectsAwaitingShortfall(t *testing.T) {
 	order := &models.BillingChargeOrder{
 		Scene:        models.BillingSceneDownload,
 		Status:       models.BillingOrderStatusAwaitingShortfall,
-		ShortfallFen: 15,
+		ShortfallFen: money.FromInt64(15),
 	}
 
 	if canUseInitialOrder(order) {
@@ -49,7 +50,7 @@ func TestCanUseInitialOrderAllowsCapturedIngressBeforeFirstTransfer(t *testing.T
 	order := &models.BillingChargeOrder{
 		Scene:              models.BillingSceneDownload,
 		Status:             models.BillingOrderStatusCaptured,
-		CapturedAmountFen:  120,
+		CapturedAmountFen:  money.FromInt64(120),
 		ActualIngressBytes: 1024,
 		ActualEgressBytes:  0,
 	}
@@ -64,10 +65,10 @@ func TestDeriveOrderStatusReturnsPartialCapturedAfterShortfallCleared(t *testing
 
 	order := &models.BillingChargeOrder{
 		Scene:             models.BillingSceneDownload,
-		HeldAmountFen:     180,
-		CapturedAmountFen: 120,
-		ReleasedAmountFen: 0,
-		ShortfallFen:      0,
+		HeldAmountFen:     money.FromInt64(180),
+		CapturedAmountFen: money.FromInt64(120),
+		ReleasedAmountFen: money.Zero(),
+		ShortfallFen:      money.Zero(),
 	}
 
 	status := deriveOrderStatus(order)

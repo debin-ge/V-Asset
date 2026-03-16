@@ -138,7 +138,7 @@ func (s *BillingService) GetAccountDetail(ctx context.Context, userID string) (*
 	}, nil
 }
 
-func (s *BillingService) AdjustBalance(ctx context.Context, userID, operationID string, amountFen int64, remark, operatorUserID string) (*models.BillingAccount, string, error) {
+func (s *BillingService) AdjustBalance(ctx context.Context, userID, operationID, amountFen, remark, operatorUserID string) (*models.BillingAccount, string, error) {
 	resp, err := s.assetClient.AdjustBillingBalance(ctx, &pb.AdjustBillingBalanceRequest{
 		UserId:         userID,
 		OperationId:    operationID,
@@ -366,11 +366,10 @@ func (s *BillingService) GetPricing(ctx context.Context) (*models.BillingPricing
 	return pricingFromProto(resp.GetPricing()), nil
 }
 
-func (s *BillingService) UpdatePricing(ctx context.Context, ingressPrice, egressPrice string, defaultEstimateBytes int64, remark, operatorUserID string) (*models.BillingPricing, error) {
+func (s *BillingService) UpdatePricing(ctx context.Context, ingressPrice, egressPrice, remark, operatorUserID string) (*models.BillingPricing, error) {
 	resp, err := s.assetClient.UpdateBillingPricing(ctx, &pb.UpdateBillingPricingRequest{
 		IngressPriceFenPerGib: ingressPrice,
 		EgressPriceFenPerGib:  egressPrice,
-		DefaultEstimateBytes:  defaultEstimateBytes,
 		Remark:                remark,
 		OperatorUserId:        operatorUserID,
 	})
@@ -404,7 +403,6 @@ func pricingFromProto(pricing *pb.BillingPricing) *models.BillingPricing {
 		Version:               pricing.GetVersion(),
 		IngressPriceFenPerGiB: pricing.GetIngressPriceFenPerGib(),
 		EgressPriceFenPerGiB:  pricing.GetEgressPriceFenPerGib(),
-		DefaultEstimateBytes:  pricing.GetDefaultEstimateBytes(),
 		Enabled:               pricing.GetEnabled(),
 		Remark:                pricing.GetRemark(),
 		UpdatedByUserID:       pricing.GetUpdatedByUserId(),

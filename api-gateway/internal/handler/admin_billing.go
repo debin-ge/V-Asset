@@ -449,7 +449,6 @@ func (h *AdminBillingHandler) UpdatePricing(c *gin.Context) {
 	resp, err := h.adminClient.UpdateBillingPricing(ctx, &pb.AdminUpdateBillingPricingRequest{
 		IngressPriceFenPerGib: req.IngressPriceFenPerGiB,
 		EgressPriceFenPerGib:  req.EgressPriceFenPerGiB,
-		DefaultEstimateBytes:  req.DefaultEstimateBytes,
 		Remark:                req.Remark,
 		OperatorUserId:        adminUser.GetUserId(),
 	})
@@ -478,7 +477,6 @@ func pricingFromAdminProto(pricing *pb.AdminBillingPricingResponse) models.Admin
 		Version:               pricing.GetVersion(),
 		IngressPriceFenPerGiB: pricing.GetIngressPriceFenPerGib(),
 		EgressPriceFenPerGiB:  pricing.GetEgressPriceFenPerGib(),
-		DefaultEstimateBytes:  pricing.GetDefaultEstimateBytes(),
 		Enabled:               pricing.GetEnabled(),
 		Remark:                pricing.GetRemark(),
 		UpdatedByUserID:       pricing.GetUpdatedByUserId(),

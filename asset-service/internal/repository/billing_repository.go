@@ -191,7 +191,7 @@ func (r *BillingRepository) ListAccounts(ctx context.Context, filter models.Bill
 func (r *BillingRepository) GetActivePricing(ctx context.Context) (*models.BillingPricing, error) {
 	return scanBillingPricing(r.db.QueryRowContext(ctx, `
 		SELECT id, version, ingress_price_fen_per_gib, egress_price_fen_per_gib,
-		       default_estimate_bytes, enabled, remark, updated_by_user_id,
+		       enabled, remark, updated_by_user_id,
 		       effective_at, created_at
 		FROM billing_pricing
 		WHERE enabled = TRUE
@@ -203,7 +203,7 @@ func (r *BillingRepository) GetActivePricing(ctx context.Context) (*models.Billi
 func (r *BillingRepository) GetPricingByVersion(ctx context.Context, version int32) (*models.BillingPricing, error) {
 	return scanBillingPricing(r.db.QueryRowContext(ctx, `
 		SELECT id, version, ingress_price_fen_per_gib, egress_price_fen_per_gib,
-		       default_estimate_bytes, enabled, remark, updated_by_user_id,
+		       enabled, remark, updated_by_user_id,
 		       effective_at, created_at
 		FROM billing_pricing
 		WHERE version = $1
@@ -229,12 +229,12 @@ func (r *BillingRepository) CreatePricingTx(ctx context.Context, tx *sql.Tx, pri
 	return tx.QueryRowContext(ctx, `
 		INSERT INTO billing_pricing (
 			version, ingress_price_fen_per_gib, egress_price_fen_per_gib,
-			default_estimate_bytes, enabled, remark, updated_by_user_id, effective_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			enabled, remark, updated_by_user_id, effective_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at
 	`,
 		pricing.Version, pricing.IngressPriceFenPerGiB, pricing.EgressPriceFenPerGiB,
-		pricing.DefaultEstimateBytes, pricing.Enabled, pricing.Remark, pricing.UpdatedByUserID, pricing.EffectiveAt,
+		pricing.Enabled, pricing.Remark, pricing.UpdatedByUserID, pricing.EffectiveAt,
 	).Scan(&pricing.ID, &pricing.CreatedAt)
 }
 
@@ -798,7 +798,7 @@ func scanBillingPricing(row rowScanner) (*models.BillingPricing, error) {
 	var pricing models.BillingPricing
 	if err := row.Scan(
 		&pricing.ID, &pricing.Version, &pricing.IngressPriceFenPerGiB, &pricing.EgressPriceFenPerGiB,
-		&pricing.DefaultEstimateBytes, &pricing.Enabled, &pricing.Remark, &pricing.UpdatedByUserID,
+		&pricing.Enabled, &pricing.Remark, &pricing.UpdatedByUserID,
 		&pricing.EffectiveAt, &pricing.CreatedAt,
 	); err != nil {
 		return nil, err

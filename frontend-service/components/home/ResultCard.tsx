@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { RemoteThumbnail } from "@/components/common/RemoteThumbnail"
 import { billingApi, BillingEstimateResponse } from "@/lib/api/billing"
 import { mapDownloadType, SelectedFormatPayload } from "@/lib/api/download"
-import { formatCurrencyFen, formatFileSize as formatSharedFileSize } from "@/lib/format"
+import { formatCurrencyYuan, formatFileSize as formatSharedFileSize, parseCurrencyYuan } from "@/lib/format"
 import {
     Dialog,
     DialogContent,
@@ -179,8 +179,8 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
         }
     }
 
-    const availableBalanceFen = billingAccount?.available_balance_fen ?? 0
-    const estimatedCostFen = estimate?.estimated_cost_fen ?? 0
+    const availableBalanceFen = parseCurrencyYuan(billingAccount?.available_balance_fen)
+    const estimatedCostFen = parseCurrencyYuan(estimate?.estimated_cost_fen)
     const insufficientBalance = !!estimate && availableBalanceFen < estimatedCostFen
     const balanceGapFen = estimate ? Math.max(estimatedCostFen - availableBalanceFen, 0) : 0
     const balanceAfterHoldFen = estimate ? Math.max(availableBalanceFen - estimatedCostFen, 0) : availableBalanceFen
@@ -415,7 +415,7 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                 <div className="rounded-2xl border border-slate-100 p-4">
                                     <p className="text-xs uppercase tracking-wide text-slate-400">Estimated Cost</p>
                                     <p className="mt-2 text-xl font-semibold text-slate-900">
-                                        {formatCurrencyFen(estimate.estimated_cost_fen)}
+                                        {formatCurrencyYuan(estimate.estimated_cost_fen)}
                                     </p>
                                     <p className="mt-1 text-xs text-slate-500">
                                         Pricing version #{estimate.pricing_version}
@@ -430,19 +430,19 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                         Available now
                                     </div>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                                        {formatCurrencyFen(availableBalanceFen)}
+                                        {formatCurrencyYuan(availableBalanceFen)}
                                     </p>
                                 </div>
                                 <div className="rounded-2xl border border-slate-100 p-4">
                                     <p className="text-xs uppercase tracking-wide text-slate-400">Reserved after submit</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                                        {formatCurrencyFen(estimatedCostFen)}
+                                        {formatCurrencyYuan(estimatedCostFen)}
                                     </p>
                                 </div>
                                 <div className="rounded-2xl border border-slate-100 p-4">
                                     <p className="text-xs uppercase tracking-wide text-slate-400">Remaining available</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                                        {formatCurrencyFen(balanceAfterHoldFen)}
+                                        {formatCurrencyYuan(balanceAfterHoldFen)}
                                     </p>
                                 </div>
                             </div>
@@ -459,8 +459,8 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                         <div>
                                             <p className="font-medium">Insufficient balance</p>
                                             <p className="mt-1">
-                                                You need {formatCurrencyFen(balanceGapFen)} more to cover this billing hold.
-                                                Current available balance: {formatCurrencyFen(availableBalanceFen)}.
+                                                You need {formatCurrencyYuan(balanceGapFen)} more to cover this billing hold.
+                                                Current available balance: {formatCurrencyYuan(availableBalanceFen)}.
                                             </p>
                                         </div>
                                     </div>
@@ -536,8 +536,8 @@ function describeSelectedFormatMeta(format?: VideoFormat) {
 }
 
 function describeEstimateReason(reason?: string) {
-    if (reason === "default_estimate") {
-        return "The platform used its default estimate because the exact file size was unavailable at parse time."
+    if (reason === "unknown_filesize") {
+        return "The exact file size is not available yet, so the pre-submit estimate stays at 0. Final billing will use the real size after the server download completes."
     }
     return "The platform used an estimated size because the exact file size was unavailable."
 }

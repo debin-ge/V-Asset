@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { billingApi, BillingStatementItem } from "@/lib/api/billing"
-import { formatCurrencyFen, formatDate, formatFileSize } from "@/lib/format"
+import { formatCurrencyYuan, formatDate, formatFileSize } from "@/lib/format"
 import { useAuth } from "@/hooks/use-auth"
 
 const statementTypeOptions = [
@@ -79,13 +79,13 @@ export function Stats() {
     const accountCards = [
         {
             title: "Available Balance",
-            value: formatCurrencyFen(billingAccount?.available_balance_fen ?? 0),
+            value: formatCurrencyYuan(billingAccount?.available_balance_fen),
             description: "Ready for your next download request",
             icon: Wallet,
         },
         {
             title: "Reserved Amount",
-            value: formatCurrencyFen(billingAccount?.reserved_balance_fen ?? 0),
+            value: formatCurrencyYuan(billingAccount?.reserved_balance_fen),
             description: "Held for active download and transfer flows",
             icon: Shield,
         },
@@ -97,7 +97,7 @@ export function Stats() {
         },
         {
             title: "Total Spent",
-            value: formatCurrencyFen(billingAccount?.total_spent_fen ?? 0),
+            value: formatCurrencyYuan(billingAccount?.total_spent_fen),
             description: "Settled billing amount already consumed",
             icon: Receipt,
         },
@@ -119,7 +119,7 @@ export function Stats() {
                         <div>
                             <p className="text-sm text-slate-600">Available balance</p>
                             <p className="mt-1 text-3xl font-semibold text-slate-950">
-                                {formatCurrencyFen(billingAccount?.available_balance_fen ?? 0)}
+                                {formatCurrencyYuan(billingAccount?.available_balance_fen)}
                             </p>
                         </div>
                         <p className="max-w-2xl text-sm text-slate-600">
@@ -230,7 +230,7 @@ export function Stats() {
                                     </div>
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-slate-400">Amount</p>
-                                        <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrencyFen(item.amount_fen)}</p>
+                                        <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrencyYuan(item.amount_fen)}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-slate-400">Statement ID</p>

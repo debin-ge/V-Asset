@@ -564,7 +564,6 @@ func (s *AdminServer) GetBillingPricing(ctx context.Context, _ *pb.AdminEmpty) (
 		Version:               pricing.Version,
 		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
 		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
-		DefaultEstimateBytes:  pricing.DefaultEstimateBytes,
 		Enabled:               pricing.Enabled,
 		Remark:                pricing.Remark,
 		UpdatedByUserId:       pricing.UpdatedByUserID,
@@ -574,7 +573,7 @@ func (s *AdminServer) GetBillingPricing(ctx context.Context, _ *pb.AdminEmpty) (
 }
 
 func (s *AdminServer) UpdateBillingPricing(ctx context.Context, req *pb.AdminUpdateBillingPricingRequest) (*pb.AdminBillingPricingResponse, error) {
-	pricing, err := s.billingService.UpdatePricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetDefaultEstimateBytes(), req.GetRemark(), req.GetOperatorUserId())
+	pricing, err := s.billingService.UpdatePricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetRemark(), req.GetOperatorUserId())
 	if err != nil {
 		return nil, mapDownstreamError(err)
 	}
@@ -582,7 +581,6 @@ func (s *AdminServer) UpdateBillingPricing(ctx context.Context, req *pb.AdminUpd
 		Version:               pricing.Version,
 		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
 		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
-		DefaultEstimateBytes:  pricing.DefaultEstimateBytes,
 		Enabled:               pricing.Enabled,
 		Remark:                pricing.Remark,
 		UpdatedByUserId:       pricing.UpdatedByUserID,

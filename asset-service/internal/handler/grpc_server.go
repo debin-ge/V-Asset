@@ -12,6 +12,7 @@ import (
 
 	"vasset/asset-service/internal/config"
 	"vasset/asset-service/internal/models"
+	"vasset/asset-service/internal/money"
 	"vasset/asset-service/internal/service"
 	pb "vasset/asset-service/proto"
 )
@@ -302,7 +303,7 @@ func (s *GRPCServer) ListBillingStatements(ctx context.Context, req *pb.ListBill
 			Type:         item.Type,
 			HistoryId:    item.HistoryID,
 			TrafficBytes: item.TrafficBytes,
-			AmountFen:    item.AmountFen,
+			AmountFen:    item.AmountFen.String(),
 			Status:       item.Status,
 			Remark:       item.Remark,
 			CreatedAt:    item.CreatedAt.Format(time.RFC3339),
@@ -332,7 +333,7 @@ func (s *GRPCServer) EstimateDownloadBilling(ctx context.Context, req *pb.Estima
 		EstimatedIngressBytes: estimate.EstimatedIngressBytes,
 		EstimatedEgressBytes:  estimate.EstimatedEgressBytes,
 		EstimatedTrafficBytes: estimate.EstimatedTrafficBytes,
-		EstimatedCostFen:      estimate.EstimatedCostFen,
+		EstimatedCostFen:      estimate.EstimatedCostFen.String(),
 		PricingVersion:        estimate.PricingVersion,
 		IsEstimated:           estimate.IsEstimated,
 		EstimateReason:        estimate.EstimateReason,
@@ -340,11 +341,16 @@ func (s *GRPCServer) EstimateDownloadBilling(ctx context.Context, req *pb.Estima
 }
 
 func (s *GRPCServer) HoldInitialDownload(ctx context.Context, req *pb.HoldInitialDownloadRequest) (*pb.HoldInitialDownloadResponse, error) {
+	estimatedCost, err := money.Parse(req.GetEstimatedCostFen())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "estimated_cost_fen 非法")
+	}
+
 	estimate := &models.BillingEstimate{
 		EstimatedIngressBytes: req.GetEstimatedIngressBytes(),
 		EstimatedEgressBytes:  req.GetEstimatedEgressBytes(),
 		EstimatedTrafficBytes: req.GetEstimatedTrafficBytes(),
-		EstimatedCostFen:      req.GetEstimatedCostFen(),
+		EstimatedCostFen:      estimatedCost,
 		PricingVersion:        req.GetPricingVersion(),
 	}
 
@@ -359,9 +365,9 @@ func (s *GRPCServer) HoldInitialDownload(ctx context.Context, req *pb.HoldInitia
 	return &pb.HoldInitialDownloadResponse{
 		OrderNo:             order.OrderNo,
 		HoldNo:              hold.HoldNo,
-		HeldAmountFen:       hold.AmountFen,
-		AvailableBalanceFen: account.AvailableBalanceFen,
-		ReservedBalanceFen:  account.ReservedBalanceFen,
+		HeldAmountFen:       hold.AmountFen.String(),
+		AvailableBalanceFen: account.AvailableBalanceFen.String(),
+		ReservedBalanceFen:  account.ReservedBalanceFen.String(),
 	}, nil
 }
 
@@ -379,8 +385,8 @@ func (s *GRPCServer) CaptureIngressUsage(ctx context.Context, req *pb.CaptureIng
 
 	return &pb.CaptureIngressUsageResponse{
 		OrderNo:              order.OrderNo,
-		CapturedAmountFen:    capturedAmount,
-		RemainingReservedFen: order.HeldAmountFen - order.CapturedAmountFen - order.ReleasedAmountFen,
+		CapturedAmountFen:    capturedAmount.String(),
+		RemainingReservedFen: order.HeldAmountFen.Sub(order.CapturedAmountFen).Sub(order.ReleasedAmountFen).String(),
 		ActualIngressBytes:   order.ActualIngressBytes,
 		ActualTrafficBytes:   order.ActualTrafficBytes,
 		OrderStatus:          order.Status,
@@ -399,7 +405,7 @@ func (s *GRPCServer) ReleaseInitialDownload(ctx context.Context, req *pb.Release
 	return &pb.ReleaseInitialDownloadResponse{
 		Success:           true,
 		OrderNo:           order.OrderNo,
-		ReleasedAmountFen: releasedAmount,
+		ReleasedAmountFen: releasedAmount.String(),
 	}, nil
 }
 
@@ -417,10 +423,10 @@ func (s *GRPCServer) PrepareFileTransferBilling(ctx context.Context, req *pb.Pre
 		OrderNo:             order.OrderNo,
 		HoldNo:              hold.HoldNo,
 		Scene:               order.Scene,
-		HoldAmountFen:       hold.AmountFen,
+		HoldAmountFen:       hold.AmountFen.String(),
 		PricingVersion:      pricing.Version,
-		AvailableBalanceFen: account.AvailableBalanceFen,
-		ReservedBalanceFen:  account.ReservedBalanceFen,
+		AvailableBalanceFen: account.AvailableBalanceFen.String(),
+		ReservedBalanceFen:  account.ReservedBalanceFen.String(),
 	}, nil
 }
 
@@ -438,9 +444,9 @@ func (s *GRPCServer) CompleteFileTransferBilling(ctx context.Context, req *pb.Co
 
 	return &pb.CompleteFileTransferBillingResponse{
 		OrderNo:                order.OrderNo,
-		CapturedAmountFen:      capturedAmount,
+		CapturedAmountFen:      capturedAmount.String(),
 		ActualTrafficBytes:     order.ActualTrafficBytes,
-		TotalCapturedAmountFen: order.CapturedAmountFen,
+		TotalCapturedAmountFen: order.CapturedAmountFen.String(),
 		OrderStatus:            order.Status,
 	}, nil
 }
@@ -457,7 +463,7 @@ func (s *GRPCServer) AbortFileTransferBilling(ctx context.Context, req *pb.Abort
 	return &pb.AbortFileTransferBillingResponse{
 		Success:           true,
 		OrderNo:           order.OrderNo,
-		ReleasedAmountFen: releasedAmount,
+		ReleasedAmountFen: releasedAmount.String(),
 	}, nil
 }
 
@@ -506,7 +512,12 @@ func (s *GRPCServer) GetBillingAccountDetail(ctx context.Context, req *pb.GetBil
 }
 
 func (s *GRPCServer) AdjustBillingBalance(ctx context.Context, req *pb.AdjustBillingBalanceRequest) (*pb.AdjustBillingBalanceResponse, error) {
-	account, entry, err := s.billingService.AdjustBillingBalance(ctx, req.GetUserId(), req.GetOperationId(), req.GetAmountFen(), req.GetRemark(), req.GetOperatorUserId())
+	amount, err := money.Parse(req.GetAmountFen())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "amount_fen 非法")
+	}
+
+	account, entry, err := s.billingService.AdjustBillingBalance(ctx, req.GetUserId(), req.GetOperationId(), amount, req.GetRemark(), req.GetOperatorUserId())
 	if err != nil {
 		if errors.Is(err, service.ErrInsufficientBalance) {
 			return nil, status.Error(codes.ResourceExhausted, "余额不足")
@@ -557,11 +568,11 @@ func (s *GRPCServer) ListBillingLedger(ctx context.Context, req *pb.ListBillingL
 			OperationId:              item.OperationID,
 			EntryType:                item.EntryType,
 			Scene:                    item.Scene,
-			ActionAmountFen:          item.ActionAmountFen,
-			AvailableDeltaFen:        item.AvailableDeltaFen,
-			ReservedDeltaFen:         item.ReservedDeltaFen,
-			BalanceAfterAvailableFen: item.BalanceAfterAvailableFen,
-			BalanceAfterReservedFen:  item.BalanceAfterReservedFen,
+			ActionAmountFen:          item.ActionAmountFen.String(),
+			AvailableDeltaFen:        item.AvailableDeltaFen.String(),
+			ReservedDeltaFen:         item.ReservedDeltaFen.String(),
+			BalanceAfterAvailableFen: item.BalanceAfterAvailableFen.String(),
+			BalanceAfterReservedFen:  item.BalanceAfterReservedFen.String(),
 			OperatorUserId:           item.OperatorUserID,
 			Remark:                   item.Remark,
 			CreatedAt:                item.CreatedAt.Format(time.RFC3339),
@@ -614,8 +625,8 @@ func (s *GRPCServer) ListTrafficUsageRecords(ctx context.Context, req *pb.ListTr
 			TransferId:         item.TransferID,
 			Direction:          item.Direction,
 			TrafficBytes:       item.TrafficBytes,
-			UnitPriceFenPerGib: item.UnitPriceFenPerGiB,
-			AmountFen:          item.AmountFen,
+			UnitPriceFenPerGib: item.UnitPriceFenPerGiB.String(),
+			AmountFen:          item.AmountFen.String(),
 			PricingVersion:     item.PricingVersion,
 			SourceService:      item.SourceService,
 			Status:             item.Status,
@@ -641,7 +652,7 @@ func (s *GRPCServer) GetBillingPricing(ctx context.Context, _ *pb.GetBillingPric
 }
 
 func (s *GRPCServer) UpdateBillingPricing(ctx context.Context, req *pb.UpdateBillingPricingRequest) (*pb.UpdateBillingPricingResponse, error) {
-	pricing, err := s.billingService.UpdateBillingPricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetDefaultEstimateBytes(), req.GetRemark(), req.GetOperatorUserId())
+	pricing, err := s.billingService.UpdateBillingPricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetRemark(), req.GetOperatorUserId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "更新费率失败")
 	}
@@ -733,10 +744,10 @@ func toBillingAccountSnapshotPB(account *models.BillingAccount) *pb.BillingAccou
 	return &pb.BillingAccountSnapshot{
 		UserId:              account.UserID,
 		CurrencyCode:        account.CurrencyCode,
-		AvailableBalanceFen: account.AvailableBalanceFen,
-		ReservedBalanceFen:  account.ReservedBalanceFen,
-		TotalRechargedFen:   account.TotalRechargedFen,
-		TotalSpentFen:       account.TotalSpentFen,
+		AvailableBalanceFen: account.AvailableBalanceFen.String(),
+		ReservedBalanceFen:  account.ReservedBalanceFen.String(),
+		TotalRechargedFen:   account.TotalRechargedFen.String(),
+		TotalSpentFen:       account.TotalSpentFen.String(),
 		TotalTrafficBytes:   account.TotalTrafficBytes,
 		Status:              account.Status,
 		Version:             account.Version,
@@ -757,10 +768,10 @@ func toBillingShortfallOrderPB(order models.BillingShortfallOrder) *pb.BillingSh
 		ActualIngressBytes: order.ActualIngressBytes,
 		ActualEgressBytes:  order.ActualEgressBytes,
 		ActualTrafficBytes: order.ActualTrafficBytes,
-		HeldAmountFen:      order.HeldAmountFen,
-		CapturedAmountFen:  order.CapturedAmountFen,
-		ReleasedAmountFen:  order.ReleasedAmountFen,
-		ShortfallFen:       order.ShortfallFen,
+		HeldAmountFen:      order.HeldAmountFen.String(),
+		CapturedAmountFen:  order.CapturedAmountFen.String(),
+		ReleasedAmountFen:  order.ReleasedAmountFen.String(),
+		ShortfallFen:       order.ShortfallFen.String(),
 		Remark:             order.Remark,
 		CreatedAt:          order.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:          order.UpdatedAt.Format(time.RFC3339),
@@ -770,9 +781,8 @@ func toBillingShortfallOrderPB(order models.BillingShortfallOrder) *pb.BillingSh
 func toBillingPricingPB(pricing *models.BillingPricing) *pb.BillingPricing {
 	return &pb.BillingPricing{
 		Version:               pricing.Version,
-		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
-		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
-		DefaultEstimateBytes:  pricing.DefaultEstimateBytes,
+		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB.String(),
+		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB.String(),
 		Enabled:               pricing.Enabled,
 		Remark:                pricing.Remark,
 		UpdatedByUserId:       pricing.UpdatedByUserID,

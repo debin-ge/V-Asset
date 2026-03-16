@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { History, LogOut, Shield, User, Wallet } from "lucide-react"
-import { formatCurrencyFen } from "@/lib/format"
+import { formatCurrencyYuan } from "@/lib/format"
 
 export function Header() {
     const { user, billingAccount, openAuthModal, logout } = useAuth()
@@ -35,13 +35,13 @@ export function Header() {
                         <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 border border-black/5">
                             <Wallet className="h-4 w-4 text-blue-600" />
                             <span className="text-sm font-medium">
-                                {formatCurrencyFen(billingAccount?.available_balance_fen ?? 0)}
+                                {formatCurrencyYuan(billingAccount?.available_balance_fen)}
                             </span>
                         </div>
                         <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 border border-black/5">
                             <Shield className="h-4 w-4 text-slate-500" />
                             <span className="text-sm font-medium text-slate-700">
-                                Reserved {formatCurrencyFen(billingAccount?.reserved_balance_fen ?? 0)}
+                                Reserved {formatCurrencyYuan(billingAccount?.reserved_balance_fen)}
                             </span>
                         </div>
                         <DropdownMenu>

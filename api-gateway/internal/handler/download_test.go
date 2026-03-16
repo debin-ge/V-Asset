@@ -240,20 +240,20 @@ func newTestDownloadHandler() (*DownloadHandler, *fakeAssetDownloadClient, *fake
 			EstimatedIngressBytes: 100,
 			EstimatedEgressBytes:  100,
 			EstimatedTrafficBytes: 200,
-			EstimatedCostFen:      10,
+			EstimatedCostFen:      "10",
 			PricingVersion:        1,
 		},
 		holdResp: &pb.HoldInitialDownloadResponse{
 			OrderNo:             "ord-1",
 			HoldNo:              "hold-1",
-			HeldAmountFen:       10,
-			AvailableBalanceFen: 90,
-			ReservedBalanceFen:  10,
+			HeldAmountFen:       "10",
+			AvailableBalanceFen: "90",
+			ReservedBalanceFen:  "10",
 		},
 		releaseResp: &pb.ReleaseInitialDownloadResponse{
 			Success:           true,
 			OrderNo:           "ord-1",
-			ReleasedAmountFen: 10,
+			ReleasedAmountFen: "10",
 		},
 	}
 	mediaClient := &fakeMediaDownloadClient{

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package admin;
 
-option go_package = "vasset/api-gateway/proto;pb";
+option go_package = "vasset/admin-service/proto;pb";
 
 service AdminService {
   rpc Login(AdminLoginRequest) returns (AdminLoginResponse);
@@ -41,6 +41,7 @@ service AdminService {
 }
 
 message AdminEmpty {}
+
 message AdminUser {
   string user_id = 1;
   string email = 2;
@@ -49,25 +50,31 @@ message AdminUser {
   int32 role = 5;
   string created_at = 6;
 }
+
 message AdminLoginRequest {
   string email = 1;
   string password = 2;
   string user_agent = 3;
   string ip_address = 4;
 }
+
 message AdminLoginResponse {
   string session_id = 1;
   AdminUser user = 2;
 }
+
 message AdminLogoutRequest {
   string session_id = 1;
 }
+
 message AdminSessionRequest {
   string session_id = 1;
 }
+
 message AdminCurrentUserResponse {
   AdminUser user = 1;
 }
+
 message AdminOverviewResponse {
   int64 total_users = 1;
   int64 daily_active_users = 2;
@@ -79,23 +86,28 @@ message AdminOverviewResponse {
   int64 active_manual_proxies = 8;
   int64 total_manual_proxies = 9;
 }
+
 message AdminTrendPoint {
   string label = 1;
   int64 count = 2;
 }
+
 message AdminRequestTrendRequest {
   string granularity = 1;
   int32 limit = 2;
 }
+
 message AdminRequestTrendResponse {
   string granularity = 1;
   repeated AdminTrendPoint points = 2;
 }
+
 message AdminUserStatsResponse {
   int64 total_users = 1;
   int64 daily_active_users = 2;
   int64 weekly_active_users = 3;
 }
+
 message AdminProxySourceStatusResponse {
   bool healthy = 1;
   string mode = 2;
@@ -105,6 +117,7 @@ message AdminProxySourceStatusResponse {
   string proxy_expire_at = 6;
   string checked_at = 7;
 }
+
 message AdminProxySourcePolicyResponse {
   int64 id = 1;
   string scope_type = 2;
@@ -118,6 +131,7 @@ message AdminProxySourcePolicyResponse {
   int32 min_lease_ttl_sec = 10;
   string manual_selection_strategy = 11;
 }
+
 message AdminUpdateProxySourcePolicyRequest {
   int64 id = 1;
   string primary_source = 2;
@@ -129,6 +143,7 @@ message AdminUpdateProxySourcePolicyRequest {
   int32 min_lease_ttl_sec = 8;
   string manual_selection_strategy = 9;
 }
+
 message AdminProxyInfo {
   int64 id = 1;
   string host = 2;
@@ -146,6 +161,7 @@ message AdminProxyInfo {
   string created_at = 14;
   string updated_at = 15;
 }
+
 message AdminListProxiesRequest {
   string search = 1;
   string protocol = 2;
@@ -153,9 +169,11 @@ message AdminListProxiesRequest {
   int32 status = 4;
   bool has_status = 5;
 }
+
 message AdminListProxiesResponse {
   repeated AdminProxyInfo items = 1;
 }
+
 message AdminCreateProxyRequest {
   string host = 1;
   int32 port = 2;
@@ -168,6 +186,7 @@ message AdminCreateProxyRequest {
   string remark = 9;
   int32 status = 10;
 }
+
 message AdminUpdateProxyRequest {
   int64 id = 1;
   string host = 2;
@@ -180,13 +199,16 @@ message AdminUpdateProxyRequest {
   string platform_tags = 9;
   string remark = 10;
 }
+
 message AdminUpdateProxyStatusRequest {
   int64 id = 1;
   int32 status = 2;
 }
+
 message AdminDeleteRequest {
   int64 id = 1;
 }
+
 message AdminCookieInfo {
   int64 id = 1;
   string platform = 2;
@@ -203,12 +225,14 @@ message AdminCookieInfo {
   string created_at = 13;
   string updated_at = 14;
 }
+
 message AdminListCookiesRequest {
   string platform = 1;
   int32 status = 2;
   int32 page = 3;
   int32 page_size = 4;
 }
+
 message AdminListCookiesResponse {
   int64 total = 1;
   int32 page = 2;
@@ -231,6 +255,7 @@ message AdminCreateCookieRequest {
   string expire_at = 4;
   int32 freeze_seconds = 5;
 }
+
 message AdminUpdateCookieRequest {
   int64 id = 1;
   string name = 2;
@@ -238,17 +263,21 @@ message AdminUpdateCookieRequest {
   string expire_at = 4;
   int32 freeze_seconds = 5;
 }
+
 message AdminFreezeCookieRequest {
   int64 id = 1;
   int32 freeze_seconds = 2;
 }
+
 message AdminFreezeCookieResponse {
   bool success = 1;
   string frozen_until = 2;
 }
+
 message AdminCreateResourceResponse {
   int64 id = 1;
 }
+
 message AdminOperationResponse {
   bool success = 1;
 }
@@ -257,10 +286,10 @@ message AdminBillingAccount {
   string user_id = 1;
   string email = 2;
   string nickname = 3;
-  int64 available_balance_fen = 4;
-  int64 reserved_balance_fen = 5;
-  int64 total_recharged_fen = 6;
-  int64 total_spent_fen = 7;
+  string available_balance_fen = 4;
+  string reserved_balance_fen = 5;
+  string total_recharged_fen = 6;
+  string total_spent_fen = 7;
   int64 total_traffic_bytes = 8;
   int32 status = 9;
   int32 version = 10;
@@ -292,7 +321,7 @@ message AdminGetBillingAccountDetailResponse {
 message AdminAdjustBillingBalanceRequest {
   string user_id = 1;
   string operation_id = 2;
-  int64 amount_fen = 3;
+  string amount_fen = 3;
   string remark = 4;
   string operator_user_id = 5;
 }
@@ -316,10 +345,10 @@ message AdminBillingShortfallOrder {
   int64 actual_ingress_bytes = 10;
   int64 actual_egress_bytes = 11;
   int64 actual_traffic_bytes = 12;
-  int64 held_amount_fen = 13;
-  int64 captured_amount_fen = 14;
-  int64 released_amount_fen = 15;
-  int64 shortfall_fen = 16;
+  string held_amount_fen = 13;
+  string captured_amount_fen = 14;
+  string released_amount_fen = 15;
+  string shortfall_fen = 16;
   string remark = 17;
   string created_at = 18;
   string updated_at = 19;
@@ -364,11 +393,11 @@ message AdminBillingLedgerEntry {
   string operation_id = 10;
   int32 entry_type = 11;
   int32 scene = 12;
-  int64 action_amount_fen = 13;
-  int64 available_delta_fen = 14;
-  int64 reserved_delta_fen = 15;
-  int64 balance_after_available_fen = 16;
-  int64 balance_after_reserved_fen = 17;
+  string action_amount_fen = 13;
+  string available_delta_fen = 14;
+  string reserved_delta_fen = 15;
+  string balance_after_available_fen = 16;
+  string balance_after_reserved_fen = 17;
   string operator_user_id = 18;
   string remark = 19;
   string created_at = 20;
@@ -400,7 +429,7 @@ message AdminBillingUsageRecord {
   int32 direction = 9;
   int64 traffic_bytes = 10;
   string unit_price_fen_per_gib = 11;
-  int64 amount_fen = 12;
+  string amount_fen = 12;
   int32 pricing_version = 13;
   string source_service = 14;
   int32 status = 15;
@@ -426,18 +455,16 @@ message AdminBillingPricingResponse {
   int32 version = 1;
   string ingress_price_fen_per_gib = 2;
   string egress_price_fen_per_gib = 3;
-  int64 default_estimate_bytes = 4;
-  bool enabled = 5;
-  string remark = 6;
-  string updated_by_user_id = 7;
-  string effective_at = 8;
-  string created_at = 9;
+  bool enabled = 4;
+  string remark = 5;
+  string updated_by_user_id = 6;
+  string effective_at = 7;
+  string created_at = 8;
 }
 
 message AdminUpdateBillingPricingRequest {
   string ingress_price_fen_per_gib = 1;
   string egress_price_fen_per_gib = 2;
-  int64 default_estimate_bytes = 3;
-  string remark = 4;
-  string operator_user_id = 5;
+  string remark = 3;
+  string operator_user_id = 4;
 }

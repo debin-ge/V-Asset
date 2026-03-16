@@ -4,10 +4,10 @@ type BillingAccount struct {
 	UserID              string `json:"user_id"`
 	Email               string `json:"email,omitempty"`
 	Nickname            string `json:"nickname,omitempty"`
-	AvailableBalanceFen int64  `json:"available_balance_fen"`
-	ReservedBalanceFen  int64  `json:"reserved_balance_fen"`
-	TotalRechargedFen   int64  `json:"total_recharged_fen"`
-	TotalSpentFen       int64  `json:"total_spent_fen"`
+	AvailableBalanceFen string `json:"available_balance_fen"`
+	ReservedBalanceFen  string `json:"reserved_balance_fen"`
+	TotalRechargedFen   string `json:"total_recharged_fen"`
+	TotalSpentFen       string `json:"total_spent_fen"`
 	TotalTrafficBytes   int64  `json:"total_traffic_bytes"`
 	Status              int32  `json:"status"`
 	Version             int32  `json:"version"`
@@ -34,11 +34,11 @@ type BillingLedgerEntry struct {
 	OperationID              string `json:"operation_id"`
 	EntryType                int32  `json:"entry_type"`
 	Scene                    int32  `json:"scene"`
-	ActionAmountFen          int64  `json:"action_amount_fen"`
-	AvailableDeltaFen        int64  `json:"available_delta_fen"`
-	ReservedDeltaFen         int64  `json:"reserved_delta_fen"`
-	BalanceAfterAvailableFen int64  `json:"balance_after_available_fen"`
-	BalanceAfterReservedFen  int64  `json:"balance_after_reserved_fen"`
+	ActionAmountFen          string `json:"action_amount_fen"`
+	AvailableDeltaFen        string `json:"available_delta_fen"`
+	ReservedDeltaFen         string `json:"reserved_delta_fen"`
+	BalanceAfterAvailableFen string `json:"balance_after_available_fen"`
+	BalanceAfterReservedFen  string `json:"balance_after_reserved_fen"`
 	OperatorUserID           string `json:"operator_user_id"`
 	Remark                   string `json:"remark"`
 	CreatedAt                string `json:"created_at"`
@@ -64,10 +64,10 @@ type BillingShortfallOrder struct {
 	ActualIngressBytes int64  `json:"actual_ingress_bytes"`
 	ActualEgressBytes  int64  `json:"actual_egress_bytes"`
 	ActualTrafficBytes int64  `json:"actual_traffic_bytes"`
-	HeldAmountFen      int64  `json:"held_amount_fen"`
-	CapturedAmountFen  int64  `json:"captured_amount_fen"`
-	ReleasedAmountFen  int64  `json:"released_amount_fen"`
-	ShortfallFen       int64  `json:"shortfall_fen"`
+	HeldAmountFen      string `json:"held_amount_fen"`
+	CapturedAmountFen  string `json:"captured_amount_fen"`
+	ReleasedAmountFen  string `json:"released_amount_fen"`
+	ShortfallFen       string `json:"shortfall_fen"`
 	Remark             string `json:"remark"`
 	CreatedAt          string `json:"created_at"`
 	UpdatedAt          string `json:"updated_at"`
@@ -92,7 +92,7 @@ type BillingUsageRecord struct {
 	Direction          int32  `json:"direction"`
 	TrafficBytes       int64  `json:"traffic_bytes"`
 	UnitPriceFenPerGiB string `json:"unit_price_fen_per_gib"`
-	AmountFen          int64  `json:"amount_fen"`
+	AmountFen          string `json:"amount_fen"`
 	PricingVersion     int32  `json:"pricing_version"`
 	SourceService      string `json:"source_service"`
 	Status             int32  `json:"status"`
@@ -111,7 +111,6 @@ type BillingPricing struct {
 	Version               int32  `json:"version"`
 	IngressPriceFenPerGiB string `json:"ingress_price_fen_per_gib"`
 	EgressPriceFenPerGiB  string `json:"egress_price_fen_per_gib"`
-	DefaultEstimateBytes  int64  `json:"default_estimate_bytes"`
 	Enabled               bool   `json:"enabled"`
 	Remark                string `json:"remark"`
 	UpdatedByUserID       string `json:"updated_by_user_id"`

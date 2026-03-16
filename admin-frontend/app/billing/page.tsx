@@ -33,12 +33,11 @@ export default function BillingPage() {
   const [pricingForm, setPricingForm] = React.useState({
     ingress_price_fen_per_gib: "0",
     egress_price_fen_per_gib: "0",
-    default_estimate_bytes: "104857600",
     remark: "",
   });
 
   const shortfallTotalFen = React.useMemo(
-    () => shortfallItems.reduce((sum, item) => sum + item.shortfall_fen, 0),
+    () => shortfallItems.reduce((sum, item) => sum + parseCurrency(item.shortfall_fen), 0),
     [shortfallItems]
   );
   const usageTrafficBytes = React.useMemo(
@@ -90,7 +89,6 @@ export default function BillingPage() {
     setPricingForm({
       ingress_price_fen_per_gib: pricingResponse.ingress_price_fen_per_gib,
       egress_price_fen_per_gib: pricingResponse.egress_price_fen_per_gib,
-      default_estimate_bytes: String(pricingResponse.default_estimate_bytes),
       remark: pricingResponse.remark || "",
     });
   }, []);
@@ -147,8 +145,8 @@ export default function BillingPage() {
       return;
     }
 
-    const amountFen = Math.round(Number(adjustAmount) * 100);
-    if (!Number.isFinite(amountFen) || amountFen === 0) {
+    const amountFen = adjustAmount.trim();
+    if (!amountFen || !Number.isFinite(Number(amountFen)) || Number(amountFen) === 0) {
       toast.error("Enter a valid amount");
       return;
     }
@@ -172,7 +170,6 @@ export default function BillingPage() {
       await billingApi.updatePricing({
         ingress_price_fen_per_gib: pricingForm.ingress_price_fen_per_gib,
         egress_price_fen_per_gib: pricingForm.egress_price_fen_per_gib,
-        default_estimate_bytes: Number(pricingForm.default_estimate_bytes),
         remark: pricingForm.remark,
       });
       await loadPricing();
@@ -290,26 +287,19 @@ export default function BillingPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Ingress Price (fen / GiB)</label>
+                    <label className="text-sm font-medium text-slate-700">Ingress Price (yuan / GiB)</label>
                     <Input
                       value={pricingForm.ingress_price_fen_per_gib}
                       onChange={(e) => setPricingForm((prev) => ({ ...prev, ingress_price_fen_per_gib: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Egress Price (fen / GiB)</label>
+                    <label className="text-sm font-medium text-slate-700">Egress Price (yuan / GiB)</label>
                     <Input
                       value={pricingForm.egress_price_fen_per_gib}
                       onChange={(e) => setPricingForm((prev) => ({ ...prev, egress_price_fen_per_gib: e.target.value }))}
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Default Estimate Bytes</label>
-                  <Input
-                    value={pricingForm.default_estimate_bytes}
-                    onChange={(e) => setPricingForm((prev) => ({ ...prev, default_estimate_bytes: e.target.value }))}
-                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">Remark</label>
@@ -321,7 +311,10 @@ export default function BillingPage() {
                 </div>
                 {pricing ? (
                   <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-                    Active version #{pricing.version} · updated {formatDateTime(pricing.effective_at)}
+                    <div>Active version #{pricing.version} · updated {formatDateTime(pricing.effective_at)}</div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      Billing uses MB-based traffic and applies a minimum billable size of 100 MB per capture.
+                    </div>
                   </div>
                 ) : null}
                 <Button onClick={() => void handleUpdatePricing()}>Update Pricing</Button>
@@ -452,7 +445,7 @@ export default function BillingPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={item.shortfall_fen <= 0 || reconcilingOrderNo === item.order_no}
+                              disabled={parseCurrency(item.shortfall_fen) <= 0 || reconcilingOrderNo === item.order_no}
                               onClick={() => void handleReconcileShortfall(item.order_no)}
                             >
                               {reconcilingOrderNo === item.order_no ? "Reconciling..." : "Reconcile"}
@@ -571,12 +564,18 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatCurrencyFen(amountFen: number) {
+function formatCurrencyFen(amountFen: string | number) {
+  const normalized = parseCurrency(amountFen);
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
     minimumFractionDigits: 2,
-  }).format(amountFen / 100);
+  }).format(normalized);
+}
+
+function parseCurrency(amount: string | number) {
+  const parsed = typeof amount === "number" ? amount : Number(amount);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function formatFileSize(bytes: number) {

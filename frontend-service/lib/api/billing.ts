@@ -4,10 +4,10 @@ import type { SelectedFormatPayload } from "./download"
 export interface BillingAccount {
     user_id: string
     currency_code: string
-    available_balance_fen: number
-    reserved_balance_fen: number
-    total_recharged_fen: number
-    total_spent_fen: number
+    available_balance_fen: string
+    reserved_balance_fen: string
+    total_recharged_fen: string
+    total_spent_fen: string
     total_traffic_bytes: number
     status: number
     version: number
@@ -20,7 +20,7 @@ export interface BillingStatementItem {
     type: number
     history_id: number
     traffic_bytes: number
-    amount_fen: number
+    amount_fen: string
     status: number
     remark: string
     created_at: string
@@ -42,7 +42,7 @@ export interface BillingEstimateRequest {
 
 export interface BillingEstimateResponse {
     estimated_traffic_bytes: number
-    estimated_cost_fen: number
+    estimated_cost_fen: string
     pricing_version: number
     is_estimated: boolean
     estimate_reason?: string

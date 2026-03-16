@@ -45,16 +45,31 @@ export function formatFileSize(bytes: number): string {
     return `${size.toFixed(i > 0 ? 1 : 0)} ${units[i]}`;
 }
 
+function normalizeCurrencyAmount(amount: string | number | null | undefined): number {
+    if (typeof amount === "number") {
+        return Number.isFinite(amount) ? amount : 0
+    }
+    if (typeof amount === "string") {
+        const parsed = Number(amount)
+        return Number.isFinite(parsed) ? parsed : 0
+    }
+    return 0
+}
+
 /**
- * Format amount in fen to CNY.
+ * Format decimal yuan amount to CNY.
  */
-export function formatCurrencyFen(amountFen: number): string {
-    const amount = amountFen / 100;
+export function formatCurrencyYuan(amount: string | number | null | undefined): string {
+    const normalizedAmount = normalizeCurrencyAmount(amount);
     return new Intl.NumberFormat('zh-CN', {
         style: 'currency',
         currency: 'CNY',
         minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(normalizedAmount);
+}
+
+export function parseCurrencyYuan(amount: string | number | null | undefined): number {
+    return normalizeCurrencyAmount(amount)
 }
 
 /**

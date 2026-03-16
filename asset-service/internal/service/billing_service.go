@@ -6,14 +6,18 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
 	"vasset/asset-service/internal/models"
+	"vasset/asset-service/internal/money"
 	"vasset/asset-service/internal/repository"
 )
 
-const gibBytes = int64(1024 * 1024 * 1024)
+const (
+	mbBytes       = int64(1000 * 1000)
+	minBillableMB = int64(100)
+	gbMB          = int64(1000)
+)
 
 var (
 	ErrInsufficientBalance = errors.New("insufficient balance")
@@ -47,12 +51,10 @@ func (s *BillingService) EstimateDownloadBilling(ctx context.Context, selectedFo
 	}
 
 	fileBytes := selectedFormatFilesize
-	isEstimated := false
+	isEstimated := fileBytes <= 0
 	reason := ""
 	if fileBytes <= 0 {
-		fileBytes = pricing.DefaultEstimateBytes
-		isEstimated = true
-		reason = "default_estimate"
+		reason = "unknown_filesize"
 	}
 
 	ingressCost, err := calculateAmountFen(fileBytes, pricing.IngressPriceFenPerGiB)
@@ -68,7 +70,7 @@ func (s *BillingService) EstimateDownloadBilling(ctx context.Context, selectedFo
 		EstimatedIngressBytes: fileBytes,
 		EstimatedEgressBytes:  fileBytes,
 		EstimatedTrafficBytes: fileBytes * 2,
-		EstimatedCostFen:      ingressCost + egressCost,
+		EstimatedCostFen:      ingressCost.Add(egressCost),
 		PricingVersion:        pricing.Version,
 		IsEstimated:           isEstimated,
 		EstimateReason:        reason,
@@ -102,12 +104,12 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 		if err != nil {
 			return err
 		}
-		if account.AvailableBalanceFen < estimate.EstimatedCostFen {
+		if account.AvailableBalanceFen.Cmp(estimate.EstimatedCostFen) < 0 {
 			return ErrInsufficientBalance
 		}
 
-		account.AvailableBalanceFen -= estimate.EstimatedCostFen
-		account.ReservedBalanceFen += estimate.EstimatedCostFen
+		account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(estimate.EstimatedCostFen)
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Add(estimate.EstimatedCostFen)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
@@ -143,8 +145,8 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 			FundingSource:     models.BillingFundingSourceNewReserve,
 			Status:            models.BillingHoldStatusHeld,
 			AmountFen:         estimate.EstimatedCostFen,
-			CapturedAmountFen: 0,
-			ReleasedAmountFen: 0,
+			CapturedAmountFen: money.Zero(),
+			ReleasedAmountFen: money.Zero(),
 			CreatedAt:         now,
 			UpdatedAt:         now,
 		}
@@ -163,7 +165,7 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 			EntryType:                models.LedgerEntryTypeHold,
 			Scene:                    models.BillingSceneDownload,
 			ActionAmountFen:          estimate.EstimatedCostFen,
-			AvailableDeltaFen:        -estimate.EstimatedCostFen,
+			AvailableDeltaFen:        estimate.EstimatedCostFen.Neg(),
 			ReservedDeltaFen:         estimate.EstimatedCostFen,
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
@@ -179,10 +181,10 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 	return order, hold, account, nil
 }
 
-func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string, actualIngressBytes int64) (*models.BillingChargeOrder, int64, error) {
+func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string, actualIngressBytes int64) (*models.BillingChargeOrder, money.Decimal, error) {
 	var (
 		order          *models.BillingChargeOrder
-		capturedAmount int64
+		capturedAmount money.Decimal
 	)
 
 	err := s.repo.WithTx(ctx, func(tx *sql.Tx) error {
@@ -212,16 +214,16 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 			if order.ActualIngressBytes != actualIngressBytes {
 				return fmt.Errorf("ingress usage already recorded for task %s", taskID)
 			}
-			if order.CapturedAmountFen > 0 && order.ShortfallFen == 0 {
+			if order.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ShortfallFen.IsZero() {
 				capturedAmount = order.CapturedAmountFen
 				return nil
 			}
 		}
 
-		additionalReserve := int64(0)
-		if remaining := remainingOrderReserve(order); remaining < capturedAmount {
-			additionalReserve = capturedAmount - remaining
-			if account.AvailableBalanceFen < additionalReserve {
+		additionalReserve := money.Zero()
+		if remaining := remainingOrderReserve(order); remaining.Cmp(capturedAmount) < 0 {
+			additionalReserve = capturedAmount.Sub(remaining)
+			if account.AvailableBalanceFen.Cmp(additionalReserve) < 0 {
 				if order.ActualIngressBytes == 0 {
 					order.ActualIngressBytes = actualIngressBytes
 					order.ActualTrafficBytes += actualIngressBytes
@@ -232,38 +234,38 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 				}
 				return ErrInsufficientBalance
 			}
-			account.AvailableBalanceFen -= additionalReserve
-			account.ReservedBalanceFen += additionalReserve
-			order.HeldAmountFen += additionalReserve
-			hold.AmountFen += additionalReserve
+			account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(additionalReserve)
+			account.ReservedBalanceFen = account.ReservedBalanceFen.Add(additionalReserve)
+			order.HeldAmountFen = order.HeldAmountFen.Add(additionalReserve)
+			hold.AmountFen = hold.AmountFen.Add(additionalReserve)
 		}
 
 		if order.ActualIngressBytes == 0 {
 			order.ActualIngressBytes = actualIngressBytes
 			order.ActualTrafficBytes += actualIngressBytes
 		}
-		order.ShortfallFen = 0
-		order.CapturedAmountFen += capturedAmount
+		order.ShortfallFen = money.Zero()
+		order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return err
 		}
 
-		hold.CapturedAmountFen += capturedAmount
+		hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
 		hold.Status = deriveHoldStatus(hold)
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
-		account.ReservedBalanceFen -= capturedAmount
-		account.TotalSpentFen += capturedAmount
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
+		account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
 		account.TotalTrafficBytes += actualIngressBytes
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
 		now := time.Now()
-		if additionalReserve > 0 {
+		if additionalReserve.Cmp(money.Zero()) > 0 {
 			holdEntry := &models.BillingLedgerEntry{
 				EntryNo:                  newBillingID("led"),
 				AccountID:                account.ID,
@@ -275,10 +277,10 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 				EntryType:                models.LedgerEntryTypeHold,
 				Scene:                    order.Scene,
 				ActionAmountFen:          additionalReserve,
-				AvailableDeltaFen:        -additionalReserve,
+				AvailableDeltaFen:        additionalReserve.Neg(),
 				ReservedDeltaFen:         additionalReserve,
 				BalanceAfterAvailableFen: account.AvailableBalanceFen,
-				BalanceAfterReservedFen:  account.ReservedBalanceFen + capturedAmount,
+				BalanceAfterReservedFen:  account.ReservedBalanceFen.Add(capturedAmount),
 				Remark:                   "top up ingress reserve",
 				CreatedAt:                now,
 			}
@@ -317,8 +319,8 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 			EntryType:                models.LedgerEntryTypeCapture,
 			Scene:                    order.Scene,
 			ActionAmountFen:          capturedAmount,
-			AvailableDeltaFen:        0,
-			ReservedDeltaFen:         -capturedAmount,
+			AvailableDeltaFen:        money.Zero(),
+			ReservedDeltaFen:         capturedAmount.Neg(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			Remark:                   "capture ingress usage",
@@ -327,16 +329,16 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, money.Zero(), err
 	}
 
 	return order, capturedAmount, nil
 }
 
-func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, reason string) (*models.BillingChargeOrder, int64, error) {
+func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, reason string) (*models.BillingChargeOrder, money.Decimal, error) {
 	var (
 		order          *models.BillingChargeOrder
-		releasedAmount int64
+		releasedAmount money.Decimal
 	)
 
 	err := s.repo.WithTx(ctx, func(tx *sql.Tx) error {
@@ -355,17 +357,17 @@ func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, rea
 		}
 
 		releasedAmount = remainingHoldAmount(hold)
-		if releasedAmount <= 0 {
+		if releasedAmount.IsZero() {
 			return nil
 		}
 
-		hold.ReleasedAmountFen += releasedAmount
+		hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releasedAmount)
 		hold.Status = models.BillingHoldStatusReleased
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
-		order.ReleasedAmountFen += releasedAmount
+		order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releasedAmount)
 		order.Remark = reason
 		order.Status = deriveOrderStatus(order)
 		if order.Status == models.BillingOrderStatusReleased {
@@ -376,8 +378,8 @@ func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, rea
 			return err
 		}
 
-		account.AvailableBalanceFen += releasedAmount
-		account.ReservedBalanceFen -= releasedAmount
+		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releasedAmount)
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releasedAmount)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
@@ -394,7 +396,7 @@ func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, rea
 			Scene:                    order.Scene,
 			ActionAmountFen:          releasedAmount,
 			AvailableDeltaFen:        releasedAmount,
-			ReservedDeltaFen:         -releasedAmount,
+			ReservedDeltaFen:         releasedAmount.Neg(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			Remark:                   reason,
@@ -403,7 +405,7 @@ func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, rea
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, money.Zero(), err
 	}
 
 	return order, releasedAmount, nil
@@ -436,7 +438,7 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 
 		now := time.Now()
 		fundingSource := int32(models.BillingFundingSourceNewReserve)
-		requiredReserve := int64(0)
+		requiredReserve := money.Zero()
 
 		if errors.Is(err, sql.ErrNoRows) || order == nil || !canUseInitialOrder(order) {
 			pricing, err = s.repo.GetActivePricing(ctx)
@@ -447,12 +449,12 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			if err != nil {
 				return err
 			}
-			if account.AvailableBalanceFen < requiredReserve {
+			if account.AvailableBalanceFen.Cmp(requiredReserve) < 0 {
 				return ErrInsufficientBalance
 			}
 
-			account.AvailableBalanceFen -= requiredReserve
-			account.ReservedBalanceFen += requiredReserve
+			account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(requiredReserve)
+			account.ReservedBalanceFen = account.ReservedBalanceFen.Add(requiredReserve)
 			if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 				return err
 			}
@@ -484,7 +486,7 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 				EntryType:                models.LedgerEntryTypeHold,
 				Scene:                    models.BillingSceneRedownload,
 				ActionAmountFen:          requiredReserve,
-				AvailableDeltaFen:        -requiredReserve,
+				AvailableDeltaFen:        requiredReserve.Neg(),
 				ReservedDeltaFen:         requiredReserve,
 				BalanceAfterAvailableFen: account.AvailableBalanceFen,
 				BalanceAfterReservedFen:  account.ReservedBalanceFen,
@@ -505,18 +507,18 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			}
 
 			remainingReserve := remainingOrderReserve(order)
-			additionalReserve := requiredReserve - remainingReserve
-			if additionalReserve > 0 {
-				if account.AvailableBalanceFen < additionalReserve {
+			additionalReserve := requiredReserve.Sub(remainingReserve)
+			if additionalReserve.Cmp(money.Zero()) > 0 {
+				if account.AvailableBalanceFen.Cmp(additionalReserve) < 0 {
 					setOrderAwaitingShortfall(order, additionalReserve, "awaiting shortfall resolution: first transfer reserve")
 					if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 						return err
 					}
 					return ErrInsufficientBalance
 				}
-				account.AvailableBalanceFen -= additionalReserve
-				account.ReservedBalanceFen += additionalReserve
-				order.HeldAmountFen += additionalReserve
+				account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(additionalReserve)
+				account.ReservedBalanceFen = account.ReservedBalanceFen.Add(additionalReserve)
+				order.HeldAmountFen = order.HeldAmountFen.Add(additionalReserve)
 				fundingSource = models.BillingFundingSourceNewReserve
 
 				if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
@@ -536,7 +538,7 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 					EntryType:                models.LedgerEntryTypeHold,
 					Scene:                    order.Scene,
 					ActionAmountFen:          additionalReserve,
-					AvailableDeltaFen:        -additionalReserve,
+					AvailableDeltaFen:        additionalReserve.Neg(),
 					ReservedDeltaFen:         additionalReserve,
 					BalanceAfterAvailableFen: account.AvailableBalanceFen,
 					BalanceAfterReservedFen:  account.ReservedBalanceFen,
@@ -561,8 +563,8 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			FundingSource:     fundingSource,
 			Status:            models.BillingHoldStatusHeld,
 			AmountFen:         requiredReserve,
-			CapturedAmountFen: 0,
-			ReleasedAmountFen: 0,
+			CapturedAmountFen: money.Zero(),
+			ReleasedAmountFen: money.Zero(),
 			CreatedAt:         now,
 			UpdatedAt:         now,
 		}
@@ -575,10 +577,10 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 	return order, hold, account, pricing, nil
 }
 
-func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transferID string, actualEgressBytes int64) (*models.BillingChargeOrder, int64, error) {
+func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transferID string, actualEgressBytes int64) (*models.BillingChargeOrder, money.Decimal, error) {
 	var (
 		order          *models.BillingChargeOrder
-		capturedAmount int64
+		capturedAmount money.Decimal
 	)
 
 	err := s.repo.WithTx(ctx, func(tx *sql.Tx) error {
@@ -604,7 +606,7 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 		if err != nil {
 			return err
 		}
-		if hold.Status == models.BillingHoldStatusCaptured || (hold.CapturedAmountFen > 0 && order.ShortfallFen == 0) {
+		if hold.Status == models.BillingHoldStatusCaptured || (hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ShortfallFen.IsZero()) {
 			capturedAmount = hold.CapturedAmountFen
 			return nil
 		}
@@ -612,16 +614,16 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			if order.ActualEgressBytes != actualEgressBytes {
 				return fmt.Errorf("egress usage already recorded for transfer %s", transferID)
 			}
-			if hold.CapturedAmountFen > 0 && order.ShortfallFen == 0 {
+			if hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ShortfallFen.IsZero() {
 				capturedAmount = hold.CapturedAmountFen
 				return nil
 			}
 		}
 
-		additionalReserve := int64(0)
-		if remaining := remainingOrderReserve(order); remaining < capturedAmount {
-			additionalReserve = capturedAmount - remaining
-			if account.AvailableBalanceFen < additionalReserve {
+		additionalReserve := money.Zero()
+		if remaining := remainingOrderReserve(order); remaining.Cmp(capturedAmount) < 0 {
+			additionalReserve = capturedAmount.Sub(remaining)
+			if account.AvailableBalanceFen.Cmp(additionalReserve) < 0 {
 				if order.ActualEgressBytes == 0 {
 					order.ActualEgressBytes += actualEgressBytes
 					order.ActualTrafficBytes += actualEgressBytes
@@ -632,16 +634,16 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 				}
 				return ErrInsufficientBalance
 			}
-			account.AvailableBalanceFen -= additionalReserve
-			account.ReservedBalanceFen += additionalReserve
-			order.HeldAmountFen += additionalReserve
+			account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(additionalReserve)
+			account.ReservedBalanceFen = account.ReservedBalanceFen.Add(additionalReserve)
+			order.HeldAmountFen = order.HeldAmountFen.Add(additionalReserve)
 		}
 
-		holdDiff := capturedAmount - hold.AmountFen
-		if holdDiff > 0 {
-			hold.AmountFen += holdDiff
+		holdDiff := capturedAmount.Sub(hold.AmountFen)
+		if holdDiff.Cmp(money.Zero()) > 0 {
+			hold.AmountFen = hold.AmountFen.Add(holdDiff)
 		}
-		hold.CapturedAmountFen += capturedAmount
+		hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
 		hold.Status = models.BillingHoldStatusCaptured
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
@@ -651,8 +653,8 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			order.ActualEgressBytes += actualEgressBytes
 			order.ActualTrafficBytes += actualEgressBytes
 		}
-		order.ShortfallFen = 0
-		order.CapturedAmountFen += capturedAmount
+		order.ShortfallFen = money.Zero()
+		order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
 		order.Status = deriveOrderStatus(order)
 		now := time.Now()
 		if order.Status == models.BillingOrderStatusCaptured {
@@ -662,14 +664,14 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			return err
 		}
 
-		account.ReservedBalanceFen -= capturedAmount
-		account.TotalSpentFen += capturedAmount
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
+		account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
 		account.TotalTrafficBytes += actualEgressBytes
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
-		if additionalReserve > 0 {
+		if additionalReserve.Cmp(money.Zero()) > 0 {
 			holdEntry := &models.BillingLedgerEntry{
 				EntryNo:                  newBillingID("led"),
 				AccountID:                account.ID,
@@ -682,10 +684,10 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 				EntryType:                models.LedgerEntryTypeHold,
 				Scene:                    order.Scene,
 				ActionAmountFen:          additionalReserve,
-				AvailableDeltaFen:        -additionalReserve,
+				AvailableDeltaFen:        additionalReserve.Neg(),
 				ReservedDeltaFen:         additionalReserve,
 				BalanceAfterAvailableFen: account.AvailableBalanceFen,
-				BalanceAfterReservedFen:  account.ReservedBalanceFen + capturedAmount,
+				BalanceAfterReservedFen:  account.ReservedBalanceFen.Add(capturedAmount),
 				Remark:                   "top up transfer reserve",
 				CreatedAt:                now,
 			}
@@ -726,8 +728,8 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			EntryType:                models.LedgerEntryTypeCapture,
 			Scene:                    order.Scene,
 			ActionAmountFen:          capturedAmount,
-			AvailableDeltaFen:        0,
-			ReservedDeltaFen:         -capturedAmount,
+			AvailableDeltaFen:        money.Zero(),
+			ReservedDeltaFen:         capturedAmount.Neg(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			Remark:                   "capture file transfer",
@@ -738,18 +740,18 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 		}
 
 		releaseAmount := remainingHoldAmount(hold)
-		if releaseAmount > 0 {
-			hold.ReleasedAmountFen += releaseAmount
+		if releaseAmount.Cmp(money.Zero()) > 0 {
+			hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releaseAmount)
 			if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 				return err
 			}
-			order.ReleasedAmountFen += releaseAmount
+			order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releaseAmount)
 			order.Status = deriveOrderStatus(order)
 			if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 				return err
 			}
-			account.AvailableBalanceFen += releaseAmount
-			account.ReservedBalanceFen -= releaseAmount
+			account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releaseAmount)
+			account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releaseAmount)
 			if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 				return err
 			}
@@ -766,7 +768,7 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 				Scene:                    order.Scene,
 				ActionAmountFen:          releaseAmount,
 				AvailableDeltaFen:        releaseAmount,
-				ReservedDeltaFen:         -releaseAmount,
+				ReservedDeltaFen:         releaseAmount.Neg(),
 				BalanceAfterAvailableFen: account.AvailableBalanceFen,
 				BalanceAfterReservedFen:  account.ReservedBalanceFen,
 				Remark:                   "release unused transfer reserve",
@@ -780,16 +782,16 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 		return nil
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, money.Zero(), err
 	}
 
 	return order, capturedAmount, nil
 }
 
-func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferID, reason string) (*models.BillingChargeOrder, int64, error) {
+func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferID, reason string) (*models.BillingChargeOrder, money.Decimal, error) {
 	var (
 		order          *models.BillingChargeOrder
-		releasedAmount int64
+		releasedAmount money.Decimal
 	)
 
 	err := s.repo.WithTx(ctx, func(tx *sql.Tx) error {
@@ -808,25 +810,25 @@ func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferI
 		}
 
 		releasedAmount = remainingHoldAmount(hold)
-		if releasedAmount <= 0 {
+		if releasedAmount.IsZero() {
 			return nil
 		}
 
-		hold.ReleasedAmountFen += releasedAmount
+		hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releasedAmount)
 		hold.Status = models.BillingHoldStatusReleased
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
-		order.ReleasedAmountFen += releasedAmount
+		order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releasedAmount)
 		order.Remark = reason
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return err
 		}
 
-		account.AvailableBalanceFen += releasedAmount
-		account.ReservedBalanceFen -= releasedAmount
+		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releasedAmount)
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releasedAmount)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
@@ -844,7 +846,7 @@ func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferI
 			Scene:                    order.Scene,
 			ActionAmountFen:          releasedAmount,
 			AvailableDeltaFen:        releasedAmount,
-			ReservedDeltaFen:         -releasedAmount,
+			ReservedDeltaFen:         releasedAmount.Neg(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			Remark:                   reason,
@@ -853,17 +855,17 @@ func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferI
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, money.Zero(), err
 	}
 
 	return order, releasedAmount, nil
 }
 
 func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx *sql.Tx, order *models.BillingChargeOrder, account *models.BillingAccount, remark, operatorUserID string) (*models.BillingLedgerEntry, error) {
-	if order == nil || order.Scene != models.BillingSceneDownload || order.ShortfallFen <= 0 {
+	if order == nil || order.Scene != models.BillingSceneDownload || order.ShortfallFen.IsZero() {
 		return nil, nil
 	}
-	if account.AvailableBalanceFen < order.ShortfallFen {
+	if account.AvailableBalanceFen.Cmp(order.ShortfallFen) < 0 {
 		setOrderAwaitingShortfall(order, order.ShortfallFen, order.Remark)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
@@ -873,13 +875,13 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 
 	now := time.Now()
 	shortfallFen := order.ShortfallFen
-	account.AvailableBalanceFen -= shortfallFen
-	account.ReservedBalanceFen += shortfallFen
-	order.HeldAmountFen += shortfallFen
+	account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(shortfallFen)
+	account.ReservedBalanceFen = account.ReservedBalanceFen.Add(shortfallFen)
+	order.HeldAmountFen = order.HeldAmountFen.Add(shortfallFen)
 
 	holdEntry := newReserveLedgerEntry(account, order, "", shortfallFen, remarkOrDefault(remark, "resolve initial order shortfall"), operatorUserID, now)
 
-	if order.ActualIngressBytes > 0 && order.CapturedAmountFen == 0 {
+	if order.ActualIngressBytes > 0 && order.CapturedAmountFen.IsZero() {
 		hold, err := s.repo.GetHoldByTaskIDForUpdate(ctx, tx, order.TaskID, models.BillingHoldTypeDownloadTotal)
 		if err != nil {
 			return nil, err
@@ -893,30 +895,30 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 			return nil, err
 		}
 
-		hold.AmountFen += shortfallFen
-		hold.CapturedAmountFen += capturedAmount
+		hold.AmountFen = hold.AmountFen.Add(shortfallFen)
+		hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
 		hold.Status = deriveHoldStatus(hold)
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return nil, err
 		}
 
-		order.ShortfallFen = 0
+		order.ShortfallFen = money.Zero()
 		order.Remark = remarkOrDefault(remark, "shortfall resolved")
-		order.CapturedAmountFen += capturedAmount
+		order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
 		}
 
-		account.ReservedBalanceFen -= capturedAmount
-		account.TotalSpentFen += capturedAmount
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
+		account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
 		account.TotalTrafficBytes += order.ActualIngressBytes
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return nil, err
 		}
 
 		holdEntry.HoldNo = hold.HoldNo
-		holdEntry.BalanceAfterReservedFen = account.ReservedBalanceFen + capturedAmount
+		holdEntry.BalanceAfterReservedFen = account.ReservedBalanceFen.Add(capturedAmount)
 		if err := s.repo.CreateLedgerTx(ctx, tx, holdEntry); err != nil {
 			return nil, err
 		}
@@ -951,8 +953,8 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 			EntryType:                models.LedgerEntryTypeCapture,
 			Scene:                    order.Scene,
 			ActionAmountFen:          capturedAmount,
-			AvailableDeltaFen:        0,
-			ReservedDeltaFen:         -capturedAmount,
+			AvailableDeltaFen:        money.Zero(),
+			ReservedDeltaFen:         capturedAmount.Neg(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			Remark:                   "capture ingress usage after shortfall resolution",
@@ -961,7 +963,7 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 		return holdEntry, s.repo.CreateLedgerTx(ctx, tx, captureEntry)
 	}
 
-	order.ShortfallFen = 0
+	order.ShortfallFen = money.Zero()
 	order.Remark = remarkOrDefault(remark, "shortfall resolved")
 	order.Status = deriveOrderStatus(order)
 	if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
@@ -974,10 +976,10 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 }
 
 func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.Tx, order *models.BillingChargeOrder, account *models.BillingAccount, remark, operatorUserID string) (*models.BillingLedgerEntry, error) {
-	if order == nil || order.ShortfallFen <= 0 || order.ActualEgressBytes <= 0 {
+	if order == nil || order.ShortfallFen.IsZero() || order.ActualEgressBytes <= 0 {
 		return nil, nil
 	}
-	if account.AvailableBalanceFen < order.ShortfallFen {
+	if account.AvailableBalanceFen.Cmp(order.ShortfallFen) < 0 {
 		setOrderAwaitingShortfall(order, order.ShortfallFen, order.Remark)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
@@ -1000,25 +1002,25 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 
 	now := time.Now()
 	shortfallFen := order.ShortfallFen
-	account.AvailableBalanceFen -= shortfallFen
-	account.ReservedBalanceFen += shortfallFen
-	order.HeldAmountFen += shortfallFen
+	account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(shortfallFen)
+	account.ReservedBalanceFen = account.ReservedBalanceFen.Add(shortfallFen)
+	order.HeldAmountFen = order.HeldAmountFen.Add(shortfallFen)
 
 	holdEntry := newReserveLedgerEntry(account, order, hold.HoldNo, shortfallFen, remarkOrDefault(remark, "resolve transfer shortfall"), operatorUserID, now)
 
-	holdDiff := capturedAmount - hold.AmountFen
-	if holdDiff > 0 {
-		hold.AmountFen += holdDiff
+	holdDiff := capturedAmount.Sub(hold.AmountFen)
+	if holdDiff.Cmp(money.Zero()) > 0 {
+		hold.AmountFen = hold.AmountFen.Add(holdDiff)
 	}
-	hold.CapturedAmountFen += capturedAmount
+	hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
 	hold.Status = models.BillingHoldStatusCaptured
 	if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 		return nil, err
 	}
 
-	order.ShortfallFen = 0
+	order.ShortfallFen = money.Zero()
 	order.Remark = remarkOrDefault(remark, "shortfall resolved")
-	order.CapturedAmountFen += capturedAmount
+	order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
 	order.Status = deriveOrderStatus(order)
 	if order.Status == models.BillingOrderStatusCaptured {
 		order.ClosedAt = &now
@@ -1027,14 +1029,14 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 		return nil, err
 	}
 
-	account.ReservedBalanceFen -= capturedAmount
-	account.TotalSpentFen += capturedAmount
+	account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
+	account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
 	account.TotalTrafficBytes += order.ActualEgressBytes
 	if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 		return nil, err
 	}
 
-	holdEntry.BalanceAfterReservedFen = account.ReservedBalanceFen + capturedAmount
+	holdEntry.BalanceAfterReservedFen = account.ReservedBalanceFen.Add(capturedAmount)
 	if err := s.repo.CreateLedgerTx(ctx, tx, holdEntry); err != nil {
 		return nil, err
 	}
@@ -1071,8 +1073,8 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 		EntryType:                models.LedgerEntryTypeCapture,
 		Scene:                    order.Scene,
 		ActionAmountFen:          capturedAmount,
-		AvailableDeltaFen:        0,
-		ReservedDeltaFen:         -capturedAmount,
+		AvailableDeltaFen:        money.Zero(),
+		ReservedDeltaFen:         capturedAmount.Neg(),
 		BalanceAfterAvailableFen: account.AvailableBalanceFen,
 		BalanceAfterReservedFen:  account.ReservedBalanceFen,
 		Remark:                   "capture file transfer after shortfall resolution",
@@ -1083,18 +1085,18 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 	}
 
 	releaseAmount := remainingHoldAmount(hold)
-	if releaseAmount > 0 {
-		hold.ReleasedAmountFen += releaseAmount
+	if releaseAmount.Cmp(money.Zero()) > 0 {
+		hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releaseAmount)
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return nil, err
 		}
-		order.ReleasedAmountFen += releaseAmount
+		order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releaseAmount)
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
 		}
-		account.AvailableBalanceFen += releaseAmount
-		account.ReservedBalanceFen -= releaseAmount
+		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releaseAmount)
+		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releaseAmount)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return nil, err
 		}
@@ -1111,7 +1113,7 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 			Scene:                    order.Scene,
 			ActionAmountFen:          releaseAmount,
 			AvailableDeltaFen:        releaseAmount,
-			ReservedDeltaFen:         -releaseAmount,
+			ReservedDeltaFen:         releaseAmount.Neg(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			Remark:                   "release unused reserve after shortfall resolution",
@@ -1140,7 +1142,7 @@ func (s *BillingService) GetBillingAccountDetail(ctx context.Context, userID str
 	return s.repo.GetOrCreateAccount(ctx, userID)
 }
 
-func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, operationID string, amountFen int64, remark, operatorUserID string) (*models.BillingAccount, *models.BillingLedgerEntry, error) {
+func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, operationID string, amountFen money.Decimal, remark, operatorUserID string) (*models.BillingAccount, *models.BillingLedgerEntry, error) {
 	if operationID == "" {
 		return nil, nil, fmt.Errorf("operation id is required")
 	}
@@ -1164,20 +1166,20 @@ func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, opera
 		if err != nil {
 			return err
 		}
-		if amountFen < 0 && account.AvailableBalanceFen < -amountFen {
+		if amountFen.Cmp(money.Zero()) < 0 && account.AvailableBalanceFen.Cmp(amountFen.Neg()) < 0 {
 			return ErrInsufficientBalance
 		}
 
-		account.AvailableBalanceFen += amountFen
-		if amountFen > 0 {
-			account.TotalRechargedFen += amountFen
+		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(amountFen)
+		if amountFen.Cmp(money.Zero()) > 0 {
+			account.TotalRechargedFen = account.TotalRechargedFen.Add(amountFen)
 		}
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
 		entryType := int32(models.LedgerEntryTypeManualAdjustment)
-		if amountFen > 0 {
+		if amountFen.Cmp(money.Zero()) > 0 {
 			entryType = models.LedgerEntryTypeManualTopup
 		}
 		entry = &models.BillingLedgerEntry{
@@ -1189,7 +1191,7 @@ func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, opera
 			Scene:                    models.BillingSceneAdmin,
 			ActionAmountFen:          abs64(amountFen),
 			AvailableDeltaFen:        amountFen,
-			ReservedDeltaFen:         0,
+			ReservedDeltaFen:         money.Zero(),
 			BalanceAfterAvailableFen: account.AvailableBalanceFen,
 			BalanceAfterReservedFen:  account.ReservedBalanceFen,
 			OperatorUserID:           operatorUserID,
@@ -1214,9 +1216,10 @@ func (s *BillingService) ReconcileBillingShortfall(ctx context.Context, orderNo,
 		order   *models.BillingChargeOrder
 		account *models.BillingAccount
 		entry   *models.BillingLedgerEntry
+		err     error
 	)
 
-	err := s.repo.WithTx(ctx, func(tx *sql.Tx) error {
+	err = s.repo.WithTx(ctx, func(tx *sql.Tx) error {
 		var err error
 		order, err = s.repo.GetOrderByOrderNoForUpdate(ctx, tx, orderNo)
 		if err != nil {
@@ -1227,12 +1230,12 @@ func (s *BillingService) ReconcileBillingShortfall(ctx context.Context, orderNo,
 			return err
 		}
 
-		if order.ShortfallFen <= 0 || order.Status != models.BillingOrderStatusAwaitingShortfall {
+		if order.ShortfallFen.IsZero() || order.Status != models.BillingOrderStatusAwaitingShortfall {
 			return nil
 		}
 
 		switch {
-		case order.Scene == models.BillingSceneDownload && order.ActualIngressBytes > 0 && order.CapturedAmountFen == 0:
+		case order.Scene == models.BillingSceneDownload && order.ActualIngressBytes > 0 && order.CapturedAmountFen.IsZero():
 			entry, err = s.resolveInitialDownloadShortfall(ctx, tx, order, account, remark, operatorUserID)
 			return err
 		case order.ActualEgressBytes > 0:
@@ -1262,9 +1265,20 @@ func (s *BillingService) GetBillingPricing(ctx context.Context) (*models.Billing
 	return s.repo.GetActivePricing(ctx)
 }
 
-func (s *BillingService) UpdateBillingPricing(ctx context.Context, ingressPrice, egressPrice string, defaultEstimateBytes int64, remark, operatorUserID string) (*models.BillingPricing, error) {
-	var pricing *models.BillingPricing
-	err := s.repo.WithTx(ctx, func(tx *sql.Tx) error {
+func (s *BillingService) UpdateBillingPricing(ctx context.Context, ingressPrice, egressPrice string, remark, operatorUserID string) (*models.BillingPricing, error) {
+	var (
+		pricing *models.BillingPricing
+		err     error
+	)
+	parsedIngressPrice, err := money.Parse(ingressPrice)
+	if err != nil {
+		return nil, fmt.Errorf("parse ingress price: %w", err)
+	}
+	parsedEgressPrice, err := money.Parse(egressPrice)
+	if err != nil {
+		return nil, fmt.Errorf("parse egress price: %w", err)
+	}
+	err = s.repo.WithTx(ctx, func(tx *sql.Tx) error {
 		latestVersion, err := s.repo.GetLatestPricingVersionTx(ctx, tx)
 		if err != nil {
 			return err
@@ -1276,9 +1290,8 @@ func (s *BillingService) UpdateBillingPricing(ctx context.Context, ingressPrice,
 		now := time.Now()
 		pricing = &models.BillingPricing{
 			Version:               latestVersion + 1,
-			IngressPriceFenPerGiB: ingressPrice,
-			EgressPriceFenPerGiB:  egressPrice,
-			DefaultEstimateBytes:  defaultEstimateBytes,
+			IngressPriceFenPerGiB: parsedIngressPrice,
+			EgressPriceFenPerGiB:  parsedEgressPrice,
 			Enabled:               true,
 			Remark:                remark,
 			UpdatedByUserID:       operatorUserID,
@@ -1309,17 +1322,17 @@ func canUseInitialOrder(order *models.BillingChargeOrder) bool {
 func deriveOrderStatus(order *models.BillingChargeOrder) int32 {
 	remaining := remainingOrderReserve(order)
 	switch {
-	case order.ShortfallFen > 0:
+	case order.ShortfallFen.Cmp(money.Zero()) > 0:
 		return models.BillingOrderStatusAwaitingShortfall
-	case order.CapturedAmountFen == 0 && order.ReleasedAmountFen == 0:
+	case order.CapturedAmountFen.IsZero() && order.ReleasedAmountFen.IsZero():
 		return models.BillingOrderStatusHeld
-	case order.CapturedAmountFen == 0 && remaining == 0:
+	case order.CapturedAmountFen.IsZero() && remaining.IsZero():
 		return models.BillingOrderStatusReleased
-	case order.CapturedAmountFen > 0 && order.ReleasedAmountFen > 0:
+	case order.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ReleasedAmountFen.Cmp(money.Zero()) > 0:
 		return models.BillingOrderStatusPartialCaptured
-	case order.CapturedAmountFen > 0 && remaining > 0:
+	case order.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.Cmp(money.Zero()) > 0:
 		return models.BillingOrderStatusPartialCaptured
-	case order.CapturedAmountFen > 0 && remaining == 0:
+	case order.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.IsZero():
 		return models.BillingOrderStatusCaptured
 	default:
 		return models.BillingOrderStatusPartialCaptured
@@ -1329,22 +1342,22 @@ func deriveOrderStatus(order *models.BillingChargeOrder) int32 {
 func deriveHoldStatus(hold *models.BillingHold) int32 {
 	remaining := remainingHoldAmount(hold)
 	switch {
-	case hold.CapturedAmountFen == 0 && hold.ReleasedAmountFen == 0:
+	case hold.CapturedAmountFen.IsZero() && hold.ReleasedAmountFen.IsZero():
 		return models.BillingHoldStatusHeld
-	case hold.CapturedAmountFen > 0 && remaining > 0:
+	case hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.Cmp(money.Zero()) > 0:
 		return models.BillingHoldStatusPartialCaptured
-	case hold.CapturedAmountFen > 0 && remaining == 0:
+	case hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.IsZero():
 		return models.BillingHoldStatusCaptured
-	case hold.ReleasedAmountFen > 0 && remaining == 0:
+	case hold.ReleasedAmountFen.Cmp(money.Zero()) > 0 && remaining.IsZero():
 		return models.BillingHoldStatusReleased
 	default:
 		return models.BillingHoldStatusHeld
 	}
 }
 
-func setOrderAwaitingShortfall(order *models.BillingChargeOrder, shortfallFen int64, remark string) {
-	if shortfallFen < 0 {
-		shortfallFen = 0
+func setOrderAwaitingShortfall(order *models.BillingChargeOrder, shortfallFen money.Decimal, remark string) {
+	if shortfallFen.Cmp(money.Zero()) < 0 {
+		shortfallFen = money.Zero()
 	}
 	order.ShortfallFen = shortfallFen
 	if remark != "" {
@@ -1353,7 +1366,7 @@ func setOrderAwaitingShortfall(order *models.BillingChargeOrder, shortfallFen in
 	order.Status = deriveOrderStatus(order)
 }
 
-func newReserveLedgerEntry(account *models.BillingAccount, order *models.BillingChargeOrder, holdNo string, amountFen int64, remark, operatorUserID string, createdAt time.Time) *models.BillingLedgerEntry {
+func newReserveLedgerEntry(account *models.BillingAccount, order *models.BillingChargeOrder, holdNo string, amountFen money.Decimal, remark, operatorUserID string, createdAt time.Time) *models.BillingLedgerEntry {
 	return &models.BillingLedgerEntry{
 		EntryNo:                  newBillingID("led"),
 		AccountID:                account.ID,
@@ -1365,7 +1378,7 @@ func newReserveLedgerEntry(account *models.BillingAccount, order *models.Billing
 		EntryType:                models.LedgerEntryTypeHold,
 		Scene:                    order.Scene,
 		ActionAmountFen:          amountFen,
-		AvailableDeltaFen:        -amountFen,
+		AvailableDeltaFen:        amountFen.Neg(),
 		ReservedDeltaFen:         amountFen,
 		BalanceAfterAvailableFen: account.AvailableBalanceFen,
 		BalanceAfterReservedFen:  account.ReservedBalanceFen,
@@ -1382,46 +1395,36 @@ func remarkOrDefault(remark, fallback string) string {
 	return fallback
 }
 
-func remainingOrderReserve(order *models.BillingChargeOrder) int64 {
-	remaining := order.HeldAmountFen - order.CapturedAmountFen - order.ReleasedAmountFen
-	if remaining < 0 {
-		return 0
+func remainingOrderReserve(order *models.BillingChargeOrder) money.Decimal {
+	remaining := order.HeldAmountFen.Sub(order.CapturedAmountFen).Sub(order.ReleasedAmountFen)
+	if remaining.Cmp(money.Zero()) < 0 {
+		return money.Zero()
 	}
 	return remaining
 }
 
-func remainingHoldAmount(hold *models.BillingHold) int64 {
-	remaining := hold.AmountFen - hold.CapturedAmountFen - hold.ReleasedAmountFen
-	if remaining < 0 {
-		return 0
+func remainingHoldAmount(hold *models.BillingHold) money.Decimal {
+	remaining := hold.AmountFen.Sub(hold.CapturedAmountFen).Sub(hold.ReleasedAmountFen)
+	if remaining.Cmp(money.Zero()) < 0 {
+		return money.Zero()
 	}
 	return remaining
 }
 
-func calculateAmountFen(bytes int64, pricePerGiB string) (int64, error) {
+func calculateAmountFen(bytes int64, pricePerGiB money.Decimal) (money.Decimal, error) {
 	if bytes <= 0 {
-		return 0, nil
-	}
-	priceRat, ok := new(big.Rat).SetString(pricePerGiB)
-	if !ok {
-		return 0, fmt.Errorf("invalid price: %s", pricePerGiB)
+		return money.Zero(), nil
 	}
 
-	amount := new(big.Rat).Mul(new(big.Rat).SetInt64(bytes), priceRat)
-	amount.Quo(amount, new(big.Rat).SetInt64(gibBytes))
+	billableMB := bytes / mbBytes
+	if bytes%mbBytes != 0 {
+		billableMB++
+	}
+	if billableMB < minBillableMB {
+		billableMB = minBillableMB
+	}
 
-	num := amount.Num()
-	den := amount.Denom()
-	quotient := new(big.Int)
-	remainder := new(big.Int)
-	quotient.QuoRem(num, den, remainder)
-	if remainder.Sign() > 0 {
-		quotient.Add(quotient, big.NewInt(1))
-	}
-	if !quotient.IsInt64() {
-		return 0, fmt.Errorf("amount overflow")
-	}
-	return quotient.Int64(), nil
+	return pricePerGiB.Mul(money.FromInt64(billableMB)).DivInt64(gbMB), nil
 }
 
 func newBillingID(prefix string) string {
@@ -1432,9 +1435,6 @@ func newBillingID(prefix string) string {
 	return fmt.Sprintf("%s_%d_%x", prefix, time.Now().UnixNano(), buf)
 }
 
-func abs64(v int64) int64 {
-	if v < 0 {
-		return -v
-	}
-	return v
+func abs64(v money.Decimal) money.Decimal {
+	return v.Abs()
 }
