@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import { resolveAppVersion } from "@/lib/runtime-config";
 
-const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const MIN_CHECK_GAP_MS = 30 * 1000;
 
 type VersionResponse = {
   version?: string;
 };
 
+type VersionGuardProps = {
+  version: string;
+};
+
 function getReloadMarker(version: string) {
   return `reloaded-for-version:${version}`;
+}
+
+function normalizeVersion(value: string | null | undefined) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 async function fetchLatestVersion(signal?: AbortSignal) {
@@ -24,44 +31,44 @@ async function fetchLatestVersion(signal?: AbortSignal) {
   }
 
   const data = (await response.json()) as VersionResponse;
-  return data.version ?? null;
+  return normalizeVersion(data.version) || null;
 }
 
-export function VersionGuard() {
+export function VersionGuard({ version }: VersionGuardProps) {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
       return;
     }
 
-    let currentVersion = resolveAppVersion();
+    let currentVersion = normalizeVersion(version);
     let isChecking = false;
+    let lastCheckAt = 0;
 
-    const ensureCurrentVersion = async (signal?: AbortSignal) => {
-      if (currentVersion !== "unknown") {
-        return currentVersion;
-      }
-
-      const initialVersion = await fetchLatestVersion(signal);
-      if (initialVersion) {
-        currentVersion = initialVersion;
-      }
-
-      return currentVersion;
-    };
-
-    const checkForUpdate = async () => {
+    const checkForUpdate = async (force = false) => {
+      const now = Date.now();
       if (isChecking) {
+        return;
+      }
+      if (!force && now-lastCheckAt < MIN_CHECK_GAP_MS) {
         return;
       }
 
       isChecking = true;
+      lastCheckAt = now;
       const controller = new AbortController();
 
       try {
-        await ensureCurrentVersion(controller.signal);
         const latestVersion = await fetchLatestVersion(controller.signal);
+        if (!latestVersion) {
+          return;
+        }
 
-        if (!latestVersion || latestVersion === currentVersion) {
+        if (!currentVersion) {
+          currentVersion = latestVersion;
+          return;
+        }
+
+        if (latestVersion === currentVersion) {
           return;
         }
 
@@ -90,21 +97,16 @@ export function VersionGuard() {
       void checkForUpdate();
     };
 
-    const intervalId = window.setInterval(() => {
-      void checkForUpdate();
-    }, VERSION_CHECK_INTERVAL_MS);
-
-    void checkForUpdate();
+    void checkForUpdate(true);
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [version]);
 
   return null;
 }

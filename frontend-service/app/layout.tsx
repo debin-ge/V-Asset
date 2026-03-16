@@ -8,6 +8,7 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { RuntimeConfigScript } from "@/components/common/RuntimeConfigScript";
 import { VersionGuard } from "@/components/common/VersionGuard";
 import { Toaster } from "@/components/ui/sonner";
+import { getResolvedAppVersion } from "@/lib/runtime-config.server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appVersion = getResolvedAppVersion();
+
   return (
     <html lang="en">
       <body
@@ -43,7 +46,7 @@ export default function RootLayout({
         </div>
 
         <AuthProvider>
-          <VersionGuard />
+          <VersionGuard version={appVersion} />
           <Header />
           <main className="flex-1 flex flex-col pt-16">
             {children}
