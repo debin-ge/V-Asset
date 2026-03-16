@@ -3,16 +3,36 @@ package service
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"vasset/admin-service/internal/models"
 	pb "vasset/admin-service/proto"
 )
 
 type BillingService struct {
-	authClient  pb.AuthServiceClient
-	assetClient pb.AssetServiceClient
+	authClient  billingAuthClient
+	assetClient billingAssetClient
 }
 
-func NewBillingService(authClient pb.AuthServiceClient, assetClient pb.AssetServiceClient) *BillingService {
+type billingAuthClient interface {
+	SearchUsers(ctx context.Context, in *pb.SearchUsersRequest, opts ...grpc.CallOption) (*pb.SearchUsersResponse, error)
+	GetUserInfo(ctx context.Context, in *pb.GetUserInfoRequest, opts ...grpc.CallOption) (*pb.GetUserInfoResponse, error)
+	BatchGetUsers(ctx context.Context, in *pb.BatchGetUsersRequest, opts ...grpc.CallOption) (*pb.BatchGetUsersResponse, error)
+}
+
+type billingAssetClient interface {
+	ListBillingAccounts(ctx context.Context, in *pb.ListBillingAccountsRequest, opts ...grpc.CallOption) (*pb.ListBillingAccountsResponse, error)
+	GetBillingAccountDetail(ctx context.Context, in *pb.GetBillingAccountDetailRequest, opts ...grpc.CallOption) (*pb.GetBillingAccountDetailResponse, error)
+	AdjustBillingBalance(ctx context.Context, in *pb.AdjustBillingBalanceRequest, opts ...grpc.CallOption) (*pb.AdjustBillingBalanceResponse, error)
+	ListBillingShortfalls(ctx context.Context, in *pb.ListBillingShortfallsRequest, opts ...grpc.CallOption) (*pb.ListBillingShortfallsResponse, error)
+	ReconcileBillingShortfall(ctx context.Context, in *pb.ReconcileBillingShortfallRequest, opts ...grpc.CallOption) (*pb.ReconcileBillingShortfallResponse, error)
+	ListBillingLedger(ctx context.Context, in *pb.ListBillingLedgerRequest, opts ...grpc.CallOption) (*pb.ListBillingLedgerResponse, error)
+	ListTrafficUsageRecords(ctx context.Context, in *pb.ListTrafficUsageRecordsRequest, opts ...grpc.CallOption) (*pb.ListTrafficUsageRecordsResponse, error)
+	GetBillingPricing(ctx context.Context, in *pb.GetBillingPricingRequest, opts ...grpc.CallOption) (*pb.GetBillingPricingResponse, error)
+	UpdateBillingPricing(ctx context.Context, in *pb.UpdateBillingPricingRequest, opts ...grpc.CallOption) (*pb.UpdateBillingPricingResponse, error)
+}
+
+func NewBillingService(authClient billingAuthClient, assetClient billingAssetClient) *BillingService {
 	return &BillingService{
 		authClient:  authClient,
 		assetClient: assetClient,
@@ -20,46 +40,53 @@ func NewBillingService(authClient pb.AuthServiceClient, assetClient pb.AssetServ
 }
 
 func (s *BillingService) ListAccounts(ctx context.Context, query string, page, pageSize, status int32) (*models.BillingAccountListResponse, error) {
-	var (
-		userMap = map[string]*pb.User{}
-		userIDs []string
-		total   int64
-	)
+	usersResp, err := s.authClient.SearchUsers(ctx, &pb.SearchUsersRequest{
+		Query:    query,
+		Page:     page,
+		PageSize: pageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	if query != "" {
-		usersResp, err := s.authClient.SearchUsers(ctx, &pb.SearchUsersRequest{
-			Query:    query,
+	userMap := make(map[string]*pb.User, len(usersResp.GetUsers()))
+	userIDs := make([]string, 0, len(usersResp.GetUsers()))
+	for _, user := range usersResp.GetUsers() {
+		userMap[user.GetUserId()] = user
+		userIDs = append(userIDs, user.GetUserId())
+	}
+
+	if len(userIDs) == 0 {
+		return &models.BillingAccountListResponse{
+			Total:    usersResp.GetTotal(),
 			Page:     page,
 			PageSize: pageSize,
-		})
-		if err != nil {
-			return nil, err
-		}
-		total = usersResp.GetTotal()
-		for _, user := range usersResp.GetUsers() {
-			userMap[user.GetUserId()] = user
-			userIDs = append(userIDs, user.GetUserId())
-		}
+			Items:    []models.BillingAccount{},
+		}, nil
 	}
 
 	accountsResp, err := s.assetClient.ListBillingAccounts(ctx, &pb.ListBillingAccountsRequest{
 		UserIds:  userIDs,
-		Page:     page,
-		PageSize: pageSize,
+		Page:     1,
+		PageSize: int32(len(userIDs)),
 		Status:   status,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if query == "" {
-		total = accountsResp.GetTotal()
-		userMap, _ = s.loadUsersByIDs(ctx, extractUserIDs(accountsResp.GetItems()))
+	accountMap := make(map[string]*pb.BillingAccountSnapshot, len(accountsResp.GetItems()))
+	for _, account := range accountsResp.GetItems() {
+		accountMap[account.GetUserId()] = account
 	}
 
 	items := make([]models.BillingAccount, 0, len(accountsResp.GetItems()))
-	for _, account := range accountsResp.GetItems() {
-		user := userMap[account.GetUserId()]
+	for _, userID := range userIDs {
+		account, ok := accountMap[userID]
+		if !ok {
+			continue
+		}
+		user := userMap[userID]
 		items = append(items, models.BillingAccount{
 			UserID:              account.GetUserId(),
 			Email:               safeUserEmail(user),
@@ -76,9 +103,9 @@ func (s *BillingService) ListAccounts(ctx context.Context, query string, page, p
 	}
 
 	return &models.BillingAccountListResponse{
-		Total:    total,
-		Page:     accountsResp.GetPage(),
-		PageSize: accountsResp.GetPageSize(),
+		Total:    usersResp.GetTotal(),
+		Page:     page,
+		PageSize: pageSize,
 		Items:    items,
 	}, nil
 }
