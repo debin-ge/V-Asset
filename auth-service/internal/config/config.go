@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -113,7 +114,47 @@ func LoadConfig(configPath string) (*Config, error) {
 		cfg.JWT.Secret = jwtSecret
 	}
 
+	if err := validateJWTConfig(&cfg.JWT); err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
+}
+
+func validateJWTConfig(cfg *JWTConfig) error {
+	secret := strings.TrimSpace(cfg.Secret)
+	if secret == "" {
+		return fmt.Errorf("jwt secret is required")
+	}
+	if isKnownWeakJWTSecret(secret) {
+		return fmt.Errorf("jwt secret must not use an insecure default value")
+	}
+	if isProductionEnvironment() && len(secret) < 32 {
+		return fmt.Errorf("jwt secret must be at least 32 bytes in production")
+	}
+
+	cfg.Secret = secret
+	return nil
+}
+
+func isKnownWeakJWTSecret(secret string) bool {
+	switch strings.ToLower(strings.TrimSpace(secret)) {
+	case "your-secret-key-change-in-production", "secret", "changeme", "password", "default-secret":
+		return true
+	default:
+		return false
+	}
+}
+
+func isProductionEnvironment() bool {
+	for _, key := range []string{"APP_ENV", "ENV", "GO_ENV"} {
+		switch strings.ToLower(strings.TrimSpace(os.Getenv(key))) {
+		case "prod", "production":
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetDSN 获取数据库连接字符串

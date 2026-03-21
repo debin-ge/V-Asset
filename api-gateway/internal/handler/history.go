@@ -66,7 +66,7 @@ func (h *HistoryHandler) GetHistory(c *gin.Context) {
 		SortOrder: req.SortOrder,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to get history: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (h *HistoryHandler) GetQuota(c *gin.Context) {
 		UserId: userID,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to get quota: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -153,7 +153,7 @@ func (h *HistoryHandler) DeleteHistory(c *gin.Context) {
 		UserId:    userID,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to delete history: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *HistoryHandler) GetUserStats(c *gin.Context) {
 		UserId: userID,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to get user stats: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 

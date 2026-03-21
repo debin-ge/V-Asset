@@ -44,7 +44,9 @@ func hashToken(token string) string {
 // GetUserID 从上下文获取用户 ID (UUID字符串)
 func GetUserID(c *gin.Context) string {
 	if userID, exists := c.Get("user_id"); exists {
-		return userID.(string)
+		if value, ok := userID.(string); ok {
+			return value
+		}
 	}
 	return ""
 }
@@ -52,7 +54,18 @@ func GetUserID(c *gin.Context) string {
 // GetUserEmail 从上下文获取用户邮箱
 func GetUserEmail(c *gin.Context) string {
 	if email, exists := c.Get("user_email"); exists {
-		return email.(string)
+		if value, ok := email.(string); ok {
+			return value
+		}
+	}
+	return ""
+}
+
+func GetToken(c *gin.Context) string {
+	if token, exists := c.Get("token"); exists {
+		if value, ok := token.(string); ok {
+			return value
+		}
 	}
 	return ""
 }

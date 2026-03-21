@@ -160,10 +160,17 @@ func (s *TokenService) RefreshToken(ctx context.Context, refreshToken string) (s
 	}
 
 	// 5. 更新会话的最后使用时间
+	oldTokenHash := session.TokenHash
 	session.TokenHash = utils.HashToken(newToken)
 	session.LastUsedAt = time.Now()
 	if err := s.sessionRepo.Update(ctx, session); err != nil {
 		return "", fmt.Errorf("failed to update session: %w", err)
+	}
+	if oldTokenHash != "" && oldTokenHash != session.TokenHash {
+		oldCacheKey := fmt.Sprintf("auth:token:%s", oldTokenHash)
+		if err := s.redis.Del(ctx, oldCacheKey).Err(); err != nil {
+			return "", fmt.Errorf("failed to invalidate previous token cache: %w", err)
+		}
 	}
 
 	// 6. 缓存新 Token
@@ -178,7 +185,9 @@ func (s *TokenService) RefreshToken(ctx context.Context, refreshToken string) (s
 func (s *TokenService) InvalidateToken(ctx context.Context, tokenString string) error {
 	// 1. 删除 Redis 缓存
 	cacheKey := fmt.Sprintf("auth:token:%s", utils.HashToken(tokenString))
-	s.redis.Del(ctx, cacheKey)
+	if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
+		return fmt.Errorf("failed to delete token cache: %w", err)
+	}
 
 	// 2. 删除数据库 session 记录
 	tokenHash := utils.HashToken(tokenString)

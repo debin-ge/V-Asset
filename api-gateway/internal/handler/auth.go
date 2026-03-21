@@ -2,25 +2,30 @@ package handler
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 
+	"vasset/api-gateway/internal/middleware"
 	"vasset/api-gateway/internal/models"
 	pb "vasset/api-gateway/proto"
 )
 
 // AuthHandler 认证处理器
 type AuthHandler struct {
-	authClient pb.AuthServiceClient
-	timeout    time.Duration
+	authClient  pb.AuthServiceClient
+	redisClient *redis.Client
+	timeout     time.Duration
 }
 
 // NewAuthHandler 创建认证处理器
-func NewAuthHandler(authClient pb.AuthServiceClient, timeout time.Duration) *AuthHandler {
+func NewAuthHandler(authClient pb.AuthServiceClient, redisClient *redis.Client, timeout time.Duration) *AuthHandler {
 	return &AuthHandler{
-		authClient: authClient,
-		timeout:    timeout,
+		authClient:  authClient,
+		redisClient: redisClient,
+		timeout:     timeout,
 	}
 }
 
@@ -41,7 +46,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Nickname: req.Nickname,
 	})
 	if err != nil {
-		models.InternalError(c, "registration failed: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -70,7 +75,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		IpAddress:  c.ClientIP(),
 	})
 	if err != nil {
-		models.Unauthorized(c, "login failed: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -91,8 +96,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 // Logout 登出
 func (h *AuthHandler) Logout(c *gin.Context) {
-	token, exists := c.Get("token")
-	if !exists {
+	token := middleware.GetToken(c)
+	if token == "" {
 		models.BadRequest(c, "token not found")
 		return
 	}
@@ -100,12 +105,20 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 
-	_, err := h.authClient.Logout(ctx, &pb.LogoutRequest{
-		Token: token.(string),
+	resp, err := h.authClient.Logout(ctx, &pb.LogoutRequest{
+		Token: token,
 	})
 	if err != nil {
-		models.InternalError(c, "logout failed: "+err.Error())
+		writeGRPCError(c, err)
 		return
+	}
+	if !resp.Success {
+		models.InternalError(c, "logout failed, please try again later")
+		return
+	}
+
+	if err := middleware.InvalidateTokenCache(c.Request.Context(), h.redisClient, token); err != nil {
+		log.Printf("[Auth] Failed to invalidate token cache: %v", err)
 	}
 
 	models.Success(c, nil)
@@ -113,8 +126,8 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 // GetProfile 获取用户信息
 func (h *AuthHandler) GetProfile(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
 		models.Unauthorized(c, "user not authenticated")
 		return
 	}
@@ -123,10 +136,10 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	defer cancel()
 
 	resp, err := h.authClient.GetUserInfo(ctx, &pb.GetUserInfoRequest{
-		UserId: userID.(string),
+		UserId: userID,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to get user info: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -148,8 +161,8 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
 		models.Unauthorized(c, "user not authenticated")
 		return
 	}
@@ -158,11 +171,11 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	defer cancel()
 
 	resp, err := h.authClient.UpdateProfile(ctx, &pb.UpdateProfileRequest{
-		UserId:   userID.(string),
+		UserId:   userID,
 		Nickname: req.Nickname,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to update profile: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -184,8 +197,8 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
 		models.Unauthorized(c, "user not authenticated")
 		return
 	}
@@ -194,12 +207,12 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	defer cancel()
 
 	resp, err := h.authClient.ChangePassword(ctx, &pb.ChangePasswordRequest{
-		UserId:      userID.(string),
+		UserId:      userID,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
 	})
 	if err != nil {
-		models.BadRequest(c, err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 

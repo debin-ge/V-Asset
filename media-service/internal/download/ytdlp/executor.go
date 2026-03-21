@@ -3,6 +3,7 @@ package ytdlp
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -23,6 +24,13 @@ import (
 const (
 	formatTracePrefix = "[format-trace]"
 	fileTracePrefix   = "[file-trace]"
+)
+
+var (
+	percentRegexp = regexp.MustCompile(`(\d+\.?\d*)%`)
+	sizeRegexp    = regexp.MustCompile(`of\s+~?\s*(\d+\.?\d*)([KMGT]?i?B)`)
+	speedRegexp   = regexp.MustCompile(`at\s+(\d+\.?\d*\w+/s)`)
+	etaRegexp     = regexp.MustCompile(`ETA\s+(\d+:\d+)`)
 )
 
 // DownloadPhase 下载阶段
@@ -380,9 +388,7 @@ func parseDownloadProgress(line string) *models.Progress {
 		return nil
 	}
 
-	// 解析百分比
-	percentRe := regexp.MustCompile(`(\d+\.?\d*)%`)
-	percentMatch := percentRe.FindStringSubmatch(line)
+	percentMatch := percentRegexp.FindStringSubmatch(line)
 	if len(percentMatch) < 2 {
 		return nil
 	}
@@ -396,8 +402,7 @@ func parseDownloadProgress(line string) *models.Progress {
 		Percent: percent,
 	}
 
-	sizeRe := regexp.MustCompile(`of\s+~?\s*(\d+\.?\d*)([KMGT]?i?B)`)
-	sizeMatch := sizeRe.FindStringSubmatch(line)
+	sizeMatch := sizeRegexp.FindStringSubmatch(line)
 	if len(sizeMatch) >= 3 {
 		totalBytes, err := parseSizeBytes(sizeMatch[1], sizeMatch[2])
 		if err == nil {
@@ -406,16 +411,12 @@ func parseDownloadProgress(line string) *models.Progress {
 		}
 	}
 
-	// 解析速度
-	speedRe := regexp.MustCompile(`at\s+(\d+\.?\d*\w+/s)`)
-	speedMatch := speedRe.FindStringSubmatch(line)
+	speedMatch := speedRegexp.FindStringSubmatch(line)
 	if len(speedMatch) >= 2 {
 		progress.Speed = speedMatch[1]
 	}
 
-	// 解析 ETA
-	etaRe := regexp.MustCompile(`ETA\s+(\d+:\d+)`)
-	etaMatch := etaRe.FindStringSubmatch(line)
+	etaMatch := etaRegexp.FindStringSubmatch(line)
 	if len(etaMatch) >= 2 {
 		progress.ETA = etaMatch[1]
 	}
@@ -498,8 +499,23 @@ func (e *Executor) GetVideoInfo(ctx context.Context, url string) (*models.Metada
 		return nil, fmt.Errorf("failed to get video info: %w", err)
 	}
 
-	// 解析 JSON 输出
-	// 这里简化处理,实际应该解析完整的 yt-dlp JSON 输出
-	_ = output
-	return &models.Metadata{}, nil
+	var info struct {
+		Title        string `json:"title"`
+		Duration     int64  `json:"duration"`
+		ExtractorKey string `json:"extractor_key"`
+	}
+	if err := json.Unmarshal(output, &info); err != nil {
+		return nil, fmt.Errorf("failed to parse video info: %w", err)
+	}
+
+	platform := detectPlatform(url)
+	if info.ExtractorKey != "" {
+		platform = strings.ToLower(info.ExtractorKey)
+	}
+
+	return &models.Metadata{
+		Title:    info.Title,
+		Duration: info.Duration,
+		Platform: platform,
+	}, nil
 }

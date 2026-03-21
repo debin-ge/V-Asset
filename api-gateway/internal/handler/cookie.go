@@ -44,7 +44,7 @@ func (h *CookieHandler) CreateCookie(c *gin.Context) {
 		FreezeSeconds: req.FreezeSeconds,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to create cookie: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (h *CookieHandler) UpdateCookie(c *gin.Context) {
 		FreezeSeconds: req.FreezeSeconds,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to update cookie: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *CookieHandler) DeleteCookie(c *gin.Context) {
 		Id: id,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to delete cookie: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *CookieHandler) GetCookie(c *gin.Context) {
 		Id: id,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to get cookie: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -176,7 +176,7 @@ func (h *CookieHandler) ListCookies(c *gin.Context) {
 		PageSize: int32(req.PageSize),
 	})
 	if err != nil {
-		models.InternalError(c, "failed to list cookies: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 
@@ -232,7 +232,7 @@ func (h *CookieHandler) FreezeCookie(c *gin.Context) {
 		FreezeSeconds: req.FreezeSeconds,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to freeze cookie: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 

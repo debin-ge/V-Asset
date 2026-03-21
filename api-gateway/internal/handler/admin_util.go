@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -12,22 +13,34 @@ import (
 
 func grpcErrorMessage(err error) string {
 	if err == nil {
-		return ""
+		return "request failed, please try again later"
 	}
 
 	st, ok := status.FromError(err)
 	if !ok {
-		return err.Error()
+		return "request failed, please try again later"
 	}
 
 	message := strings.TrimSpace(st.Message())
-	if message == "" {
-		return err.Error()
+	switch st.Code() {
+	case codes.InvalidArgument, codes.FailedPrecondition, codes.OutOfRange,
+		codes.NotFound, codes.AlreadyExists, codes.ResourceExhausted,
+		codes.Unauthenticated, codes.PermissionDenied:
+		if message != "" {
+			return message
+		}
+	case codes.Unavailable:
+		return "service temporarily unavailable"
+	case codes.DeadlineExceeded:
+		return "request timed out, please try again later"
 	}
-	return message
+
+	return "request failed, please try again later"
 }
 
 func writeGRPCError(c *gin.Context, err error) {
+	log.Printf("[Gateway] gRPC request failed: code=%s err=%v", status.Code(err), err)
+
 	switch status.Code(err) {
 	case codes.InvalidArgument, codes.FailedPrecondition, codes.OutOfRange:
 		models.BadRequest(c, grpcErrorMessage(err))

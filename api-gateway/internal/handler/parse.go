@@ -41,7 +41,7 @@ func (h *ParseHandler) ParseURL(c *gin.Context) {
 		SkipCache: req.SkipCache,
 	})
 	if err != nil {
-		models.InternalError(c, "failed to parse URL: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 

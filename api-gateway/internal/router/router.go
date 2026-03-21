@@ -41,6 +41,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 	// 创建处理器
 	authHandler := handler.NewAuthHandler(
 		deps.GRPCClients.AuthClient,
+		deps.RedisClient,
 		deps.Config.GRPC.Timeout,
 	)
 	parseHandler := handler.NewParseHandler(

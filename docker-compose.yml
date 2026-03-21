@@ -89,7 +89,7 @@ services:
       - DB_NAME=${DB_NAME:-vasset}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_SECRET=${JWT_SECRET:-vasset-dev-jwt-secret-2026-safe-key}
     depends_on:
       postgres:
         condition: service_healthy

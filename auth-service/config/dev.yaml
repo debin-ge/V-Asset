@@ -19,7 +19,7 @@ redis:
   pool_size: 50
   
 jwt:
-  secret: "your-secret-key-change-in-production"
+  secret: "vasset-dev-jwt-secret-2026-safe-key"
   access_token_ttl: 86400    # 24小时
   refresh_token_ttl: 604800  # 7天
   

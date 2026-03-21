@@ -110,7 +110,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		quotaResp, err := h.assetClient.CheckQuota(ctx, &pb.CheckQuotaRequest{UserId: userID})
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to check quota: %v", err)
-			models.InternalError(c, "failed to check quota: "+err.Error())
+			writeGRPCError(c, err)
 			return
 		}
 		log.Printf("[Download] ✓ Quota check passed - Remaining: %d", quotaResp.Remaining)
@@ -125,7 +125,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	validateResp, err := h.mediaClient.ValidateURL(ctx, &pb.ValidateURLRequest{Url: req.URL})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to validate URL: %v", err)
-		models.InternalError(c, "failed to validate URL: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 	if !validateResp.Valid {
@@ -146,7 +146,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to parse URL: %v", err)
-		models.InternalError(c, "failed to parse URL: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 	log.Printf("[Download] ✓ URL parsed - Title: %s, Duration: %ds", parseResp.Title, parseResp.Duration)
@@ -166,7 +166,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to create history: %v", err)
-		models.InternalError(c, "failed to create history: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 	log.Printf("[Download] ✓ History created - HistoryID: %d", historyResp.HistoryId)
@@ -183,7 +183,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to estimate billing: %v", err)
 			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
-			models.InternalError(c, "failed to estimate billing: "+grpcErrorMessage(err))
+			writeGRPCError(c, err)
 			return
 		}
 
@@ -201,11 +201,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to hold initial billing: %v", err)
 			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
-			if status.Code(err) == codes.ResourceExhausted {
-				models.Forbidden(c, grpcErrorMessage(err))
-				return
-			}
-			models.InternalError(c, "failed to hold billing: "+grpcErrorMessage(err))
+			writeGRPCError(c, err)
 			return
 		}
 		log.Printf("[Download] ✓ Billing hold created")
@@ -215,7 +211,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to consume quota: %v", err)
 			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
-			models.InternalError(c, "failed to consume quota: "+err.Error())
+			writeGRPCError(c, err)
 			return
 		}
 		log.Printf("[Download] ✓ Quota consumed")
@@ -247,7 +243,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 			models.Error(c, http.StatusServiceUnavailable, grpcErrorMessage(err))
 			return
 		}
-		models.InternalError(c, "failed to submit task: "+err.Error())
+		writeGRPCError(c, err)
 		return
 	}
 	log.Printf("[Download] ✓ Task %s published to RabbitMQ", taskID)

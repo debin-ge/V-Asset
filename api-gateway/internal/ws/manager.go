@@ -148,12 +148,16 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 
 	connID := fmt.Sprintf("conn_%d", time.Now().UnixNano())
 	done := make(chan struct{})
-	defer func() {
-		close(done)
-		conn.Close()
-		m.connections.Delete(connID)
-		log.Printf("[WS] Connection closed: %s", connID)
-	}()
+	var stopOnce sync.Once
+	stop := func() {
+		stopOnce.Do(func() {
+			close(done)
+			conn.Close()
+			m.connections.Delete(connID)
+			log.Printf("[WS] Connection closed: %s", connID)
+		})
+	}
+	defer stop()
 
 	// 保存连接
 	m.connections.Store(connID, conn)
@@ -167,8 +171,8 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	})
 
 	// 启动心跳
-	go m.heartbeat(connID, conn, done)
-	go m.readPump(connID, conn, done)
+	go m.heartbeat(connID, conn, done, stop)
+	go m.readPump(connID, conn, stop)
 
 	ctx := context.Background()
 	channelName := fmt.Sprintf("progress:%s", taskID)
@@ -184,6 +188,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 			return
 		case msg, ok := <-ch:
 			if !ok {
+				stop()
 				return
 			}
 
@@ -196,11 +201,13 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 			conn.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
 			if err := conn.WriteJSON(progress); err != nil {
 				log.Printf("[WS] Failed to send message: %v", err)
+				stop()
 				return
 			}
 			log.Printf("[WS] Forwarded progress to %s: task=%s status=%s percent=%.2f", connID, progress.TaskID, progress.Status, progress.Percent)
 
 			if progress.Status == "completed" || progress.Status == "failed" {
+				stop()
 				return
 			}
 		}
@@ -305,7 +312,7 @@ func isInternalProxyHost(host string) bool {
 }
 
 // heartbeat 发送心跳
-func (m *Manager) heartbeat(taskID string, conn *websocket.Conn, done <-chan struct{}) {
+func (m *Manager) heartbeat(taskID string, conn *websocket.Conn, done <-chan struct{}, stop func()) {
 	ticker := time.NewTicker(wsPingInterval)
 	defer ticker.Stop()
 
@@ -322,22 +329,21 @@ func (m *Manager) heartbeat(taskID string, conn *websocket.Conn, done <-chan str
 			// 发送 Ping
 			if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(wsWriteTimeout)); err != nil {
 				log.Printf("[WS] Failed to send ping: %v", err)
+				stop()
 				return
 			}
 		}
 	}
 }
 
-func (m *Manager) readPump(taskID string, conn *websocket.Conn, done <-chan struct{}) {
+func (m *Manager) readPump(taskID string, conn *websocket.Conn, stop func()) {
 	for {
-		select {
-		case <-done:
-			return
-		default:
-			if _, _, err := conn.ReadMessage(); err != nil {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			if !websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				log.Printf("[WS] Read loop ended for %s: %v", taskID, err)
-				return
 			}
+			stop()
+			return
 		}
 	}
 }

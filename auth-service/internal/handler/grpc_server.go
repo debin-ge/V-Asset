@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -42,7 +43,7 @@ func (s *GRPCServer) Register(ctx context.Context, req *pb.RegisterRequest) (*pb
 	// 调用服务层
 	user, err := s.authService.Register(ctx, req.Email, req.Password, req.Nickname)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, authStatusError(err)
 	}
 
 	return &pb.RegisterResponse{
@@ -132,7 +133,7 @@ func (s *GRPCServer) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.Log
 
 	err := s.authService.Logout(ctx, req.Token)
 	if err != nil {
-		return &pb.LogoutResponse{Success: false}, nil
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.LogoutResponse{Success: true}, nil
@@ -178,15 +179,15 @@ func (s *GRPCServer) UpdateProfile(ctx context.Context, req *pb.UpdateProfileReq
 	LogRequest("UpdateProfile", req)
 
 	if req.UserId == "" {
-		return nil, fmt.Errorf("user_id is required")
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 	if req.Nickname == "" {
-		return nil, fmt.Errorf("nickname is required")
+		return nil, status.Error(codes.InvalidArgument, "nickname is required")
 	}
 
 	user, err := s.authService.UpdateProfile(ctx, req.UserId, req.Nickname)
 	if err != nil {
-		return nil, err
+		return nil, authStatusError(err)
 	}
 
 	return &pb.UpdateProfileResponse{
@@ -206,18 +207,18 @@ func (s *GRPCServer) ChangePassword(ctx context.Context, req *pb.ChangePasswordR
 	LogRequest("ChangePassword", "userID:"+req.UserId)
 
 	if req.UserId == "" {
-		return nil, fmt.Errorf("user_id is required")
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 	if req.OldPassword == "" {
-		return nil, fmt.Errorf("old_password is required")
+		return nil, status.Error(codes.InvalidArgument, "old_password is required")
 	}
 	if req.NewPassword == "" {
-		return nil, fmt.Errorf("new_password is required")
+		return nil, status.Error(codes.InvalidArgument, "new_password is required")
 	}
 
 	err := s.authService.ChangePassword(ctx, req.UserId, req.OldPassword, req.NewPassword)
 	if err != nil {
-		return nil, err
+		return nil, authStatusError(err)
 	}
 
 	return &pb.ChangePasswordResponse{
@@ -291,6 +292,36 @@ func (s *GRPCServer) HealthCheck(ctx context.Context) error {
 }
 
 // LogRequest 记录请求日志
-func LogRequest(method string, req interface{}) {
+func LogRequest(method string, req any) {
 	fmt.Printf("[gRPC] Method: %s, Request: %+v\n", method, req)
+}
+
+func authStatusError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if _, ok := status.FromError(err); ok {
+		return err
+	}
+
+	message := strings.TrimSpace(err.Error())
+	switch {
+	case message == "":
+		return status.Error(codes.Internal, "internal server error")
+	case strings.Contains(message, "邮箱已被注册"):
+		return status.Error(codes.AlreadyExists, message)
+	case strings.Contains(message, "不能为空"),
+		strings.Contains(message, "格式不正确"),
+		strings.Contains(message, "长度必须"),
+		strings.Contains(message, "旧密码不正确"),
+		strings.Contains(message, "nickname is required"),
+		strings.Contains(message, "user_id is required"),
+		strings.Contains(message, "old_password is required"),
+		strings.Contains(message, "new_password is required"):
+		return status.Error(codes.InvalidArgument, message)
+	case strings.Contains(message, "用户不存在"):
+		return status.Error(codes.NotFound, message)
+	default:
+		return status.Error(codes.Internal, message)
+	}
 }

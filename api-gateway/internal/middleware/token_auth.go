@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -42,14 +43,14 @@ func AuthenticateToken(ctx context.Context, authClient tokenVerifier, redisClien
 
 	cacheKey := fmt.Sprintf("auth:token:%s", hashToken(token))
 	if redisClient != nil {
-		cachedData, cacheErr := redisClient.HGetAll(ctx, cacheKey).Result()
-		if cacheErr == nil && len(cachedData) > 0 {
-			userID := cachedData["user_id"]
-			if userID != "" {
+		cachedData, cacheErr := redisClient.Get(ctx, cacheKey).Result()
+		if cacheErr == nil && cachedData != "" {
+			var claims AuthClaims
+			if err := json.Unmarshal([]byte(cachedData), &claims); err == nil && claims.UserID != "" {
 				return &AuthClaims{
-					UserID: userID,
-					Email:  cachedData["email"],
-					Role:   cachedData["role"],
+					UserID: claims.UserID,
+					Email:  claims.Email,
+					Role:   claims.Role,
 					Token:  token,
 				}, nil
 			}
@@ -70,12 +71,14 @@ func AuthenticateToken(ctx context.Context, authClient tokenVerifier, redisClien
 	}
 
 	if redisClient != nil {
-		redisClient.HSet(ctx, cacheKey, map[string]interface{}{
-			"user_id": resp.UserId,
-			"email":   resp.Email,
-			"role":    resp.Role,
+		claimsJSON, err := json.Marshal(AuthClaims{
+			UserID: resp.UserId,
+			Email:  resp.Email,
+			Role:   resp.Role,
 		})
-		redisClient.Expire(ctx, cacheKey, 5*time.Minute)
+		if err == nil {
+			redisClient.Set(ctx, cacheKey, claimsJSON, 5*time.Minute)
+		}
 	}
 
 	return &AuthClaims{
@@ -84,6 +87,20 @@ func AuthenticateToken(ctx context.Context, authClient tokenVerifier, redisClien
 		Role:   resp.Role,
 		Token:  token,
 	}, nil
+}
+
+func InvalidateTokenCache(ctx context.Context, redisClient *redis.Client, rawToken string) error {
+	if redisClient == nil {
+		return nil
+	}
+
+	token, err := normalizeToken(rawToken)
+	if err != nil {
+		return err
+	}
+
+	cacheKey := fmt.Sprintf("auth:token:%s", hashToken(token))
+	return redisClient.Del(ctx, cacheKey).Err()
 }
 
 func normalizeToken(raw string) (string, error) {

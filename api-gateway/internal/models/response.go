@@ -8,21 +8,21 @@ import (
 
 // Response 统一响应结构
 type Response struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 // PagedResponse 分页响应
 type PagedResponse struct {
-	Total    int64       `json:"total"`
-	Page     int         `json:"page"`
-	PageSize int         `json:"page_size"`
-	Items    interface{} `json:"items"`
+	Total    int64 `json:"total"`
+	Page     int   `json:"page"`
+	PageSize int   `json:"page_size"`
+	Items    any   `json:"items"`
 }
 
 // Success 成功响应
-func Success(c *gin.Context, data interface{}) {
+func Success(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, Response{
 		Code:    0,
 		Message: "success",
@@ -31,7 +31,7 @@ func Success(c *gin.Context, data interface{}) {
 }
 
 // Created 创建成功响应
-func Created(c *gin.Context, data interface{}) {
+func Created(c *gin.Context, data any) {
 	c.JSON(http.StatusCreated, Response{
 		Code:    0,
 		Message: "success",
@@ -40,7 +40,7 @@ func Created(c *gin.Context, data interface{}) {
 }
 
 // Accepted 已接受响应
-func Accepted(c *gin.Context, data interface{}) {
+func Accepted(c *gin.Context, data any) {
 	c.JSON(http.StatusAccepted, Response{
 		Code:    0,
 		Message: "task submitted",
