@@ -74,6 +74,9 @@ service AssetService {
   rpc GetBillingPricing(GetBillingPricingRequest) returns (GetBillingPricingResponse);
   // 更新费率
   rpc UpdateBillingPricing(UpdateBillingPricingRequest) returns (UpdateBillingPricingResponse);
+  rpc GetWelcomeCreditSettings(GetWelcomeCreditSettingsRequest) returns (GetWelcomeCreditSettingsResponse);
+  rpc UpdateWelcomeCreditSettings(UpdateWelcomeCreditSettingsRequest) returns (UpdateWelcomeCreditSettingsResponse);
+  rpc GrantWelcomeCredit(GrantWelcomeCreditRequest) returns (GrantWelcomeCreditResponse);
   // 后台：查询待补扣短款订单
   rpc ListBillingShortfalls(ListBillingShortfallsRequest) returns (ListBillingShortfallsResponse);
   // 后台：手动补扣短款订单
@@ -604,6 +607,54 @@ message UpdateBillingPricingRequest {
 message UpdateBillingPricingResponse {
   bool success = 1;
   BillingPricing pricing = 2;
+}
+
+message WelcomeCreditSettings {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message GetWelcomeCreditSettingsRequest {}
+
+message GetWelcomeCreditSettingsResponse {
+  WelcomeCreditSettings settings = 1;
+}
+
+message UpdateWelcomeCreditSettingsRequest {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_by = 4;
+}
+
+message UpdateWelcomeCreditSettingsResponse {
+  bool success = 1;
+  WelcomeCreditSettings settings = 2;
+}
+
+message WelcomeCreditGrantSnapshot {
+  string operation_id = 1;
+  string ledger_entry_no = 2;
+  string reason_code = 3;
+  string amount_yuan = 4;
+  string currency_code = 5;
+  string created_at = 6;
+}
+
+message GrantWelcomeCreditRequest {
+  string user_id = 1;
+  string operation_id = 2;
+}
+
+message GrantWelcomeCreditResponse {
+  bool success = 1;
+  bool granted = 2;
+  BillingAccountSnapshot account = 3;
+  string entry_no = 4;
+  WelcomeCreditGrantSnapshot grant = 5;
 }
 
 message BillingShortfallOrderItem {

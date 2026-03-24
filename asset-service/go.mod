@@ -3,6 +3,7 @@ module vasset/asset-service
 go 1.24.0
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/lib/pq v1.10.9
 	google.golang.org/grpc v1.77.0

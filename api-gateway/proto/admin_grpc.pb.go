@@ -19,35 +19,37 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminService_Login_FullMethodName                     = "/admin.AdminService/Login"
-	AdminService_Logout_FullMethodName                    = "/admin.AdminService/Logout"
-	AdminService_GetCurrentUser_FullMethodName            = "/admin.AdminService/GetCurrentUser"
-	AdminService_GetOverview_FullMethodName               = "/admin.AdminService/GetOverview"
-	AdminService_GetRequestTrend_FullMethodName           = "/admin.AdminService/GetRequestTrend"
-	AdminService_GetUserStats_FullMethodName              = "/admin.AdminService/GetUserStats"
-	AdminService_GetProxySourceStatus_FullMethodName      = "/admin.AdminService/GetProxySourceStatus"
-	AdminService_GetProxySourcePolicy_FullMethodName      = "/admin.AdminService/GetProxySourcePolicy"
-	AdminService_UpdateProxySourcePolicy_FullMethodName   = "/admin.AdminService/UpdateProxySourcePolicy"
-	AdminService_ListProxies_FullMethodName               = "/admin.AdminService/ListProxies"
-	AdminService_CreateProxy_FullMethodName               = "/admin.AdminService/CreateProxy"
-	AdminService_UpdateProxy_FullMethodName               = "/admin.AdminService/UpdateProxy"
-	AdminService_UpdateProxyStatus_FullMethodName         = "/admin.AdminService/UpdateProxyStatus"
-	AdminService_DeleteProxy_FullMethodName               = "/admin.AdminService/DeleteProxy"
-	AdminService_ListCookies_FullMethodName               = "/admin.AdminService/ListCookies"
-	AdminService_GetCookie_FullMethodName                 = "/admin.AdminService/GetCookie"
-	AdminService_CreateCookie_FullMethodName              = "/admin.AdminService/CreateCookie"
-	AdminService_UpdateCookie_FullMethodName              = "/admin.AdminService/UpdateCookie"
-	AdminService_DeleteCookie_FullMethodName              = "/admin.AdminService/DeleteCookie"
-	AdminService_FreezeCookie_FullMethodName              = "/admin.AdminService/FreezeCookie"
-	AdminService_ListBillingAccounts_FullMethodName       = "/admin.AdminService/ListBillingAccounts"
-	AdminService_GetBillingAccountDetail_FullMethodName   = "/admin.AdminService/GetBillingAccountDetail"
-	AdminService_AdjustBillingBalance_FullMethodName      = "/admin.AdminService/AdjustBillingBalance"
-	AdminService_ListBillingShortfalls_FullMethodName     = "/admin.AdminService/ListBillingShortfalls"
-	AdminService_ReconcileBillingShortfall_FullMethodName = "/admin.AdminService/ReconcileBillingShortfall"
-	AdminService_ListBillingLedger_FullMethodName         = "/admin.AdminService/ListBillingLedger"
-	AdminService_ListBillingUsageRecords_FullMethodName   = "/admin.AdminService/ListBillingUsageRecords"
-	AdminService_GetBillingPricing_FullMethodName         = "/admin.AdminService/GetBillingPricing"
-	AdminService_UpdateBillingPricing_FullMethodName      = "/admin.AdminService/UpdateBillingPricing"
+	AdminService_Login_FullMethodName                       = "/admin.AdminService/Login"
+	AdminService_Logout_FullMethodName                      = "/admin.AdminService/Logout"
+	AdminService_GetCurrentUser_FullMethodName              = "/admin.AdminService/GetCurrentUser"
+	AdminService_GetOverview_FullMethodName                 = "/admin.AdminService/GetOverview"
+	AdminService_GetRequestTrend_FullMethodName             = "/admin.AdminService/GetRequestTrend"
+	AdminService_GetUserStats_FullMethodName                = "/admin.AdminService/GetUserStats"
+	AdminService_GetProxySourceStatus_FullMethodName        = "/admin.AdminService/GetProxySourceStatus"
+	AdminService_GetProxySourcePolicy_FullMethodName        = "/admin.AdminService/GetProxySourcePolicy"
+	AdminService_UpdateProxySourcePolicy_FullMethodName     = "/admin.AdminService/UpdateProxySourcePolicy"
+	AdminService_ListProxies_FullMethodName                 = "/admin.AdminService/ListProxies"
+	AdminService_CreateProxy_FullMethodName                 = "/admin.AdminService/CreateProxy"
+	AdminService_UpdateProxy_FullMethodName                 = "/admin.AdminService/UpdateProxy"
+	AdminService_UpdateProxyStatus_FullMethodName           = "/admin.AdminService/UpdateProxyStatus"
+	AdminService_DeleteProxy_FullMethodName                 = "/admin.AdminService/DeleteProxy"
+	AdminService_ListCookies_FullMethodName                 = "/admin.AdminService/ListCookies"
+	AdminService_GetCookie_FullMethodName                   = "/admin.AdminService/GetCookie"
+	AdminService_CreateCookie_FullMethodName                = "/admin.AdminService/CreateCookie"
+	AdminService_UpdateCookie_FullMethodName                = "/admin.AdminService/UpdateCookie"
+	AdminService_DeleteCookie_FullMethodName                = "/admin.AdminService/DeleteCookie"
+	AdminService_FreezeCookie_FullMethodName                = "/admin.AdminService/FreezeCookie"
+	AdminService_ListBillingAccounts_FullMethodName         = "/admin.AdminService/ListBillingAccounts"
+	AdminService_GetBillingAccountDetail_FullMethodName     = "/admin.AdminService/GetBillingAccountDetail"
+	AdminService_AdjustBillingBalance_FullMethodName        = "/admin.AdminService/AdjustBillingBalance"
+	AdminService_ListBillingShortfalls_FullMethodName       = "/admin.AdminService/ListBillingShortfalls"
+	AdminService_ReconcileBillingShortfall_FullMethodName   = "/admin.AdminService/ReconcileBillingShortfall"
+	AdminService_ListBillingLedger_FullMethodName           = "/admin.AdminService/ListBillingLedger"
+	AdminService_ListBillingUsageRecords_FullMethodName     = "/admin.AdminService/ListBillingUsageRecords"
+	AdminService_GetBillingPricing_FullMethodName           = "/admin.AdminService/GetBillingPricing"
+	AdminService_UpdateBillingPricing_FullMethodName        = "/admin.AdminService/UpdateBillingPricing"
+	AdminService_GetWelcomeCreditSettings_FullMethodName    = "/admin.AdminService/GetWelcomeCreditSettings"
+	AdminService_UpdateWelcomeCreditSettings_FullMethodName = "/admin.AdminService/UpdateWelcomeCreditSettings"
 )
 
 // AdminServiceClient is the client API for AdminService service.
@@ -83,6 +85,8 @@ type AdminServiceClient interface {
 	ListBillingUsageRecords(ctx context.Context, in *AdminListBillingUsageRecordsRequest, opts ...grpc.CallOption) (*AdminListBillingUsageRecordsResponse, error)
 	GetBillingPricing(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminBillingPricingResponse, error)
 	UpdateBillingPricing(ctx context.Context, in *AdminUpdateBillingPricingRequest, opts ...grpc.CallOption) (*AdminBillingPricingResponse, error)
+	GetWelcomeCreditSettings(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(ctx context.Context, in *AdminUpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*AdminWelcomeCreditSettingsResponse, error)
 }
 
 type adminServiceClient struct {
@@ -383,6 +387,26 @@ func (c *adminServiceClient) UpdateBillingPricing(ctx context.Context, in *Admin
 	return out, nil
 }
 
+func (c *adminServiceClient) GetWelcomeCreditSettings(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminWelcomeCreditSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminWelcomeCreditSettingsResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) UpdateWelcomeCreditSettings(ctx context.Context, in *AdminUpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*AdminWelcomeCreditSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminWelcomeCreditSettingsResponse)
+	err := c.cc.Invoke(ctx, AdminService_UpdateWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility.
@@ -416,6 +440,8 @@ type AdminServiceServer interface {
 	ListBillingUsageRecords(context.Context, *AdminListBillingUsageRecordsRequest) (*AdminListBillingUsageRecordsResponse, error)
 	GetBillingPricing(context.Context, *AdminEmpty) (*AdminBillingPricingResponse, error)
 	UpdateBillingPricing(context.Context, *AdminUpdateBillingPricingRequest) (*AdminBillingPricingResponse, error)
+	GetWelcomeCreditSettings(context.Context, *AdminEmpty) (*AdminWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(context.Context, *AdminUpdateWelcomeCreditSettingsRequest) (*AdminWelcomeCreditSettingsResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -512,6 +538,12 @@ func (UnimplementedAdminServiceServer) GetBillingPricing(context.Context, *Admin
 }
 func (UnimplementedAdminServiceServer) UpdateBillingPricing(context.Context, *AdminUpdateBillingPricingRequest) (*AdminBillingPricingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateBillingPricing not implemented")
+}
+func (UnimplementedAdminServiceServer) GetWelcomeCreditSettings(context.Context, *AdminEmpty) (*AdminWelcomeCreditSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetWelcomeCreditSettings not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateWelcomeCreditSettings(context.Context, *AdminUpdateWelcomeCreditSettingsRequest) (*AdminWelcomeCreditSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateWelcomeCreditSettings not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 func (UnimplementedAdminServiceServer) testEmbeddedByValue()                      {}
@@ -1056,6 +1088,42 @@ func _AdminService_UpdateBillingPricing_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_GetWelcomeCreditSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminEmpty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetWelcomeCreditSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetWelcomeCreditSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetWelcomeCreditSettings(ctx, req.(*AdminEmpty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_UpdateWelcomeCreditSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminUpdateWelcomeCreditSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateWelcomeCreditSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_UpdateWelcomeCreditSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateWelcomeCreditSettings(ctx, req.(*AdminUpdateWelcomeCreditSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1178,6 +1246,14 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBillingPricing",
 			Handler:    _AdminService_UpdateBillingPricing_Handler,
+		},
+		{
+			MethodName: "GetWelcomeCreditSettings",
+			Handler:    _AdminService_GetWelcomeCreditSettings_Handler,
+		},
+		{
+			MethodName: "UpdateWelcomeCreditSettings",
+			Handler:    _AdminService_UpdateWelcomeCreditSettings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

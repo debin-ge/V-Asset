@@ -43,7 +43,7 @@ func (h *BillingHandler) GetAccount(c *gin.Context) {
 	}
 
 	account := resp.GetAccount()
-	models.Success(c, models.BillingAccountResponse{
+	models.Success(c, models.BillingAccountOverviewResponse{
 		UserID:              account.GetUserId(),
 		CurrencyCode:        account.GetCurrencyCode(),
 		AvailableBalanceFen: account.GetAvailableBalanceFen(),
@@ -106,7 +106,7 @@ func (h *BillingHandler) ListStatements(c *gin.Context) {
 		})
 	}
 
-	models.Success(c, models.PagedResponse{
+	models.Success(c, models.BillingStatementListResponse{
 		Total:    resp.GetTotal(),
 		Page:     int(resp.GetPage()),
 		PageSize: int(resp.GetPageSize()),

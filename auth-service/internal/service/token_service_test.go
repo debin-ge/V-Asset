@@ -51,7 +51,7 @@ func TestTokenServiceRefreshTokenInvalidatesPreviousCache(t *testing.T) {
 	redisServer.Set(oldCacheKey, string(oldClaims))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, user_id, refresh_token, token_hash, device_info, ip_address, 
+		SELECT id, user_id, refresh_token, token_hash, device_info, ip_address,
 		       expires_at, last_used_at, created_at
 		FROM user_sessions
 		WHERE refresh_token = $1
@@ -61,7 +61,7 @@ func TestTokenServiceRefreshTokenInvalidatesPreviousCache(t *testing.T) {
 			AddRow(int64(7), "user-1", refreshToken, oldTokenHash, "chrome", "127.0.0.1", expiresAt, lastUsedAt, createdAt))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, email, password_hash, nickname, avatar_url, role, status, 
+		SELECT id, email, password_hash, nickname, avatar_url, role, status,
 		       created_at, updated_at, last_login_at
 		FROM users
 		WHERE id = $1

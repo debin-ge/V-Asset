@@ -3,12 +3,15 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# 复制依赖文件并下载
-COPY go.mod go.sum ./
+# 复制 asset-service 完整源码（满足 replace 指令，auth-service 引用了 asset-service/proto）
+COPY asset-service/ /asset-service/
+
+# 复制 auth-service 依赖文件并下载
+COPY auth-service/go.mod auth-service/go.sum ./
 RUN go mod download
 
 # 复制源代码
-COPY . .
+COPY auth-service/ .
 
 # 更新依赖并编译
 RUN go mod tidy

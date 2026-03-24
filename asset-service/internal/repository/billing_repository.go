@@ -472,6 +472,27 @@ func (r *BillingRepository) GetLedgerByOperationID(ctx context.Context, operatio
 	`, operationID))
 }
 
+func (r *BillingRepository) CreateWelcomeCreditGrantTx(ctx context.Context, tx *sql.Tx, grant *models.WelcomeCreditGrant) error {
+	return tx.QueryRowContext(ctx, `
+		INSERT INTO welcome_credit_grants (
+			user_id, operation_id, ledger_entry_no, reason_code, amount_yuan, currency_code, created_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7
+		)
+		RETURNING id
+	`,
+		grant.UserID, grant.OperationID, grant.LedgerEntryNo, grant.ReasonCode, grant.AmountYuan, grant.CurrencyCode, grant.CreatedAt,
+	).Scan(&grant.ID)
+}
+
+func (r *BillingRepository) GetWelcomeCreditGrantByOperationID(ctx context.Context, operationID string) (*models.WelcomeCreditGrant, error) {
+	return scanWelcomeCreditGrant(r.db.QueryRowContext(ctx, `
+		SELECT id, user_id, operation_id, ledger_entry_no, reason_code, amount_yuan, currency_code, created_at
+		FROM welcome_credit_grants
+		WHERE operation_id = $1
+	`, operationID))
+}
+
 func (r *BillingRepository) ListLedger(ctx context.Context, filter models.BillingLedgerFilter) (*models.BillingLedgerResult, error) {
 	if filter.Page < 1 {
 		filter.Page = 1
@@ -855,6 +876,23 @@ func scanBillingLedgerEntry(row rowScanner) (*models.BillingLedgerEntry, error) 
 
 func scanBillingLedgerEntryRows(rows *sql.Rows) (*models.BillingLedgerEntry, error) {
 	return scanBillingLedgerEntry(rows)
+}
+
+func scanWelcomeCreditGrant(row rowScanner) (*models.WelcomeCreditGrant, error) {
+	var grant models.WelcomeCreditGrant
+	if err := row.Scan(
+		&grant.ID,
+		&grant.UserID,
+		&grant.OperationID,
+		&grant.LedgerEntryNo,
+		&grant.ReasonCode,
+		&grant.AmountYuan,
+		&grant.CurrencyCode,
+		&grant.CreatedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &grant, nil
 }
 
 func scanTrafficUsageRecordRows(rows *sql.Rows) (*models.TrafficUsageRecord, error) {

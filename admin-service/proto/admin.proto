@@ -38,6 +38,8 @@ service AdminService {
   rpc ListBillingUsageRecords(AdminListBillingUsageRecordsRequest) returns (AdminListBillingUsageRecordsResponse);
   rpc GetBillingPricing(AdminEmpty) returns (AdminBillingPricingResponse);
   rpc UpdateBillingPricing(AdminUpdateBillingPricingRequest) returns (AdminBillingPricingResponse);
+  rpc GetWelcomeCreditSettings(AdminEmpty) returns (AdminWelcomeCreditSettingsResponse);
+  rpc UpdateWelcomeCreditSettings(AdminUpdateWelcomeCreditSettingsRequest) returns (AdminWelcomeCreditSettingsResponse);
 }
 
 message AdminEmpty {}
@@ -466,5 +468,20 @@ message AdminUpdateBillingPricingRequest {
   string ingress_price_fen_per_gib = 1;
   string egress_price_fen_per_gib = 2;
   string remark = 3;
+  string operator_user_id = 4;
+}
+
+message AdminWelcomeCreditSettingsResponse {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message AdminUpdateWelcomeCreditSettingsRequest {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
   string operator_user_id = 4;
 }

@@ -7,7 +7,6 @@ import { CookieFilterBar } from "@/components/cookies/CookieFilterBar";
 import { CookieFormDialog } from "@/components/cookies/CookieFormDialog";
 import { CookieTable } from "@/components/cookies/CookieTable";
 import { AppShell } from "@/components/layout/AppShell";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cookieApi } from "@/lib/api/cookie";
 import type { CookieInfo } from "@/types/cookie";
@@ -73,11 +72,6 @@ export default function CookiesPage() {
     <ProtectedRoute>
       <AppShell>
         <div className="space-y-4">
-          <PageHeader
-            eyebrow="Session Assets"
-            title="Cookies"
-            description="管理平台 Cookies 资源、冻结窗口和使用状态。"
-          />
           <CookieFilterBar
             platform={platform}
             onPlatformChange={setPlatform}

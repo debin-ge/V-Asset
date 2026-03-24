@@ -1,7 +1,7 @@
 import apiClient from "../api-client"
 import type { SelectedFormatPayload } from "./download"
 
-export interface BillingAccount {
+export interface BillingAccountOverviewResponse {
     user_id: string
     currency_code: string
     available_balance_fen: string
@@ -26,12 +26,15 @@ export interface BillingStatementItem {
     created_at: string
 }
 
-export interface BillingStatementListResponse {
+export interface BillingStatementPageResponse {
     total: number
     page: number
     page_size: number
     items: BillingStatementItem[]
 }
+
+export type BillingAccount = BillingAccountOverviewResponse
+export type BillingStatementListResponse = BillingStatementPageResponse
 
 export interface BillingEstimateRequest {
     url: string
@@ -49,14 +52,14 @@ export interface BillingEstimateResponse {
 }
 
 export const billingApi = {
-    getAccount: async (): Promise<BillingAccount> => {
+    getAccount: async (): Promise<BillingAccountOverviewResponse> => {
         const response = await apiClient.get("/api/v1/user/account")
-        return response.data as BillingAccount
+        return response.data as BillingAccountOverviewResponse
     },
 
-    listStatements: async (params?: { page?: number; page_size?: number; type?: number; status?: number }): Promise<BillingStatementListResponse> => {
+    listStatements: async (params?: { page?: number; page_size?: number; type?: number; status?: number }): Promise<BillingStatementPageResponse> => {
         const response = await apiClient.get("/api/v1/user/billing/ledger", { params })
-        return response.data as BillingStatementListResponse
+        return response.data as BillingStatementPageResponse
     },
 
     estimateDownload: async (payload: BillingEstimateRequest): Promise<BillingEstimateResponse> => {

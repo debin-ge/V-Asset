@@ -30,6 +30,8 @@ type billingAssetClient interface {
 	ListTrafficUsageRecords(ctx context.Context, in *pb.ListTrafficUsageRecordsRequest, opts ...grpc.CallOption) (*pb.ListTrafficUsageRecordsResponse, error)
 	GetBillingPricing(ctx context.Context, in *pb.GetBillingPricingRequest, opts ...grpc.CallOption) (*pb.GetBillingPricingResponse, error)
 	UpdateBillingPricing(ctx context.Context, in *pb.UpdateBillingPricingRequest, opts ...grpc.CallOption) (*pb.UpdateBillingPricingResponse, error)
+	GetWelcomeCreditSettings(ctx context.Context, in *pb.GetWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*pb.GetWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(ctx context.Context, in *pb.UpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*pb.UpdateWelcomeCreditSettingsResponse, error)
 }
 
 func NewBillingService(authClient billingAuthClient, assetClient billingAssetClient) *BillingService {
@@ -379,6 +381,27 @@ func (s *BillingService) UpdatePricing(ctx context.Context, ingressPrice, egress
 	return pricingFromProto(resp.GetPricing()), nil
 }
 
+func (s *BillingService) GetWelcomeCreditSettings(ctx context.Context) (*models.WelcomeCreditSettings, error) {
+	resp, err := s.assetClient.GetWelcomeCreditSettings(ctx, &pb.GetWelcomeCreditSettingsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return welcomeCreditSettingsFromProto(resp.GetSettings()), nil
+}
+
+func (s *BillingService) UpdateWelcomeCreditSettings(ctx context.Context, enabled bool, amountYuan, currencyCode, updatedBy string) (*models.WelcomeCreditSettings, error) {
+	resp, err := s.assetClient.UpdateWelcomeCreditSettings(ctx, &pb.UpdateWelcomeCreditSettingsRequest{
+		Enabled:      enabled,
+		AmountYuan:   amountYuan,
+		CurrencyCode: currencyCode,
+		UpdatedBy:    updatedBy,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return welcomeCreditSettingsFromProto(resp.GetSettings()), nil
+}
+
 func (s *BillingService) loadUsersByIDs(ctx context.Context, userIDs []string) (map[string]*pb.User, error) {
 	result := map[string]*pb.User{}
 	if len(userIDs) == 0 {
@@ -408,6 +431,19 @@ func pricingFromProto(pricing *pb.BillingPricing) *models.BillingPricing {
 		UpdatedByUserID:       pricing.GetUpdatedByUserId(),
 		EffectiveAt:           pricing.GetEffectiveAt(),
 		CreatedAt:             pricing.GetCreatedAt(),
+	}
+}
+
+func welcomeCreditSettingsFromProto(settings *pb.WelcomeCreditSettings) *models.WelcomeCreditSettings {
+	if settings == nil {
+		return &models.WelcomeCreditSettings{}
+	}
+	return &models.WelcomeCreditSettings{
+		Enabled:      settings.GetEnabled(),
+		AmountYuan:   settings.GetAmountYuan(),
+		CurrencyCode: settings.GetCurrencyCode(),
+		UpdatedAt:    settings.GetUpdatedAt(),
+		UpdatedBy:    settings.GetUpdatedBy(),
 	}
 }
 

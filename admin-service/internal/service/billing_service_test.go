@@ -30,9 +30,14 @@ func (s *stubBillingAuthClient) BatchGetUsers(context.Context, *pb.BatchGetUsers
 }
 
 type stubBillingAssetClient struct {
-	listResp *pb.ListBillingAccountsResponse
-	listErr  error
-	listReq  *pb.ListBillingAccountsRequest
+	listResp                *pb.ListBillingAccountsResponse
+	listErr                 error
+	listReq                 *pb.ListBillingAccountsRequest
+	getWelcomeCreditResp    *pb.GetWelcomeCreditSettingsResponse
+	getWelcomeCreditErr     error
+	updateWelcomeCreditReq  *pb.UpdateWelcomeCreditSettingsRequest
+	updateWelcomeCreditResp *pb.UpdateWelcomeCreditSettingsResponse
+	updateWelcomeCreditErr  error
 }
 
 func (s *stubBillingAssetClient) ListBillingAccounts(_ context.Context, in *pb.ListBillingAccountsRequest, _ ...grpc.CallOption) (*pb.ListBillingAccountsResponse, error) {
@@ -72,6 +77,18 @@ func (s *stubBillingAssetClient) GetBillingPricing(context.Context, *pb.GetBilli
 
 func (s *stubBillingAssetClient) UpdateBillingPricing(context.Context, *pb.UpdateBillingPricingRequest, ...grpc.CallOption) (*pb.UpdateBillingPricingResponse, error) {
 	return &pb.UpdateBillingPricingResponse{}, nil
+}
+
+func (s *stubBillingAssetClient) GetWelcomeCreditSettings(context.Context, *pb.GetWelcomeCreditSettingsRequest, ...grpc.CallOption) (*pb.GetWelcomeCreditSettingsResponse, error) {
+	return s.getWelcomeCreditResp, s.getWelcomeCreditErr
+}
+
+func (s *stubBillingAssetClient) UpdateWelcomeCreditSettings(_ context.Context, in *pb.UpdateWelcomeCreditSettingsRequest, _ ...grpc.CallOption) (*pb.UpdateWelcomeCreditSettingsResponse, error) {
+	if in != nil {
+		reqCopy := *in
+		s.updateWelcomeCreditReq = &reqCopy
+	}
+	return s.updateWelcomeCreditResp, s.updateWelcomeCreditErr
 }
 
 func TestBillingServiceListAccounts_UsesSearchForDefaultList(t *testing.T) {
@@ -189,6 +206,66 @@ func TestBillingServiceListAccounts_ReturnsEmptyWhenSearchHasNoMatches(t *testin
 		t.Fatalf("expected asset client not to be called when search returned no users, got %+v", assetClient.listReq)
 	}
 	if resp.Total != 0 || len(resp.Items) != 0 {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
+func TestGetWelcomeCreditSettings(t *testing.T) {
+	authClient := &stubBillingAuthClient{}
+	assetClient := &stubBillingAssetClient{
+		getWelcomeCreditResp: &pb.GetWelcomeCreditSettingsResponse{
+			Settings: &pb.WelcomeCreditSettings{
+				Enabled:      true,
+				AmountYuan:   "1.50",
+				CurrencyCode: "CNY",
+				UpdatedAt:    "2026-03-21T12:00:00Z",
+				UpdatedBy:    "admin-1",
+			},
+		},
+	}
+
+	svc := NewBillingService(authClient, assetClient)
+
+	resp, err := svc.GetWelcomeCreditSettings(context.Background())
+	if err != nil {
+		t.Fatalf("GetWelcomeCreditSettings returned error: %v", err)
+	}
+
+	if !resp.Enabled || resp.AmountYuan != "1.50" || resp.CurrencyCode != "CNY" || resp.UpdatedAt != "2026-03-21T12:00:00Z" || resp.UpdatedBy != "admin-1" {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
+func TestUpdateWelcomeCreditSettings(t *testing.T) {
+	authClient := &stubBillingAuthClient{}
+	assetClient := &stubBillingAssetClient{
+		updateWelcomeCreditResp: &pb.UpdateWelcomeCreditSettingsResponse{
+			Success: true,
+			Settings: &pb.WelcomeCreditSettings{
+				Enabled:      false,
+				AmountYuan:   "2.00",
+				CurrencyCode: "CNY",
+				UpdatedAt:    "2026-03-21T13:00:00Z",
+				UpdatedBy:    "admin-2",
+			},
+		},
+	}
+
+	svc := NewBillingService(authClient, assetClient)
+
+	resp, err := svc.UpdateWelcomeCreditSettings(context.Background(), false, "2.00", "CNY", "admin-2")
+	if err != nil {
+		t.Fatalf("UpdateWelcomeCreditSettings returned error: %v", err)
+	}
+
+	if assetClient.updateWelcomeCreditReq == nil {
+		t.Fatal("expected UpdateWelcomeCreditSettings request to be sent")
+	}
+	if assetClient.updateWelcomeCreditReq.GetEnabled() != false || assetClient.updateWelcomeCreditReq.GetAmountYuan() != "2.00" || assetClient.updateWelcomeCreditReq.GetCurrencyCode() != "CNY" || assetClient.updateWelcomeCreditReq.GetUpdatedBy() != "admin-2" {
+		t.Fatalf("unexpected upstream request: %+v", assetClient.updateWelcomeCreditReq)
+	}
+
+	if resp.Enabled != false || resp.AmountYuan != "2.00" || resp.CurrencyCode != "CNY" || resp.UpdatedAt != "2026-03-21T13:00:00Z" || resp.UpdatedBy != "admin-2" {
 		t.Fatalf("unexpected response: %+v", resp)
 	}
 }

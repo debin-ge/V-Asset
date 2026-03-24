@@ -1,6 +1,6 @@
 package models
 
-type BillingAccountResponse struct {
+type BillingAccountOverviewResponse struct {
 	UserID              string `json:"user_id"`
 	CurrencyCode        string `json:"currency_code"`
 	AvailableBalanceFen string `json:"available_balance_fen"`
@@ -12,6 +12,13 @@ type BillingAccountResponse struct {
 	Version             int32  `json:"version"`
 	CreatedAt           string `json:"created_at"`
 	UpdatedAt           string `json:"updated_at"`
+}
+
+type BillingStatementListResponse struct {
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"page_size"`
+	Items    []BillingStatementItem `json:"items"`
 }
 
 type BillingStatementRequest struct {
@@ -178,4 +185,18 @@ type AdminUpdateBillingPricingRequest struct {
 	IngressPriceFenPerGiB string `json:"ingress_price_fen_per_gib" binding:"required"`
 	EgressPriceFenPerGiB  string `json:"egress_price_fen_per_gib" binding:"required"`
 	Remark                string `json:"remark"`
+}
+
+type AdminWelcomeCreditSettings struct {
+	Enabled      bool   `json:"enabled"`
+	AmountYuan   string `json:"amount_yuan"`
+	CurrencyCode string `json:"currency_code"`
+	UpdatedAt    string `json:"updated_at"`
+	UpdatedBy    string `json:"updated_by"`
+}
+
+type AdminUpdateWelcomeCreditSettingsRequest struct {
+	Enabled      bool   `json:"enabled"`
+	AmountYuan   string `json:"amount_yuan" binding:"required"`
+	CurrencyCode string `json:"currency_code" binding:"required"`
 }

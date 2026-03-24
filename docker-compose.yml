@@ -77,7 +77,9 @@ services:
 
   # Auth Service - 认证服务
   auth-service:
-    build: ./auth-service
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
     container_name: vasset-auth
     expose:
       - "9001"
@@ -90,6 +92,7 @@ services:
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - JWT_SECRET=${JWT_SECRET:-vasset-dev-jwt-secret-2026-safe-key}
+      - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
     depends_on:
       postgres:
         condition: service_healthy
@@ -166,6 +169,9 @@ services:
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
+      - CORS_ALLOWED_METHODS=${CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,OPTIONS,PATCH}
+      - CORS_ALLOWED_HEADERS=${CORS_ALLOWED_HEADERS:-Content-Type,Authorization}
       - BILLING_ENABLED=${BILLING_ENABLED:-true}
       - ADMIN_SESSION_COOKIE_NAME=${ADMIN_SESSION_COOKIE_NAME:-vasset_admin_session}
       - ADMIN_SESSION_SECURE=${ADMIN_SESSION_SECURE:-false}

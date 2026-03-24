@@ -20,13 +20,14 @@ import (
 // GRPCServer gRPC 服务器
 type GRPCServer struct {
 	pb.UnimplementedAssetServiceServer
-	historyService *service.HistoryService
-	quotaService   *service.QuotaService
-	statsService   *service.StatsService
-	billingService *service.BillingService
-	proxyHandler   *ProxyHandler
-	cookieHandler  *CookieHandler
-	cfg            *config.Config
+	historyService       *service.HistoryService
+	quotaService         *service.QuotaService
+	statsService         *service.StatsService
+	billingService       *service.BillingService
+	welcomeCreditService *service.WelcomeCreditService
+	proxyHandler         *ProxyHandler
+	cookieHandler        *CookieHandler
+	cfg                  *config.Config
 }
 
 // NewGRPCServer 创建 gRPC 服务器
@@ -35,18 +36,20 @@ func NewGRPCServer(
 	quotaService *service.QuotaService,
 	statsService *service.StatsService,
 	billingService *service.BillingService,
+	welcomeCreditService *service.WelcomeCreditService,
 	proxyHandler *ProxyHandler,
 	cookieHandler *CookieHandler,
 	cfg *config.Config,
 ) *GRPCServer {
 	return &GRPCServer{
-		historyService: historyService,
-		quotaService:   quotaService,
-		statsService:   statsService,
-		billingService: billingService,
-		proxyHandler:   proxyHandler,
-		cookieHandler:  cookieHandler,
-		cfg:            cfg,
+		historyService:       historyService,
+		quotaService:         quotaService,
+		statsService:         statsService,
+		billingService:       billingService,
+		welcomeCreditService: welcomeCreditService,
+		proxyHandler:         proxyHandler,
+		cookieHandler:        cookieHandler,
+		cfg:                  cfg,
 	}
 }
 
@@ -662,6 +665,74 @@ func (s *GRPCServer) UpdateBillingPricing(ctx context.Context, req *pb.UpdateBil
 	}, nil
 }
 
+func (s *GRPCServer) GetWelcomeCreditSettings(ctx context.Context, _ *pb.GetWelcomeCreditSettingsRequest) (*pb.GetWelcomeCreditSettingsResponse, error) {
+	settings, err := s.welcomeCreditService.GetWelcomeCreditSettings(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, "欢迎赠送额度配置不存在")
+		}
+		return nil, status.Error(codes.Internal, "获取欢迎赠送额度配置失败")
+	}
+
+	return &pb.GetWelcomeCreditSettingsResponse{Settings: toWelcomeCreditSettingsPB(settings)}, nil
+}
+
+func (s *GRPCServer) UpdateWelcomeCreditSettings(ctx context.Context, req *pb.UpdateWelcomeCreditSettingsRequest) (*pb.UpdateWelcomeCreditSettingsResponse, error) {
+	amountYuan, err := money.Parse(req.GetAmountYuan())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "amount_yuan 非法")
+	}
+
+	settings, err := s.welcomeCreditService.UpdateWelcomeCreditSettings(ctx, req.GetEnabled(), amountYuan, req.GetCurrencyCode(), req.GetUpdatedBy())
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidWelcomeCreditAmount) {
+			return nil, status.Error(codes.InvalidArgument, "amount_yuan 不能为负数")
+		}
+		if err.Error() == "currency code is required" {
+			return nil, status.Error(codes.InvalidArgument, "currency_code 不能为空")
+		}
+		return nil, status.Error(codes.Internal, "更新欢迎赠送额度配置失败")
+	}
+
+	return &pb.UpdateWelcomeCreditSettingsResponse{
+		Success:  true,
+		Settings: toWelcomeCreditSettingsPB(settings),
+	}, nil
+}
+
+func (s *GRPCServer) GrantWelcomeCredit(ctx context.Context, req *pb.GrantWelcomeCreditRequest) (*pb.GrantWelcomeCreditResponse, error) {
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "用户ID不能为空")
+	}
+	if req.GetOperationId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "operation_id 不能为空")
+	}
+
+	account, entry, grant, granted, err := s.billingService.GrantWelcomeCredit(ctx, req.GetUserId(), req.GetOperationId())
+	if err != nil {
+		if errors.Is(err, service.ErrDuplicateOperation) {
+			return nil, status.Error(codes.AlreadyExists, "operation_id 已被其他账务事件占用")
+		}
+		if err.Error() == "user id is required" || err.Error() == "operation id is required" {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "发放欢迎赠送额度失败")
+	}
+
+	entryNo := ""
+	if entry != nil {
+		entryNo = entry.EntryNo
+	}
+
+	return &pb.GrantWelcomeCreditResponse{
+		Success: true,
+		Granted: granted,
+		Account: toBillingAccountSnapshotPB(account),
+		EntryNo: entryNo,
+		Grant:   toWelcomeCreditGrantPB(grant),
+	}, nil
+}
+
 func (s *GRPCServer) ListBillingShortfalls(ctx context.Context, req *pb.ListBillingShortfallsRequest) (*pb.ListBillingShortfallsResponse, error) {
 	page := int(req.GetPage())
 	if page < 1 {
@@ -788,6 +859,30 @@ func toBillingPricingPB(pricing *models.BillingPricing) *pb.BillingPricing {
 		UpdatedByUserId:       pricing.UpdatedByUserID,
 		EffectiveAt:           pricing.EffectiveAt.Format(time.RFC3339),
 		CreatedAt:             pricing.CreatedAt.Format(time.RFC3339),
+	}
+}
+
+func toWelcomeCreditSettingsPB(settings *models.WelcomeCreditSettings) *pb.WelcomeCreditSettings {
+	return &pb.WelcomeCreditSettings{
+		Enabled:      settings.Enabled,
+		AmountYuan:   settings.AmountYuan.String(),
+		CurrencyCode: settings.CurrencyCode,
+		UpdatedAt:    settings.UpdatedAt.Format(time.RFC3339),
+		UpdatedBy:    settings.UpdatedBy,
+	}
+}
+
+func toWelcomeCreditGrantPB(grant *models.WelcomeCreditGrant) *pb.WelcomeCreditGrantSnapshot {
+	if grant == nil {
+		return nil
+	}
+	return &pb.WelcomeCreditGrantSnapshot{
+		OperationId:   grant.OperationID,
+		LedgerEntryNo: grant.LedgerEntryNo,
+		ReasonCode:    grant.ReasonCode,
+		AmountYuan:    grant.AmountYuan.String(),
+		CurrencyCode:  grant.CurrencyCode,
+		CreatedAt:     grant.CreatedAt.Format(time.RFC3339),
 	}
 }
 

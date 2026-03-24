@@ -4097,6 +4097,150 @@ func (x *AdminUpdateBillingPricingRequest) GetOperatorUserId() string {
 	return ""
 }
 
+type AdminWelcomeCreditSettingsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Enabled       bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	AmountYuan    string                 `protobuf:"bytes,2,opt,name=amount_yuan,json=amountYuan,proto3" json:"amount_yuan,omitempty"`
+	CurrencyCode  string                 `protobuf:"bytes,3,opt,name=currency_code,json=currencyCode,proto3" json:"currency_code,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedBy     string                 `protobuf:"bytes,5,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) Reset() {
+	*x = AdminWelcomeCreditSettingsResponse{}
+	mi := &file_proto_admin_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminWelcomeCreditSettingsResponse) ProtoMessage() {}
+
+func (x *AdminWelcomeCreditSettingsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminWelcomeCreditSettingsResponse.ProtoReflect.Descriptor instead.
+func (*AdminWelcomeCreditSettingsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) GetAmountYuan() string {
+	if x != nil {
+		return x.AmountYuan
+	}
+	return ""
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) GetCurrencyCode() string {
+	if x != nil {
+		return x.CurrencyCode
+	}
+	return ""
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *AdminWelcomeCreditSettingsResponse) GetUpdatedBy() string {
+	if x != nil {
+		return x.UpdatedBy
+	}
+	return ""
+}
+
+type AdminUpdateWelcomeCreditSettingsRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Enabled        bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	AmountYuan     string                 `protobuf:"bytes,2,opt,name=amount_yuan,json=amountYuan,proto3" json:"amount_yuan,omitempty"`
+	CurrencyCode   string                 `protobuf:"bytes,3,opt,name=currency_code,json=currencyCode,proto3" json:"currency_code,omitempty"`
+	OperatorUserId string                 `protobuf:"bytes,4,opt,name=operator_user_id,json=operatorUserId,proto3" json:"operator_user_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) Reset() {
+	*x = AdminUpdateWelcomeCreditSettingsRequest{}
+	mi := &file_proto_admin_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminUpdateWelcomeCreditSettingsRequest) ProtoMessage() {}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminUpdateWelcomeCreditSettingsRequest.ProtoReflect.Descriptor instead.
+func (*AdminUpdateWelcomeCreditSettingsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) GetAmountYuan() string {
+	if x != nil {
+		return x.AmountYuan
+	}
+	return ""
+}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) GetCurrencyCode() string {
+	if x != nil {
+		return x.CurrencyCode
+	}
+	return ""
+}
+
+func (x *AdminUpdateWelcomeCreditSettingsRequest) GetOperatorUserId() string {
+	if x != nil {
+		return x.OperatorUserId
+	}
+	return ""
+}
+
 var File_proto_admin_proto protoreflect.FileDescriptor
 
 const file_proto_admin_proto_rawDesc = "" +
@@ -4471,7 +4615,22 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\x19ingress_price_fen_per_gib\x18\x01 \x01(\tR\x15ingressPriceFenPerGib\x126\n" +
 	"\x18egress_price_fen_per_gib\x18\x02 \x01(\tR\x14egressPriceFenPerGib\x12\x16\n" +
 	"\x06remark\x18\x03 \x01(\tR\x06remark\x12(\n" +
-	"\x10operator_user_id\x18\x04 \x01(\tR\x0eoperatorUserId2\xe7\x13\n" +
+	"\x10operator_user_id\x18\x04 \x01(\tR\x0eoperatorUserId\"\xc2\x01\n" +
+	"\"AdminWelcomeCreditSettingsResponse\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x1f\n" +
+	"\vamount_yuan\x18\x02 \x01(\tR\n" +
+	"amountYuan\x12#\n" +
+	"\rcurrency_code\x18\x03 \x01(\tR\fcurrencyCode\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x04 \x01(\tR\tupdatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_by\x18\x05 \x01(\tR\tupdatedBy\"\xb3\x01\n" +
+	"'AdminUpdateWelcomeCreditSettingsRequest\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x1f\n" +
+	"\vamount_yuan\x18\x02 \x01(\tR\n" +
+	"amountYuan\x12#\n" +
+	"\rcurrency_code\x18\x03 \x01(\tR\fcurrencyCode\x12(\n" +
+	"\x10operator_user_id\x18\x04 \x01(\tR\x0eoperatorUserId2\xbb\x15\n" +
 	"\fAdminService\x12<\n" +
 	"\x05Login\x12\x18.admin.AdminLoginRequest\x1a\x19.admin.AdminLoginResponse\x12B\n" +
 	"\x06Logout\x12\x19.admin.AdminLogoutRequest\x1a\x1d.admin.AdminOperationResponse\x12M\n" +
@@ -4501,7 +4660,9 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\x11ListBillingLedger\x12$.admin.AdminListBillingLedgerRequest\x1a%.admin.AdminListBillingLedgerResponse\x12r\n" +
 	"\x17ListBillingUsageRecords\x12*.admin.AdminListBillingUsageRecordsRequest\x1a+.admin.AdminListBillingUsageRecordsResponse\x12J\n" +
 	"\x11GetBillingPricing\x12\x11.admin.AdminEmpty\x1a\".admin.AdminBillingPricingResponse\x12c\n" +
-	"\x14UpdateBillingPricing\x12'.admin.AdminUpdateBillingPricingRequest\x1a\".admin.AdminBillingPricingResponseB\x1fZ\x1dvasset/admin-service/proto;pbb\x06proto3"
+	"\x14UpdateBillingPricing\x12'.admin.AdminUpdateBillingPricingRequest\x1a\".admin.AdminBillingPricingResponse\x12X\n" +
+	"\x18GetWelcomeCreditSettings\x12\x11.admin.AdminEmpty\x1a).admin.AdminWelcomeCreditSettingsResponse\x12x\n" +
+	"\x1bUpdateWelcomeCreditSettings\x12..admin.AdminUpdateWelcomeCreditSettingsRequest\x1a).admin.AdminWelcomeCreditSettingsResponseB\x1fZ\x1dvasset/admin-service/proto;pbb\x06proto3"
 
 var (
 	file_proto_admin_proto_rawDescOnce sync.Once
@@ -4515,61 +4676,63 @@ func file_proto_admin_proto_rawDescGZIP() []byte {
 	return file_proto_admin_proto_rawDescData
 }
 
-var file_proto_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 53)
+var file_proto_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 55)
 var file_proto_admin_proto_goTypes = []any{
-	(*AdminEmpty)(nil),                             // 0: admin.AdminEmpty
-	(*AdminUser)(nil),                              // 1: admin.AdminUser
-	(*AdminLoginRequest)(nil),                      // 2: admin.AdminLoginRequest
-	(*AdminLoginResponse)(nil),                     // 3: admin.AdminLoginResponse
-	(*AdminLogoutRequest)(nil),                     // 4: admin.AdminLogoutRequest
-	(*AdminSessionRequest)(nil),                    // 5: admin.AdminSessionRequest
-	(*AdminCurrentUserResponse)(nil),               // 6: admin.AdminCurrentUserResponse
-	(*AdminOverviewResponse)(nil),                  // 7: admin.AdminOverviewResponse
-	(*AdminTrendPoint)(nil),                        // 8: admin.AdminTrendPoint
-	(*AdminRequestTrendRequest)(nil),               // 9: admin.AdminRequestTrendRequest
-	(*AdminRequestTrendResponse)(nil),              // 10: admin.AdminRequestTrendResponse
-	(*AdminUserStatsResponse)(nil),                 // 11: admin.AdminUserStatsResponse
-	(*AdminProxySourceStatusResponse)(nil),         // 12: admin.AdminProxySourceStatusResponse
-	(*AdminProxySourcePolicyResponse)(nil),         // 13: admin.AdminProxySourcePolicyResponse
-	(*AdminUpdateProxySourcePolicyRequest)(nil),    // 14: admin.AdminUpdateProxySourcePolicyRequest
-	(*AdminProxyInfo)(nil),                         // 15: admin.AdminProxyInfo
-	(*AdminListProxiesRequest)(nil),                // 16: admin.AdminListProxiesRequest
-	(*AdminListProxiesResponse)(nil),               // 17: admin.AdminListProxiesResponse
-	(*AdminCreateProxyRequest)(nil),                // 18: admin.AdminCreateProxyRequest
-	(*AdminUpdateProxyRequest)(nil),                // 19: admin.AdminUpdateProxyRequest
-	(*AdminUpdateProxyStatusRequest)(nil),          // 20: admin.AdminUpdateProxyStatusRequest
-	(*AdminDeleteRequest)(nil),                     // 21: admin.AdminDeleteRequest
-	(*AdminCookieInfo)(nil),                        // 22: admin.AdminCookieInfo
-	(*AdminListCookiesRequest)(nil),                // 23: admin.AdminListCookiesRequest
-	(*AdminListCookiesResponse)(nil),               // 24: admin.AdminListCookiesResponse
-	(*AdminGetCookieRequest)(nil),                  // 25: admin.AdminGetCookieRequest
-	(*AdminGetCookieResponse)(nil),                 // 26: admin.AdminGetCookieResponse
-	(*AdminCreateCookieRequest)(nil),               // 27: admin.AdminCreateCookieRequest
-	(*AdminUpdateCookieRequest)(nil),               // 28: admin.AdminUpdateCookieRequest
-	(*AdminFreezeCookieRequest)(nil),               // 29: admin.AdminFreezeCookieRequest
-	(*AdminFreezeCookieResponse)(nil),              // 30: admin.AdminFreezeCookieResponse
-	(*AdminCreateResourceResponse)(nil),            // 31: admin.AdminCreateResourceResponse
-	(*AdminOperationResponse)(nil),                 // 32: admin.AdminOperationResponse
-	(*AdminBillingAccount)(nil),                    // 33: admin.AdminBillingAccount
-	(*AdminListBillingAccountsRequest)(nil),        // 34: admin.AdminListBillingAccountsRequest
-	(*AdminListBillingAccountsResponse)(nil),       // 35: admin.AdminListBillingAccountsResponse
-	(*AdminGetBillingAccountDetailRequest)(nil),    // 36: admin.AdminGetBillingAccountDetailRequest
-	(*AdminGetBillingAccountDetailResponse)(nil),   // 37: admin.AdminGetBillingAccountDetailResponse
-	(*AdminAdjustBillingBalanceRequest)(nil),       // 38: admin.AdminAdjustBillingBalanceRequest
-	(*AdminAdjustBillingBalanceResponse)(nil),      // 39: admin.AdminAdjustBillingBalanceResponse
-	(*AdminBillingShortfallOrder)(nil),             // 40: admin.AdminBillingShortfallOrder
-	(*AdminListBillingShortfallsRequest)(nil),      // 41: admin.AdminListBillingShortfallsRequest
-	(*AdminListBillingShortfallsResponse)(nil),     // 42: admin.AdminListBillingShortfallsResponse
-	(*AdminReconcileBillingShortfallRequest)(nil),  // 43: admin.AdminReconcileBillingShortfallRequest
-	(*AdminReconcileBillingShortfallResponse)(nil), // 44: admin.AdminReconcileBillingShortfallResponse
-	(*AdminBillingLedgerEntry)(nil),                // 45: admin.AdminBillingLedgerEntry
-	(*AdminListBillingLedgerRequest)(nil),          // 46: admin.AdminListBillingLedgerRequest
-	(*AdminListBillingLedgerResponse)(nil),         // 47: admin.AdminListBillingLedgerResponse
-	(*AdminBillingUsageRecord)(nil),                // 48: admin.AdminBillingUsageRecord
-	(*AdminListBillingUsageRecordsRequest)(nil),    // 49: admin.AdminListBillingUsageRecordsRequest
-	(*AdminListBillingUsageRecordsResponse)(nil),   // 50: admin.AdminListBillingUsageRecordsResponse
-	(*AdminBillingPricingResponse)(nil),            // 51: admin.AdminBillingPricingResponse
-	(*AdminUpdateBillingPricingRequest)(nil),       // 52: admin.AdminUpdateBillingPricingRequest
+	(*AdminEmpty)(nil),                              // 0: admin.AdminEmpty
+	(*AdminUser)(nil),                               // 1: admin.AdminUser
+	(*AdminLoginRequest)(nil),                       // 2: admin.AdminLoginRequest
+	(*AdminLoginResponse)(nil),                      // 3: admin.AdminLoginResponse
+	(*AdminLogoutRequest)(nil),                      // 4: admin.AdminLogoutRequest
+	(*AdminSessionRequest)(nil),                     // 5: admin.AdminSessionRequest
+	(*AdminCurrentUserResponse)(nil),                // 6: admin.AdminCurrentUserResponse
+	(*AdminOverviewResponse)(nil),                   // 7: admin.AdminOverviewResponse
+	(*AdminTrendPoint)(nil),                         // 8: admin.AdminTrendPoint
+	(*AdminRequestTrendRequest)(nil),                // 9: admin.AdminRequestTrendRequest
+	(*AdminRequestTrendResponse)(nil),               // 10: admin.AdminRequestTrendResponse
+	(*AdminUserStatsResponse)(nil),                  // 11: admin.AdminUserStatsResponse
+	(*AdminProxySourceStatusResponse)(nil),          // 12: admin.AdminProxySourceStatusResponse
+	(*AdminProxySourcePolicyResponse)(nil),          // 13: admin.AdminProxySourcePolicyResponse
+	(*AdminUpdateProxySourcePolicyRequest)(nil),     // 14: admin.AdminUpdateProxySourcePolicyRequest
+	(*AdminProxyInfo)(nil),                          // 15: admin.AdminProxyInfo
+	(*AdminListProxiesRequest)(nil),                 // 16: admin.AdminListProxiesRequest
+	(*AdminListProxiesResponse)(nil),                // 17: admin.AdminListProxiesResponse
+	(*AdminCreateProxyRequest)(nil),                 // 18: admin.AdminCreateProxyRequest
+	(*AdminUpdateProxyRequest)(nil),                 // 19: admin.AdminUpdateProxyRequest
+	(*AdminUpdateProxyStatusRequest)(nil),           // 20: admin.AdminUpdateProxyStatusRequest
+	(*AdminDeleteRequest)(nil),                      // 21: admin.AdminDeleteRequest
+	(*AdminCookieInfo)(nil),                         // 22: admin.AdminCookieInfo
+	(*AdminListCookiesRequest)(nil),                 // 23: admin.AdminListCookiesRequest
+	(*AdminListCookiesResponse)(nil),                // 24: admin.AdminListCookiesResponse
+	(*AdminGetCookieRequest)(nil),                   // 25: admin.AdminGetCookieRequest
+	(*AdminGetCookieResponse)(nil),                  // 26: admin.AdminGetCookieResponse
+	(*AdminCreateCookieRequest)(nil),                // 27: admin.AdminCreateCookieRequest
+	(*AdminUpdateCookieRequest)(nil),                // 28: admin.AdminUpdateCookieRequest
+	(*AdminFreezeCookieRequest)(nil),                // 29: admin.AdminFreezeCookieRequest
+	(*AdminFreezeCookieResponse)(nil),               // 30: admin.AdminFreezeCookieResponse
+	(*AdminCreateResourceResponse)(nil),             // 31: admin.AdminCreateResourceResponse
+	(*AdminOperationResponse)(nil),                  // 32: admin.AdminOperationResponse
+	(*AdminBillingAccount)(nil),                     // 33: admin.AdminBillingAccount
+	(*AdminListBillingAccountsRequest)(nil),         // 34: admin.AdminListBillingAccountsRequest
+	(*AdminListBillingAccountsResponse)(nil),        // 35: admin.AdminListBillingAccountsResponse
+	(*AdminGetBillingAccountDetailRequest)(nil),     // 36: admin.AdminGetBillingAccountDetailRequest
+	(*AdminGetBillingAccountDetailResponse)(nil),    // 37: admin.AdminGetBillingAccountDetailResponse
+	(*AdminAdjustBillingBalanceRequest)(nil),        // 38: admin.AdminAdjustBillingBalanceRequest
+	(*AdminAdjustBillingBalanceResponse)(nil),       // 39: admin.AdminAdjustBillingBalanceResponse
+	(*AdminBillingShortfallOrder)(nil),              // 40: admin.AdminBillingShortfallOrder
+	(*AdminListBillingShortfallsRequest)(nil),       // 41: admin.AdminListBillingShortfallsRequest
+	(*AdminListBillingShortfallsResponse)(nil),      // 42: admin.AdminListBillingShortfallsResponse
+	(*AdminReconcileBillingShortfallRequest)(nil),   // 43: admin.AdminReconcileBillingShortfallRequest
+	(*AdminReconcileBillingShortfallResponse)(nil),  // 44: admin.AdminReconcileBillingShortfallResponse
+	(*AdminBillingLedgerEntry)(nil),                 // 45: admin.AdminBillingLedgerEntry
+	(*AdminListBillingLedgerRequest)(nil),           // 46: admin.AdminListBillingLedgerRequest
+	(*AdminListBillingLedgerResponse)(nil),          // 47: admin.AdminListBillingLedgerResponse
+	(*AdminBillingUsageRecord)(nil),                 // 48: admin.AdminBillingUsageRecord
+	(*AdminListBillingUsageRecordsRequest)(nil),     // 49: admin.AdminListBillingUsageRecordsRequest
+	(*AdminListBillingUsageRecordsResponse)(nil),    // 50: admin.AdminListBillingUsageRecordsResponse
+	(*AdminBillingPricingResponse)(nil),             // 51: admin.AdminBillingPricingResponse
+	(*AdminUpdateBillingPricingRequest)(nil),        // 52: admin.AdminUpdateBillingPricingRequest
+	(*AdminWelcomeCreditSettingsResponse)(nil),      // 53: admin.AdminWelcomeCreditSettingsResponse
+	(*AdminUpdateWelcomeCreditSettingsRequest)(nil), // 54: admin.AdminUpdateWelcomeCreditSettingsRequest
 }
 var file_proto_admin_proto_depIdxs = []int32{
 	1,  // 0: admin.AdminLoginResponse.user:type_name -> admin.AdminUser
@@ -4615,37 +4778,41 @@ var file_proto_admin_proto_depIdxs = []int32{
 	49, // 40: admin.AdminService.ListBillingUsageRecords:input_type -> admin.AdminListBillingUsageRecordsRequest
 	0,  // 41: admin.AdminService.GetBillingPricing:input_type -> admin.AdminEmpty
 	52, // 42: admin.AdminService.UpdateBillingPricing:input_type -> admin.AdminUpdateBillingPricingRequest
-	3,  // 43: admin.AdminService.Login:output_type -> admin.AdminLoginResponse
-	32, // 44: admin.AdminService.Logout:output_type -> admin.AdminOperationResponse
-	6,  // 45: admin.AdminService.GetCurrentUser:output_type -> admin.AdminCurrentUserResponse
-	7,  // 46: admin.AdminService.GetOverview:output_type -> admin.AdminOverviewResponse
-	10, // 47: admin.AdminService.GetRequestTrend:output_type -> admin.AdminRequestTrendResponse
-	11, // 48: admin.AdminService.GetUserStats:output_type -> admin.AdminUserStatsResponse
-	12, // 49: admin.AdminService.GetProxySourceStatus:output_type -> admin.AdminProxySourceStatusResponse
-	13, // 50: admin.AdminService.GetProxySourcePolicy:output_type -> admin.AdminProxySourcePolicyResponse
-	32, // 51: admin.AdminService.UpdateProxySourcePolicy:output_type -> admin.AdminOperationResponse
-	17, // 52: admin.AdminService.ListProxies:output_type -> admin.AdminListProxiesResponse
-	31, // 53: admin.AdminService.CreateProxy:output_type -> admin.AdminCreateResourceResponse
-	32, // 54: admin.AdminService.UpdateProxy:output_type -> admin.AdminOperationResponse
-	32, // 55: admin.AdminService.UpdateProxyStatus:output_type -> admin.AdminOperationResponse
-	32, // 56: admin.AdminService.DeleteProxy:output_type -> admin.AdminOperationResponse
-	24, // 57: admin.AdminService.ListCookies:output_type -> admin.AdminListCookiesResponse
-	26, // 58: admin.AdminService.GetCookie:output_type -> admin.AdminGetCookieResponse
-	31, // 59: admin.AdminService.CreateCookie:output_type -> admin.AdminCreateResourceResponse
-	32, // 60: admin.AdminService.UpdateCookie:output_type -> admin.AdminOperationResponse
-	32, // 61: admin.AdminService.DeleteCookie:output_type -> admin.AdminOperationResponse
-	30, // 62: admin.AdminService.FreezeCookie:output_type -> admin.AdminFreezeCookieResponse
-	35, // 63: admin.AdminService.ListBillingAccounts:output_type -> admin.AdminListBillingAccountsResponse
-	37, // 64: admin.AdminService.GetBillingAccountDetail:output_type -> admin.AdminGetBillingAccountDetailResponse
-	39, // 65: admin.AdminService.AdjustBillingBalance:output_type -> admin.AdminAdjustBillingBalanceResponse
-	42, // 66: admin.AdminService.ListBillingShortfalls:output_type -> admin.AdminListBillingShortfallsResponse
-	44, // 67: admin.AdminService.ReconcileBillingShortfall:output_type -> admin.AdminReconcileBillingShortfallResponse
-	47, // 68: admin.AdminService.ListBillingLedger:output_type -> admin.AdminListBillingLedgerResponse
-	50, // 69: admin.AdminService.ListBillingUsageRecords:output_type -> admin.AdminListBillingUsageRecordsResponse
-	51, // 70: admin.AdminService.GetBillingPricing:output_type -> admin.AdminBillingPricingResponse
-	51, // 71: admin.AdminService.UpdateBillingPricing:output_type -> admin.AdminBillingPricingResponse
-	43, // [43:72] is the sub-list for method output_type
-	14, // [14:43] is the sub-list for method input_type
+	0,  // 43: admin.AdminService.GetWelcomeCreditSettings:input_type -> admin.AdminEmpty
+	54, // 44: admin.AdminService.UpdateWelcomeCreditSettings:input_type -> admin.AdminUpdateWelcomeCreditSettingsRequest
+	3,  // 45: admin.AdminService.Login:output_type -> admin.AdminLoginResponse
+	32, // 46: admin.AdminService.Logout:output_type -> admin.AdminOperationResponse
+	6,  // 47: admin.AdminService.GetCurrentUser:output_type -> admin.AdminCurrentUserResponse
+	7,  // 48: admin.AdminService.GetOverview:output_type -> admin.AdminOverviewResponse
+	10, // 49: admin.AdminService.GetRequestTrend:output_type -> admin.AdminRequestTrendResponse
+	11, // 50: admin.AdminService.GetUserStats:output_type -> admin.AdminUserStatsResponse
+	12, // 51: admin.AdminService.GetProxySourceStatus:output_type -> admin.AdminProxySourceStatusResponse
+	13, // 52: admin.AdminService.GetProxySourcePolicy:output_type -> admin.AdminProxySourcePolicyResponse
+	32, // 53: admin.AdminService.UpdateProxySourcePolicy:output_type -> admin.AdminOperationResponse
+	17, // 54: admin.AdminService.ListProxies:output_type -> admin.AdminListProxiesResponse
+	31, // 55: admin.AdminService.CreateProxy:output_type -> admin.AdminCreateResourceResponse
+	32, // 56: admin.AdminService.UpdateProxy:output_type -> admin.AdminOperationResponse
+	32, // 57: admin.AdminService.UpdateProxyStatus:output_type -> admin.AdminOperationResponse
+	32, // 58: admin.AdminService.DeleteProxy:output_type -> admin.AdminOperationResponse
+	24, // 59: admin.AdminService.ListCookies:output_type -> admin.AdminListCookiesResponse
+	26, // 60: admin.AdminService.GetCookie:output_type -> admin.AdminGetCookieResponse
+	31, // 61: admin.AdminService.CreateCookie:output_type -> admin.AdminCreateResourceResponse
+	32, // 62: admin.AdminService.UpdateCookie:output_type -> admin.AdminOperationResponse
+	32, // 63: admin.AdminService.DeleteCookie:output_type -> admin.AdminOperationResponse
+	30, // 64: admin.AdminService.FreezeCookie:output_type -> admin.AdminFreezeCookieResponse
+	35, // 65: admin.AdminService.ListBillingAccounts:output_type -> admin.AdminListBillingAccountsResponse
+	37, // 66: admin.AdminService.GetBillingAccountDetail:output_type -> admin.AdminGetBillingAccountDetailResponse
+	39, // 67: admin.AdminService.AdjustBillingBalance:output_type -> admin.AdminAdjustBillingBalanceResponse
+	42, // 68: admin.AdminService.ListBillingShortfalls:output_type -> admin.AdminListBillingShortfallsResponse
+	44, // 69: admin.AdminService.ReconcileBillingShortfall:output_type -> admin.AdminReconcileBillingShortfallResponse
+	47, // 70: admin.AdminService.ListBillingLedger:output_type -> admin.AdminListBillingLedgerResponse
+	50, // 71: admin.AdminService.ListBillingUsageRecords:output_type -> admin.AdminListBillingUsageRecordsResponse
+	51, // 72: admin.AdminService.GetBillingPricing:output_type -> admin.AdminBillingPricingResponse
+	51, // 73: admin.AdminService.UpdateBillingPricing:output_type -> admin.AdminBillingPricingResponse
+	53, // 74: admin.AdminService.GetWelcomeCreditSettings:output_type -> admin.AdminWelcomeCreditSettingsResponse
+	53, // 75: admin.AdminService.UpdateWelcomeCreditSettings:output_type -> admin.AdminWelcomeCreditSettingsResponse
+	45, // [45:76] is the sub-list for method output_type
+	14, // [14:45] is the sub-list for method input_type
 	14, // [14:14] is the sub-list for extension type_name
 	14, // [14:14] is the sub-list for extension extendee
 	0,  // [0:14] is the sub-list for field type_name
@@ -4662,7 +4829,7 @@ func file_proto_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_admin_proto_rawDesc), len(file_proto_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   53,
+			NumMessages:   55,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

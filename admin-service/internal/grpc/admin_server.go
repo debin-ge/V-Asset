@@ -589,6 +589,34 @@ func (s *AdminServer) UpdateBillingPricing(ctx context.Context, req *pb.AdminUpd
 	}, nil
 }
 
+func (s *AdminServer) GetWelcomeCreditSettings(ctx context.Context, _ *pb.AdminEmpty) (*pb.AdminWelcomeCreditSettingsResponse, error) {
+	settings, err := s.billingService.GetWelcomeCreditSettings(ctx)
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+	return &pb.AdminWelcomeCreditSettingsResponse{
+		Enabled:      settings.Enabled,
+		AmountYuan:   settings.AmountYuan,
+		CurrencyCode: settings.CurrencyCode,
+		UpdatedAt:    settings.UpdatedAt,
+		UpdatedBy:    settings.UpdatedBy,
+	}, nil
+}
+
+func (s *AdminServer) UpdateWelcomeCreditSettings(ctx context.Context, req *pb.AdminUpdateWelcomeCreditSettingsRequest) (*pb.AdminWelcomeCreditSettingsResponse, error) {
+	settings, err := s.billingService.UpdateWelcomeCreditSettings(ctx, req.GetEnabled(), req.GetAmountYuan(), req.GetCurrencyCode(), req.GetOperatorUserId())
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+	return &pb.AdminWelcomeCreditSettingsResponse{
+		Enabled:      settings.Enabled,
+		AmountYuan:   settings.AmountYuan,
+		CurrencyCode: settings.CurrencyCode,
+		UpdatedAt:    settings.UpdatedAt,
+		UpdatedBy:    settings.UpdatedBy,
+	}, nil
+}
+
 func adminUserToProto(user models.AdminUser) *pb.AdminUser {
 	return &pb.AdminUser{
 		UserId:    user.UserID,

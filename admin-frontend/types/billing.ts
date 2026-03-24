@@ -128,6 +128,21 @@ export interface BillingPricingUpdatePayload {
   remark?: string;
 }
 
+export interface WelcomeCreditSettings {
+  enabled: boolean;
+  amount_yuan: string;
+  currency_code?: string;
+  created_at?: string;
+  updated_at?: string;
+  updated_by?: string;
+}
+
+export interface WelcomeCreditSettingsUpdatePayload {
+  enabled: boolean;
+  amount_yuan: string;
+  currency_code?: string;
+}
+
 export interface BillingShortfallReconcilePayload {
   remark?: string;
 }

@@ -74,6 +74,8 @@ service AssetService {
   rpc GetBillingPricing(GetBillingPricingRequest) returns (GetBillingPricingResponse);
   // 更新费率
   rpc UpdateBillingPricing(UpdateBillingPricingRequest) returns (UpdateBillingPricingResponse);
+  rpc GetWelcomeCreditSettings(GetWelcomeCreditSettingsRequest) returns (GetWelcomeCreditSettingsResponse);
+  rpc UpdateWelcomeCreditSettings(UpdateWelcomeCreditSettingsRequest) returns (UpdateWelcomeCreditSettingsResponse);
   // 后台：查询待补扣短款订单
   rpc ListBillingShortfalls(ListBillingShortfallsRequest) returns (ListBillingShortfallsResponse);
   // 后台：手动补扣短款订单
@@ -604,6 +606,32 @@ message UpdateBillingPricingRequest {
 message UpdateBillingPricingResponse {
   bool success = 1;
   BillingPricing pricing = 2;
+}
+
+message WelcomeCreditSettings {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message GetWelcomeCreditSettingsRequest {}
+
+message GetWelcomeCreditSettingsResponse {
+  WelcomeCreditSettings settings = 1;
+}
+
+message UpdateWelcomeCreditSettingsRequest {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_by = 4;
+}
+
+message UpdateWelcomeCreditSettingsResponse {
+  bool success = 1;
+  WelcomeCreditSettings settings = 2;
 }
 
 message BillingShortfallOrderItem {

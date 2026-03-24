@@ -8,7 +8,6 @@ import { RequestTrendChart } from "@/components/dashboard/RequestTrendChart";
 import { ResourceSummary } from "@/components/dashboard/ResourceSummary";
 import { UserStatsPanel } from "@/components/dashboard/UserStatsPanel";
 import { AppShell } from "@/components/layout/AppShell";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { ProxyStatusCard } from "@/components/proxies/ProxyStatusCard";
 import { Button } from "@/components/ui/button";
 import { proxyApi } from "@/lib/api/proxy";
@@ -45,29 +44,25 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <AppShell>
+      <AppShell
+        actions={(
+          <>
+            <Button
+              variant={granularity === "day" ? "default" : "outline"}
+              onClick={() => setGranularity("day")}
+            >
+            7 Days
+            </Button>
+            <Button
+              variant={granularity === "hour" ? "default" : "outline"}
+              onClick={() => setGranularity("hour")}
+            >
+            24 Hours
+            </Button>
+          </>
+        )}
+      >
         <div className="space-y-4">
-          <PageHeader
-            eyebrow="Operations"
-            title="Platform Dashboard"
-            description="平台级用户、请求流量、代理资源和失败面板统一汇总。"
-            actions={
-              <>
-                <Button
-                  variant={granularity === "day" ? "default" : "outline"}
-                  onClick={() => setGranularity("day")}
-                >
-                7 Days
-                </Button>
-                <Button
-                  variant={granularity === "hour" ? "default" : "outline"}
-                  onClick={() => setGranularity("hour")}
-                >
-                24 Hours
-                </Button>
-              </>
-            }
-          />
           <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
             <MetricCard label="Total Users" value={overview?.total_users ?? "-"} />
             <MetricCard label="DAU" value={overview?.daily_active_users ?? "-"} />

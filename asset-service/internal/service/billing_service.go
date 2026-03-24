@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"vasset/asset-service/internal/models"
@@ -19,18 +20,27 @@ const (
 	gbMB          = int64(1000)
 )
 
+var defaultWelcomeCreditSettings = &models.WelcomeCreditSettings{
+	Enabled:      true,
+	AmountYuan:   money.MustParse("1.00"),
+	CurrencyCode: "CNY",
+	UpdatedBy:    "system",
+}
+
 var (
 	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrDuplicateOperation  = errors.New("operation id already used for another billing event")
 )
 
 // BillingService 账务服务
 type BillingService struct {
-	repo *repository.BillingRepository
+	repo              *repository.BillingRepository
+	welcomeCreditRepo *repository.WelcomeCreditSettingsRepository
 }
 
 // NewBillingService 创建账务服务
-func NewBillingService(repo *repository.BillingRepository) *BillingService {
-	return &BillingService{repo: repo}
+func NewBillingService(repo *repository.BillingRepository, welcomeCreditRepo *repository.WelcomeCreditSettingsRepository) *BillingService {
+	return &BillingService{repo: repo, welcomeCreditRepo: welcomeCreditRepo}
 }
 
 func (s *BillingService) GetBillingAccount(ctx context.Context, userID string, autoCreate bool) (*models.BillingAccount, error) {
@@ -42,6 +52,136 @@ func (s *BillingService) GetBillingAccount(ctx context.Context, userID string, a
 
 func (s *BillingService) ListBillingStatements(ctx context.Context, userID string, page, pageSize int, statementType, statementStatus int32) (*models.BillingStatementResult, error) {
 	return s.repo.ListStatements(ctx, userID, page, pageSize, statementType, statementStatus)
+}
+
+func (s *BillingService) GrantWelcomeCredit(ctx context.Context, userID, operationID string) (*models.BillingAccount, *models.BillingLedgerEntry, *models.WelcomeCreditGrant, bool, error) {
+	if userID == "" {
+		return nil, nil, nil, false, fmt.Errorf("user id is required")
+	}
+	if operationID == "" {
+		return nil, nil, nil, false, fmt.Errorf("operation id is required")
+	}
+
+	account, err := s.repo.GetOrCreateAccount(ctx, userID)
+	if err != nil {
+		return nil, nil, nil, false, err
+	}
+
+	existingEntry, err := s.repo.GetLedgerByOperationID(ctx, operationID)
+	if err == nil {
+		if existingEntry.UserID != userID || existingEntry.Remark != models.WelcomeCreditReasonCode {
+			return nil, nil, nil, false, ErrDuplicateOperation
+		}
+		grant, grantErr := s.repo.GetWelcomeCreditGrantByOperationID(ctx, operationID)
+		if grantErr != nil && !errors.Is(grantErr, sql.ErrNoRows) {
+			return nil, nil, nil, false, grantErr
+		}
+		return account, existingEntry, grant, false, nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return nil, nil, nil, false, err
+	}
+
+	settings, err := s.getEffectiveWelcomeCreditSettings(ctx)
+	if err != nil {
+		return nil, nil, nil, false, err
+	}
+	if !settings.Enabled || settings.AmountYuan.Cmp(money.Zero()) <= 0 {
+		return account, nil, nil, false, nil
+	}
+
+	amountMinor := settings.AmountYuan.Mul(money.FromInt64(100))
+	if amountMinor.Cmp(money.Zero()) <= 0 {
+		return account, nil, nil, false, nil
+	}
+
+	var (
+		entry *models.BillingLedgerEntry
+		grant *models.WelcomeCreditGrant
+	)
+	err = s.repo.WithTx(ctx, func(tx *sql.Tx) error {
+		account, err = s.repo.GetOrCreateAccountTx(ctx, tx, userID)
+		if err != nil {
+			return err
+		}
+
+		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(amountMinor)
+		account.TotalRechargedFen = account.TotalRechargedFen.Add(amountMinor)
+		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
+			return err
+		}
+
+		now := time.Now()
+		entry = &models.BillingLedgerEntry{
+			EntryNo:                  newBillingID("led"),
+			AccountID:                account.ID,
+			UserID:                   userID,
+			OperationID:              operationID,
+			EntryType:                models.LedgerEntryTypeManualTopup,
+			Scene:                    models.BillingSceneOnboarding,
+			ActionAmountFen:          abs64(amountMinor),
+			AvailableDeltaFen:        amountMinor,
+			ReservedDeltaFen:         money.Zero(),
+			BalanceAfterAvailableFen: account.AvailableBalanceFen,
+			BalanceAfterReservedFen:  account.ReservedBalanceFen,
+			Remark:                   models.WelcomeCreditReasonCode,
+			CreatedAt:                now,
+		}
+		if err := s.repo.CreateLedgerTx(ctx, tx, entry); err != nil {
+			return err
+		}
+
+		grant = &models.WelcomeCreditGrant{
+			UserID:        userID,
+			OperationID:   operationID,
+			LedgerEntryNo: entry.EntryNo,
+			ReasonCode:    models.WelcomeCreditReasonCode,
+			AmountYuan:    settings.AmountYuan,
+			CurrencyCode:  settings.CurrencyCode,
+			CreatedAt:     now,
+		}
+		return s.repo.CreateWelcomeCreditGrantTx(ctx, tx, grant)
+	})
+	if err != nil {
+		if existingEntry, existingErr := s.repo.GetLedgerByOperationID(ctx, operationID); existingErr == nil {
+			if existingEntry.UserID != userID || existingEntry.Remark != models.WelcomeCreditReasonCode {
+				return nil, nil, nil, false, ErrDuplicateOperation
+			}
+			grant, grantErr := s.repo.GetWelcomeCreditGrantByOperationID(ctx, operationID)
+			if grantErr != nil && !errors.Is(grantErr, sql.ErrNoRows) {
+				return nil, nil, nil, false, grantErr
+			}
+			account, accErr := s.repo.GetOrCreateAccount(ctx, userID)
+			return account, existingEntry, grant, false, accErr
+		}
+		return nil, nil, nil, false, err
+	}
+
+	return account, entry, grant, true, nil
+}
+
+func (s *BillingService) getEffectiveWelcomeCreditSettings(ctx context.Context) (*models.WelcomeCreditSettings, error) {
+	settings, err := s.welcomeCreditRepo.GetWelcomeCreditSettings(ctx)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+		return s.welcomeCreditRepo.UpsertWelcomeCreditSettings(ctx, defaultWelcomeCreditSettings)
+	}
+
+	if shouldBootstrapWelcomeCreditSettings(settings) {
+		return s.welcomeCreditRepo.UpsertWelcomeCreditSettings(ctx, defaultWelcomeCreditSettings)
+	}
+
+	return settings, nil
+}
+
+func shouldBootstrapWelcomeCreditSettings(settings *models.WelcomeCreditSettings) bool {
+	if settings == nil {
+		return true
+	}
+
+	return strings.TrimSpace(settings.CurrencyCode) == "" || strings.TrimSpace(settings.UpdatedBy) == "" || settings.UpdatedAt.IsZero()
 }
 
 func (s *BillingService) EstimateDownloadBilling(ctx context.Context, selectedFormatFilesize int64) (*models.BillingEstimate, *models.BillingPricing, error) {

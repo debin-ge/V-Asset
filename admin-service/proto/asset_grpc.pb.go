@@ -47,6 +47,8 @@ const (
 	AssetService_ListTrafficUsageRecords_FullMethodName     = "/asset.AssetService/ListTrafficUsageRecords"
 	AssetService_GetBillingPricing_FullMethodName           = "/asset.AssetService/GetBillingPricing"
 	AssetService_UpdateBillingPricing_FullMethodName        = "/asset.AssetService/UpdateBillingPricing"
+	AssetService_GetWelcomeCreditSettings_FullMethodName    = "/asset.AssetService/GetWelcomeCreditSettings"
+	AssetService_UpdateWelcomeCreditSettings_FullMethodName = "/asset.AssetService/UpdateWelcomeCreditSettings"
 	AssetService_ListBillingShortfalls_FullMethodName       = "/asset.AssetService/ListBillingShortfalls"
 	AssetService_ReconcileBillingShortfall_FullMethodName   = "/asset.AssetService/ReconcileBillingShortfall"
 	AssetService_AcquireProxyForTask_FullMethodName         = "/asset.AssetService/AcquireProxyForTask"
@@ -130,6 +132,8 @@ type AssetServiceClient interface {
 	GetBillingPricing(ctx context.Context, in *GetBillingPricingRequest, opts ...grpc.CallOption) (*GetBillingPricingResponse, error)
 	// 更新费率
 	UpdateBillingPricing(ctx context.Context, in *UpdateBillingPricingRequest, opts ...grpc.CallOption) (*UpdateBillingPricingResponse, error)
+	GetWelcomeCreditSettings(ctx context.Context, in *GetWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*GetWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(ctx context.Context, in *UpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*UpdateWelcomeCreditSettingsResponse, error)
 	// 后台：查询待补扣短款订单
 	ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error)
 	// 后台：手动补扣短款订单
@@ -462,6 +466,26 @@ func (c *assetServiceClient) UpdateBillingPricing(ctx context.Context, in *Updat
 	return out, nil
 }
 
+func (c *assetServiceClient) GetWelcomeCreditSettings(ctx context.Context, in *GetWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*GetWelcomeCreditSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetWelcomeCreditSettingsResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateWelcomeCreditSettings(ctx context.Context, in *UpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*UpdateWelcomeCreditSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateWelcomeCreditSettingsResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *assetServiceClient) ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListBillingShortfallsResponse)
@@ -723,6 +747,8 @@ type AssetServiceServer interface {
 	GetBillingPricing(context.Context, *GetBillingPricingRequest) (*GetBillingPricingResponse, error)
 	// 更新费率
 	UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error)
+	GetWelcomeCreditSettings(context.Context, *GetWelcomeCreditSettingsRequest) (*GetWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(context.Context, *UpdateWelcomeCreditSettingsRequest) (*UpdateWelcomeCreditSettingsResponse, error)
 	// 后台：查询待补扣短款订单
 	ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error)
 	// 后台：手动补扣短款订单
@@ -858,6 +884,12 @@ func (UnimplementedAssetServiceServer) GetBillingPricing(context.Context, *GetBi
 }
 func (UnimplementedAssetServiceServer) UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateBillingPricing not implemented")
+}
+func (UnimplementedAssetServiceServer) GetWelcomeCreditSettings(context.Context, *GetWelcomeCreditSettingsRequest) (*GetWelcomeCreditSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetWelcomeCreditSettings not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateWelcomeCreditSettings(context.Context, *UpdateWelcomeCreditSettingsRequest) (*UpdateWelcomeCreditSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateWelcomeCreditSettings not implemented")
 }
 func (UnimplementedAssetServiceServer) ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListBillingShortfalls not implemented")
@@ -1444,6 +1476,42 @@ func _AssetService_UpdateBillingPricing_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_GetWelcomeCreditSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWelcomeCreditSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetWelcomeCreditSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetWelcomeCreditSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetWelcomeCreditSettings(ctx, req.(*GetWelcomeCreditSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateWelcomeCreditSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateWelcomeCreditSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateWelcomeCreditSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateWelcomeCreditSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateWelcomeCreditSettings(ctx, req.(*UpdateWelcomeCreditSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AssetService_ListBillingShortfalls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListBillingShortfallsRequest)
 	if err := dec(in); err != nil {
@@ -1922,6 +1990,14 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBillingPricing",
 			Handler:    _AssetService_UpdateBillingPricing_Handler,
+		},
+		{
+			MethodName: "GetWelcomeCreditSettings",
+			Handler:    _AssetService_GetWelcomeCreditSettings_Handler,
+		},
+		{
+			MethodName: "UpdateWelcomeCreditSettings",
+			Handler:    _AssetService_UpdateWelcomeCreditSettings_Handler,
 		},
 		{
 			MethodName: "ListBillingShortfalls",

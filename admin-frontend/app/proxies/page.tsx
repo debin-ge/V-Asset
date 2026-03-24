@@ -4,7 +4,6 @@ import * as React from "react";
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppShell } from "@/components/layout/AppShell";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { ProxyPolicyCard } from "@/components/proxies/ProxyPolicyCard";
 import { ProxyStatusCard } from "@/components/proxies/ProxyStatusCard";
 import { ProxyTable } from "@/components/proxies/ProxyTable";
@@ -99,18 +98,14 @@ export default function ProxiesPage() {
 
   return (
     <ProtectedRoute>
-      <AppShell>
+      <AppShell
+        actions={(
+          <Button onClick={() => void loadData()}>
+            Refresh
+          </Button>
+        )}
+      >
         <div className="space-y-4">
-          <PageHeader
-            eyebrow="Network Pool"
-            title="Proxies"
-            description="管理 Proxy 主备策略、健康状态与手动代理池。"
-            actions={
-              <Button onClick={() => void loadData()}>
-                Refresh
-              </Button>
-            }
-          />
           <Card className="rounded-[28px] border-border/60 bg-white/85 shadow-sm">
             <CardContent className="grid gap-3 py-6 md:grid-cols-2 xl:grid-cols-5">
               <Input

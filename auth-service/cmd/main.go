@@ -14,7 +14,9 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
+	assetpb "vasset/asset-service/proto"
 	"vasset/auth-service/internal/config"
 	"vasset/auth-service/internal/database"
 	"vasset/auth-service/internal/handler"
@@ -32,6 +34,10 @@ func main() {
 	}
 
 	log.Printf("Starting Auth Service on port %d...", cfg.Server.Port)
+	assetServiceAddr := os.Getenv("ASSET_SERVICE_ADDR")
+	if assetServiceAddr == "" {
+		assetServiceAddr = "localhost:9004"
+	}
 
 	// 2. 运行数据库迁移
 	if err := database.RunMigrations(cfg.Database.GetURL()); err != nil {
@@ -71,9 +77,19 @@ func main() {
 	)
 
 	// 6. 初始化 Service
+	assetConn, err := grpc.NewClient(
+		assetServiceAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect asset-service grpc client: %v", err)
+	}
+	defer assetConn.Close()
+
+	assetClient := assetpb.NewAssetServiceClient(assetConn)
 	tokenService := service.NewTokenService(jwtUtil, redisClient, sessionRepo, userRepo)
 	userService := service.NewUserService(userRepo, &cfg.Password)
-	authService := service.NewAuthService(userService, tokenService, sessionRepo, redisClient, &cfg.Session, &cfg.Password)
+	authService := service.NewAuthService(userService, tokenService, sessionRepo, redisClient, &cfg.Session, &cfg.Password, assetClient)
 
 	// 7. 初始化 gRPC 服务器
 	grpcServer := handler.NewGRPCServer(authService, userService, tokenService)

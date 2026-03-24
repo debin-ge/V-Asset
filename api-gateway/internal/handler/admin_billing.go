@@ -460,6 +460,49 @@ func (h *AdminBillingHandler) UpdatePricing(c *gin.Context) {
 	models.Success(c, pricingFromAdminProto(resp))
 }
 
+func (h *AdminBillingHandler) GetWelcomeCreditSettings(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
+	defer cancel()
+
+	resp, err := h.adminClient.GetWelcomeCreditSettings(ctx, &pb.AdminEmpty{})
+	if err != nil {
+		writeGRPCError(c, err)
+		return
+	}
+
+	models.Success(c, welcomeCreditSettingsFromAdminProto(resp))
+}
+
+func (h *AdminBillingHandler) UpdateWelcomeCreditSettings(c *gin.Context) {
+	var req models.AdminUpdateWelcomeCreditSettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		models.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+
+	adminUser, ok := getAdminUserFromContext(c)
+	if !ok {
+		models.Unauthorized(c, "invalid admin user")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
+	defer cancel()
+
+	resp, err := h.adminClient.UpdateWelcomeCreditSettings(ctx, &pb.AdminUpdateWelcomeCreditSettingsRequest{
+		Enabled:        req.Enabled,
+		AmountYuan:     req.AmountYuan,
+		CurrencyCode:   req.CurrencyCode,
+		OperatorUserId: adminUser.GetUserId(),
+	})
+	if err != nil {
+		writeGRPCError(c, err)
+		return
+	}
+
+	models.Success(c, welcomeCreditSettingsFromAdminProto(resp))
+}
+
 func getAdminUserFromContext(c *gin.Context) (*pb.AdminUser, bool) {
 	user, exists := c.Get("admin_user")
 	if !exists {
@@ -482,5 +525,18 @@ func pricingFromAdminProto(pricing *pb.AdminBillingPricingResponse) models.Admin
 		UpdatedByUserID:       pricing.GetUpdatedByUserId(),
 		EffectiveAt:           pricing.GetEffectiveAt(),
 		CreatedAt:             pricing.GetCreatedAt(),
+	}
+}
+
+func welcomeCreditSettingsFromAdminProto(settings *pb.AdminWelcomeCreditSettingsResponse) models.AdminWelcomeCreditSettings {
+	if settings == nil {
+		return models.AdminWelcomeCreditSettings{}
+	}
+	return models.AdminWelcomeCreditSettings{
+		Enabled:      settings.GetEnabled(),
+		AmountYuan:   settings.GetAmountYuan(),
+		CurrencyCode: settings.GetCurrencyCode(),
+		UpdatedAt:    settings.GetUpdatedAt(),
+		UpdatedBy:    settings.GetUpdatedBy(),
 	}
 }

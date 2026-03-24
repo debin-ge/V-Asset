@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"google.golang.org/grpc"
+	assetpb "vasset/asset-service/proto"
 	"vasset/auth-service/internal/config"
 	"vasset/auth-service/internal/models"
 	"vasset/auth-service/internal/repository"
@@ -13,24 +15,39 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type authUserService interface {
+	CreateUser(ctx context.Context, email, password, nickname string) (*models.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	UpdateLastLogin(ctx context.Context, userID string) error
+	GetUserByID(ctx context.Context, userID string) (*models.User, error)
+	UpdateNickname(ctx context.Context, userID string, nickname string) error
+	UpdatePassword(ctx context.Context, userID string, passwordHash string) error
+}
+
+type welcomeCreditClient interface {
+	GrantWelcomeCredit(ctx context.Context, in *assetpb.GrantWelcomeCreditRequest, opts ...grpc.CallOption) (*assetpb.GrantWelcomeCreditResponse, error)
+}
+
 // AuthService 认证服务
 type AuthService struct {
-	userService   *UserService
+	userService   authUserService
 	tokenService  *TokenService
 	sessionRepo   *repository.SessionRepository
 	redis         *redis.Client
 	sessionConfig *config.SessionConfig
 	pwdConfig     *config.PasswordConfig
+	welcomeCredit welcomeCreditClient
 }
 
 // NewAuthService 创建认证服务
 func NewAuthService(
-	userService *UserService,
+	userService authUserService,
 	tokenService *TokenService,
 	sessionRepo *repository.SessionRepository,
 	redis *redis.Client,
 	sessionConfig *config.SessionConfig,
 	pwdConfig *config.PasswordConfig,
+	welcomeCredit welcomeCreditClient,
 ) *AuthService {
 	return &AuthService{
 		userService:   userService,
@@ -39,12 +56,30 @@ func NewAuthService(
 		redis:         redis,
 		sessionConfig: sessionConfig,
 		pwdConfig:     pwdConfig,
+		welcomeCredit: welcomeCredit,
 	}
 }
 
 // Register 用户注册
 func (s *AuthService) Register(ctx context.Context, email, password, nickname string) (*models.User, error) {
-	return s.userService.CreateUser(ctx, email, password, nickname)
+	user, err := s.userService.CreateUser(ctx, email, password, nickname)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.welcomeCredit == nil {
+		return nil, fmt.Errorf("failed to grant welcome credit: client not configured")
+	}
+
+	operationID := fmt.Sprintf("welcome_credit:%s", user.ID)
+	if _, err := s.welcomeCredit.GrantWelcomeCredit(ctx, &assetpb.GrantWelcomeCreditRequest{
+		UserId:      user.ID,
+		OperationId: operationID,
+	}); err != nil {
+		return nil, fmt.Errorf("failed to grant welcome credit: %w", err)
+	}
+
+	return user, nil
 }
 
 // Login 用户登录

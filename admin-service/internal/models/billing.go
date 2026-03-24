@@ -117,3 +117,11 @@ type BillingPricing struct {
 	EffectiveAt           string `json:"effective_at"`
 	CreatedAt             string `json:"created_at"`
 }
+
+type WelcomeCreditSettings struct {
+	Enabled      bool   `json:"enabled"`
+	AmountYuan   string `json:"amount_yuan"`
+	CurrencyCode string `json:"currency_code"`
+	UpdatedAt    string `json:"updated_at"`
+	UpdatedBy    string `json:"updated_by"`
+}

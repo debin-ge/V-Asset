@@ -16,6 +16,7 @@ const (
 	BillingSceneDownload   = 1
 	BillingSceneRedownload = 2
 	BillingSceneAdmin      = 3
+	BillingSceneOnboarding = 4
 )
 
 const (

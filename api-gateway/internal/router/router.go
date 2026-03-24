@@ -186,6 +186,8 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		adminV1.GET("/billing/usage-records", adminBillingHandler.ListUsageRecords)
 		adminV1.GET("/billing/pricing", adminBillingHandler.GetPricing)
 		adminV1.PUT("/billing/pricing", adminBillingHandler.UpdatePricing)
+		adminV1.GET("/billing/welcome-credit", adminBillingHandler.GetWelcomeCreditSettings)
+		adminV1.PUT("/billing/welcome-credit", adminBillingHandler.UpdateWelcomeCreditSettings)
 	}
 
 	// ==================== WebSocket 路由 ====================

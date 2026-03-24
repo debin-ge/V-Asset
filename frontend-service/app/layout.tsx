@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Header } from "@/components/common/Header";
@@ -9,16 +8,6 @@ import { RuntimeConfigScript } from "@/components/common/RuntimeConfigScript";
 import { VersionGuard } from "@/components/common/VersionGuard";
 import { Toaster } from "@/components/ui/sonner";
 import { getResolvedAppVersion } from "@/lib/runtime-config.server";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "V-Asset - Video Asset Platform",
@@ -35,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col relative overflow-x-hidden`}
+        className="antialiased min-h-screen flex flex-col relative overflow-x-hidden"
         suppressHydrationWarning
       >
         <RuntimeConfigScript />
