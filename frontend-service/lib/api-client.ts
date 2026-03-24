@@ -3,8 +3,8 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { resolveApiBaseUrl } from './runtime-config';
 
 // Token存储键名
-const TOKEN_KEY = 'v-asset-token';
-const REFRESH_TOKEN_KEY = 'v-asset-refresh-token';
+const TOKEN_KEY = 'youdlp-token';
+const REFRESH_TOKEN_KEY = 'youdlp-refresh-token';
 
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
             // Token过期，尝试刷新或清除
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(REFRESH_TOKEN_KEY);
-            localStorage.removeItem('v-asset-user');
+            localStorage.removeItem('youdlp-user');
             // 触发事件通知组件
             window.dispatchEvent(new CustomEvent('auth:logout'));
         }

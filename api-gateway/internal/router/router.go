@@ -4,12 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
-	"vasset/api-gateway/internal/client"
-	"vasset/api-gateway/internal/config"
-	"vasset/api-gateway/internal/handler"
-	"vasset/api-gateway/internal/middleware"
-	"vasset/api-gateway/internal/mq"
-	"vasset/api-gateway/internal/ws"
+	"youdlp/api-gateway/internal/client"
+	"youdlp/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/handler"
+	"youdlp/api-gateway/internal/middleware"
+	"youdlp/api-gateway/internal/mq"
+	"youdlp/api-gateway/internal/ws"
 )
 
 // Dependencies 路由依赖

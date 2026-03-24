@@ -43,7 +43,7 @@ func (j *JWTUtil) GenerateToken(userID string, email, role string) (string, erro
 			ExpiresAt: jwt.NewNumericDate(now.Add(j.accessTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    "vasset-auth",
+			Issuer:    "youdlp-auth",
 		},
 	}
 
@@ -58,7 +58,7 @@ func (j *JWTUtil) GenerateRefreshToken(userID string) (string, error) {
 		Subject:   userID,
 		ExpiresAt: jwt.NewNumericDate(now.Add(j.refreshTokenTTL)),
 		IssuedAt:  jwt.NewNumericDate(now),
-		Issuer:    "vasset-auth",
+		Issuer:    "youdlp-auth",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

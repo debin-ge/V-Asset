@@ -9,8 +9,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/repository"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/repository"
 )
 
 func TestGrantWelcomeCreditIdempotent(t *testing.T) {

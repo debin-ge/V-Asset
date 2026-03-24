@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/repository"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/repository"
 )
 
 // StatsService 统计服务

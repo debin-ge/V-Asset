@@ -29,7 +29,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	_, err := interceptor(
 		ctx,
 		struct{}{},
-		&grpc.UnaryServerInfo{FullMethod: "/vasset.AssetService/GetFileInfo"},
+		&grpc.UnaryServerInfo{FullMethod: "/youdlp.AssetService/GetFileInfo"},
 		func(context.Context, any) (any, error) {
 			return "ok", nil
 		},
@@ -47,7 +47,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	if got := payload["request_id"]; got != "rid-asset" {
 		t.Fatalf("request_id = %#v, want %q", got, "rid-asset")
 	}
-	if got := payload["grpc_method"]; got != "/vasset.AssetService/GetFileInfo" {
+	if got := payload["grpc_method"]; got != "/youdlp.AssetService/GetFileInfo" {
 		t.Fatalf("grpc_method = %#v, want GetFileInfo method", got)
 	}
 	if got := payload["grpc_code"]; got != "OK" {

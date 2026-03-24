@@ -13,7 +13,7 @@ grpc:
   timeout: 300s  # YouTube + 代理链路可能超过 90s，需明显放宽
 
 admin_session:
-  cookie_name: "vasset_admin_session"
+  cookie_name: "youdlp_admin_session"
   ttl: 24h
   secure: false
   cookie_domain: ""
@@ -27,8 +27,8 @@ redis:
 
 rabbitmq:
   url: "amqp://guest:guest@localhost:5672/"
-  exchange: "vasset.download.exchange"
-  queue: "vasset.download.queue"
+  exchange: "youdlp.download.exchange"
+  queue: "youdlp.download.queue"
   routing_key: "download.quick"
 
 cors:

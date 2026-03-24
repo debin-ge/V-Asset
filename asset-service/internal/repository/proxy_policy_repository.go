@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 // ProxyPolicyRepository 代理来源策略仓储

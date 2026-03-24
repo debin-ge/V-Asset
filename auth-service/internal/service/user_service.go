@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"vasset/auth-service/internal/config"
-	"vasset/auth-service/internal/models"
-	"vasset/auth-service/internal/repository"
-	"vasset/auth-service/internal/utils"
+	"youdlp/auth-service/internal/config"
+	"youdlp/auth-service/internal/models"
+	"youdlp/auth-service/internal/repository"
+	"youdlp/auth-service/internal/utils"
 )
 
 // UserService 用户服务

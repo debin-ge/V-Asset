@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/models"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/models"
+	pb "youdlp/api-gateway/proto"
 )
 
 // ProxyHandler 代理管理处理器

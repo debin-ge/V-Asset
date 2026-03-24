@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	assetpb "vasset/asset-service/proto"
-	"vasset/auth-service/internal/config"
-	"vasset/auth-service/internal/models"
-	"vasset/auth-service/internal/repository"
-	"vasset/auth-service/internal/utils"
+	assetpb "youdlp/asset-service/proto"
+	"youdlp/auth-service/internal/config"
+	"youdlp/auth-service/internal/models"
+	"youdlp/auth-service/internal/repository"
+	"youdlp/auth-service/internal/utils"
 
 	"github.com/redis/go-redis/v9"
 )

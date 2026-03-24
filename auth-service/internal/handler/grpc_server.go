@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/auth-service/internal/service"
-	pb "vasset/auth-service/proto"
+	"youdlp/auth-service/internal/service"
+	pb "youdlp/auth-service/proto"
 )
 
 // GRPCServer gRPC 服务器

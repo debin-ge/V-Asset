@@ -49,7 +49,7 @@ func TestLoadConfigAcceptsStrongJWTSecretInProduction(t *testing.T) {
 func writeTempConfig(t *testing.T, secret string) string {
 	t.Helper()
 
-	content := "server:\n  port: 9001\ndatabase:\n  host: localhost\n  port: 5432\n  user: vasset\n  password: password\n  dbname: vasset\n  sslmode: disable\n  max_open_conns: 10\n  max_idle_conns: 5\n  conn_max_lifetime: 3600s\nredis:\n  addr: localhost:6379\n  password: \"\"\n  db: 0\n  pool_size: 10\njwt:\n  secret: \"" + secret + "\"\n  access_token_ttl: 86400\n  refresh_token_ttl: 604800\npassword:\n  bcrypt_cost: 10\n  min_length: 8\n  require_uppercase: true\n  require_lowercase: true\n  require_number: true\n  require_special: false\nsession:\n  max_sessions_per_user: 5\n  cleanup_interval: 3600\n"
+	content := "server:\n  port: 9001\ndatabase:\n  host: localhost\n  port: 5432\n  user: youdlp\n  password: password\n  dbname: youdlp\n  sslmode: disable\n  max_open_conns: 10\n  max_idle_conns: 5\n  conn_max_lifetime: 3600s\nredis:\n  addr: localhost:6379\n  password: \"\"\n  db: 0\n  pool_size: 10\njwt:\n  secret: \"" + secret + "\"\n  access_token_ttl: 86400\n  refresh_token_ttl: 604800\npassword:\n  bcrypt_cost: 10\n  min_length: 8\n  require_uppercase: true\n  require_lowercase: true\n  require_number: true\n  require_special: false\nsession:\n  max_sessions_per_user: 5\n  cleanup_interval: 3600\n"
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.yaml")

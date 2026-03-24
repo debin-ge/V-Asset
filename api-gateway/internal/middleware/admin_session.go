@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/config"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/config"
+	pb "youdlp/api-gateway/proto"
 )
 
 func AdminSession(adminClient pb.AdminServiceClient, cfg *config.AdminSessionConfig, timeout time.Duration) gin.HandlerFunc {

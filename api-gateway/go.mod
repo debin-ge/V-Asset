@@ -1,4 +1,4 @@
-module vasset/api-gateway
+module youdlp/api-gateway
 
 go 1.24.0
 

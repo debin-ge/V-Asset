@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
-	pb "vasset/api-gateway/proto"
+	pb "youdlp/api-gateway/proto"
 )
 
 // JWTAuth JWT 认证中间件

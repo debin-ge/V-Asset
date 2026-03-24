@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 // HistoryRepository 历史记录仓储

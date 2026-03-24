@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"vasset/api-gateway/internal/config"
-	"vasset/api-gateway/internal/trace"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/trace"
+	pb "youdlp/api-gateway/proto"
 )
 
 // GRPCClients gRPC 客户端集合

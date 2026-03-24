@@ -1,4 +1,4 @@
-module vasset/asset-service
+module youdlp/asset-service
 
 go 1.24.0
 

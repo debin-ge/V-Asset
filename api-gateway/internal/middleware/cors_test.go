@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/config"
 )
 
 func TestCORSEmptyAllowlistDoesNotReflectOrigin(t *testing.T) {

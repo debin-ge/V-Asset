@@ -3,7 +3,7 @@ package detector
 import (
 	"regexp"
 
-	"vasset/media-service/internal/utils"
+	"youdlp/media-service/internal/utils"
 )
 
 // PlatformDetector 平台检测器

@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/service"
-	pb "vasset/asset-service/proto"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/service"
+	pb "youdlp/asset-service/proto"
 )
 
 // CookieHandler Cookie gRPC 处理器

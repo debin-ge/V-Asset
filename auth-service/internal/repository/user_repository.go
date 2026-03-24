@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"vasset/auth-service/internal/models"
+	"youdlp/auth-service/internal/models"
 )
 
 // UserRepository 用户数据访问层

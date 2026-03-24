@@ -11,7 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/trace"
+	"youdlp/api-gateway/internal/trace"
 )
 
 func TestLoggerPropagatesIncomingRequestIDToContext(t *testing.T) {

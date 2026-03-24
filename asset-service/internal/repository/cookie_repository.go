@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 // CookieRepository Cookie 数据访问层

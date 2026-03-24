@@ -8,8 +8,8 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"vasset/media-service/internal/download/config"
-	"vasset/media-service/internal/download/models"
+	"youdlp/media-service/internal/download/config"
+	"youdlp/media-service/internal/download/models"
 )
 
 // TaskConsumer MQ 任务消费者

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth;
 
-option go_package = "vasset/api-gateway/proto;pb";
+option go_package = "youdlp/api-gateway/proto;pb";
 
 service AuthService {
   // 用户注册

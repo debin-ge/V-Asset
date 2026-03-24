@@ -16,15 +16,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	assetpb "vasset/asset-service/proto"
-	"vasset/auth-service/internal/config"
-	"vasset/auth-service/internal/database"
-	"vasset/auth-service/internal/handler"
-	"vasset/auth-service/internal/observability"
-	"vasset/auth-service/internal/repository"
-	"vasset/auth-service/internal/service"
-	"vasset/auth-service/internal/utils"
-	pb "vasset/auth-service/proto"
+	assetpb "youdlp/asset-service/proto"
+	"youdlp/auth-service/internal/config"
+	"youdlp/auth-service/internal/database"
+	"youdlp/auth-service/internal/handler"
+	"youdlp/auth-service/internal/observability"
+	"youdlp/auth-service/internal/repository"
+	"youdlp/auth-service/internal/service"
+	"youdlp/auth-service/internal/utils"
+	pb "youdlp/auth-service/proto"
 )
 
 func main() {

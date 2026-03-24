@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package admin;
 
-option go_package = "vasset/admin-service/proto;pb";
+option go_package = "youdlp/admin-service/proto;pb";
 
 service AdminService {
   rpc Login(AdminLoginRequest) returns (AdminLoginResponse);

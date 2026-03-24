@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 type WelcomeCreditSettingsRepository struct {

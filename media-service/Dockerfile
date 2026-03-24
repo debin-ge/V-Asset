@@ -33,7 +33,7 @@ COPY --from=builder /app/config ./config
 COPY --from=builder /app/migrations ./migrations
 
 # 创建运行目录
-RUN mkdir -p /etc/vasset/cookies /data/vasset/tmp /data/vasset/archive
+RUN mkdir -p /etc/youdlp/cookies /data/youdlp/tmp /data/youdlp/archive
 
 # 设置时区
 ENV TZ=Asia/Shanghai

@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"vasset/media-service/internal/redact"
-	pb "vasset/media-service/proto"
+	"youdlp/media-service/internal/redact"
+	pb "youdlp/media-service/proto"
 )
 
 // AssetClient Asset服务客户端

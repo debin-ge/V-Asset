@@ -7,13 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"vasset/media-service/internal/download/config"
-	"vasset/media-service/internal/download/models"
-	"vasset/media-service/internal/download/repository"
-	"vasset/media-service/internal/download/storage"
-	"vasset/media-service/internal/download/ytdlp"
-	"vasset/media-service/internal/platformpolicy"
-	"vasset/media-service/internal/redact"
+	"youdlp/media-service/internal/download/config"
+	"youdlp/media-service/internal/download/models"
+	"youdlp/media-service/internal/download/repository"
+	"youdlp/media-service/internal/download/storage"
+	"youdlp/media-service/internal/download/ytdlp"
+	"youdlp/media-service/internal/platformpolicy"
+	"youdlp/media-service/internal/redact"
 )
 
 // AssetClientInterface Asset 服务客户端接口

@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "vasset/admin-service/proto"
+	pb "youdlp/admin-service/proto"
 )
 
 type stubBillingAuthClient struct {

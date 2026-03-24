@@ -1,5 +1,5 @@
 # ================================================
-# V-Asset 后端服务统一 Docker Compose 配置
+# YouDLP 后端服务统一 Docker Compose 配置
 # 快速启动: docker-compose up -d
 # ================================================
 
@@ -8,7 +8,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: vasset-nginx
+    container_name: youdlp-nginx
     ports:
       - "80:80"
     volumes:
@@ -26,11 +26,11 @@ services:
   # PostgreSQL 数据库
   postgres:
     image: postgres:15-alpine
-    container_name: vasset-postgres
+    container_name: youdlp-postgres
     environment:
-      POSTGRES_USER: ${DB_USER:-vasset}
+      POSTGRES_USER: ${DB_USER:-youdlp}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-      POSTGRES_DB: ${DB_NAME:-vasset}
+      POSTGRES_DB: ${DB_NAME:-youdlp}
       TZ: Asia/Shanghai
       PGTZ: Asia/Shanghai
     ports:
@@ -38,7 +38,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U vasset" ]
+      test: [ "CMD-SHELL", "pg_isready -U youdlp" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,7 +47,7 @@ services:
   # Redis 缓存
   redis:
     image: redis:7-alpine
-    container_name: vasset-redis
+    container_name: youdlp-redis
     expose:
       - "6379"
     volumes:
@@ -62,7 +62,7 @@ services:
   # RabbitMQ 消息队列
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: vasset-rabbitmq
+    container_name: youdlp-rabbitmq
     expose:
       - "5672" # AMQP
       - "15672" # 管理界面
@@ -85,18 +85,18 @@ services:
     build:
       context: .
       dockerfile: auth-service/Dockerfile
-    container_name: vasset-auth
+    container_name: youdlp-auth
     expose:
       - "9001"
     environment:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_USER=${DB_USER:-vasset}
+      - DB_USER=${DB_USER:-youdlp}
       - DB_PASSWORD=${DB_PASSWORD:-password}
-      - DB_NAME=${DB_NAME:-vasset}
+      - DB_NAME=${DB_NAME:-youdlp}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - JWT_SECRET=${JWT_SECRET:-vasset-dev-jwt-secret-2026-safe-key}
+      - JWT_SECRET=${JWT_SECRET:-youdlp-dev-jwt-secret-2026-safe-key}
       - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
     depends_on:
       postgres:
@@ -113,22 +113,22 @@ services:
   # Media Service - 解析+下载融合服务
   media-service:
     build: ./media-service
-    container_name: vasset-media
+    container_name: youdlp-media
     expose:
       - "9002"
     environment:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_USER=${DB_USER:-vasset}
+      - DB_USER=${DB_USER:-youdlp}
       - DB_PASSWORD=${DB_PASSWORD:-password}
-      - DB_NAME=${DB_NAME:-vasset}
+      - DB_NAME=${DB_NAME:-youdlp}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
       - ASSET_SERVICE_ADDR=${ASSET_SERVICE_ADDR:-asset-service:9004}
     volumes:
-      - cookies-data:/etc/vasset/cookies
-      - vasset-data:/data/vasset
+      - cookies-data:/etc/youdlp/cookies
+      - youdlp-data:/data/youdlp
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,21 +146,21 @@ services:
   # Asset Service - 资产服务
   asset-service:
     build: ./asset-service
-    container_name: vasset-asset
+    container_name: youdlp-asset
     expose:
       - "9004"
     environment:
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_USER=${DB_USER:-vasset}
+      - DB_USER=${DB_USER:-youdlp}
       - DB_PASSWORD=${DB_PASSWORD:-password}
-      - DB_NAME=${DB_NAME:-vasset}
+      - DB_NAME=${DB_NAME:-youdlp}
       - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - PROXY_API_ENDPOINT=${PROXY_API_ENDPOINT:-}
       - PROXY_API_KEY=${PROXY_API_KEY:-}
     volumes:
-      - vasset-data:/data/vasset
+      - youdlp-data:/data/youdlp
     depends_on:
       postgres:
         condition: service_healthy
@@ -178,7 +178,7 @@ services:
   # API Gateway - API 网关
   api-gateway:
     build: ./api-gateway
-    container_name: vasset-gateway
+    container_name: youdlp-gateway
     expose:
       - "8080"
     environment:
@@ -193,12 +193,12 @@ services:
       - CORS_ALLOWED_METHODS=${CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,OPTIONS,PATCH}
       - CORS_ALLOWED_HEADERS=${CORS_ALLOWED_HEADERS:-Content-Type,Authorization}
       - BILLING_ENABLED=${BILLING_ENABLED:-true}
-      - ADMIN_SESSION_COOKIE_NAME=${ADMIN_SESSION_COOKIE_NAME:-vasset_admin_session}
+      - ADMIN_SESSION_COOKIE_NAME=${ADMIN_SESSION_COOKIE_NAME:-youdlp_admin_session}
       - ADMIN_SESSION_SECURE=${ADMIN_SESSION_SECURE:-false}
       - ADMIN_SESSION_SAME_SITE=${ADMIN_SESSION_SAME_SITE:-Lax}
       - ADMIN_SESSION_COOKIE_DOMAIN=${ADMIN_SESSION_COOKIE_DOMAIN:-}
     volumes:
-      - vasset-data:/data/vasset:ro # 只读挂载，用于提供文件下载
+      - youdlp-data:/data/youdlp:ro # 只读挂载，用于提供文件下载
     depends_on:
       - auth-service
       - media-service
@@ -213,7 +213,7 @@ services:
   # Admin Service - 管理后台后端
   admin-service:
     build: ./admin-service
-    container_name: vasset-admin-service
+    container_name: youdlp-admin-service
     expose:
       - "9005"
     environment:
@@ -242,7 +242,7 @@ services:
       args:
         APP_VERSION: ${APP_VERSION:-}
         BUILD_TIMESTAMP: ${BUILD_TIMESTAMP:-}
-    container_name: vasset-frontend
+    container_name: youdlp-frontend
     expose:
       - "3000"
     environment:
@@ -259,7 +259,7 @@ services:
   # Admin Frontend - 管理后台前端
   admin-frontend:
     build: ./admin-frontend
-    container_name: vasset-admin-frontend
+    container_name: youdlp-admin-frontend
     expose:
       - "3001"
     environment:
@@ -277,7 +277,7 @@ volumes:
     driver: local
   rabbitmq-data:
     driver: local
-  vasset-data:
+  youdlp-data:
     driver: local
   cookies-data:
     driver: local
@@ -285,4 +285,4 @@ volumes:
 # ==================== 网络 ====================
 networks:
   default:
-    name: vasset-network
+    name: youdlp-network

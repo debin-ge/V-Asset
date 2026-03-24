@@ -3,21 +3,21 @@ version: '3.8'
 services:
   media-service:
     build: .
-    container_name: vasset-media-service
+    container_name: youdlp-media-service
     ports:
       - "9002:9002"
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     volumes:
       - ./config:/root/config
-      - ./cookies:/etc/vasset/cookies
+      - ./cookies:/etc/youdlp/cookies
     depends_on:
       - redis
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    container_name: vasset-media-redis
+    container_name: youdlp-media-redis
     ports:
       - "6379:6379"
     volumes:

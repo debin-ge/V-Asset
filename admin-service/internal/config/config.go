@@ -115,7 +115,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		cfg.Session.TTL = 24 * time.Hour
 	}
 	if cfg.Session.CookieName == "" {
-		cfg.Session.CookieName = "vasset_admin_session"
+		cfg.Session.CookieName = "youdlp_admin_session"
 	}
 	if cfg.Session.SameSite == "" {
 		cfg.Session.SameSite = "Lax"

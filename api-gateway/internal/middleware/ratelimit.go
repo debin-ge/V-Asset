@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 
-	"vasset/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/config"
 )
 
 // RateLimiter 限流器

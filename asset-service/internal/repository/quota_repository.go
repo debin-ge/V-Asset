@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 // QuotaRepository 配额仓储

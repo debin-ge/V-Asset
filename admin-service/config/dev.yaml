@@ -19,7 +19,7 @@ redis:
 session:
   secret: admin-session-secret
   ttl: 24h
-  cookie_name: vasset_admin_session
+  cookie_name: youdlp_admin_session
   secure: false
   cookie_domain: ""
   same_site: Lax

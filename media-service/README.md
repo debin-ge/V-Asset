@@ -1,6 +1,6 @@
 # Media Service
 
-`media-service` 是 V-Asset 的解析与下载执行服务。
+`media-service` 是 YouDLP 的解析与下载执行服务。
 
 它既承担同步的“链接解析”能力，也承担异步的“下载任务消费与执行”能力。
 

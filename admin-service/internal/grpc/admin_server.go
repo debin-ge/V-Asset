@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/admin-service/internal/models"
-	"vasset/admin-service/internal/service"
-	pb "vasset/admin-service/proto"
+	"youdlp/admin-service/internal/models"
+	"youdlp/admin-service/internal/service"
+	pb "youdlp/admin-service/proto"
 )
 
 type AdminServer struct {

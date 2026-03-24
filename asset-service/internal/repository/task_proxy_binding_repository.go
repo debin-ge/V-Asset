@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 // ErrTaskProxyBindingAlreadyExists 表示任务绑定已存在

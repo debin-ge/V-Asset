@@ -3,7 +3,7 @@ package adapter
 import (
 	"context"
 
-	"vasset/media-service/internal/ytdlp"
+	"youdlp/media-service/internal/ytdlp"
 )
 
 // BilibiliAdapter Bilibili平台适配器

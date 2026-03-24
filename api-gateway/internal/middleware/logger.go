@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"vasset/api-gateway/internal/trace"
+	"youdlp/api-gateway/internal/trace"
 )
 
 // Logger 请求日志中间件

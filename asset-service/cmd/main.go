@@ -12,13 +12,13 @@ import (
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 
-	"vasset/asset-service/internal/config"
-	"vasset/asset-service/internal/database"
-	"vasset/asset-service/internal/handler"
-	"vasset/asset-service/internal/observability"
-	"vasset/asset-service/internal/repository"
-	"vasset/asset-service/internal/service"
-	pb "vasset/asset-service/proto"
+	"youdlp/asset-service/internal/config"
+	"youdlp/asset-service/internal/database"
+	"youdlp/asset-service/internal/handler"
+	"youdlp/asset-service/internal/observability"
+	"youdlp/asset-service/internal/repository"
+	"youdlp/asset-service/internal/service"
+	pb "youdlp/asset-service/proto"
 )
 
 func main() {

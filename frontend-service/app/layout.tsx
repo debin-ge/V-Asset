@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { getResolvedAppVersion } from "@/lib/runtime-config.server";
 
 export const metadata: Metadata = {
-  title: "V-Asset - Video Asset Platform",
+  title: "YouDLP - Video Asset Platform",
   description: "Download videos from various platforms with ease.",
 };
 

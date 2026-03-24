@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"time"
 
-	"vasset/asset-service/internal/config"
-	"vasset/asset-service/internal/models"
-	dynamicproxy "vasset/asset-service/internal/proxy"
-	"vasset/asset-service/internal/repository"
+	"youdlp/asset-service/internal/config"
+	"youdlp/asset-service/internal/models"
+	dynamicproxy "youdlp/asset-service/internal/proxy"
+	"youdlp/asset-service/internal/repository"
 )
 
 // ProxyService 代理业务逻辑层

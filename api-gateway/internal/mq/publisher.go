@@ -10,7 +10,7 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"vasset/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/config"
 )
 
 // DownloadTask 下载任务消息

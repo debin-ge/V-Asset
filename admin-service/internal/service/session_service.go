@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 
-	"vasset/admin-service/internal/models"
+	"youdlp/admin-service/internal/models"
 )
 
 type SessionService struct {

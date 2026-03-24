@@ -677,7 +677,7 @@ const file_proto_downloader_proto_rawDesc = "" +
 	"\rGetTaskStatus\x12 .downloader.GetTaskStatusRequest\x1a!.downloader.GetTaskStatusResponse\x12c\n" +
 	"\x12GetDownloadHistory\x12%.downloader.GetDownloadHistoryRequest\x1a&.downloader.GetDownloadHistoryResponse\x12K\n" +
 	"\n" +
-	"CancelTask\x12\x1d.downloader.CancelTaskRequest\x1a\x1e.downloader.CancelTaskResponseB\x1fZ\x1dvasset/media-service/proto;pbb\x06proto3"
+	"CancelTask\x12\x1d.downloader.CancelTaskRequest\x1a\x1e.downloader.CancelTaskResponseB\x1fZ\x1dyoudlp/media-service/proto;pbb\x06proto3"
 
 var (
 	file_proto_downloader_proto_rawDescOnce sync.Once

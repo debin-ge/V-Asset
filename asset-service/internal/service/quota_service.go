@@ -6,9 +6,9 @@ import (
 	"errors"
 	"time"
 
-	"vasset/asset-service/internal/config"
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/repository"
+	"youdlp/asset-service/internal/config"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/repository"
 )
 
 type quotaRepository interface {

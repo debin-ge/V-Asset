@@ -7,9 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	assetpb "vasset/asset-service/proto"
-	"vasset/auth-service/internal/config"
-	"vasset/auth-service/internal/models"
+	assetpb "youdlp/asset-service/proto"
+	"youdlp/auth-service/internal/config"
+	"youdlp/auth-service/internal/models"
 )
 
 type stubRegisterUserService struct {

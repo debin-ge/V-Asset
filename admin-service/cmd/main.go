@@ -13,12 +13,12 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
-	"vasset/admin-service/internal/client"
-	"vasset/admin-service/internal/config"
-	grpcserver "vasset/admin-service/internal/grpc"
-	"vasset/admin-service/internal/observability"
-	"vasset/admin-service/internal/service"
-	pb "vasset/admin-service/proto"
+	"youdlp/admin-service/internal/client"
+	"youdlp/admin-service/internal/config"
+	grpcserver "youdlp/admin-service/internal/grpc"
+	"youdlp/admin-service/internal/observability"
+	"youdlp/admin-service/internal/service"
+	pb "youdlp/admin-service/proto"
 )
 
 func main() {

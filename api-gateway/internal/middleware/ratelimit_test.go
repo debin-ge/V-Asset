@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"vasset/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/config"
 )
 
 func TestMaybeCleanupRemovesExpiredUserAndIPLimiters(t *testing.T) {

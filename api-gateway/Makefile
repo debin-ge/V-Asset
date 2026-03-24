@@ -21,7 +21,7 @@ clean:
 
 # Docker 构建
 docker-build:
-	docker build -t vasset/api-gateway:latest .
+	docker build -t youdlp/api-gateway:latest .
 
 # 启动 Docker Compose
 docker-up:

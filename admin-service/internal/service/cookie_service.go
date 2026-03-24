@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"vasset/admin-service/internal/models"
-	pb "vasset/admin-service/proto"
+	"youdlp/admin-service/internal/models"
+	pb "youdlp/admin-service/proto"
 )
 
 type CookieService struct {

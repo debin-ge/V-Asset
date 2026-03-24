@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
-	"vasset/api-gateway/internal/models"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/models"
+	pb "youdlp/api-gateway/proto"
 )
 
 type fakeAuthVerifier struct {

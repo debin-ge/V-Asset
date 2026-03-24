@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/repository"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/repository"
 )
 
 // HistoryService 历史服务

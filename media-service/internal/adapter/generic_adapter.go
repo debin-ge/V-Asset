@@ -3,7 +3,7 @@ package adapter
 import (
 	"context"
 
-	"vasset/media-service/internal/ytdlp"
+	"youdlp/media-service/internal/ytdlp"
 )
 
 // GenericAdapter 通用平台适配器

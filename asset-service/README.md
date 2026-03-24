@@ -1,6 +1,6 @@
 # Asset Service - 资产管理服务
 
-Asset Service 是 V-Asset 视频下载平台的资产管理微服务，负责用户下载历史管理、配额控制和数据统计。
+Asset Service 是 YouDLP 视频下载平台的资产管理微服务，负责用户下载历史管理、配额控制和数据统计。
 
 ## 功能特性
 

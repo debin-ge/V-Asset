@@ -36,9 +36,9 @@ platforms:
 database:
   host: localhost
   port: 5432
-  user: vasset
+  user: youdlp
   password: password
-  dbname: vasset
+  dbname: youdlp
   sslmode: disable
   max_open_conns: 50
   max_idle_conns: 10
@@ -46,7 +46,7 @@ database:
 
 rabbitmq:
   url: "amqp://guest:guest@localhost:5672/"
-  queue: "vasset.download.queue"
+  queue: "youdlp.download.queue"
   prefetch_count: 5
 
 worker:
@@ -58,7 +58,7 @@ ytdlp:
   timeout: 1800
   max_concurrent: 10
   concurrent_fragments: 3
-  cookies_dir: "/etc/vasset/cookies"
+  cookies_dir: "/etc/youdlp/cookies"
   proxy: ""
   default_args:
     - "--no-playlist"
@@ -100,7 +100,7 @@ ytdlp_update:
   auto_update: false
 
 storage:
-  base_path: "/data/vasset"
+  base_path: "/data/youdlp"
   tmp_ttl: 86400
 
 cleanup:
@@ -114,7 +114,7 @@ retry:
   max_interval: 3600
 
 asset_service:
-  addr: "vasset-asset:9004"
+  addr: "youdlp-asset:9004"
   timeout: 30
   enable_cookies: true
   cookie_temp_dir: "/tmp/media-cookies"

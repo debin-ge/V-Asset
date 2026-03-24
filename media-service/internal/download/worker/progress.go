@@ -8,8 +8,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"vasset/media-service/internal/download/models"
-	"vasset/media-service/internal/download/ytdlp"
+	"youdlp/media-service/internal/download/models"
+	"youdlp/media-service/internal/download/ytdlp"
 )
 
 // ProgressPublisher 进度发布器

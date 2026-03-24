@@ -682,7 +682,7 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\vGetUserInfo\x12\x18.auth.GetUserInfoRequest\x1a\x19.auth.GetUserInfoResponse\x12]\n" +
 	"\x14GetPlatformUserStats\x12!.auth.GetPlatformUserStatsRequest\x1a\".auth.GetPlatformUserStatsResponse\x12B\n" +
 	"\vSearchUsers\x12\x18.auth.SearchUsersRequest\x1a\x19.auth.SearchUsersResponse\x12H\n" +
-	"\rBatchGetUsers\x12\x1a.auth.BatchGetUsersRequest\x1a\x1b.auth.BatchGetUsersResponseB\x1fZ\x1dvasset/admin-service/proto;pbb\x06proto3"
+	"\rBatchGetUsers\x12\x1a.auth.BatchGetUsersRequest\x1a\x1b.auth.BatchGetUsersResponseB\x1fZ\x1dyoudlp/admin-service/proto;pbb\x06proto3"
 
 var (
 	file_proto_auth_proto_rawDescOnce sync.Once

@@ -3,8 +3,8 @@ package service
 import (
 	"testing"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/money"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/money"
 )
 
 func TestSetOrderAwaitingShortfallMarksOrder(t *testing.T) {

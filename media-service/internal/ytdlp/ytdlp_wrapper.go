@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"vasset/media-service/internal/config"
-	"vasset/media-service/internal/redact"
-	"vasset/media-service/internal/utils"
+	"youdlp/media-service/internal/config"
+	"youdlp/media-service/internal/redact"
+	"youdlp/media-service/internal/utils"
 )
 
 // VideoInfo yt-dlp返回的视频信息

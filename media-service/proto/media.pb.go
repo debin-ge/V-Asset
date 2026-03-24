@@ -517,7 +517,7 @@ const file_proto_media_proto_rawDesc = "" +
 	"\amessage\x18\x03 \x01(\tR\amessage2\x91\x01\n" +
 	"\fMediaService\x12;\n" +
 	"\bParseURL\x12\x16.media.ParseURLRequest\x1a\x17.media.ParseURLResponse\x12D\n" +
-	"\vValidateURL\x12\x19.media.ValidateURLRequest\x1a\x1a.media.ValidateURLResponseB\x1fZ\x1dvasset/media-service/proto;pbb\x06proto3"
+	"\vValidateURL\x12\x19.media.ValidateURLRequest\x1a\x1a.media.ValidateURLResponseB\x1fZ\x1dyoudlp/media-service/proto;pbb\x06proto3"
 
 var (
 	file_proto_media_proto_rawDescOnce sync.Once

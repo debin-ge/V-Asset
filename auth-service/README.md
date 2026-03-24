@@ -1,6 +1,6 @@
 # Auth Service
 
-`auth-service` 是 V-Asset 的用户认证服务，负责用户账户、登录、JWT、Refresh Token 和用户会话管理。
+`auth-service` 是 YouDLP 的用户认证服务，负责用户账户、登录、JWT、Refresh Token 和用户会话管理。
 
 ## 当前职责
 

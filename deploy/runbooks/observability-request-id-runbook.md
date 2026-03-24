@@ -25,7 +25,7 @@ RID="rid-123"
 跨关键容器快速查一遍：
 
 ```bash
-for s in vasset-nginx vasset-gateway vasset-auth vasset-media vasset-asset vasset-admin-service; do
+for s in youdlp-nginx youdlp-gateway youdlp-auth youdlp-media youdlp-asset youdlp-admin-service; do
   echo "========== $s =========="
   docker logs "$s" --since "30m" 2>&1 | grep "$RID" || true
 done

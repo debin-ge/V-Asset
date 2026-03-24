@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/media-service/internal/service"
-	"vasset/media-service/internal/utils"
-	pb "vasset/media-service/proto"
+	"youdlp/media-service/internal/service"
+	"youdlp/media-service/internal/utils"
+	pb "youdlp/media-service/proto"
 )
 
 // GRPCServer gRPC服务器

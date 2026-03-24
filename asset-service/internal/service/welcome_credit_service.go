@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/money"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/money"
 )
 
 var ErrInvalidWelcomeCreditAmount = errors.New("welcome credit amount cannot be negative")

@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"vasset/media-service/internal/platformpolicy"
+	"youdlp/media-service/internal/platformpolicy"
 )
 
 // Config 应用配置

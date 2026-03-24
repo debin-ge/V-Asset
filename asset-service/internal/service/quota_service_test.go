@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"vasset/asset-service/internal/config"
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/config"
+	"youdlp/asset-service/internal/models"
 )
 
 type fakeQuotaRepository struct {

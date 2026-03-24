@@ -19,8 +19,8 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
-	"vasset/api-gateway/internal/middleware"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/middleware"
+	pb "youdlp/api-gateway/proto"
 )
 
 var upgrader = websocket.Upgrader{

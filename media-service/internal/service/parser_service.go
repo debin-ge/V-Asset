@@ -7,15 +7,15 @@ import (
 
 	"go.uber.org/zap"
 
-	"vasset/media-service/internal/adapter"
-	"vasset/media-service/internal/cache"
-	"vasset/media-service/internal/client"
-	"vasset/media-service/internal/config"
-	"vasset/media-service/internal/detector"
-	"vasset/media-service/internal/platformpolicy"
-	"vasset/media-service/internal/redact"
-	"vasset/media-service/internal/utils"
-	"vasset/media-service/internal/ytdlp"
+	"youdlp/media-service/internal/adapter"
+	"youdlp/media-service/internal/cache"
+	"youdlp/media-service/internal/client"
+	"youdlp/media-service/internal/config"
+	"youdlp/media-service/internal/detector"
+	"youdlp/media-service/internal/platformpolicy"
+	"youdlp/media-service/internal/redact"
+	"youdlp/media-service/internal/utils"
+	"youdlp/media-service/internal/ytdlp"
 )
 
 // ParserService 解析服务

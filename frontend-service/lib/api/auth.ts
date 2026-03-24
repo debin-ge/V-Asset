@@ -64,7 +64,7 @@ export const authApi = {
             await apiClient.post('/api/v1/auth/logout');
         } finally {
             tokenManager.clearTokens();
-            localStorage.removeItem('v-asset-user');
+            localStorage.removeItem('youdlp-user');
         }
     },
 };

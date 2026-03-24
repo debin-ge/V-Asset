@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/api-gateway/internal/models"
+	"youdlp/api-gateway/internal/models"
 )
 
 func grpcErrorMessage(err error) string {

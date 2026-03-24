@@ -11,10 +11,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	"vasset/api-gateway/internal/client"
-	"vasset/api-gateway/internal/config"
-	"vasset/api-gateway/internal/models"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/client"
+	"youdlp/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/models"
+	pb "youdlp/api-gateway/proto"
 )
 
 func TestBillingRoutesRequireAuth(t *testing.T) {
@@ -79,7 +79,7 @@ func TestAdminWelcomeCreditRoutesRequireSession(t *testing.T) {
 		Config: &config.Config{
 			RateLimit:    config.RateLimitConfig{GlobalRPS: 100, UserRPS: 100, Burst: 100},
 			FileDownload: config.FileDownloadConfig{BufferSize: 32768},
-			AdminSession: config.AdminSessionConfig{CookieName: "vasset_admin_session"},
+			AdminSession: config.AdminSessionConfig{CookieName: "youdlp_admin_session"},
 			GRPC:         config.GRPCConfig{Timeout: time.Second},
 		},
 		GRPCClients: &client.GRPCClients{AdminClient: &fakeAdminClientForWelcomeCreditRoutes{}},
@@ -126,14 +126,14 @@ func TestAdminWelcomeCreditRoutesProxySettings(t *testing.T) {
 		Config: &config.Config{
 			RateLimit:    config.RateLimitConfig{GlobalRPS: 100, UserRPS: 100, Burst: 100},
 			FileDownload: config.FileDownloadConfig{BufferSize: 32768},
-			AdminSession: config.AdminSessionConfig{CookieName: "vasset_admin_session"},
+			AdminSession: config.AdminSessionConfig{CookieName: "youdlp_admin_session"},
 			GRPC:         config.GRPCConfig{Timeout: time.Second},
 		},
 		GRPCClients: &client.GRPCClients{AdminClient: adminClient},
 	})
 
 	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/admin/billing/welcome-credit", nil)
-	getReq.AddCookie(&http.Cookie{Name: "vasset_admin_session", Value: "session-1"})
+	getReq.AddCookie(&http.Cookie{Name: "youdlp_admin_session", Value: "session-1"})
 	getW := httptest.NewRecorder()
 	r.ServeHTTP(getW, getReq)
 	if getW.Code != http.StatusOK {
@@ -153,7 +153,7 @@ func TestAdminWelcomeCreditRoutesProxySettings(t *testing.T) {
 	}
 	putReq := httptest.NewRequest(http.MethodPut, "/api/v1/admin/billing/welcome-credit", bytes.NewBuffer(updateBodyBytes))
 	putReq.Header.Set("Content-Type", "application/json")
-	putReq.AddCookie(&http.Cookie{Name: "vasset_admin_session", Value: "session-1"})
+	putReq.AddCookie(&http.Cookie{Name: "youdlp_admin_session", Value: "session-1"})
 	putW := httptest.NewRecorder()
 	r.ServeHTTP(putW, putReq)
 	if putW.Code != http.StatusOK {

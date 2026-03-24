@@ -10,7 +10,7 @@ import (
 
 	"github.com/lib/pq"
 
-	"vasset/asset-service/internal/models"
+	"youdlp/asset-service/internal/models"
 )
 
 // ErrProxyAlreadyExists 表示同一 IP 和端口的代理已存在

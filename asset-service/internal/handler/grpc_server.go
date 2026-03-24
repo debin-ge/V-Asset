@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/asset-service/internal/config"
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/money"
-	"vasset/asset-service/internal/service"
-	pb "vasset/asset-service/proto"
+	"youdlp/asset-service/internal/config"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/money"
+	"youdlp/asset-service/internal/service"
+	pb "youdlp/asset-service/proto"
 )
 
 // GRPCServer gRPC 服务器

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package media;
 
-option go_package = "vasset/media-service/proto;pb";
+option go_package = "youdlp/media-service/proto;pb";
 
 service MediaService {
   rpc ParseURL(ParseURLRequest) returns (ParseURLResponse);

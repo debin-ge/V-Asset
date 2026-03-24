@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"vasset/media-service/internal/download/config"
+	"youdlp/media-service/internal/download/config"
 )
 
 // YtDLPUpdater 定时检测 yt-dlp 版本更新。
@@ -135,7 +135,7 @@ func (u *YtDLPUpdater) getLatestReleaseVersion(ctx context.Context) (string, err
 		return "", err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "vasset-media-service")
+	req.Header.Set("User-Agent", "youdlp-media-service")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

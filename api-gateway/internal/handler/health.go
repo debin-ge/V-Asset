@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"vasset/api-gateway/internal/client"
-	"vasset/api-gateway/internal/models"
-	"vasset/api-gateway/internal/mq"
-	"vasset/api-gateway/internal/ws"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/client"
+	"youdlp/api-gateway/internal/models"
+	"youdlp/api-gateway/internal/mq"
+	"youdlp/api-gateway/internal/ws"
+	pb "youdlp/api-gateway/proto"
 )
 
 // HealthHandler 健康检查处理器

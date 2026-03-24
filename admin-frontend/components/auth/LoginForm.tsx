@@ -38,7 +38,7 @@ export function LoginForm() {
           <ShieldCheck className="size-5" />
         </div>
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/70">V-Asset Admin</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/70">YouDLP Admin</p>
           <CardTitle className="text-3xl tracking-tight">管理员登录</CardTitle>
           <CardDescription>统一管理平台流量、代理资源和会话资产。</CardDescription>
         </div>
@@ -47,7 +47,7 @@ export function LoginForm() {
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <label className="grid gap-2">
             <span className="text-sm font-medium text-foreground">邮箱</span>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@vasset.local" />
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@youdlp.local" />
           </label>
           <label className="grid gap-2">
             <span className="text-sm font-medium text-foreground">密码</span>

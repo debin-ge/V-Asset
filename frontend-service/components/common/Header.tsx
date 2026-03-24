@@ -22,10 +22,10 @@ export function Header() {
         <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between px-6 backdrop-blur-md bg-white/10 border-b border-white/10">
             <Link href="/" className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                    V
+                    Y
                 </div>
                 <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                    V-Asset
+                    YouDLP
                 </span>
             </Link>
 

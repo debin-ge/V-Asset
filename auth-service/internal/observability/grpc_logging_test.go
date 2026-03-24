@@ -29,7 +29,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	_, err := interceptor(
 		ctx,
 		struct{}{},
-		&grpc.UnaryServerInfo{FullMethod: "/vasset.AuthService/Login"},
+		&grpc.UnaryServerInfo{FullMethod: "/youdlp.AuthService/Login"},
 		func(context.Context, any) (any, error) {
 			return "ok", nil
 		},
@@ -47,7 +47,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	if got := payload["request_id"]; got != "rid-123" {
 		t.Fatalf("request_id = %#v, want %q", got, "rid-123")
 	}
-	if got := payload["grpc_method"]; got != "/vasset.AuthService/Login" {
+	if got := payload["grpc_method"]; got != "/youdlp.AuthService/Login" {
 		t.Fatalf("grpc_method = %#v, want login method", got)
 	}
 	if got := payload["grpc_code"]; got != "OK" {

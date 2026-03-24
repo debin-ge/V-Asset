@@ -78,7 +78,7 @@ export function AuthModal() {
         <Dialog open={isAuthModalOpen} onOpenChange={(open) => { if (!open) { resetForm(); closeAuthModal(); } }}>
             <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] text-white border-gray-800">
                 <DialogHeader>
-                    <DialogTitle className="text-center text-2xl font-bold">V-Asset</DialogTitle>
+                    <DialogTitle className="text-center text-2xl font-bold">YouDLP</DialogTitle>
                     <DialogDescription className="text-center text-gray-400">
                         Sign in to access your downloads and history
                     </DialogDescription>

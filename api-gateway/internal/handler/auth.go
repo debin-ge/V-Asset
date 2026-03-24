@@ -8,9 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
-	"vasset/api-gateway/internal/middleware"
-	"vasset/api-gateway/internal/models"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/middleware"
+	"youdlp/api-gateway/internal/models"
+	pb "youdlp/api-gateway/proto"
 )
 
 // AuthHandler 认证处理器

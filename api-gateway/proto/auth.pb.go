@@ -1265,7 +1265,7 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\rUpdateProfile\x12\x1a.auth.UpdateProfileRequest\x1a\x1b.auth.UpdateProfileResponse\x12K\n" +
 	"\x0eChangePassword\x12\x1b.auth.ChangePasswordRequest\x1a\x1c.auth.ChangePasswordResponse\x12B\n" +
 	"\vSearchUsers\x12\x18.auth.SearchUsersRequest\x1a\x19.auth.SearchUsersResponse\x12H\n" +
-	"\rBatchGetUsers\x12\x1a.auth.BatchGetUsersRequest\x1a\x1b.auth.BatchGetUsersResponseB\x1dZ\x1bvasset/api-gateway/proto;pbb\x06proto3"
+	"\rBatchGetUsers\x12\x1a.auth.BatchGetUsersRequest\x1a\x1b.auth.BatchGetUsersResponseB\x1dZ\x1byoudlp/api-gateway/proto;pbb\x06proto3"
 
 var (
 	file_proto_auth_proto_rawDescOnce sync.Once

@@ -1,6 +1,6 @@
-# V-Asset
+# YouDLP
 
-V-Asset 是一个面向视频解析、下载交付、资产沉淀和后台治理的完整平台，而不只是对 `yt-dlp` 的简单封装。
+YouDLP 是一个面向视频解析、下载交付、资产沉淀和后台治理的完整平台，而不只是对 `yt-dlp` 的简单封装。
 
 当前仓库已经形成一套清晰的分层：
 
@@ -39,7 +39,7 @@ V-Asset 是一个面向视频解析、下载交付、资产沉淀和后台治理
 ### 1. 两套鉴权模型并存
 
 - 用户侧接口走 JWT，前台通过 `Authorization: Bearer <token>` 访问 `/api/v1/*`
-- 管理后台走独立的 HttpOnly Cookie，会话名默认是 `vasset_admin_session`
+- 管理后台走独立的 HttpOnly Cookie，会话名默认是 `youdlp_admin_session`
 
 这两套模型在代码中是明确分开的：
 

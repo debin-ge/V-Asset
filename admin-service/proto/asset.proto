@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package asset;
 
-option go_package = "vasset/asset-service/proto;pb";
+option go_package = "youdlp/asset-service/proto;pb";
 
 service AssetService {
   // 获取下载历史

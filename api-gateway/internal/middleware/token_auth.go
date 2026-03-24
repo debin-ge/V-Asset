@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
-	pb "vasset/api-gateway/proto"
+	pb "youdlp/api-gateway/proto"
 )
 
 // AuthClaims 是认证通过后可复用的身份信息。

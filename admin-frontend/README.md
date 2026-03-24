@@ -1,6 +1,6 @@
 # Admin Frontend
 
-`admin-frontend` 是 V-Asset 的管理后台前端，基于 Next.js App Router 构建。
+`admin-frontend` 是 YouDLP 的管理后台前端，基于 Next.js App Router 构建。
 
 当前它是正式的后台控制台入口，对应的部署基路径为：
 

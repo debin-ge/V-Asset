@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"vasset/asset-service/internal/money"
+	"youdlp/asset-service/internal/money"
 )
 
 const (

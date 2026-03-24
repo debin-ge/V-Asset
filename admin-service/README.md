@@ -1,6 +1,6 @@
 # Admin Service
 
-`admin-service` 是 V-Asset 管理后台的聚合后端。
+`admin-service` 是 YouDLP 管理后台的聚合后端。
 
 它不直接持有用户、代理或 Cookie 的真源数据，而是为管理后台提供：
 

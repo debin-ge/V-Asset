@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/middleware"
-	"vasset/api-gateway/internal/models"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/middleware"
+	"youdlp/api-gateway/internal/models"
+	pb "youdlp/api-gateway/proto"
 )
 
 type BillingHandler struct {

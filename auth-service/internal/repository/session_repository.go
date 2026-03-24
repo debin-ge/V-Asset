@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"vasset/auth-service/internal/models"
+	"youdlp/auth-service/internal/models"
 )
 
 // SessionRepository 会话数据访问层

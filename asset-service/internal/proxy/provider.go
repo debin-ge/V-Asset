@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"vasset/asset-service/internal/config"
+	"youdlp/asset-service/internal/config"
 )
 
 // Lease 表示一次动态代理租约。

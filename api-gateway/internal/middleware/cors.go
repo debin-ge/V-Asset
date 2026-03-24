@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/config"
 )
 
 // CORS 跨域中间件

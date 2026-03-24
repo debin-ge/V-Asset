@@ -26,7 +26,7 @@ export default function LoginPage() {
       <div className="relative grid w-full max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="hidden rounded-[36px] border border-border/60 bg-slate-950 p-8 text-slate-100 shadow-2xl shadow-slate-950/10 lg:flex lg:flex-col lg:justify-between">
           <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200/80">V-Asset Control Plane</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200/80">YouDLP Control Plane</p>
             <h1 className="max-w-lg text-5xl font-semibold leading-tight tracking-tight">
               把代理资源、Cookies 和平台请求统一放进一个可操作的控制台。
             </h1>

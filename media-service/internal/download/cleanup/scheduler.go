@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
-	"vasset/media-service/internal/download/config"
-	"vasset/media-service/internal/download/repository"
-	"vasset/media-service/internal/download/storage"
+	"youdlp/media-service/internal/download/config"
+	"youdlp/media-service/internal/download/repository"
+	"youdlp/media-service/internal/download/storage"
 )
 
 // Scheduler 清理调度器

@@ -8791,7 +8791,7 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\vListCookies\x12\x19.asset.ListCookiesRequest\x1a\x1a.asset.ListCookiesResponse\x12Y\n" +
 	"\x12GetAvailableCookie\x12 .asset.GetAvailableCookieRequest\x1a!.asset.GetAvailableCookieResponse\x12V\n" +
 	"\x11ReportCookieUsage\x12\x1f.asset.ReportCookieUsageRequest\x1a .asset.ReportCookieUsageResponse\x12G\n" +
-	"\fFreezeCookie\x12\x1a.asset.FreezeCookieRequest\x1a\x1b.asset.FreezeCookieResponseB\x1fZ\x1dvasset/asset-service/proto;pbb\x06proto3"
+	"\fFreezeCookie\x12\x1a.asset.FreezeCookieRequest\x1a\x1b.asset.FreezeCookieResponseB\x1fZ\x1dyoudlp/asset-service/proto;pbb\x06proto3"
 
 var (
 	file_proto_asset_proto_rawDescOnce sync.Once

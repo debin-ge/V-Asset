@@ -9,7 +9,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"vasset/media-service/internal/utils"
+	"youdlp/media-service/internal/utils"
 )
 
 // ParseResult 解析结果

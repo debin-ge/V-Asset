@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"vasset/api-gateway/internal/trace"
+	"youdlp/api-gateway/internal/trace"
 )
 
 func TestRequestIDUnaryClientInterceptorInjectsMetadata(t *testing.T) {
@@ -15,7 +15,7 @@ func TestRequestIDUnaryClientInterceptorInjectsMetadata(t *testing.T) {
 
 	err := requestIDUnaryClientInterceptor(
 		ctx,
-		"/vasset.AuthService/Login",
+		"/youdlp.AuthService/Login",
 		nil,
 		nil,
 		nil,
@@ -38,7 +38,7 @@ func TestRequestIDUnaryClientInterceptorInjectsMetadata(t *testing.T) {
 func TestRequestIDUnaryClientInterceptorSkipsWhenMissing(t *testing.T) {
 	err := requestIDUnaryClientInterceptor(
 		context.Background(),
-		"/vasset.AuthService/Login",
+		"/youdlp.AuthService/Login",
 		nil,
 		nil,
 		nil,

@@ -1,6 +1,6 @@
 # API Gateway
 
-`api-gateway` 是 V-Asset 的统一 HTTP / WebSocket 入口，负责把浏览器请求转换为对后端 gRPC 服务和消息队列的调用。
+`api-gateway` 是 YouDLP 的统一 HTTP / WebSocket 入口，负责把浏览器请求转换为对后端 gRPC 服务和消息队列的调用。
 
 ## 这个服务负责什么
 
@@ -105,7 +105,7 @@
 ### 管理端
 
 - 依赖管理员会话 Cookie
-- 默认 Cookie 名：`vasset_admin_session`
+- 默认 Cookie 名：`youdlp_admin_session`
 - 由 `admin-service` 校验并通过 Gateway 中间件注入管理员信息
 
 ## 下载与文件交付

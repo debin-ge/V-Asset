@@ -4,9 +4,9 @@ server:
 database:
   host: localhost
   port: 5432
-  user: vasset
+  user: youdlp
   password: password
-  dbname: vasset
+  dbname: youdlp
   sslmode: disable
   max_open_conns: 50
   max_idle_conns: 10

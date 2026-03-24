@@ -29,7 +29,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	_, err := interceptor(
 		ctx,
 		struct{}{},
-		&grpc.UnaryServerInfo{FullMethod: "/vasset.AdminService/GetCurrentUser"},
+		&grpc.UnaryServerInfo{FullMethod: "/youdlp.AdminService/GetCurrentUser"},
 		func(context.Context, any) (any, error) {
 			return "ok", nil
 		},
@@ -47,7 +47,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	if got := payload["request_id"]; got != "rid-admin" {
 		t.Fatalf("request_id = %#v, want %q", got, "rid-admin")
 	}
-	if got := payload["grpc_method"]; got != "/vasset.AdminService/GetCurrentUser" {
+	if got := payload["grpc_method"]; got != "/youdlp.AdminService/GetCurrentUser" {
 		t.Fatalf("grpc_method = %#v, want GetCurrentUser method", got)
 	}
 	if got := payload["grpc_code"]; got != "OK" {

@@ -21,7 +21,7 @@ clean:
 
 # Docker 构建
 docker-build:
-	docker build -t vasset/auth-service:latest .
+	docker build -t youdlp/auth-service:latest .
 
 # 启动 Docker Compose
 docker-up:

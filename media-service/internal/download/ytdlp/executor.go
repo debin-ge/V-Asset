@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"vasset/media-service/internal/download/config"
-	"vasset/media-service/internal/download/models"
-	"vasset/media-service/internal/platformpolicy"
-	"vasset/media-service/internal/redact"
+	"youdlp/media-service/internal/download/config"
+	"youdlp/media-service/internal/download/models"
+	"youdlp/media-service/internal/platformpolicy"
+	"youdlp/media-service/internal/redact"
 )
 
 const (

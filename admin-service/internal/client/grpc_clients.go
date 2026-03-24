@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"vasset/admin-service/internal/config"
-	pb "vasset/admin-service/proto"
+	"youdlp/admin-service/internal/config"
+	pb "youdlp/admin-service/proto"
 )
 
 type GRPCClients struct {

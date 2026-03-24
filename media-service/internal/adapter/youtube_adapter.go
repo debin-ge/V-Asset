@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"vasset/media-service/internal/utils"
-	"vasset/media-service/internal/ytdlp"
+	"youdlp/media-service/internal/utils"
+	"youdlp/media-service/internal/ytdlp"
 )
 
 // YouTubeAdapter YouTube平台适配器

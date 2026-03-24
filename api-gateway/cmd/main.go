@@ -12,11 +12,11 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"vasset/api-gateway/internal/client"
-	"vasset/api-gateway/internal/config"
-	"vasset/api-gateway/internal/mq"
-	"vasset/api-gateway/internal/router"
-	"vasset/api-gateway/internal/ws"
+	"youdlp/api-gateway/internal/client"
+	"youdlp/api-gateway/internal/config"
+	"youdlp/api-gateway/internal/mq"
+	"youdlp/api-gateway/internal/router"
+	"youdlp/api-gateway/internal/ws"
 )
 
 func main() {

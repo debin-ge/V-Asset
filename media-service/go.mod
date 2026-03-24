@@ -1,4 +1,4 @@
-module vasset/media-service
+module youdlp/media-service
 
 go 1.24.0
 

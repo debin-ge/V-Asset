@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"vasset/api-gateway/internal/ws"
+	"youdlp/api-gateway/internal/ws"
 )
 
 // WebSocketHandler WebSocket 处理器

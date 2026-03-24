@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package downloader;
 
-option go_package = "vasset/media-service/proto;pb";
+option go_package = "youdlp/media-service/proto;pb";
 
 service DownloaderService {
   // 获取任务状态

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth;
 
-option go_package = "vasset/admin-service/proto;pb";
+option go_package = "youdlp/admin-service/proto;pb";
 
 service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse);

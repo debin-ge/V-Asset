@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"time"
 
-	"vasset/media-service/internal/download/config"
-	"vasset/media-service/internal/download/models"
+	"youdlp/media-service/internal/download/config"
+	"youdlp/media-service/internal/download/models"
 )
 
 // PathGenerator 路径生成器
@@ -44,14 +44,14 @@ func (g *PathGenerator) GeneratePath(task *models.DownloadTask) (string, error) 
 
 	switch task.Mode {
 	case "quick_download":
-		// 临时文件: /data/vasset/tmp/{task_id}/video.mp4
+		// 临时文件: /data/youdlp/tmp/{task_id}/video.mp4
 		filePath = filepath.Join(
 			g.basePath, "tmp", task.TaskID,
 			fmt.Sprintf("%s.%s", safeTitle, format),
 		)
 
 	case "archive":
-		// 归档文件: /data/vasset/archive/{user_id}/{YYYYMMDD}/video_{timestamp}.mp4
+		// 归档文件: /data/youdlp/archive/{user_id}/{YYYYMMDD}/video_{timestamp}.mp4
 		date := time.Now().Format("20060102")
 		timestamp := time.Now().Unix()
 

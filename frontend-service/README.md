@@ -1,6 +1,6 @@
 # Frontend Service
 
-`frontend-service` 是 V-Asset 的用户前台，基于 Next.js App Router 构建。
+`frontend-service` 是 YouDLP 的用户前台，基于 Next.js App Router 构建。
 
 它负责用户侧的核心体验：
 

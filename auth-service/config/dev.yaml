@@ -4,9 +4,9 @@ server:
 database:
   host: localhost
   port: 5432
-  user: vasset
+  user: youdlp
   password: password
-  dbname: vasset
+  dbname: youdlp
   sslmode: disable
   max_open_conns: 100
   max_idle_conns: 10
@@ -19,7 +19,7 @@ redis:
   pool_size: 50
   
 jwt:
-  secret: "vasset-dev-jwt-secret-2026-safe-key"
+  secret: "youdlp-dev-jwt-secret-2026-safe-key"
   access_token_ttl: 86400    # 24小时
   refresh_token_ttl: 604800  # 7天
   

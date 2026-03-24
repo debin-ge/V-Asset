@@ -4662,7 +4662,7 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\x11GetBillingPricing\x12\x11.admin.AdminEmpty\x1a\".admin.AdminBillingPricingResponse\x12c\n" +
 	"\x14UpdateBillingPricing\x12'.admin.AdminUpdateBillingPricingRequest\x1a\".admin.AdminBillingPricingResponse\x12X\n" +
 	"\x18GetWelcomeCreditSettings\x12\x11.admin.AdminEmpty\x1a).admin.AdminWelcomeCreditSettingsResponse\x12x\n" +
-	"\x1bUpdateWelcomeCreditSettings\x12..admin.AdminUpdateWelcomeCreditSettingsRequest\x1a).admin.AdminWelcomeCreditSettingsResponseB\x1fZ\x1dvasset/admin-service/proto;pbb\x06proto3"
+	"\x1bUpdateWelcomeCreditSettings\x12..admin.AdminUpdateWelcomeCreditSettingsRequest\x1a).admin.AdminWelcomeCreditSettingsResponseB\x1fZ\x1dyoudlp/admin-service/proto;pbb\x06proto3"
 
 var (
 	file_proto_admin_proto_rawDescOnce sync.Once

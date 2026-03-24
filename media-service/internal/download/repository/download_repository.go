@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"vasset/media-service/internal/download/models"
+	"youdlp/media-service/internal/download/models"
 )
 
 // DownloadRepository 下载记录数据访问层

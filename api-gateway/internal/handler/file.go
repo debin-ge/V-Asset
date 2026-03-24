@@ -15,9 +15,9 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
-	"vasset/api-gateway/internal/middleware"
-	"vasset/api-gateway/internal/models"
-	pb "vasset/api-gateway/proto"
+	"youdlp/api-gateway/internal/middleware"
+	"youdlp/api-gateway/internal/models"
+	pb "youdlp/api-gateway/proto"
 )
 
 const downloadTicketTTL = 90 * time.Second

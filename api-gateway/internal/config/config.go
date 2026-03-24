@@ -180,7 +180,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		cfg.GRPC.AdminService = "localhost:9005"
 	}
 	if cfg.AdminSession.CookieName == "" {
-		cfg.AdminSession.CookieName = "vasset_admin_session"
+		cfg.AdminSession.CookieName = "youdlp_admin_session"
 	}
 	if cfg.AdminSession.TTL == 0 {
 		cfg.AdminSession.TTL = 24 * time.Hour

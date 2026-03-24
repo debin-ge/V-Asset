@@ -8,8 +8,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 
-	"vasset/asset-service/internal/models"
-	"vasset/asset-service/internal/money"
+	"youdlp/asset-service/internal/models"
+	"youdlp/asset-service/internal/money"
 )
 
 func TestWelcomeCreditSettingsRepositoryRoundTrip(t *testing.T) {

@@ -29,7 +29,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	_, err := interceptor(
 		ctx,
 		struct{}{},
-		&grpc.UnaryServerInfo{FullMethod: "/vasset.MediaService/ParseURL"},
+		&grpc.UnaryServerInfo{FullMethod: "/youdlp.MediaService/ParseURL"},
 		func(context.Context, any) (any, error) {
 			return "ok", nil
 		},
@@ -47,7 +47,7 @@ func TestUnaryServerInterceptorLogsRequestIDAndMethod(t *testing.T) {
 	if got := payload["request_id"]; got != "rid-media" {
 		t.Fatalf("request_id = %#v, want %q", got, "rid-media")
 	}
-	if got := payload["grpc_method"]; got != "/vasset.MediaService/ParseURL" {
+	if got := payload["grpc_method"]; got != "/youdlp.MediaService/ParseURL" {
 		t.Fatalf("grpc_method = %#v, want ParseURL method", got)
 	}
 	if got := payload["grpc_code"]; got != "OK" {

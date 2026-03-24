@@ -26,7 +26,7 @@ export function Header() {
           </div>
           <div>
             <p className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-lg font-bold text-transparent">
-              V-Asset
+              YouDLP
             </p>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">
               Admin Frontend
