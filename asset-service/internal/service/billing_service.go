@@ -90,8 +90,8 @@ func (s *BillingService) GrantWelcomeCredit(ctx context.Context, userID, operati
 		return account, nil, nil, false, nil
 	}
 
-	amountMinor := settings.AmountYuan.Mul(money.FromInt64(100))
-	if amountMinor.Cmp(money.Zero()) <= 0 {
+	amountYuan := settings.AmountYuan
+	if amountYuan.Cmp(money.Zero()) <= 0 {
 		return account, nil, nil, false, nil
 	}
 
@@ -105,27 +105,27 @@ func (s *BillingService) GrantWelcomeCredit(ctx context.Context, userID, operati
 			return err
 		}
 
-		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(amountMinor)
-		account.TotalRechargedFen = account.TotalRechargedFen.Add(amountMinor)
+		account.AvailableBalanceYuan = account.AvailableBalanceYuan.Add(amountYuan)
+		account.TotalRechargedYuan = account.TotalRechargedYuan.Add(amountYuan)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
 		now := time.Now()
 		entry = &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   userID,
-			OperationID:              operationID,
-			EntryType:                models.LedgerEntryTypeManualTopup,
-			Scene:                    models.BillingSceneOnboarding,
-			ActionAmountFen:          abs64(amountMinor),
-			AvailableDeltaFen:        amountMinor,
-			ReservedDeltaFen:         money.Zero(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   models.WelcomeCreditReasonCode,
-			CreatedAt:                now,
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    userID,
+			OperationID:               operationID,
+			EntryType:                 models.LedgerEntryTypeManualTopup,
+			Scene:                     models.BillingSceneOnboarding,
+			ActionAmountYuan:          abs64(amountYuan),
+			AvailableDeltaYuan:        amountYuan,
+			ReservedDeltaYuan:         money.Zero(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    models.WelcomeCreditReasonCode,
+			CreatedAt:                 now,
 		}
 		if err := s.repo.CreateLedgerTx(ctx, tx, entry); err != nil {
 			return err
@@ -191,17 +191,23 @@ func (s *BillingService) EstimateDownloadBilling(ctx context.Context, selectedFo
 	}
 
 	fileBytes := selectedFormatFilesize
-	isEstimated := fileBytes <= 0
-	reason := ""
 	if fileBytes <= 0 {
-		reason = "unknown_filesize"
+		return &models.BillingEstimate{
+			EstimatedIngressBytes: 0,
+			EstimatedEgressBytes:  0,
+			EstimatedTrafficBytes: 0,
+			EstimatedCostYuan:     money.Zero(),
+			PricingVersion:        pricing.Version,
+			IsEstimated:           true,
+			EstimateReason:        "unknown_filesize",
+		}, pricing, nil
 	}
 
-	ingressCost, err := calculateAmountFen(fileBytes, pricing.IngressPriceFenPerGiB)
+	ingressCost, err := calculateAmountYuan(fileBytes, pricing.IngressPriceYuanPerGB)
 	if err != nil {
 		return nil, nil, err
 	}
-	egressCost, err := calculateAmountFen(fileBytes, pricing.EgressPriceFenPerGiB)
+	egressCost, err := calculateAmountYuan(fileBytes, pricing.EgressPriceYuanPerGB)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -210,10 +216,10 @@ func (s *BillingService) EstimateDownloadBilling(ctx context.Context, selectedFo
 		EstimatedIngressBytes: fileBytes,
 		EstimatedEgressBytes:  fileBytes,
 		EstimatedTrafficBytes: fileBytes * 2,
-		EstimatedCostFen:      ingressCost.Add(egressCost),
+		EstimatedCostYuan:     ingressCost.Add(egressCost),
 		PricingVersion:        pricing.Version,
-		IsEstimated:           isEstimated,
-		EstimateReason:        reason,
+		IsEstimated:           false,
+		EstimateReason:        "",
 	}, pricing, nil
 }
 
@@ -244,12 +250,12 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 		if err != nil {
 			return err
 		}
-		if account.AvailableBalanceFen.Cmp(estimate.EstimatedCostFen) < 0 {
+		if account.AvailableBalanceYuan.Cmp(estimate.EstimatedCostYuan) < 0 {
 			return ErrInsufficientBalance
 		}
 
-		account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(estimate.EstimatedCostFen)
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Add(estimate.EstimatedCostFen)
+		account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(estimate.EstimatedCostYuan)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(estimate.EstimatedCostYuan)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
@@ -266,7 +272,7 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 			EstimatedIngressBytes: estimate.EstimatedIngressBytes,
 			EstimatedEgressBytes:  estimate.EstimatedEgressBytes,
 			EstimatedTrafficBytes: estimate.EstimatedTrafficBytes,
-			HeldAmountFen:         estimate.EstimatedCostFen,
+			HeldAmountYuan:        estimate.EstimatedCostYuan,
 			Remark:                "initial download hold",
 			CreatedAt:             now,
 			UpdatedAt:             now,
@@ -276,41 +282,41 @@ func (s *BillingService) HoldInitialDownload(ctx context.Context, userID string,
 		}
 
 		hold = &models.BillingHold{
-			HoldNo:            newBillingID("hold"),
-			OrderNo:           order.OrderNo,
-			UserID:            userID,
-			HistoryID:         historyID,
-			TaskID:            taskID,
-			HoldType:          models.BillingHoldTypeDownloadTotal,
-			FundingSource:     models.BillingFundingSourceNewReserve,
-			Status:            models.BillingHoldStatusHeld,
-			AmountFen:         estimate.EstimatedCostFen,
-			CapturedAmountFen: money.Zero(),
-			ReleasedAmountFen: money.Zero(),
-			CreatedAt:         now,
-			UpdatedAt:         now,
+			HoldNo:             newBillingID("hold"),
+			OrderNo:            order.OrderNo,
+			UserID:             userID,
+			HistoryID:          historyID,
+			TaskID:             taskID,
+			HoldType:           models.BillingHoldTypeDownloadTotal,
+			FundingSource:      models.BillingFundingSourceNewReserve,
+			Status:             models.BillingHoldStatusHeld,
+			AmountYuan:         estimate.EstimatedCostYuan,
+			CapturedAmountYuan: money.Zero(),
+			ReleasedAmountYuan: money.Zero(),
+			CreatedAt:          now,
+			UpdatedAt:          now,
 		}
 		if err := s.repo.CreateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
 		entry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   userID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                historyID,
-			TaskID:                   taskID,
-			EntryType:                models.LedgerEntryTypeHold,
-			Scene:                    models.BillingSceneDownload,
-			ActionAmountFen:          estimate.EstimatedCostFen,
-			AvailableDeltaFen:        estimate.EstimatedCostFen.Neg(),
-			ReservedDeltaFen:         estimate.EstimatedCostFen,
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   "hold initial download",
-			CreatedAt:                now,
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    userID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 historyID,
+			TaskID:                    taskID,
+			EntryType:                 models.LedgerEntryTypeHold,
+			Scene:                     models.BillingSceneDownload,
+			ActionAmountYuan:          estimate.EstimatedCostYuan,
+			AvailableDeltaYuan:        estimate.EstimatedCostYuan.Neg(),
+			ReservedDeltaYuan:         estimate.EstimatedCostYuan,
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    "hold initial download",
+			CreatedAt:                 now,
 		}
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
@@ -346,7 +352,7 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 		if err != nil {
 			return err
 		}
-		capturedAmount, err = calculateAmountFen(actualIngressBytes, pricing.IngressPriceFenPerGiB)
+		capturedAmount, err = calculateAmountYuan(actualIngressBytes, pricing.IngressPriceYuanPerGB)
 		if err != nil {
 			return err
 		}
@@ -354,8 +360,8 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 			if order.ActualIngressBytes != actualIngressBytes {
 				return fmt.Errorf("ingress usage already recorded for task %s", taskID)
 			}
-			if order.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ShortfallFen.IsZero() {
-				capturedAmount = order.CapturedAmountFen
+			if order.CapturedAmountYuan.Cmp(money.Zero()) > 0 && order.ShortfallYuan.IsZero() {
+				capturedAmount = order.CapturedAmountYuan
 				return nil
 			}
 		}
@@ -363,7 +369,7 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 		additionalReserve := money.Zero()
 		if remaining := remainingOrderReserve(order); remaining.Cmp(capturedAmount) < 0 {
 			additionalReserve = capturedAmount.Sub(remaining)
-			if account.AvailableBalanceFen.Cmp(additionalReserve) < 0 {
+			if account.AvailableBalanceYuan.Cmp(additionalReserve) < 0 {
 				if order.ActualIngressBytes == 0 {
 					order.ActualIngressBytes = actualIngressBytes
 					order.ActualTrafficBytes += actualIngressBytes
@@ -374,31 +380,31 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 				}
 				return ErrInsufficientBalance
 			}
-			account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(additionalReserve)
-			account.ReservedBalanceFen = account.ReservedBalanceFen.Add(additionalReserve)
-			order.HeldAmountFen = order.HeldAmountFen.Add(additionalReserve)
-			hold.AmountFen = hold.AmountFen.Add(additionalReserve)
+			account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(additionalReserve)
+			account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(additionalReserve)
+			order.HeldAmountYuan = order.HeldAmountYuan.Add(additionalReserve)
+			hold.AmountYuan = hold.AmountYuan.Add(additionalReserve)
 		}
 
 		if order.ActualIngressBytes == 0 {
 			order.ActualIngressBytes = actualIngressBytes
 			order.ActualTrafficBytes += actualIngressBytes
 		}
-		order.ShortfallFen = money.Zero()
-		order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
+		order.ShortfallYuan = money.Zero()
+		order.CapturedAmountYuan = order.CapturedAmountYuan.Add(capturedAmount)
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return err
 		}
 
-		hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
+		hold.CapturedAmountYuan = hold.CapturedAmountYuan.Add(capturedAmount)
 		hold.Status = deriveHoldStatus(hold)
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
-		account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(capturedAmount)
+		account.TotalSpentYuan = account.TotalSpentYuan.Add(capturedAmount)
 		account.TotalTrafficBytes += actualIngressBytes
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
@@ -407,22 +413,22 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 		now := time.Now()
 		if additionalReserve.Cmp(money.Zero()) > 0 {
 			holdEntry := &models.BillingLedgerEntry{
-				EntryNo:                  newBillingID("led"),
-				AccountID:                account.ID,
-				UserID:                   order.UserID,
-				OrderNo:                  order.OrderNo,
-				HoldNo:                   hold.HoldNo,
-				HistoryID:                order.HistoryID,
-				TaskID:                   order.TaskID,
-				EntryType:                models.LedgerEntryTypeHold,
-				Scene:                    order.Scene,
-				ActionAmountFen:          additionalReserve,
-				AvailableDeltaFen:        additionalReserve.Neg(),
-				ReservedDeltaFen:         additionalReserve,
-				BalanceAfterAvailableFen: account.AvailableBalanceFen,
-				BalanceAfterReservedFen:  account.ReservedBalanceFen.Add(capturedAmount),
-				Remark:                   "top up ingress reserve",
-				CreatedAt:                now,
+				EntryNo:                   newBillingID("led"),
+				AccountID:                 account.ID,
+				UserID:                    order.UserID,
+				OrderNo:                   order.OrderNo,
+				HoldNo:                    hold.HoldNo,
+				HistoryID:                 order.HistoryID,
+				TaskID:                    order.TaskID,
+				EntryType:                 models.LedgerEntryTypeHold,
+				Scene:                     order.Scene,
+				ActionAmountYuan:          additionalReserve,
+				AvailableDeltaYuan:        additionalReserve.Neg(),
+				ReservedDeltaYuan:         additionalReserve,
+				BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+				BalanceAfterReservedYuan:  account.ReservedBalanceYuan.Add(capturedAmount),
+				Remark:                    "top up ingress reserve",
+				CreatedAt:                 now,
 			}
 			if err := s.repo.CreateLedgerTx(ctx, tx, holdEntry); err != nil {
 				return err
@@ -437,8 +443,8 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 			TaskID:             order.TaskID,
 			Direction:          models.TrafficDirectionIngress,
 			TrafficBytes:       actualIngressBytes,
-			UnitPriceFenPerGiB: pricing.IngressPriceFenPerGiB,
-			AmountFen:          capturedAmount,
+			UnitPriceYuanPerGB: pricing.IngressPriceYuanPerGB,
+			AmountYuan:         capturedAmount,
 			PricingVersion:     pricing.Version,
 			SourceService:      "media-service",
 			Status:             models.TrafficUsageStatusConfirmed,
@@ -449,22 +455,22 @@ func (s *BillingService) CaptureIngressUsage(ctx context.Context, taskID string,
 		}
 
 		entry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   order.UserID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                order.HistoryID,
-			TaskID:                   order.TaskID,
-			EntryType:                models.LedgerEntryTypeCapture,
-			Scene:                    order.Scene,
-			ActionAmountFen:          capturedAmount,
-			AvailableDeltaFen:        money.Zero(),
-			ReservedDeltaFen:         capturedAmount.Neg(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   "capture ingress usage",
-			CreatedAt:                now,
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    order.UserID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 order.HistoryID,
+			TaskID:                    order.TaskID,
+			EntryType:                 models.LedgerEntryTypeCapture,
+			Scene:                     order.Scene,
+			ActionAmountYuan:          capturedAmount,
+			AvailableDeltaYuan:        money.Zero(),
+			ReservedDeltaYuan:         capturedAmount.Neg(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    "capture ingress usage",
+			CreatedAt:                 now,
 		}
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
@@ -501,13 +507,13 @@ func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, rea
 			return nil
 		}
 
-		hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releasedAmount)
+		hold.ReleasedAmountYuan = hold.ReleasedAmountYuan.Add(releasedAmount)
 		hold.Status = models.BillingHoldStatusReleased
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
-		order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releasedAmount)
+		order.ReleasedAmountYuan = order.ReleasedAmountYuan.Add(releasedAmount)
 		order.Remark = reason
 		order.Status = deriveOrderStatus(order)
 		if order.Status == models.BillingOrderStatusReleased {
@@ -518,29 +524,29 @@ func (s *BillingService) ReleaseInitialDownload(ctx context.Context, taskID, rea
 			return err
 		}
 
-		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releasedAmount)
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releasedAmount)
+		account.AvailableBalanceYuan = account.AvailableBalanceYuan.Add(releasedAmount)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(releasedAmount)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
 		entry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   order.UserID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                order.HistoryID,
-			TaskID:                   order.TaskID,
-			EntryType:                models.LedgerEntryTypeRelease,
-			Scene:                    order.Scene,
-			ActionAmountFen:          releasedAmount,
-			AvailableDeltaFen:        releasedAmount,
-			ReservedDeltaFen:         releasedAmount.Neg(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   reason,
-			CreatedAt:                time.Now(),
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    order.UserID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 order.HistoryID,
+			TaskID:                    order.TaskID,
+			EntryType:                 models.LedgerEntryTypeRelease,
+			Scene:                     order.Scene,
+			ActionAmountYuan:          releasedAmount,
+			AvailableDeltaYuan:        releasedAmount,
+			ReservedDeltaYuan:         releasedAmount.Neg(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    reason,
+			CreatedAt:                 time.Now(),
 		}
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
@@ -585,16 +591,16 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			if err != nil {
 				return err
 			}
-			requiredReserve, err = calculateAmountFen(fileSizeBytes, pricing.EgressPriceFenPerGiB)
+			requiredReserve, err = calculateAmountYuan(fileSizeBytes, pricing.EgressPriceYuanPerGB)
 			if err != nil {
 				return err
 			}
-			if account.AvailableBalanceFen.Cmp(requiredReserve) < 0 {
+			if account.AvailableBalanceYuan.Cmp(requiredReserve) < 0 {
 				return ErrInsufficientBalance
 			}
 
-			account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(requiredReserve)
-			account.ReservedBalanceFen = account.ReservedBalanceFen.Add(requiredReserve)
+			account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(requiredReserve)
+			account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(requiredReserve)
 			if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 				return err
 			}
@@ -608,7 +614,7 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 				PricingVersion:        pricing.Version,
 				EstimatedEgressBytes:  fileSizeBytes,
 				EstimatedTrafficBytes: fileSizeBytes,
-				HeldAmountFen:         requiredReserve,
+				HeldAmountYuan:        requiredReserve,
 				Remark:                "redownload hold",
 				CreatedAt:             now,
 				UpdatedAt:             now,
@@ -618,20 +624,20 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			}
 
 			entry := &models.BillingLedgerEntry{
-				EntryNo:                  newBillingID("led"),
-				AccountID:                account.ID,
-				UserID:                   userID,
-				OrderNo:                  order.OrderNo,
-				HistoryID:                historyID,
-				EntryType:                models.LedgerEntryTypeHold,
-				Scene:                    models.BillingSceneRedownload,
-				ActionAmountFen:          requiredReserve,
-				AvailableDeltaFen:        requiredReserve.Neg(),
-				ReservedDeltaFen:         requiredReserve,
-				BalanceAfterAvailableFen: account.AvailableBalanceFen,
-				BalanceAfterReservedFen:  account.ReservedBalanceFen,
-				Remark:                   "hold redownload transfer",
-				CreatedAt:                now,
+				EntryNo:                   newBillingID("led"),
+				AccountID:                 account.ID,
+				UserID:                    userID,
+				OrderNo:                   order.OrderNo,
+				HistoryID:                 historyID,
+				EntryType:                 models.LedgerEntryTypeHold,
+				Scene:                     models.BillingSceneRedownload,
+				ActionAmountYuan:          requiredReserve,
+				AvailableDeltaYuan:        requiredReserve.Neg(),
+				ReservedDeltaYuan:         requiredReserve,
+				BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+				BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+				Remark:                    "hold redownload transfer",
+				CreatedAt:                 now,
 			}
 			if err := s.repo.CreateLedgerTx(ctx, tx, entry); err != nil {
 				return err
@@ -641,7 +647,7 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			if err != nil {
 				return err
 			}
-			requiredReserve, err = calculateAmountFen(fileSizeBytes, pricing.EgressPriceFenPerGiB)
+			requiredReserve, err = calculateAmountYuan(fileSizeBytes, pricing.EgressPriceYuanPerGB)
 			if err != nil {
 				return err
 			}
@@ -649,16 +655,16 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 			remainingReserve := remainingOrderReserve(order)
 			additionalReserve := requiredReserve.Sub(remainingReserve)
 			if additionalReserve.Cmp(money.Zero()) > 0 {
-				if account.AvailableBalanceFen.Cmp(additionalReserve) < 0 {
+				if account.AvailableBalanceYuan.Cmp(additionalReserve) < 0 {
 					setOrderAwaitingShortfall(order, additionalReserve, "awaiting shortfall resolution: first transfer reserve")
 					if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 						return err
 					}
 					return ErrInsufficientBalance
 				}
-				account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(additionalReserve)
-				account.ReservedBalanceFen = account.ReservedBalanceFen.Add(additionalReserve)
-				order.HeldAmountFen = order.HeldAmountFen.Add(additionalReserve)
+				account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(additionalReserve)
+				account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(additionalReserve)
+				order.HeldAmountYuan = order.HeldAmountYuan.Add(additionalReserve)
 				fundingSource = models.BillingFundingSourceNewReserve
 
 				if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
@@ -669,21 +675,21 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 				}
 
 				entry := &models.BillingLedgerEntry{
-					EntryNo:                  newBillingID("led"),
-					AccountID:                account.ID,
-					UserID:                   userID,
-					OrderNo:                  order.OrderNo,
-					HistoryID:                historyID,
-					TaskID:                   order.TaskID,
-					EntryType:                models.LedgerEntryTypeHold,
-					Scene:                    order.Scene,
-					ActionAmountFen:          additionalReserve,
-					AvailableDeltaFen:        additionalReserve.Neg(),
-					ReservedDeltaFen:         additionalReserve,
-					BalanceAfterAvailableFen: account.AvailableBalanceFen,
-					BalanceAfterReservedFen:  account.ReservedBalanceFen,
-					Remark:                   "top up first transfer reserve",
-					CreatedAt:                now,
+					EntryNo:                   newBillingID("led"),
+					AccountID:                 account.ID,
+					UserID:                    userID,
+					OrderNo:                   order.OrderNo,
+					HistoryID:                 historyID,
+					TaskID:                    order.TaskID,
+					EntryType:                 models.LedgerEntryTypeHold,
+					Scene:                     order.Scene,
+					ActionAmountYuan:          additionalReserve,
+					AvailableDeltaYuan:        additionalReserve.Neg(),
+					ReservedDeltaYuan:         additionalReserve,
+					BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+					BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+					Remark:                    "top up first transfer reserve",
+					CreatedAt:                 now,
 				}
 				if err := s.repo.CreateLedgerTx(ctx, tx, entry); err != nil {
 					return err
@@ -694,19 +700,19 @@ func (s *BillingService) PrepareFileTransferBilling(ctx context.Context, userID 
 		}
 
 		hold = &models.BillingHold{
-			HoldNo:            newBillingID("hold"),
-			OrderNo:           order.OrderNo,
-			UserID:            userID,
-			HistoryID:         historyID,
-			TransferID:        newBillingID("trf"),
-			HoldType:          models.BillingHoldTypeFileTransfer,
-			FundingSource:     fundingSource,
-			Status:            models.BillingHoldStatusHeld,
-			AmountFen:         requiredReserve,
-			CapturedAmountFen: money.Zero(),
-			ReleasedAmountFen: money.Zero(),
-			CreatedAt:         now,
-			UpdatedAt:         now,
+			HoldNo:             newBillingID("hold"),
+			OrderNo:            order.OrderNo,
+			UserID:             userID,
+			HistoryID:          historyID,
+			TransferID:         newBillingID("trf"),
+			HoldType:           models.BillingHoldTypeFileTransfer,
+			FundingSource:      fundingSource,
+			Status:             models.BillingHoldStatusHeld,
+			AmountYuan:         requiredReserve,
+			CapturedAmountYuan: money.Zero(),
+			ReleasedAmountYuan: money.Zero(),
+			CreatedAt:          now,
+			UpdatedAt:          now,
 		}
 		return s.repo.CreateHoldTx(ctx, tx, hold)
 	})
@@ -742,20 +748,20 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 		if err != nil {
 			return err
 		}
-		capturedAmount, err = calculateAmountFen(actualEgressBytes, pricing.EgressPriceFenPerGiB)
+		capturedAmount, err = calculateAmountYuan(actualEgressBytes, pricing.EgressPriceYuanPerGB)
 		if err != nil {
 			return err
 		}
-		if hold.Status == models.BillingHoldStatusCaptured || (hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ShortfallFen.IsZero()) {
-			capturedAmount = hold.CapturedAmountFen
+		if hold.Status == models.BillingHoldStatusCaptured || (hold.CapturedAmountYuan.Cmp(money.Zero()) > 0 && order.ShortfallYuan.IsZero()) {
+			capturedAmount = hold.CapturedAmountYuan
 			return nil
 		}
 		if order.ActualEgressBytes > 0 {
 			if order.ActualEgressBytes != actualEgressBytes {
 				return fmt.Errorf("egress usage already recorded for transfer %s", transferID)
 			}
-			if hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ShortfallFen.IsZero() {
-				capturedAmount = hold.CapturedAmountFen
+			if hold.CapturedAmountYuan.Cmp(money.Zero()) > 0 && order.ShortfallYuan.IsZero() {
+				capturedAmount = hold.CapturedAmountYuan
 				return nil
 			}
 		}
@@ -763,7 +769,7 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 		additionalReserve := money.Zero()
 		if remaining := remainingOrderReserve(order); remaining.Cmp(capturedAmount) < 0 {
 			additionalReserve = capturedAmount.Sub(remaining)
-			if account.AvailableBalanceFen.Cmp(additionalReserve) < 0 {
+			if account.AvailableBalanceYuan.Cmp(additionalReserve) < 0 {
 				if order.ActualEgressBytes == 0 {
 					order.ActualEgressBytes += actualEgressBytes
 					order.ActualTrafficBytes += actualEgressBytes
@@ -774,16 +780,16 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 				}
 				return ErrInsufficientBalance
 			}
-			account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(additionalReserve)
-			account.ReservedBalanceFen = account.ReservedBalanceFen.Add(additionalReserve)
-			order.HeldAmountFen = order.HeldAmountFen.Add(additionalReserve)
+			account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(additionalReserve)
+			account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(additionalReserve)
+			order.HeldAmountYuan = order.HeldAmountYuan.Add(additionalReserve)
 		}
 
-		holdDiff := capturedAmount.Sub(hold.AmountFen)
+		holdDiff := capturedAmount.Sub(hold.AmountYuan)
 		if holdDiff.Cmp(money.Zero()) > 0 {
-			hold.AmountFen = hold.AmountFen.Add(holdDiff)
+			hold.AmountYuan = hold.AmountYuan.Add(holdDiff)
 		}
-		hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
+		hold.CapturedAmountYuan = hold.CapturedAmountYuan.Add(capturedAmount)
 		hold.Status = models.BillingHoldStatusCaptured
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
@@ -793,8 +799,8 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			order.ActualEgressBytes += actualEgressBytes
 			order.ActualTrafficBytes += actualEgressBytes
 		}
-		order.ShortfallFen = money.Zero()
-		order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
+		order.ShortfallYuan = money.Zero()
+		order.CapturedAmountYuan = order.CapturedAmountYuan.Add(capturedAmount)
 		order.Status = deriveOrderStatus(order)
 		now := time.Now()
 		if order.Status == models.BillingOrderStatusCaptured {
@@ -804,8 +810,8 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			return err
 		}
 
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
-		account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(capturedAmount)
+		account.TotalSpentYuan = account.TotalSpentYuan.Add(capturedAmount)
 		account.TotalTrafficBytes += actualEgressBytes
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
@@ -813,23 +819,23 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 
 		if additionalReserve.Cmp(money.Zero()) > 0 {
 			holdEntry := &models.BillingLedgerEntry{
-				EntryNo:                  newBillingID("led"),
-				AccountID:                account.ID,
-				UserID:                   order.UserID,
-				OrderNo:                  order.OrderNo,
-				HoldNo:                   hold.HoldNo,
-				HistoryID:                order.HistoryID,
-				TaskID:                   order.TaskID,
-				TransferID:               transferID,
-				EntryType:                models.LedgerEntryTypeHold,
-				Scene:                    order.Scene,
-				ActionAmountFen:          additionalReserve,
-				AvailableDeltaFen:        additionalReserve.Neg(),
-				ReservedDeltaFen:         additionalReserve,
-				BalanceAfterAvailableFen: account.AvailableBalanceFen,
-				BalanceAfterReservedFen:  account.ReservedBalanceFen.Add(capturedAmount),
-				Remark:                   "top up transfer reserve",
-				CreatedAt:                now,
+				EntryNo:                   newBillingID("led"),
+				AccountID:                 account.ID,
+				UserID:                    order.UserID,
+				OrderNo:                   order.OrderNo,
+				HoldNo:                    hold.HoldNo,
+				HistoryID:                 order.HistoryID,
+				TaskID:                    order.TaskID,
+				TransferID:                transferID,
+				EntryType:                 models.LedgerEntryTypeHold,
+				Scene:                     order.Scene,
+				ActionAmountYuan:          additionalReserve,
+				AvailableDeltaYuan:        additionalReserve.Neg(),
+				ReservedDeltaYuan:         additionalReserve,
+				BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+				BalanceAfterReservedYuan:  account.ReservedBalanceYuan.Add(capturedAmount),
+				Remark:                    "top up transfer reserve",
+				CreatedAt:                 now,
 			}
 			if err := s.repo.CreateLedgerTx(ctx, tx, holdEntry); err != nil {
 				return err
@@ -845,8 +851,8 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 			TransferID:         transferID,
 			Direction:          models.TrafficDirectionEgress,
 			TrafficBytes:       actualEgressBytes,
-			UnitPriceFenPerGiB: pricing.EgressPriceFenPerGiB,
-			AmountFen:          capturedAmount,
+			UnitPriceYuanPerGB: pricing.EgressPriceYuanPerGB,
+			AmountYuan:         capturedAmount,
 			PricingVersion:     pricing.Version,
 			SourceService:      "api-gateway",
 			Status:             models.TrafficUsageStatusConfirmed,
@@ -857,23 +863,23 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 		}
 
 		entry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   order.UserID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                order.HistoryID,
-			TaskID:                   order.TaskID,
-			TransferID:               transferID,
-			EntryType:                models.LedgerEntryTypeCapture,
-			Scene:                    order.Scene,
-			ActionAmountFen:          capturedAmount,
-			AvailableDeltaFen:        money.Zero(),
-			ReservedDeltaFen:         capturedAmount.Neg(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   "capture file transfer",
-			CreatedAt:                now,
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    order.UserID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 order.HistoryID,
+			TaskID:                    order.TaskID,
+			TransferID:                transferID,
+			EntryType:                 models.LedgerEntryTypeCapture,
+			Scene:                     order.Scene,
+			ActionAmountYuan:          capturedAmount,
+			AvailableDeltaYuan:        money.Zero(),
+			ReservedDeltaYuan:         capturedAmount.Neg(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    "capture file transfer",
+			CreatedAt:                 now,
 		}
 		if err := s.repo.CreateLedgerTx(ctx, tx, entry); err != nil {
 			return err
@@ -881,38 +887,38 @@ func (s *BillingService) CompleteFileTransferBilling(ctx context.Context, transf
 
 		releaseAmount := remainingHoldAmount(hold)
 		if releaseAmount.Cmp(money.Zero()) > 0 {
-			hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releaseAmount)
+			hold.ReleasedAmountYuan = hold.ReleasedAmountYuan.Add(releaseAmount)
 			if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 				return err
 			}
-			order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releaseAmount)
+			order.ReleasedAmountYuan = order.ReleasedAmountYuan.Add(releaseAmount)
 			order.Status = deriveOrderStatus(order)
 			if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 				return err
 			}
-			account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releaseAmount)
-			account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releaseAmount)
+			account.AvailableBalanceYuan = account.AvailableBalanceYuan.Add(releaseAmount)
+			account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(releaseAmount)
 			if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 				return err
 			}
 			releaseEntry := &models.BillingLedgerEntry{
-				EntryNo:                  newBillingID("led"),
-				AccountID:                account.ID,
-				UserID:                   order.UserID,
-				OrderNo:                  order.OrderNo,
-				HoldNo:                   hold.HoldNo,
-				HistoryID:                order.HistoryID,
-				TaskID:                   order.TaskID,
-				TransferID:               transferID,
-				EntryType:                models.LedgerEntryTypeRelease,
-				Scene:                    order.Scene,
-				ActionAmountFen:          releaseAmount,
-				AvailableDeltaFen:        releaseAmount,
-				ReservedDeltaFen:         releaseAmount.Neg(),
-				BalanceAfterAvailableFen: account.AvailableBalanceFen,
-				BalanceAfterReservedFen:  account.ReservedBalanceFen,
-				Remark:                   "release unused transfer reserve",
-				CreatedAt:                time.Now(),
+				EntryNo:                   newBillingID("led"),
+				AccountID:                 account.ID,
+				UserID:                    order.UserID,
+				OrderNo:                   order.OrderNo,
+				HoldNo:                    hold.HoldNo,
+				HistoryID:                 order.HistoryID,
+				TaskID:                    order.TaskID,
+				TransferID:                transferID,
+				EntryType:                 models.LedgerEntryTypeRelease,
+				Scene:                     order.Scene,
+				ActionAmountYuan:          releaseAmount,
+				AvailableDeltaYuan:        releaseAmount,
+				ReservedDeltaYuan:         releaseAmount.Neg(),
+				BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+				BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+				Remark:                    "release unused transfer reserve",
+				CreatedAt:                 time.Now(),
 			}
 			if err := s.repo.CreateLedgerTx(ctx, tx, releaseEntry); err != nil {
 				return err
@@ -954,43 +960,43 @@ func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferI
 			return nil
 		}
 
-		hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releasedAmount)
+		hold.ReleasedAmountYuan = hold.ReleasedAmountYuan.Add(releasedAmount)
 		hold.Status = models.BillingHoldStatusReleased
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return err
 		}
 
-		order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releasedAmount)
+		order.ReleasedAmountYuan = order.ReleasedAmountYuan.Add(releasedAmount)
 		order.Remark = reason
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return err
 		}
 
-		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releasedAmount)
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releasedAmount)
+		account.AvailableBalanceYuan = account.AvailableBalanceYuan.Add(releasedAmount)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(releasedAmount)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
 		entry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   order.UserID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                order.HistoryID,
-			TaskID:                   order.TaskID,
-			TransferID:               transferID,
-			EntryType:                models.LedgerEntryTypeRelease,
-			Scene:                    order.Scene,
-			ActionAmountFen:          releasedAmount,
-			AvailableDeltaFen:        releasedAmount,
-			ReservedDeltaFen:         releasedAmount.Neg(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   reason,
-			CreatedAt:                time.Now(),
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    order.UserID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 order.HistoryID,
+			TaskID:                    order.TaskID,
+			TransferID:                transferID,
+			EntryType:                 models.LedgerEntryTypeRelease,
+			Scene:                     order.Scene,
+			ActionAmountYuan:          releasedAmount,
+			AvailableDeltaYuan:        releasedAmount,
+			ReservedDeltaYuan:         releasedAmount.Neg(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    reason,
+			CreatedAt:                 time.Now(),
 		}
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
@@ -1002,11 +1008,11 @@ func (s *BillingService) AbortFileTransferBilling(ctx context.Context, transferI
 }
 
 func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx *sql.Tx, order *models.BillingChargeOrder, account *models.BillingAccount, remark, operatorUserID string) (*models.BillingLedgerEntry, error) {
-	if order == nil || order.Scene != models.BillingSceneDownload || order.ShortfallFen.IsZero() {
+	if order == nil || order.Scene != models.BillingSceneDownload || order.ShortfallYuan.IsZero() {
 		return nil, nil
 	}
-	if account.AvailableBalanceFen.Cmp(order.ShortfallFen) < 0 {
-		setOrderAwaitingShortfall(order, order.ShortfallFen, order.Remark)
+	if account.AvailableBalanceYuan.Cmp(order.ShortfallYuan) < 0 {
+		setOrderAwaitingShortfall(order, order.ShortfallYuan, order.Remark)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
 		}
@@ -1014,14 +1020,14 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 	}
 
 	now := time.Now()
-	shortfallFen := order.ShortfallFen
-	account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(shortfallFen)
-	account.ReservedBalanceFen = account.ReservedBalanceFen.Add(shortfallFen)
-	order.HeldAmountFen = order.HeldAmountFen.Add(shortfallFen)
+	shortfallYuan := order.ShortfallYuan
+	account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(shortfallYuan)
+	account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(shortfallYuan)
+	order.HeldAmountYuan = order.HeldAmountYuan.Add(shortfallYuan)
 
-	holdEntry := newReserveLedgerEntry(account, order, "", shortfallFen, remarkOrDefault(remark, "resolve initial order shortfall"), operatorUserID, now)
+	holdEntry := newReserveLedgerEntry(account, order, "", shortfallYuan, remarkOrDefault(remark, "resolve initial order shortfall"), operatorUserID, now)
 
-	if order.ActualIngressBytes > 0 && order.CapturedAmountFen.IsZero() {
+	if order.ActualIngressBytes > 0 && order.CapturedAmountYuan.IsZero() {
 		hold, err := s.repo.GetHoldByTaskIDForUpdate(ctx, tx, order.TaskID, models.BillingHoldTypeDownloadTotal)
 		if err != nil {
 			return nil, err
@@ -1030,35 +1036,35 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 		if err != nil {
 			return nil, err
 		}
-		capturedAmount, err := calculateAmountFen(order.ActualIngressBytes, pricing.IngressPriceFenPerGiB)
+		capturedAmount, err := calculateAmountYuan(order.ActualIngressBytes, pricing.IngressPriceYuanPerGB)
 		if err != nil {
 			return nil, err
 		}
 
-		hold.AmountFen = hold.AmountFen.Add(shortfallFen)
-		hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
+		hold.AmountYuan = hold.AmountYuan.Add(shortfallYuan)
+		hold.CapturedAmountYuan = hold.CapturedAmountYuan.Add(capturedAmount)
 		hold.Status = deriveHoldStatus(hold)
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return nil, err
 		}
 
-		order.ShortfallFen = money.Zero()
+		order.ShortfallYuan = money.Zero()
 		order.Remark = remarkOrDefault(remark, "shortfall resolved")
-		order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
+		order.CapturedAmountYuan = order.CapturedAmountYuan.Add(capturedAmount)
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
 		}
 
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
-		account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(capturedAmount)
+		account.TotalSpentYuan = account.TotalSpentYuan.Add(capturedAmount)
 		account.TotalTrafficBytes += order.ActualIngressBytes
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return nil, err
 		}
 
 		holdEntry.HoldNo = hold.HoldNo
-		holdEntry.BalanceAfterReservedFen = account.ReservedBalanceFen.Add(capturedAmount)
+		holdEntry.BalanceAfterReservedYuan = account.ReservedBalanceYuan.Add(capturedAmount)
 		if err := s.repo.CreateLedgerTx(ctx, tx, holdEntry); err != nil {
 			return nil, err
 		}
@@ -1071,8 +1077,8 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 			TaskID:             order.TaskID,
 			Direction:          models.TrafficDirectionIngress,
 			TrafficBytes:       order.ActualIngressBytes,
-			UnitPriceFenPerGiB: pricing.IngressPriceFenPerGiB,
-			AmountFen:          capturedAmount,
+			UnitPriceYuanPerGB: pricing.IngressPriceYuanPerGB,
+			AmountYuan:         capturedAmount,
 			PricingVersion:     pricing.Version,
 			SourceService:      "media-service",
 			Status:             models.TrafficUsageStatusConfirmed,
@@ -1083,27 +1089,27 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 		}
 
 		captureEntry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   order.UserID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                order.HistoryID,
-			TaskID:                   order.TaskID,
-			EntryType:                models.LedgerEntryTypeCapture,
-			Scene:                    order.Scene,
-			ActionAmountFen:          capturedAmount,
-			AvailableDeltaFen:        money.Zero(),
-			ReservedDeltaFen:         capturedAmount.Neg(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   "capture ingress usage after shortfall resolution",
-			CreatedAt:                now,
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    order.UserID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 order.HistoryID,
+			TaskID:                    order.TaskID,
+			EntryType:                 models.LedgerEntryTypeCapture,
+			Scene:                     order.Scene,
+			ActionAmountYuan:          capturedAmount,
+			AvailableDeltaYuan:        money.Zero(),
+			ReservedDeltaYuan:         capturedAmount.Neg(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    "capture ingress usage after shortfall resolution",
+			CreatedAt:                 now,
 		}
 		return holdEntry, s.repo.CreateLedgerTx(ctx, tx, captureEntry)
 	}
 
-	order.ShortfallFen = money.Zero()
+	order.ShortfallYuan = money.Zero()
 	order.Remark = remarkOrDefault(remark, "shortfall resolved")
 	order.Status = deriveOrderStatus(order)
 	if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
@@ -1116,11 +1122,11 @@ func (s *BillingService) resolveInitialDownloadShortfall(ctx context.Context, tx
 }
 
 func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.Tx, order *models.BillingChargeOrder, account *models.BillingAccount, remark, operatorUserID string) (*models.BillingLedgerEntry, error) {
-	if order == nil || order.ShortfallFen.IsZero() || order.ActualEgressBytes <= 0 {
+	if order == nil || order.ShortfallYuan.IsZero() || order.ActualEgressBytes <= 0 {
 		return nil, nil
 	}
-	if account.AvailableBalanceFen.Cmp(order.ShortfallFen) < 0 {
-		setOrderAwaitingShortfall(order, order.ShortfallFen, order.Remark)
+	if account.AvailableBalanceYuan.Cmp(order.ShortfallYuan) < 0 {
+		setOrderAwaitingShortfall(order, order.ShortfallYuan, order.Remark)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
 		}
@@ -1135,32 +1141,32 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 	if err != nil {
 		return nil, err
 	}
-	capturedAmount, err := calculateAmountFen(order.ActualEgressBytes, pricing.EgressPriceFenPerGiB)
+	capturedAmount, err := calculateAmountYuan(order.ActualEgressBytes, pricing.EgressPriceYuanPerGB)
 	if err != nil {
 		return nil, err
 	}
 
 	now := time.Now()
-	shortfallFen := order.ShortfallFen
-	account.AvailableBalanceFen = account.AvailableBalanceFen.Sub(shortfallFen)
-	account.ReservedBalanceFen = account.ReservedBalanceFen.Add(shortfallFen)
-	order.HeldAmountFen = order.HeldAmountFen.Add(shortfallFen)
+	shortfallYuan := order.ShortfallYuan
+	account.AvailableBalanceYuan = account.AvailableBalanceYuan.Sub(shortfallYuan)
+	account.ReservedBalanceYuan = account.ReservedBalanceYuan.Add(shortfallYuan)
+	order.HeldAmountYuan = order.HeldAmountYuan.Add(shortfallYuan)
 
-	holdEntry := newReserveLedgerEntry(account, order, hold.HoldNo, shortfallFen, remarkOrDefault(remark, "resolve transfer shortfall"), operatorUserID, now)
+	holdEntry := newReserveLedgerEntry(account, order, hold.HoldNo, shortfallYuan, remarkOrDefault(remark, "resolve transfer shortfall"), operatorUserID, now)
 
-	holdDiff := capturedAmount.Sub(hold.AmountFen)
+	holdDiff := capturedAmount.Sub(hold.AmountYuan)
 	if holdDiff.Cmp(money.Zero()) > 0 {
-		hold.AmountFen = hold.AmountFen.Add(holdDiff)
+		hold.AmountYuan = hold.AmountYuan.Add(holdDiff)
 	}
-	hold.CapturedAmountFen = hold.CapturedAmountFen.Add(capturedAmount)
+	hold.CapturedAmountYuan = hold.CapturedAmountYuan.Add(capturedAmount)
 	hold.Status = models.BillingHoldStatusCaptured
 	if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 		return nil, err
 	}
 
-	order.ShortfallFen = money.Zero()
+	order.ShortfallYuan = money.Zero()
 	order.Remark = remarkOrDefault(remark, "shortfall resolved")
-	order.CapturedAmountFen = order.CapturedAmountFen.Add(capturedAmount)
+	order.CapturedAmountYuan = order.CapturedAmountYuan.Add(capturedAmount)
 	order.Status = deriveOrderStatus(order)
 	if order.Status == models.BillingOrderStatusCaptured {
 		order.ClosedAt = &now
@@ -1169,14 +1175,14 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 		return nil, err
 	}
 
-	account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(capturedAmount)
-	account.TotalSpentFen = account.TotalSpentFen.Add(capturedAmount)
+	account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(capturedAmount)
+	account.TotalSpentYuan = account.TotalSpentYuan.Add(capturedAmount)
 	account.TotalTrafficBytes += order.ActualEgressBytes
 	if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 		return nil, err
 	}
 
-	holdEntry.BalanceAfterReservedFen = account.ReservedBalanceFen.Add(capturedAmount)
+	holdEntry.BalanceAfterReservedYuan = account.ReservedBalanceYuan.Add(capturedAmount)
 	if err := s.repo.CreateLedgerTx(ctx, tx, holdEntry); err != nil {
 		return nil, err
 	}
@@ -1190,8 +1196,8 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 		TransferID:         hold.TransferID,
 		Direction:          models.TrafficDirectionEgress,
 		TrafficBytes:       order.ActualEgressBytes,
-		UnitPriceFenPerGiB: pricing.EgressPriceFenPerGiB,
-		AmountFen:          capturedAmount,
+		UnitPriceYuanPerGB: pricing.EgressPriceYuanPerGB,
+		AmountYuan:         capturedAmount,
 		PricingVersion:     pricing.Version,
 		SourceService:      "api-gateway",
 		Status:             models.TrafficUsageStatusConfirmed,
@@ -1202,23 +1208,23 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 	}
 
 	captureEntry := &models.BillingLedgerEntry{
-		EntryNo:                  newBillingID("led"),
-		AccountID:                account.ID,
-		UserID:                   order.UserID,
-		OrderNo:                  order.OrderNo,
-		HoldNo:                   hold.HoldNo,
-		HistoryID:                order.HistoryID,
-		TaskID:                   order.TaskID,
-		TransferID:               hold.TransferID,
-		EntryType:                models.LedgerEntryTypeCapture,
-		Scene:                    order.Scene,
-		ActionAmountFen:          capturedAmount,
-		AvailableDeltaFen:        money.Zero(),
-		ReservedDeltaFen:         capturedAmount.Neg(),
-		BalanceAfterAvailableFen: account.AvailableBalanceFen,
-		BalanceAfterReservedFen:  account.ReservedBalanceFen,
-		Remark:                   "capture file transfer after shortfall resolution",
-		CreatedAt:                now,
+		EntryNo:                   newBillingID("led"),
+		AccountID:                 account.ID,
+		UserID:                    order.UserID,
+		OrderNo:                   order.OrderNo,
+		HoldNo:                    hold.HoldNo,
+		HistoryID:                 order.HistoryID,
+		TaskID:                    order.TaskID,
+		TransferID:                hold.TransferID,
+		EntryType:                 models.LedgerEntryTypeCapture,
+		Scene:                     order.Scene,
+		ActionAmountYuan:          capturedAmount,
+		AvailableDeltaYuan:        money.Zero(),
+		ReservedDeltaYuan:         capturedAmount.Neg(),
+		BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+		BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+		Remark:                    "capture file transfer after shortfall resolution",
+		CreatedAt:                 now,
 	}
 	if err := s.repo.CreateLedgerTx(ctx, tx, captureEntry); err != nil {
 		return nil, err
@@ -1226,38 +1232,38 @@ func (s *BillingService) resolveTransferShortfall(ctx context.Context, tx *sql.T
 
 	releaseAmount := remainingHoldAmount(hold)
 	if releaseAmount.Cmp(money.Zero()) > 0 {
-		hold.ReleasedAmountFen = hold.ReleasedAmountFen.Add(releaseAmount)
+		hold.ReleasedAmountYuan = hold.ReleasedAmountYuan.Add(releaseAmount)
 		if err := s.repo.UpdateHoldTx(ctx, tx, hold); err != nil {
 			return nil, err
 		}
-		order.ReleasedAmountFen = order.ReleasedAmountFen.Add(releaseAmount)
+		order.ReleasedAmountYuan = order.ReleasedAmountYuan.Add(releaseAmount)
 		order.Status = deriveOrderStatus(order)
 		if err := s.repo.UpdateOrderTx(ctx, tx, order); err != nil {
 			return nil, err
 		}
-		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(releaseAmount)
-		account.ReservedBalanceFen = account.ReservedBalanceFen.Sub(releaseAmount)
+		account.AvailableBalanceYuan = account.AvailableBalanceYuan.Add(releaseAmount)
+		account.ReservedBalanceYuan = account.ReservedBalanceYuan.Sub(releaseAmount)
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return nil, err
 		}
 		releaseEntry := &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   order.UserID,
-			OrderNo:                  order.OrderNo,
-			HoldNo:                   hold.HoldNo,
-			HistoryID:                order.HistoryID,
-			TaskID:                   order.TaskID,
-			TransferID:               hold.TransferID,
-			EntryType:                models.LedgerEntryTypeRelease,
-			Scene:                    order.Scene,
-			ActionAmountFen:          releaseAmount,
-			AvailableDeltaFen:        releaseAmount,
-			ReservedDeltaFen:         releaseAmount.Neg(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			Remark:                   "release unused reserve after shortfall resolution",
-			CreatedAt:                now,
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    order.UserID,
+			OrderNo:                   order.OrderNo,
+			HoldNo:                    hold.HoldNo,
+			HistoryID:                 order.HistoryID,
+			TaskID:                    order.TaskID,
+			TransferID:                hold.TransferID,
+			EntryType:                 models.LedgerEntryTypeRelease,
+			Scene:                     order.Scene,
+			ActionAmountYuan:          releaseAmount,
+			AvailableDeltaYuan:        releaseAmount,
+			ReservedDeltaYuan:         releaseAmount.Neg(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			Remark:                    "release unused reserve after shortfall resolution",
+			CreatedAt:                 now,
 		}
 		if err := s.repo.CreateLedgerTx(ctx, tx, releaseEntry); err != nil {
 			return nil, err
@@ -1282,7 +1288,7 @@ func (s *BillingService) GetBillingAccountDetail(ctx context.Context, userID str
 	return s.repo.GetOrCreateAccount(ctx, userID)
 }
 
-func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, operationID string, amountFen money.Decimal, remark, operatorUserID string) (*models.BillingAccount, *models.BillingLedgerEntry, error) {
+func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, operationID string, amountYuan money.Decimal, remark, operatorUserID string) (*models.BillingAccount, *models.BillingLedgerEntry, error) {
 	if operationID == "" {
 		return nil, nil, fmt.Errorf("operation id is required")
 	}
@@ -1306,37 +1312,37 @@ func (s *BillingService) AdjustBillingBalance(ctx context.Context, userID, opera
 		if err != nil {
 			return err
 		}
-		if amountFen.Cmp(money.Zero()) < 0 && account.AvailableBalanceFen.Cmp(amountFen.Neg()) < 0 {
+		if amountYuan.Cmp(money.Zero()) < 0 && account.AvailableBalanceYuan.Cmp(amountYuan.Neg()) < 0 {
 			return ErrInsufficientBalance
 		}
 
-		account.AvailableBalanceFen = account.AvailableBalanceFen.Add(amountFen)
-		if amountFen.Cmp(money.Zero()) > 0 {
-			account.TotalRechargedFen = account.TotalRechargedFen.Add(amountFen)
+		account.AvailableBalanceYuan = account.AvailableBalanceYuan.Add(amountYuan)
+		if amountYuan.Cmp(money.Zero()) > 0 {
+			account.TotalRechargedYuan = account.TotalRechargedYuan.Add(amountYuan)
 		}
 		if err := s.repo.UpdateAccountTx(ctx, tx, account); err != nil {
 			return err
 		}
 
 		entryType := int32(models.LedgerEntryTypeManualAdjustment)
-		if amountFen.Cmp(money.Zero()) > 0 {
+		if amountYuan.Cmp(money.Zero()) > 0 {
 			entryType = models.LedgerEntryTypeManualTopup
 		}
 		entry = &models.BillingLedgerEntry{
-			EntryNo:                  newBillingID("led"),
-			AccountID:                account.ID,
-			UserID:                   userID,
-			OperationID:              operationID,
-			EntryType:                entryType,
-			Scene:                    models.BillingSceneAdmin,
-			ActionAmountFen:          abs64(amountFen),
-			AvailableDeltaFen:        amountFen,
-			ReservedDeltaFen:         money.Zero(),
-			BalanceAfterAvailableFen: account.AvailableBalanceFen,
-			BalanceAfterReservedFen:  account.ReservedBalanceFen,
-			OperatorUserID:           operatorUserID,
-			Remark:                   remark,
-			CreatedAt:                time.Now(),
+			EntryNo:                   newBillingID("led"),
+			AccountID:                 account.ID,
+			UserID:                    userID,
+			OperationID:               operationID,
+			EntryType:                 entryType,
+			Scene:                     models.BillingSceneAdmin,
+			ActionAmountYuan:          abs64(amountYuan),
+			AvailableDeltaYuan:        amountYuan,
+			ReservedDeltaYuan:         money.Zero(),
+			BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+			BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+			OperatorUserID:            operatorUserID,
+			Remark:                    remark,
+			CreatedAt:                 time.Now(),
 		}
 		return s.repo.CreateLedgerTx(ctx, tx, entry)
 	})
@@ -1370,12 +1376,12 @@ func (s *BillingService) ReconcileBillingShortfall(ctx context.Context, orderNo,
 			return err
 		}
 
-		if order.ShortfallFen.IsZero() || order.Status != models.BillingOrderStatusAwaitingShortfall {
+		if order.ShortfallYuan.IsZero() || order.Status != models.BillingOrderStatusAwaitingShortfall {
 			return nil
 		}
 
 		switch {
-		case order.Scene == models.BillingSceneDownload && order.ActualIngressBytes > 0 && order.CapturedAmountFen.IsZero():
+		case order.Scene == models.BillingSceneDownload && order.ActualIngressBytes > 0 && order.CapturedAmountYuan.IsZero():
 			entry, err = s.resolveInitialDownloadShortfall(ctx, tx, order, account, remark, operatorUserID)
 			return err
 		case order.ActualEgressBytes > 0:
@@ -1430,8 +1436,8 @@ func (s *BillingService) UpdateBillingPricing(ctx context.Context, ingressPrice,
 		now := time.Now()
 		pricing = &models.BillingPricing{
 			Version:               latestVersion + 1,
-			IngressPriceFenPerGiB: parsedIngressPrice,
-			EgressPriceFenPerGiB:  parsedEgressPrice,
+			IngressPriceYuanPerGB: parsedIngressPrice,
+			EgressPriceYuanPerGB:  parsedEgressPrice,
 			Enabled:               true,
 			Remark:                remark,
 			UpdatedByUserID:       operatorUserID,
@@ -1462,17 +1468,17 @@ func canUseInitialOrder(order *models.BillingChargeOrder) bool {
 func deriveOrderStatus(order *models.BillingChargeOrder) int32 {
 	remaining := remainingOrderReserve(order)
 	switch {
-	case order.ShortfallFen.Cmp(money.Zero()) > 0:
+	case order.ShortfallYuan.Cmp(money.Zero()) > 0:
 		return models.BillingOrderStatusAwaitingShortfall
-	case order.CapturedAmountFen.IsZero() && order.ReleasedAmountFen.IsZero():
+	case order.CapturedAmountYuan.IsZero() && order.ReleasedAmountYuan.IsZero():
 		return models.BillingOrderStatusHeld
-	case order.CapturedAmountFen.IsZero() && remaining.IsZero():
+	case order.CapturedAmountYuan.IsZero() && remaining.IsZero():
 		return models.BillingOrderStatusReleased
-	case order.CapturedAmountFen.Cmp(money.Zero()) > 0 && order.ReleasedAmountFen.Cmp(money.Zero()) > 0:
+	case order.CapturedAmountYuan.Cmp(money.Zero()) > 0 && order.ReleasedAmountYuan.Cmp(money.Zero()) > 0:
 		return models.BillingOrderStatusPartialCaptured
-	case order.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.Cmp(money.Zero()) > 0:
+	case order.CapturedAmountYuan.Cmp(money.Zero()) > 0 && remaining.Cmp(money.Zero()) > 0:
 		return models.BillingOrderStatusPartialCaptured
-	case order.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.IsZero():
+	case order.CapturedAmountYuan.Cmp(money.Zero()) > 0 && remaining.IsZero():
 		return models.BillingOrderStatusCaptured
 	default:
 		return models.BillingOrderStatusPartialCaptured
@@ -1482,49 +1488,49 @@ func deriveOrderStatus(order *models.BillingChargeOrder) int32 {
 func deriveHoldStatus(hold *models.BillingHold) int32 {
 	remaining := remainingHoldAmount(hold)
 	switch {
-	case hold.CapturedAmountFen.IsZero() && hold.ReleasedAmountFen.IsZero():
+	case hold.CapturedAmountYuan.IsZero() && hold.ReleasedAmountYuan.IsZero():
 		return models.BillingHoldStatusHeld
-	case hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.Cmp(money.Zero()) > 0:
+	case hold.CapturedAmountYuan.Cmp(money.Zero()) > 0 && remaining.Cmp(money.Zero()) > 0:
 		return models.BillingHoldStatusPartialCaptured
-	case hold.CapturedAmountFen.Cmp(money.Zero()) > 0 && remaining.IsZero():
+	case hold.CapturedAmountYuan.Cmp(money.Zero()) > 0 && remaining.IsZero():
 		return models.BillingHoldStatusCaptured
-	case hold.ReleasedAmountFen.Cmp(money.Zero()) > 0 && remaining.IsZero():
+	case hold.ReleasedAmountYuan.Cmp(money.Zero()) > 0 && remaining.IsZero():
 		return models.BillingHoldStatusReleased
 	default:
 		return models.BillingHoldStatusHeld
 	}
 }
 
-func setOrderAwaitingShortfall(order *models.BillingChargeOrder, shortfallFen money.Decimal, remark string) {
-	if shortfallFen.Cmp(money.Zero()) < 0 {
-		shortfallFen = money.Zero()
+func setOrderAwaitingShortfall(order *models.BillingChargeOrder, shortfallYuan money.Decimal, remark string) {
+	if shortfallYuan.Cmp(money.Zero()) < 0 {
+		shortfallYuan = money.Zero()
 	}
-	order.ShortfallFen = shortfallFen
+	order.ShortfallYuan = shortfallYuan
 	if remark != "" {
 		order.Remark = remark
 	}
 	order.Status = deriveOrderStatus(order)
 }
 
-func newReserveLedgerEntry(account *models.BillingAccount, order *models.BillingChargeOrder, holdNo string, amountFen money.Decimal, remark, operatorUserID string, createdAt time.Time) *models.BillingLedgerEntry {
+func newReserveLedgerEntry(account *models.BillingAccount, order *models.BillingChargeOrder, holdNo string, amountYuan money.Decimal, remark, operatorUserID string, createdAt time.Time) *models.BillingLedgerEntry {
 	return &models.BillingLedgerEntry{
-		EntryNo:                  newBillingID("led"),
-		AccountID:                account.ID,
-		UserID:                   order.UserID,
-		OrderNo:                  order.OrderNo,
-		HoldNo:                   holdNo,
-		HistoryID:                order.HistoryID,
-		TaskID:                   order.TaskID,
-		EntryType:                models.LedgerEntryTypeHold,
-		Scene:                    order.Scene,
-		ActionAmountFen:          amountFen,
-		AvailableDeltaFen:        amountFen.Neg(),
-		ReservedDeltaFen:         amountFen,
-		BalanceAfterAvailableFen: account.AvailableBalanceFen,
-		BalanceAfterReservedFen:  account.ReservedBalanceFen,
-		OperatorUserID:           operatorUserID,
-		Remark:                   remark,
-		CreatedAt:                createdAt,
+		EntryNo:                   newBillingID("led"),
+		AccountID:                 account.ID,
+		UserID:                    order.UserID,
+		OrderNo:                   order.OrderNo,
+		HoldNo:                    holdNo,
+		HistoryID:                 order.HistoryID,
+		TaskID:                    order.TaskID,
+		EntryType:                 models.LedgerEntryTypeHold,
+		Scene:                     order.Scene,
+		ActionAmountYuan:          amountYuan,
+		AvailableDeltaYuan:        amountYuan.Neg(),
+		ReservedDeltaYuan:         amountYuan,
+		BalanceAfterAvailableYuan: account.AvailableBalanceYuan,
+		BalanceAfterReservedYuan:  account.ReservedBalanceYuan,
+		OperatorUserID:            operatorUserID,
+		Remark:                    remark,
+		CreatedAt:                 createdAt,
 	}
 }
 
@@ -1536,7 +1542,7 @@ func remarkOrDefault(remark, fallback string) string {
 }
 
 func remainingOrderReserve(order *models.BillingChargeOrder) money.Decimal {
-	remaining := order.HeldAmountFen.Sub(order.CapturedAmountFen).Sub(order.ReleasedAmountFen)
+	remaining := order.HeldAmountYuan.Sub(order.CapturedAmountYuan).Sub(order.ReleasedAmountYuan)
 	if remaining.Cmp(money.Zero()) < 0 {
 		return money.Zero()
 	}
@@ -1544,16 +1550,16 @@ func remainingOrderReserve(order *models.BillingChargeOrder) money.Decimal {
 }
 
 func remainingHoldAmount(hold *models.BillingHold) money.Decimal {
-	remaining := hold.AmountFen.Sub(hold.CapturedAmountFen).Sub(hold.ReleasedAmountFen)
+	remaining := hold.AmountYuan.Sub(hold.CapturedAmountYuan).Sub(hold.ReleasedAmountYuan)
 	if remaining.Cmp(money.Zero()) < 0 {
 		return money.Zero()
 	}
 	return remaining
 }
 
-func calculateAmountFen(bytes int64, pricePerGiB money.Decimal) (money.Decimal, error) {
-	if bytes <= 0 {
-		return money.Zero(), nil
+func calculateAmountYuan(bytes int64, pricePerGB money.Decimal) (money.Decimal, error) {
+	if bytes < 0 {
+		return money.Zero(), fmt.Errorf("bytes must be non-negative")
 	}
 
 	billableMB := bytes / mbBytes
@@ -1564,7 +1570,8 @@ func calculateAmountFen(bytes int64, pricePerGiB money.Decimal) (money.Decimal, 
 		billableMB = minBillableMB
 	}
 
-	return pricePerGiB.Mul(money.FromInt64(billableMB)).DivInt64(gbMB), nil
+	amount := pricePerGB.Mul(money.FromInt64(billableMB)).DivInt64(gbMB)
+	return amount.Ceil(2), nil
 }
 
 func newBillingID(prefix string) string {

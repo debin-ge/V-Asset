@@ -104,8 +104,8 @@ func TestBillingServiceListAccounts_UsesSearchForDefaultList(t *testing.T) {
 	assetClient := &stubBillingAssetClient{
 		listResp: &pb.ListBillingAccountsResponse{
 			Items: []*pb.BillingAccountSnapshot{
-				{UserId: "normal-user", AvailableBalanceFen: "100", Status: 1},
-				{UserId: "admin-user", AvailableBalanceFen: "200", Status: 1},
+				{UserId: "normal-user", AvailableBalanceYuan: "100", Status: 1},
+				{UserId: "admin-user", AvailableBalanceYuan: "200", Status: 1},
 			},
 		},
 	}
@@ -163,7 +163,7 @@ func TestBillingServiceListAccounts_AvoidsDoublePaginationForSearchResults(t *te
 	assetClient := &stubBillingAssetClient{
 		listResp: &pb.ListBillingAccountsResponse{
 			Items: []*pb.BillingAccountSnapshot{
-				{UserId: "page-two-user", AvailableBalanceFen: "500", Status: 1},
+				{UserId: "page-two-user", AvailableBalanceYuan: "500", Status: 1},
 			},
 		},
 	}

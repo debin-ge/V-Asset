@@ -40,17 +40,17 @@ func TestGetAccountResponseShape(t *testing.T) {
 	handler := NewBillingHandler(&fakeBillingAssetClient{
 		getBillingAccountResp: &pb.GetBillingAccountResponse{
 			Account: &pb.BillingAccountSnapshot{
-				UserId:              "user-1",
-				CurrencyCode:        "CNY",
-				AvailableBalanceFen: "100",
-				ReservedBalanceFen:  "0",
-				TotalRechargedFen:   "200",
-				TotalSpentFen:       "100",
-				TotalTrafficBytes:   1024,
-				Status:              1,
-				Version:             2,
-				CreatedAt:           "2026-03-20T00:00:00Z",
-				UpdatedAt:           "2026-03-21T00:00:00Z",
+				UserId:               "user-1",
+				CurrencyCode:         "CNY",
+				AvailableBalanceYuan: "100",
+				ReservedBalanceYuan:  "0",
+				TotalRechargedYuan:   "200",
+				TotalSpentYuan:       "100",
+				TotalTrafficBytes:    1024,
+				Status:               1,
+				Version:              2,
+				CreatedAt:            "2026-03-20T00:00:00Z",
+				UpdatedAt:            "2026-03-21T00:00:00Z",
 			},
 		},
 	}, time.Second)
@@ -69,8 +69,8 @@ func TestGetAccountResponseShape(t *testing.T) {
 
 	data := decodeResponseDataAsMap(t, w)
 	assertHasKeys(t, data,
-		"user_id", "currency_code", "available_balance_fen", "reserved_balance_fen",
-		"total_recharged_fen", "total_spent_fen", "total_traffic_bytes",
+		"user_id", "currency_code", "available_balance_yuan", "reserved_balance_yuan",
+		"total_recharged_yuan", "total_spent_yuan", "total_traffic_bytes",
 		"status", "version", "created_at", "updated_at",
 	)
 	assertMissingKeys(t, data, "items", "total", "page", "page_size")
@@ -92,7 +92,7 @@ func TestListStatementsResponseShape(t *testing.T) {
 					Type:         1,
 					HistoryId:    101,
 					TrafficBytes: 2048,
-					AmountFen:    "15",
+					AmountYuan:   "15",
 					Status:       1,
 					Remark:       "download",
 					CreatedAt:    "2026-03-21T00:00:00Z",
@@ -116,8 +116,8 @@ func TestListStatementsResponseShape(t *testing.T) {
 	data := decodeResponseDataAsMap(t, w)
 	assertHasKeys(t, data, "total", "page", "page_size", "items")
 	assertMissingKeys(t, data,
-		"user_id", "currency_code", "available_balance_fen", "reserved_balance_fen",
-		"total_recharged_fen", "total_spent_fen", "total_traffic_bytes", "version",
+		"user_id", "currency_code", "available_balance_yuan", "reserved_balance_yuan",
+		"total_recharged_yuan", "total_spent_yuan", "total_traffic_bytes", "version",
 	)
 }
 

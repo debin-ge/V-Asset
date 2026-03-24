@@ -59,16 +59,16 @@ export default function BillingAccountDetailPage() {
   const [reconcileRemark, setReconcileRemark] = React.useState("");
   const [reconcilingOrderNo, setReconcilingOrderNo] = React.useState("");
 
-  const shortfallTotalFen = React.useMemo(
-    () => shortfallItems.reduce((sum, item) => sum + parseCurrency(item.shortfall_fen), 0),
+  const shortfallTotalYuan = React.useMemo(
+    () => shortfallItems.reduce((sum, item) => sum + parseCurrency(item.shortfall_yuan), 0),
     [shortfallItems]
   );
   const usageTrafficBytes = React.useMemo(
     () => usageItems.reduce((sum, item) => sum + item.traffic_bytes, 0),
     [usageItems]
   );
-  const usageTotalAmountFen = React.useMemo(
-    () => usageItems.reduce((sum, item) => sum + parseCurrency(item.amount_fen), 0),
+  const usageTotalAmountYuan = React.useMemo(
+    () => usageItems.reduce((sum, item) => sum + parseCurrency(item.amount_yuan), 0),
     [usageItems]
   );
 
@@ -208,15 +208,15 @@ export default function BillingAccountDetailPage() {
       return;
     }
 
-    const amountFen = adjustAmount.trim();
-    if (!amountFen || !Number.isFinite(Number(amountFen)) || Number(amountFen) === 0) {
+    const amountYuan = adjustAmount.trim();
+    if (!amountYuan || !Number.isFinite(Number(amountYuan)) || Number(amountYuan) === 0) {
       toast.error("Enter a valid amount");
       return;
     }
 
     try {
       await billingApi.adjustBalance(userId, {
-        amount_fen: amountFen,
+        amount_yuan: amountYuan,
         remark: adjustRemark.trim(),
       });
 
@@ -270,11 +270,11 @@ export default function BillingAccountDetailPage() {
     return (
       <div data-testid="admin-billing-detail-account" className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <Metric label="Available" value={formatCurrencyFen(account.available_balance_fen)} tone="success" />
-          <Metric label="Reserved" value={formatCurrencyFen(account.reserved_balance_fen)} tone="warning" />
+          <Metric label="Available" value={formatCurrencyYuan(account.available_balance_yuan)} tone="success" />
+          <Metric label="Reserved" value={formatCurrencyYuan(account.reserved_balance_yuan)} tone="warning" />
           <Metric label="Total Traffic" value={formatFileSize(account.total_traffic_bytes)} tone="info" />
-          <Metric label="Total Recharged" value={formatCurrencyFen(account.total_recharged_fen)} />
-          <Metric label="Total Spent" value={formatCurrencyFen(account.total_spent_fen)} tone="danger" />
+          <Metric label="Total Recharged" value={formatCurrencyYuan(account.total_recharged_yuan)} />
+          <Metric label="Total Spent" value={formatCurrencyYuan(account.total_spent_yuan)} tone="danger" />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
@@ -294,10 +294,10 @@ export default function BillingAccountDetailPage() {
               <p className="mt-1 font-mono text-xs text-slate-400">User ID: {account.user_id}</p>
 
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                <InfoChip label="Available" value={formatCurrencyFen(account.available_balance_fen)} />
-                <InfoChip label="Reserved" value={formatCurrencyFen(account.reserved_balance_fen)} />
-                <InfoChip label="Total Recharged" value={formatCurrencyFen(account.total_recharged_fen)} />
-                <InfoChip label="Total Spent" value={formatCurrencyFen(account.total_spent_fen)} />
+                <InfoChip label="Available" value={formatCurrencyYuan(account.available_balance_yuan)} />
+                <InfoChip label="Reserved" value={formatCurrencyYuan(account.reserved_balance_yuan)} />
+                <InfoChip label="Total Recharged" value={formatCurrencyYuan(account.total_recharged_yuan)} />
+                <InfoChip label="Total Spent" value={formatCurrencyYuan(account.total_spent_yuan)} />
               </div>
             </CardContent>
           </Card>
@@ -316,10 +316,10 @@ export default function BillingAccountDetailPage() {
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Amount (fen)</label>
+                  <label className="text-sm font-medium text-slate-700">Amount (yuan)</label>
                   <Input
                     data-testid="admin-billing-adjust-amount"
-                    placeholder="100 or -500"
+                    placeholder="1.00 or -5.00"
                     value={adjustAmount}
                     onChange={(e) => setAdjustAmount(e.target.value)}
                   />
@@ -349,7 +349,7 @@ export default function BillingAccountDetailPage() {
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-3">
           <Metric label="Entries Loaded" value={String(ledgerItems.length)} tone="info" />
-          <Metric label="Current Available" value={account ? formatCurrencyFen(account.available_balance_fen) : "-"} tone="success" />
+          <Metric label="Current Available" value={account ? formatCurrencyYuan(account.available_balance_yuan) : "-"} tone="success" />
           <Metric
             label="Latest Entry"
             value={ledgerItems.length ? formatDateTime(ledgerItems[0].created_at) : "-"}
@@ -376,11 +376,11 @@ export default function BillingAccountDetailPage() {
                     <TableCell>
                       <StatusBadge label={ledgerTypeLabel(item.entry_type)} tone={ledgerTypeTone(item.entry_type)} />
                     </TableCell>
-                    <TableCell>{formatCurrencyFen(item.action_amount_fen)}</TableCell>
+                    <TableCell>{formatCurrencyYuan(item.action_amount_yuan)}</TableCell>
                     <TableCell>
                       <div className="text-xs text-slate-600">
-                        <div>Avail {formatCurrencyFen(item.balance_after_available_fen)}</div>
-                        <div>Reserved {formatCurrencyFen(item.balance_after_reserved_fen)}</div>
+                        <div>Avail {formatCurrencyYuan(item.balance_after_available_yuan)}</div>
+                        <div>Reserved {formatCurrencyYuan(item.balance_after_reserved_yuan)}</div>
                       </div>
                     </TableCell>
                     <TableCell>{item.remark || "-"}</TableCell>
@@ -407,7 +407,7 @@ export default function BillingAccountDetailPage() {
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-3">
           <Metric label="Pending Orders" value={String(shortfallItems.length)} tone="warning" />
-          <Metric label="Shortfall Total" value={formatCurrencyFen(shortfallTotalFen)} tone="danger" />
+          <Metric label="Shortfall Total" value={formatCurrencyYuan(shortfallTotalYuan)} tone="danger" />
           <Metric
             label="Latest Update"
             value={shortfallItems.length ? formatDateTime(shortfallItems[0].updated_at || shortfallItems[0].created_at) : "-"}
@@ -449,7 +449,7 @@ export default function BillingAccountDetailPage() {
                       <StatusBadge label={sceneLabel(item.scene)} tone={sceneTone(item.scene)} />
                     </TableCell>
                     <TableCell>{formatFileSize(totalTrafficBytes(item))}</TableCell>
-                    <TableCell className="font-medium text-amber-700">{formatCurrencyFen(item.shortfall_fen)}</TableCell>
+                    <TableCell className="font-medium text-amber-700">{formatCurrencyYuan(item.shortfall_yuan)}</TableCell>
                     <TableCell>
                       <StatusBadge label={orderStatusLabel(item.status)} tone={orderStatusTone(item.status)} />
                     </TableCell>
@@ -464,7 +464,7 @@ export default function BillingAccountDetailPage() {
                         size="sm"
                         variant="outline"
                         data-testid={`admin-billing-reconcile-${item.order_no}`}
-                        disabled={parseCurrency(item.shortfall_fen) <= 0 || reconcilingOrderNo === item.order_no}
+                        disabled={parseCurrency(item.shortfall_yuan) <= 0 || reconcilingOrderNo === item.order_no}
                         onClick={() => void handleReconcileShortfall(item.order_no)}
                       >
                         {reconcilingOrderNo === item.order_no ? "Reconciling..." : "Reconcile"}
@@ -494,7 +494,7 @@ export default function BillingAccountDetailPage() {
         <div className="grid gap-3 md:grid-cols-3">
           <Metric label="Records Loaded" value={String(usageItems.length)} tone="info" />
           <Metric label="Traffic Loaded" value={formatFileSize(usageTrafficBytes)} tone="success" />
-          <Metric label="Total Amount" value={formatCurrencyFen(usageTotalAmountFen)} />
+          <Metric label="Total Amount" value={formatCurrencyYuan(usageTotalAmountYuan)} />
         </div>
 
         <Card className="overflow-hidden rounded-2xl border-slate-200/80">
@@ -514,7 +514,7 @@ export default function BillingAccountDetailPage() {
                       <StatusBadge label={item.direction === 1 ? "Ingress" : "Egress"} tone={directionTone(item.direction)} />
                     </TableCell>
                     <TableCell>{formatFileSize(item.traffic_bytes)}</TableCell>
-                    <TableCell>{formatCurrencyFen(item.amount_fen)}</TableCell>
+                    <TableCell>{formatCurrencyYuan(item.amount_yuan)}</TableCell>
                   </TableRow>
                 ))}
 
@@ -563,8 +563,8 @@ export default function BillingAccountDetailPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <InfoChip label="Available" value={account ? formatCurrencyFen(account.available_balance_fen) : "-"} />
-                    <InfoChip label="Reserved" value={account ? formatCurrencyFen(account.reserved_balance_fen) : "-"} />
+                    <InfoChip label="Available" value={account ? formatCurrencyYuan(account.available_balance_yuan) : "-"} />
+                    <InfoChip label="Reserved" value={account ? formatCurrencyYuan(account.reserved_balance_yuan) : "-"} />
                   </div>
                 </CardContent>
               </Card>
@@ -718,13 +718,13 @@ function parseCurrency(amount: string | number) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function formatCurrencyFen(amountFen: string | number) {
-  const normalized = parseCurrency(amountFen);
+function formatCurrencyYuan(amountYuan: string | number) {
+  const normalized = parseCurrency(amountYuan);
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
     minimumFractionDigits: 2,
-  }).format(normalized / 100);
+  }).format(normalized);
 }
 
 function formatFileSize(bytes: number) {

@@ -53,13 +53,13 @@ export function AccountOverview() {
     const accountCards = [
         {
             title: "Available Balance",
-            value: formatCurrencyYuan(billingAccount.available_balance_fen),
+            value: formatCurrencyYuan(billingAccount.available_balance_yuan),
             description: "Ready for your next download request",
             icon: Wallet,
         },
         {
             title: "Reserved Amount",
-            value: formatCurrencyYuan(billingAccount.reserved_balance_fen),
+            value: formatCurrencyYuan(billingAccount.reserved_balance_yuan),
             description: "Held for active download and transfer flows",
             icon: Shield,
         },
@@ -71,7 +71,7 @@ export function AccountOverview() {
         },
         {
             title: "Total Spent",
-            value: formatCurrencyYuan(billingAccount.total_spent_fen),
+            value: formatCurrencyYuan(billingAccount.total_spent_yuan),
             description: "Settled billing amount already consumed",
             icon: Receipt,
         },
@@ -93,7 +93,7 @@ export function AccountOverview() {
                         <div>
                             <p className="text-sm text-slate-600">Available balance</p>
                             <p data-testid="account-balance-value" className="mt-1 text-3xl font-semibold text-slate-950">
-                                {formatCurrencyYuan(billingAccount.available_balance_fen)}
+                                {formatCurrencyYuan(billingAccount.available_balance_yuan)}
                             </p>
                         </div>
                         <p className="max-w-2xl text-sm text-slate-600">

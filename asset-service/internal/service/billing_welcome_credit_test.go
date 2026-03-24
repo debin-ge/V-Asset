@@ -52,15 +52,15 @@ func TestGrantWelcomeCreditIdempotent(t *testing.T) {
 	if entry1 == nil || grant1 == nil {
 		t.Fatal("expected first grant ledger and snapshot")
 	}
-	if account1.AvailableBalanceFen.String() != "100" {
-		t.Fatalf("expected available balance 100 internal minor units, got %s", account1.AvailableBalanceFen.String())
+	if account1.AvailableBalanceYuan.String() != "1" {
+		t.Fatalf("expected available balance 1 yuan, got %s", account1.AvailableBalanceYuan.String())
 	}
 
-	expectEnsureAccount(mock, "u-1", "100", "100", 2, now)
+	expectEnsureAccount(mock, "u-1", "1", "1", 2, now)
 	mock.ExpectQuery(`FROM billing_ledger_entries\s+WHERE operation_id = \$1`).
 		WithArgs("welcome_credit:u-1").
 		WillReturnRows(ledgerRows().
-			AddRow(11, entry1.EntryNo, int64(1), "u-1", "", "", int64(0), "", "", "welcome_credit:u-1", models.LedgerEntryTypeManualTopup, models.BillingSceneOnboarding, "100", "100", "0", "100", "0", "", models.WelcomeCreditReasonCode, now))
+			AddRow(11, entry1.EntryNo, int64(1), "u-1", "", "", int64(0), "", "", "welcome_credit:u-1", models.LedgerEntryTypeManualTopup, models.BillingSceneOnboarding, "1", "1", "0", "1", "0", "", models.WelcomeCreditReasonCode, now))
 	mock.ExpectQuery(`FROM welcome_credit_grants\s+WHERE operation_id = \$1`).
 		WithArgs("welcome_credit:u-1").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "operation_id", "ledger_entry_no", "reason_code", "amount_yuan", "currency_code", "created_at"}).
@@ -79,8 +79,8 @@ func TestGrantWelcomeCreditIdempotent(t *testing.T) {
 	if entry1.EntryNo != entry2.EntryNo {
 		t.Fatalf("expected same ledger entry, got %s and %s", entry1.EntryNo, entry2.EntryNo)
 	}
-	if account2.AvailableBalanceFen.String() != "100" {
-		t.Fatalf("expected idempotent balance unchanged at 100, got %s", account2.AvailableBalanceFen.String())
+	if account2.AvailableBalanceYuan.String() != "1" {
+		t.Fatalf("expected idempotent balance unchanged at 1 yuan, got %s", account2.AvailableBalanceYuan.String())
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -130,8 +130,8 @@ func TestGrantWelcomeCreditSnapshotsAmount(t *testing.T) {
 	if entry.Remark != models.WelcomeCreditReasonCode {
 		t.Fatalf("expected ledger reason code %s, got %s", models.WelcomeCreditReasonCode, entry.Remark)
 	}
-	if entry.ActionAmountFen.String() != "150" {
-		t.Fatalf("expected internal minor amount 150, got %s", entry.ActionAmountFen.String())
+	if entry.ActionAmountYuan.String() != "1.5" {
+		t.Fatalf("expected action amount 1.5 yuan, got %s", entry.ActionAmountYuan.String())
 	}
 	if grant.AmountYuan.String() != "1.5" {
 		t.Fatalf("expected snapshot amount_yuan 1.5, got %s", grant.AmountYuan.String())
@@ -175,8 +175,8 @@ func TestGrantWelcomeCreditDisabledSetting(t *testing.T) {
 	if entry != nil || grant != nil {
 		t.Fatal("expected no ledger and no grant snapshot when disabled")
 	}
-	if account.AvailableBalanceFen.String() != "0" {
-		t.Fatalf("expected balance unchanged, got %s", account.AvailableBalanceFen.String())
+	if account.AvailableBalanceYuan.String() != "0" {
+		t.Fatalf("expected balance unchanged, got %s", account.AvailableBalanceYuan.String())
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -200,7 +200,7 @@ func TestGrantWelcomeCreditRejectsDuplicateOperation(t *testing.T) {
 	mock.ExpectQuery(`FROM billing_ledger_entries\s+WHERE operation_id = \$1`).
 		WithArgs("welcome_credit:u-4").
 		WillReturnRows(ledgerRows().
-			AddRow(31, "led_x", int64(1), "other-user", "", "", int64(0), "", "", "welcome_credit:u-4", models.LedgerEntryTypeManualTopup, models.BillingSceneAdmin, "100", "100", "0", "100", "0", "", "manual_topup", now))
+			AddRow(31, "led_x", int64(1), "other-user", "", "", int64(0), "", "", "welcome_credit:u-4", models.LedgerEntryTypeManualTopup, models.BillingSceneAdmin, "1", "1", "0", "1", "0", "", "manual_topup", now))
 
 	_, _, _, _, err = svc.GrantWelcomeCredit(context.Background(), "u-4", "welcome_credit:u-4")
 	if !errors.Is(err, ErrDuplicateOperation) {
@@ -214,24 +214,24 @@ func TestGrantWelcomeCreditRejectsDuplicateOperation(t *testing.T) {
 
 func expectEnsureAccount(mock sqlmock.Sqlmock, userID, available, totalRecharged string, version int32, now time.Time) {
 	mock.ExpectExec(`INSERT INTO billing_accounts`).WithArgs(userID).WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectQuery(`SELECT id, user_id, currency_code, available_balance_fen, reserved_balance_fen`).
+	mock.ExpectQuery(`SELECT id, user_id, currency_code, available_balance_yuan, reserved_balance_yuan`).
 		WithArgs(userID).
 		WillReturnRows(accountRows().AddRow(1, userID, "CNY", available, "0", totalRecharged, "0", int64(0), models.BillingAccountStatusActive, version, now, now))
 }
 
 func expectEnsureAccountForUpdate(mock sqlmock.Sqlmock, userID, available, totalRecharged string, version int32, now time.Time) {
 	mock.ExpectExec(`INSERT INTO billing_accounts`).WithArgs(userID).WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectQuery(`SELECT id, user_id, currency_code, available_balance_fen, reserved_balance_fen[\s\S]*FOR UPDATE`).
+	mock.ExpectQuery(`SELECT id, user_id, currency_code, available_balance_yuan, reserved_balance_yuan[\s\S]*FOR UPDATE`).
 		WithArgs(userID).
 		WillReturnRows(accountRows().AddRow(1, userID, "CNY", available, "0", totalRecharged, "0", int64(0), models.BillingAccountStatusActive, version, now, now))
 }
 
 func accountRows() *sqlmock.Rows {
-	return sqlmock.NewRows([]string{"id", "user_id", "currency_code", "available_balance_fen", "reserved_balance_fen", "total_recharged_fen", "total_spent_fen", "total_traffic_bytes", "status", "version", "created_at", "updated_at"})
+	return sqlmock.NewRows([]string{"id", "user_id", "currency_code", "available_balance_yuan", "reserved_balance_yuan", "total_recharged_yuan", "total_spent_yuan", "total_traffic_bytes", "status", "version", "created_at", "updated_at"})
 }
 
 func ledgerRows() *sqlmock.Rows {
-	return sqlmock.NewRows([]string{"id", "entry_no", "account_id", "user_id", "order_no", "hold_no", "history_id", "task_id", "transfer_id", "operation_id", "entry_type", "scene", "action_amount_fen", "available_delta_fen", "reserved_delta_fen", "balance_after_available_fen", "balance_after_reserved_fen", "operator_user_id", "remark", "created_at"})
+	return sqlmock.NewRows([]string{"id", "entry_no", "account_id", "user_id", "order_no", "hold_no", "history_id", "task_id", "transfer_id", "operation_id", "entry_type", "scene", "action_amount_yuan", "available_delta_yuan", "reserved_delta_yuan", "balance_after_available_yuan", "balance_after_reserved_yuan", "operator_user_id", "remark", "created_at"})
 }
 
 func TestGrantWelcomeCreditBootstrapsDefaultSetting(t *testing.T) {
@@ -276,8 +276,8 @@ func TestGrantWelcomeCreditBootstrapsDefaultSetting(t *testing.T) {
 	if entry == nil || grant == nil {
 		t.Fatal("expected ledger and grant snapshot when default setting is bootstrapped")
 	}
-	if account.AvailableBalanceFen.String() != "100" {
-		t.Fatalf("expected bootstrapped default balance 100, got %s", account.AvailableBalanceFen.String())
+	if account.AvailableBalanceYuan.String() != "1" {
+		t.Fatalf("expected bootstrapped default balance 1 yuan, got %s", account.AvailableBalanceYuan.String())
 	}
 	if grant.AmountYuan.String() != "1" {
 		t.Fatalf("expected default snapshot amount 1, got %s", grant.AmountYuan.String())
@@ -331,8 +331,8 @@ func TestGrantWelcomeCreditBootstrapsUninitializedSetting(t *testing.T) {
 	if entry == nil || grant == nil {
 		t.Fatal("expected ledger and grant snapshot when uninitialized setting is bootstrapped")
 	}
-	if account.AvailableBalanceFen.String() != "100" {
-		t.Fatalf("expected bootstrapped default balance 100, got %s", account.AvailableBalanceFen.String())
+	if account.AvailableBalanceYuan.String() != "1" {
+		t.Fatalf("expected bootstrapped default balance 1 yuan, got %s", account.AvailableBalanceYuan.String())
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

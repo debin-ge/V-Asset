@@ -1797,20 +1797,20 @@ func (x *UpdateHistoryStatusResponse) GetSuccess() bool {
 }
 
 type BillingAccountSnapshot struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	UserId              string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	CurrencyCode        string                 `protobuf:"bytes,2,opt,name=currency_code,json=currencyCode,proto3" json:"currency_code,omitempty"`
-	AvailableBalanceFen string                 `protobuf:"bytes,3,opt,name=available_balance_fen,json=availableBalanceFen,proto3" json:"available_balance_fen,omitempty"`
-	ReservedBalanceFen  string                 `protobuf:"bytes,4,opt,name=reserved_balance_fen,json=reservedBalanceFen,proto3" json:"reserved_balance_fen,omitempty"`
-	TotalRechargedFen   string                 `protobuf:"bytes,5,opt,name=total_recharged_fen,json=totalRechargedFen,proto3" json:"total_recharged_fen,omitempty"`
-	TotalSpentFen       string                 `protobuf:"bytes,6,opt,name=total_spent_fen,json=totalSpentFen,proto3" json:"total_spent_fen,omitempty"`
-	TotalTrafficBytes   int64                  `protobuf:"varint,7,opt,name=total_traffic_bytes,json=totalTrafficBytes,proto3" json:"total_traffic_bytes,omitempty"`
-	Status              int32                  `protobuf:"varint,8,opt,name=status,proto3" json:"status,omitempty"`
-	Version             int32                  `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
-	CreatedAt           string                 `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt           string                 `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	UserId               string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	CurrencyCode         string                 `protobuf:"bytes,2,opt,name=currency_code,json=currencyCode,proto3" json:"currency_code,omitempty"`
+	AvailableBalanceYuan string                 `protobuf:"bytes,3,opt,name=available_balance_yuan,json=availableBalanceYuan,proto3" json:"available_balance_yuan,omitempty"`
+	ReservedBalanceYuan  string                 `protobuf:"bytes,4,opt,name=reserved_balance_yuan,json=reservedBalanceYuan,proto3" json:"reserved_balance_yuan,omitempty"`
+	TotalRechargedYuan   string                 `protobuf:"bytes,5,opt,name=total_recharged_yuan,json=totalRechargedYuan,proto3" json:"total_recharged_yuan,omitempty"`
+	TotalSpentYuan       string                 `protobuf:"bytes,6,opt,name=total_spent_yuan,json=totalSpentYuan,proto3" json:"total_spent_yuan,omitempty"`
+	TotalTrafficBytes    int64                  `protobuf:"varint,7,opt,name=total_traffic_bytes,json=totalTrafficBytes,proto3" json:"total_traffic_bytes,omitempty"`
+	Status               int32                  `protobuf:"varint,8,opt,name=status,proto3" json:"status,omitempty"`
+	Version              int32                  `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
+	CreatedAt            string                 `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt            string                 `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *BillingAccountSnapshot) Reset() {
@@ -1857,30 +1857,30 @@ func (x *BillingAccountSnapshot) GetCurrencyCode() string {
 	return ""
 }
 
-func (x *BillingAccountSnapshot) GetAvailableBalanceFen() string {
+func (x *BillingAccountSnapshot) GetAvailableBalanceYuan() string {
 	if x != nil {
-		return x.AvailableBalanceFen
+		return x.AvailableBalanceYuan
 	}
 	return ""
 }
 
-func (x *BillingAccountSnapshot) GetReservedBalanceFen() string {
+func (x *BillingAccountSnapshot) GetReservedBalanceYuan() string {
 	if x != nil {
-		return x.ReservedBalanceFen
+		return x.ReservedBalanceYuan
 	}
 	return ""
 }
 
-func (x *BillingAccountSnapshot) GetTotalRechargedFen() string {
+func (x *BillingAccountSnapshot) GetTotalRechargedYuan() string {
 	if x != nil {
-		return x.TotalRechargedFen
+		return x.TotalRechargedYuan
 	}
 	return ""
 }
 
-func (x *BillingAccountSnapshot) GetTotalSpentFen() string {
+func (x *BillingAccountSnapshot) GetTotalSpentYuan() string {
 	if x != nil {
-		return x.TotalSpentFen
+		return x.TotalSpentYuan
 	}
 	return ""
 }
@@ -2022,7 +2022,7 @@ type BillingStatementItem struct {
 	Type          int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
 	HistoryId     int64                  `protobuf:"varint,3,opt,name=history_id,json=historyId,proto3" json:"history_id,omitempty"`
 	TrafficBytes  int64                  `protobuf:"varint,4,opt,name=traffic_bytes,json=trafficBytes,proto3" json:"traffic_bytes,omitempty"`
-	AmountFen     string                 `protobuf:"bytes,5,opt,name=amount_fen,json=amountFen,proto3" json:"amount_fen,omitempty"`
+	AmountYuan    string                 `protobuf:"bytes,5,opt,name=amount_yuan,json=amountYuan,proto3" json:"amount_yuan,omitempty"`
 	Status        int32                  `protobuf:"varint,6,opt,name=status,proto3" json:"status,omitempty"`
 	Remark        string                 `protobuf:"bytes,7,opt,name=remark,proto3" json:"remark,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -2088,9 +2088,9 @@ func (x *BillingStatementItem) GetTrafficBytes() int64 {
 	return 0
 }
 
-func (x *BillingStatementItem) GetAmountFen() string {
+func (x *BillingStatementItem) GetAmountYuan() string {
 	if x != nil {
-		return x.AmountFen
+		return x.AmountYuan
 	}
 	return ""
 }
@@ -2473,7 +2473,7 @@ type EstimateDownloadBillingResponse struct {
 	EstimatedIngressBytes int64                  `protobuf:"varint,1,opt,name=estimated_ingress_bytes,json=estimatedIngressBytes,proto3" json:"estimated_ingress_bytes,omitempty"`
 	EstimatedEgressBytes  int64                  `protobuf:"varint,2,opt,name=estimated_egress_bytes,json=estimatedEgressBytes,proto3" json:"estimated_egress_bytes,omitempty"`
 	EstimatedTrafficBytes int64                  `protobuf:"varint,3,opt,name=estimated_traffic_bytes,json=estimatedTrafficBytes,proto3" json:"estimated_traffic_bytes,omitempty"`
-	EstimatedCostFen      string                 `protobuf:"bytes,4,opt,name=estimated_cost_fen,json=estimatedCostFen,proto3" json:"estimated_cost_fen,omitempty"`
+	EstimatedCostYuan     string                 `protobuf:"bytes,4,opt,name=estimated_cost_yuan,json=estimatedCostYuan,proto3" json:"estimated_cost_yuan,omitempty"`
 	PricingVersion        int32                  `protobuf:"varint,5,opt,name=pricing_version,json=pricingVersion,proto3" json:"pricing_version,omitempty"`
 	IsEstimated           bool                   `protobuf:"varint,6,opt,name=is_estimated,json=isEstimated,proto3" json:"is_estimated,omitempty"`
 	EstimateReason        string                 `protobuf:"bytes,7,opt,name=estimate_reason,json=estimateReason,proto3" json:"estimate_reason,omitempty"`
@@ -2532,9 +2532,9 @@ func (x *EstimateDownloadBillingResponse) GetEstimatedTrafficBytes() int64 {
 	return 0
 }
 
-func (x *EstimateDownloadBillingResponse) GetEstimatedCostFen() string {
+func (x *EstimateDownloadBillingResponse) GetEstimatedCostYuan() string {
 	if x != nil {
-		return x.EstimatedCostFen
+		return x.EstimatedCostYuan
 	}
 	return ""
 }
@@ -2568,7 +2568,7 @@ type HoldInitialDownloadRequest struct {
 	EstimatedIngressBytes int64                  `protobuf:"varint,4,opt,name=estimated_ingress_bytes,json=estimatedIngressBytes,proto3" json:"estimated_ingress_bytes,omitempty"`
 	EstimatedEgressBytes  int64                  `protobuf:"varint,5,opt,name=estimated_egress_bytes,json=estimatedEgressBytes,proto3" json:"estimated_egress_bytes,omitempty"`
 	EstimatedTrafficBytes int64                  `protobuf:"varint,6,opt,name=estimated_traffic_bytes,json=estimatedTrafficBytes,proto3" json:"estimated_traffic_bytes,omitempty"`
-	EstimatedCostFen      string                 `protobuf:"bytes,7,opt,name=estimated_cost_fen,json=estimatedCostFen,proto3" json:"estimated_cost_fen,omitempty"`
+	EstimatedCostYuan     string                 `protobuf:"bytes,7,opt,name=estimated_cost_yuan,json=estimatedCostYuan,proto3" json:"estimated_cost_yuan,omitempty"`
 	PricingVersion        int32                  `protobuf:"varint,8,opt,name=pricing_version,json=pricingVersion,proto3" json:"pricing_version,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
@@ -2646,9 +2646,9 @@ func (x *HoldInitialDownloadRequest) GetEstimatedTrafficBytes() int64 {
 	return 0
 }
 
-func (x *HoldInitialDownloadRequest) GetEstimatedCostFen() string {
+func (x *HoldInitialDownloadRequest) GetEstimatedCostYuan() string {
 	if x != nil {
-		return x.EstimatedCostFen
+		return x.EstimatedCostYuan
 	}
 	return ""
 }
@@ -2661,14 +2661,14 @@ func (x *HoldInitialDownloadRequest) GetPricingVersion() int32 {
 }
 
 type HoldInitialDownloadResponse struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	OrderNo             string                 `protobuf:"bytes,1,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	HoldNo              string                 `protobuf:"bytes,2,opt,name=hold_no,json=holdNo,proto3" json:"hold_no,omitempty"`
-	HeldAmountFen       string                 `protobuf:"bytes,3,opt,name=held_amount_fen,json=heldAmountFen,proto3" json:"held_amount_fen,omitempty"`
-	AvailableBalanceFen string                 `protobuf:"bytes,4,opt,name=available_balance_fen,json=availableBalanceFen,proto3" json:"available_balance_fen,omitempty"`
-	ReservedBalanceFen  string                 `protobuf:"bytes,5,opt,name=reserved_balance_fen,json=reservedBalanceFen,proto3" json:"reserved_balance_fen,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	OrderNo              string                 `protobuf:"bytes,1,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	HoldNo               string                 `protobuf:"bytes,2,opt,name=hold_no,json=holdNo,proto3" json:"hold_no,omitempty"`
+	HeldAmountYuan       string                 `protobuf:"bytes,3,opt,name=held_amount_yuan,json=heldAmountYuan,proto3" json:"held_amount_yuan,omitempty"`
+	AvailableBalanceYuan string                 `protobuf:"bytes,4,opt,name=available_balance_yuan,json=availableBalanceYuan,proto3" json:"available_balance_yuan,omitempty"`
+	ReservedBalanceYuan  string                 `protobuf:"bytes,5,opt,name=reserved_balance_yuan,json=reservedBalanceYuan,proto3" json:"reserved_balance_yuan,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *HoldInitialDownloadResponse) Reset() {
@@ -2715,23 +2715,23 @@ func (x *HoldInitialDownloadResponse) GetHoldNo() string {
 	return ""
 }
 
-func (x *HoldInitialDownloadResponse) GetHeldAmountFen() string {
+func (x *HoldInitialDownloadResponse) GetHeldAmountYuan() string {
 	if x != nil {
-		return x.HeldAmountFen
+		return x.HeldAmountYuan
 	}
 	return ""
 }
 
-func (x *HoldInitialDownloadResponse) GetAvailableBalanceFen() string {
+func (x *HoldInitialDownloadResponse) GetAvailableBalanceYuan() string {
 	if x != nil {
-		return x.AvailableBalanceFen
+		return x.AvailableBalanceYuan
 	}
 	return ""
 }
 
-func (x *HoldInitialDownloadResponse) GetReservedBalanceFen() string {
+func (x *HoldInitialDownloadResponse) GetReservedBalanceYuan() string {
 	if x != nil {
-		return x.ReservedBalanceFen
+		return x.ReservedBalanceYuan
 	}
 	return ""
 }
@@ -2789,15 +2789,15 @@ func (x *CaptureIngressUsageRequest) GetActualIngressBytes() int64 {
 }
 
 type CaptureIngressUsageResponse struct {
-	state                protoimpl.MessageState `protogen:"open.v1"`
-	OrderNo              string                 `protobuf:"bytes,1,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	CapturedAmountFen    string                 `protobuf:"bytes,2,opt,name=captured_amount_fen,json=capturedAmountFen,proto3" json:"captured_amount_fen,omitempty"`
-	RemainingReservedFen string                 `protobuf:"bytes,3,opt,name=remaining_reserved_fen,json=remainingReservedFen,proto3" json:"remaining_reserved_fen,omitempty"`
-	ActualIngressBytes   int64                  `protobuf:"varint,4,opt,name=actual_ingress_bytes,json=actualIngressBytes,proto3" json:"actual_ingress_bytes,omitempty"`
-	ActualTrafficBytes   int64                  `protobuf:"varint,5,opt,name=actual_traffic_bytes,json=actualTrafficBytes,proto3" json:"actual_traffic_bytes,omitempty"`
-	OrderStatus          int32                  `protobuf:"varint,6,opt,name=order_status,json=orderStatus,proto3" json:"order_status,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	OrderNo               string                 `protobuf:"bytes,1,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	CapturedAmountYuan    string                 `protobuf:"bytes,2,opt,name=captured_amount_yuan,json=capturedAmountYuan,proto3" json:"captured_amount_yuan,omitempty"`
+	RemainingReservedYuan string                 `protobuf:"bytes,3,opt,name=remaining_reserved_yuan,json=remainingReservedYuan,proto3" json:"remaining_reserved_yuan,omitempty"`
+	ActualIngressBytes    int64                  `protobuf:"varint,4,opt,name=actual_ingress_bytes,json=actualIngressBytes,proto3" json:"actual_ingress_bytes,omitempty"`
+	ActualTrafficBytes    int64                  `protobuf:"varint,5,opt,name=actual_traffic_bytes,json=actualTrafficBytes,proto3" json:"actual_traffic_bytes,omitempty"`
+	OrderStatus           int32                  `protobuf:"varint,6,opt,name=order_status,json=orderStatus,proto3" json:"order_status,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *CaptureIngressUsageResponse) Reset() {
@@ -2837,16 +2837,16 @@ func (x *CaptureIngressUsageResponse) GetOrderNo() string {
 	return ""
 }
 
-func (x *CaptureIngressUsageResponse) GetCapturedAmountFen() string {
+func (x *CaptureIngressUsageResponse) GetCapturedAmountYuan() string {
 	if x != nil {
-		return x.CapturedAmountFen
+		return x.CapturedAmountYuan
 	}
 	return ""
 }
 
-func (x *CaptureIngressUsageResponse) GetRemainingReservedFen() string {
+func (x *CaptureIngressUsageResponse) GetRemainingReservedYuan() string {
 	if x != nil {
-		return x.RemainingReservedFen
+		return x.RemainingReservedYuan
 	}
 	return ""
 }
@@ -2925,12 +2925,12 @@ func (x *ReleaseInitialDownloadRequest) GetReason() string {
 }
 
 type ReleaseInitialDownloadResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Success           bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	OrderNo           string                 `protobuf:"bytes,2,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	ReleasedAmountFen string                 `protobuf:"bytes,3,opt,name=released_amount_fen,json=releasedAmountFen,proto3" json:"released_amount_fen,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Success            bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	OrderNo            string                 `protobuf:"bytes,2,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	ReleasedAmountYuan string                 `protobuf:"bytes,3,opt,name=released_amount_yuan,json=releasedAmountYuan,proto3" json:"released_amount_yuan,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ReleaseInitialDownloadResponse) Reset() {
@@ -2977,9 +2977,9 @@ func (x *ReleaseInitialDownloadResponse) GetOrderNo() string {
 	return ""
 }
 
-func (x *ReleaseInitialDownloadResponse) GetReleasedAmountFen() string {
+func (x *ReleaseInitialDownloadResponse) GetReleasedAmountYuan() string {
 	if x != nil {
-		return x.ReleasedAmountFen
+		return x.ReleasedAmountYuan
 	}
 	return ""
 }
@@ -3045,17 +3045,17 @@ func (x *PrepareFileTransferBillingRequest) GetFileSizeBytes() int64 {
 }
 
 type PrepareFileTransferBillingResponse struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	TransferId          string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
-	OrderNo             string                 `protobuf:"bytes,2,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	HoldNo              string                 `protobuf:"bytes,3,opt,name=hold_no,json=holdNo,proto3" json:"hold_no,omitempty"`
-	Scene               int32                  `protobuf:"varint,4,opt,name=scene,proto3" json:"scene,omitempty"`
-	HoldAmountFen       string                 `protobuf:"bytes,5,opt,name=hold_amount_fen,json=holdAmountFen,proto3" json:"hold_amount_fen,omitempty"`
-	PricingVersion      int32                  `protobuf:"varint,6,opt,name=pricing_version,json=pricingVersion,proto3" json:"pricing_version,omitempty"`
-	AvailableBalanceFen string                 `protobuf:"bytes,7,opt,name=available_balance_fen,json=availableBalanceFen,proto3" json:"available_balance_fen,omitempty"`
-	ReservedBalanceFen  string                 `protobuf:"bytes,8,opt,name=reserved_balance_fen,json=reservedBalanceFen,proto3" json:"reserved_balance_fen,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	TransferId           string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	OrderNo              string                 `protobuf:"bytes,2,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	HoldNo               string                 `protobuf:"bytes,3,opt,name=hold_no,json=holdNo,proto3" json:"hold_no,omitempty"`
+	Scene                int32                  `protobuf:"varint,4,opt,name=scene,proto3" json:"scene,omitempty"`
+	HoldAmountYuan       string                 `protobuf:"bytes,5,opt,name=hold_amount_yuan,json=holdAmountYuan,proto3" json:"hold_amount_yuan,omitempty"`
+	PricingVersion       int32                  `protobuf:"varint,6,opt,name=pricing_version,json=pricingVersion,proto3" json:"pricing_version,omitempty"`
+	AvailableBalanceYuan string                 `protobuf:"bytes,7,opt,name=available_balance_yuan,json=availableBalanceYuan,proto3" json:"available_balance_yuan,omitempty"`
+	ReservedBalanceYuan  string                 `protobuf:"bytes,8,opt,name=reserved_balance_yuan,json=reservedBalanceYuan,proto3" json:"reserved_balance_yuan,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *PrepareFileTransferBillingResponse) Reset() {
@@ -3116,9 +3116,9 @@ func (x *PrepareFileTransferBillingResponse) GetScene() int32 {
 	return 0
 }
 
-func (x *PrepareFileTransferBillingResponse) GetHoldAmountFen() string {
+func (x *PrepareFileTransferBillingResponse) GetHoldAmountYuan() string {
 	if x != nil {
-		return x.HoldAmountFen
+		return x.HoldAmountYuan
 	}
 	return ""
 }
@@ -3130,16 +3130,16 @@ func (x *PrepareFileTransferBillingResponse) GetPricingVersion() int32 {
 	return 0
 }
 
-func (x *PrepareFileTransferBillingResponse) GetAvailableBalanceFen() string {
+func (x *PrepareFileTransferBillingResponse) GetAvailableBalanceYuan() string {
 	if x != nil {
-		return x.AvailableBalanceFen
+		return x.AvailableBalanceYuan
 	}
 	return ""
 }
 
-func (x *PrepareFileTransferBillingResponse) GetReservedBalanceFen() string {
+func (x *PrepareFileTransferBillingResponse) GetReservedBalanceYuan() string {
 	if x != nil {
-		return x.ReservedBalanceFen
+		return x.ReservedBalanceYuan
 	}
 	return ""
 }
@@ -3197,14 +3197,14 @@ func (x *CompleteFileTransferBillingRequest) GetActualEgressBytes() int64 {
 }
 
 type CompleteFileTransferBillingResponse struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	OrderNo                string                 `protobuf:"bytes,1,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	CapturedAmountFen      string                 `protobuf:"bytes,2,opt,name=captured_amount_fen,json=capturedAmountFen,proto3" json:"captured_amount_fen,omitempty"`
-	ActualTrafficBytes     int64                  `protobuf:"varint,3,opt,name=actual_traffic_bytes,json=actualTrafficBytes,proto3" json:"actual_traffic_bytes,omitempty"`
-	TotalCapturedAmountFen string                 `protobuf:"bytes,4,opt,name=total_captured_amount_fen,json=totalCapturedAmountFen,proto3" json:"total_captured_amount_fen,omitempty"`
-	OrderStatus            int32                  `protobuf:"varint,5,opt,name=order_status,json=orderStatus,proto3" json:"order_status,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	OrderNo                 string                 `protobuf:"bytes,1,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	CapturedAmountYuan      string                 `protobuf:"bytes,2,opt,name=captured_amount_yuan,json=capturedAmountYuan,proto3" json:"captured_amount_yuan,omitempty"`
+	ActualTrafficBytes      int64                  `protobuf:"varint,3,opt,name=actual_traffic_bytes,json=actualTrafficBytes,proto3" json:"actual_traffic_bytes,omitempty"`
+	TotalCapturedAmountYuan string                 `protobuf:"bytes,4,opt,name=total_captured_amount_yuan,json=totalCapturedAmountYuan,proto3" json:"total_captured_amount_yuan,omitempty"`
+	OrderStatus             int32                  `protobuf:"varint,5,opt,name=order_status,json=orderStatus,proto3" json:"order_status,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *CompleteFileTransferBillingResponse) Reset() {
@@ -3244,9 +3244,9 @@ func (x *CompleteFileTransferBillingResponse) GetOrderNo() string {
 	return ""
 }
 
-func (x *CompleteFileTransferBillingResponse) GetCapturedAmountFen() string {
+func (x *CompleteFileTransferBillingResponse) GetCapturedAmountYuan() string {
 	if x != nil {
-		return x.CapturedAmountFen
+		return x.CapturedAmountYuan
 	}
 	return ""
 }
@@ -3258,9 +3258,9 @@ func (x *CompleteFileTransferBillingResponse) GetActualTrafficBytes() int64 {
 	return 0
 }
 
-func (x *CompleteFileTransferBillingResponse) GetTotalCapturedAmountFen() string {
+func (x *CompleteFileTransferBillingResponse) GetTotalCapturedAmountYuan() string {
 	if x != nil {
-		return x.TotalCapturedAmountFen
+		return x.TotalCapturedAmountYuan
 	}
 	return ""
 }
@@ -3325,12 +3325,12 @@ func (x *AbortFileTransferBillingRequest) GetReason() string {
 }
 
 type AbortFileTransferBillingResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Success           bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	OrderNo           string                 `protobuf:"bytes,2,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	ReleasedAmountFen string                 `protobuf:"bytes,3,opt,name=released_amount_fen,json=releasedAmountFen,proto3" json:"released_amount_fen,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Success            bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	OrderNo            string                 `protobuf:"bytes,2,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	ReleasedAmountYuan string                 `protobuf:"bytes,3,opt,name=released_amount_yuan,json=releasedAmountYuan,proto3" json:"released_amount_yuan,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *AbortFileTransferBillingResponse) Reset() {
@@ -3377,9 +3377,9 @@ func (x *AbortFileTransferBillingResponse) GetOrderNo() string {
 	return ""
 }
 
-func (x *AbortFileTransferBillingResponse) GetReleasedAmountFen() string {
+func (x *AbortFileTransferBillingResponse) GetReleasedAmountYuan() string {
 	if x != nil {
-		return x.ReleasedAmountFen
+		return x.ReleasedAmountYuan
 	}
 	return ""
 }
@@ -3612,7 +3612,7 @@ type AdjustBillingBalanceRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	UserId         string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	OperationId    string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
-	AmountFen      string                 `protobuf:"bytes,3,opt,name=amount_fen,json=amountFen,proto3" json:"amount_fen,omitempty"`
+	AmountYuan     string                 `protobuf:"bytes,3,opt,name=amount_yuan,json=amountYuan,proto3" json:"amount_yuan,omitempty"`
 	Remark         string                 `protobuf:"bytes,4,opt,name=remark,proto3" json:"remark,omitempty"`
 	OperatorUserId string                 `protobuf:"bytes,5,opt,name=operator_user_id,json=operatorUserId,proto3" json:"operator_user_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -3663,9 +3663,9 @@ func (x *AdjustBillingBalanceRequest) GetOperationId() string {
 	return ""
 }
 
-func (x *AdjustBillingBalanceRequest) GetAmountFen() string {
+func (x *AdjustBillingBalanceRequest) GetAmountYuan() string {
 	if x != nil {
-		return x.AmountFen
+		return x.AmountYuan
 	}
 	return ""
 }
@@ -3745,27 +3745,27 @@ func (x *AdjustBillingBalanceResponse) GetEntryNo() string {
 }
 
 type LedgerEntryItem struct {
-	state                    protoimpl.MessageState `protogen:"open.v1"`
-	EntryNo                  string                 `protobuf:"bytes,1,opt,name=entry_no,json=entryNo,proto3" json:"entry_no,omitempty"`
-	UserId                   string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	OrderNo                  string                 `protobuf:"bytes,3,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
-	HoldNo                   string                 `protobuf:"bytes,4,opt,name=hold_no,json=holdNo,proto3" json:"hold_no,omitempty"`
-	HistoryId                int64                  `protobuf:"varint,5,opt,name=history_id,json=historyId,proto3" json:"history_id,omitempty"`
-	TaskId                   string                 `protobuf:"bytes,6,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	TransferId               string                 `protobuf:"bytes,7,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
-	OperationId              string                 `protobuf:"bytes,8,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
-	EntryType                int32                  `protobuf:"varint,9,opt,name=entry_type,json=entryType,proto3" json:"entry_type,omitempty"`
-	Scene                    int32                  `protobuf:"varint,10,opt,name=scene,proto3" json:"scene,omitempty"`
-	ActionAmountFen          string                 `protobuf:"bytes,11,opt,name=action_amount_fen,json=actionAmountFen,proto3" json:"action_amount_fen,omitempty"`
-	AvailableDeltaFen        string                 `protobuf:"bytes,12,opt,name=available_delta_fen,json=availableDeltaFen,proto3" json:"available_delta_fen,omitempty"`
-	ReservedDeltaFen         string                 `protobuf:"bytes,13,opt,name=reserved_delta_fen,json=reservedDeltaFen,proto3" json:"reserved_delta_fen,omitempty"`
-	BalanceAfterAvailableFen string                 `protobuf:"bytes,14,opt,name=balance_after_available_fen,json=balanceAfterAvailableFen,proto3" json:"balance_after_available_fen,omitempty"`
-	BalanceAfterReservedFen  string                 `protobuf:"bytes,15,opt,name=balance_after_reserved_fen,json=balanceAfterReservedFen,proto3" json:"balance_after_reserved_fen,omitempty"`
-	OperatorUserId           string                 `protobuf:"bytes,16,opt,name=operator_user_id,json=operatorUserId,proto3" json:"operator_user_id,omitempty"`
-	Remark                   string                 `protobuf:"bytes,17,opt,name=remark,proto3" json:"remark,omitempty"`
-	CreatedAt                string                 `protobuf:"bytes,18,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	EntryNo                   string                 `protobuf:"bytes,1,opt,name=entry_no,json=entryNo,proto3" json:"entry_no,omitempty"`
+	UserId                    string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	OrderNo                   string                 `protobuf:"bytes,3,opt,name=order_no,json=orderNo,proto3" json:"order_no,omitempty"`
+	HoldNo                    string                 `protobuf:"bytes,4,opt,name=hold_no,json=holdNo,proto3" json:"hold_no,omitempty"`
+	HistoryId                 int64                  `protobuf:"varint,5,opt,name=history_id,json=historyId,proto3" json:"history_id,omitempty"`
+	TaskId                    string                 `protobuf:"bytes,6,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	TransferId                string                 `protobuf:"bytes,7,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	OperationId               string                 `protobuf:"bytes,8,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	EntryType                 int32                  `protobuf:"varint,9,opt,name=entry_type,json=entryType,proto3" json:"entry_type,omitempty"`
+	Scene                     int32                  `protobuf:"varint,10,opt,name=scene,proto3" json:"scene,omitempty"`
+	ActionAmountYuan          string                 `protobuf:"bytes,11,opt,name=action_amount_yuan,json=actionAmountYuan,proto3" json:"action_amount_yuan,omitempty"`
+	AvailableDeltaYuan        string                 `protobuf:"bytes,12,opt,name=available_delta_yuan,json=availableDeltaYuan,proto3" json:"available_delta_yuan,omitempty"`
+	ReservedDeltaYuan         string                 `protobuf:"bytes,13,opt,name=reserved_delta_yuan,json=reservedDeltaYuan,proto3" json:"reserved_delta_yuan,omitempty"`
+	BalanceAfterAvailableYuan string                 `protobuf:"bytes,14,opt,name=balance_after_available_yuan,json=balanceAfterAvailableYuan,proto3" json:"balance_after_available_yuan,omitempty"`
+	BalanceAfterReservedYuan  string                 `protobuf:"bytes,15,opt,name=balance_after_reserved_yuan,json=balanceAfterReservedYuan,proto3" json:"balance_after_reserved_yuan,omitempty"`
+	OperatorUserId            string                 `protobuf:"bytes,16,opt,name=operator_user_id,json=operatorUserId,proto3" json:"operator_user_id,omitempty"`
+	Remark                    string                 `protobuf:"bytes,17,opt,name=remark,proto3" json:"remark,omitempty"`
+	CreatedAt                 string                 `protobuf:"bytes,18,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *LedgerEntryItem) Reset() {
@@ -3868,37 +3868,37 @@ func (x *LedgerEntryItem) GetScene() int32 {
 	return 0
 }
 
-func (x *LedgerEntryItem) GetActionAmountFen() string {
+func (x *LedgerEntryItem) GetActionAmountYuan() string {
 	if x != nil {
-		return x.ActionAmountFen
+		return x.ActionAmountYuan
 	}
 	return ""
 }
 
-func (x *LedgerEntryItem) GetAvailableDeltaFen() string {
+func (x *LedgerEntryItem) GetAvailableDeltaYuan() string {
 	if x != nil {
-		return x.AvailableDeltaFen
+		return x.AvailableDeltaYuan
 	}
 	return ""
 }
 
-func (x *LedgerEntryItem) GetReservedDeltaFen() string {
+func (x *LedgerEntryItem) GetReservedDeltaYuan() string {
 	if x != nil {
-		return x.ReservedDeltaFen
+		return x.ReservedDeltaYuan
 	}
 	return ""
 }
 
-func (x *LedgerEntryItem) GetBalanceAfterAvailableFen() string {
+func (x *LedgerEntryItem) GetBalanceAfterAvailableYuan() string {
 	if x != nil {
-		return x.BalanceAfterAvailableFen
+		return x.BalanceAfterAvailableYuan
 	}
 	return ""
 }
 
-func (x *LedgerEntryItem) GetBalanceAfterReservedFen() string {
+func (x *LedgerEntryItem) GetBalanceAfterReservedYuan() string {
 	if x != nil {
-		return x.BalanceAfterReservedFen
+		return x.BalanceAfterReservedYuan
 	}
 	return ""
 }
@@ -4070,8 +4070,8 @@ type TrafficUsageRecordItem struct {
 	TransferId         string                 `protobuf:"bytes,6,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
 	Direction          int32                  `protobuf:"varint,7,opt,name=direction,proto3" json:"direction,omitempty"`
 	TrafficBytes       int64                  `protobuf:"varint,8,opt,name=traffic_bytes,json=trafficBytes,proto3" json:"traffic_bytes,omitempty"`
-	UnitPriceFenPerGib string                 `protobuf:"bytes,9,opt,name=unit_price_fen_per_gib,json=unitPriceFenPerGib,proto3" json:"unit_price_fen_per_gib,omitempty"`
-	AmountFen          string                 `protobuf:"bytes,10,opt,name=amount_fen,json=amountFen,proto3" json:"amount_fen,omitempty"`
+	UnitPriceYuanPerGb string                 `protobuf:"bytes,9,opt,name=unit_price_yuan_per_gb,json=unitPriceYuanPerGb,proto3" json:"unit_price_yuan_per_gb,omitempty"`
+	AmountYuan         string                 `protobuf:"bytes,10,opt,name=amount_yuan,json=amountYuan,proto3" json:"amount_yuan,omitempty"`
 	PricingVersion     int32                  `protobuf:"varint,11,opt,name=pricing_version,json=pricingVersion,proto3" json:"pricing_version,omitempty"`
 	SourceService      string                 `protobuf:"bytes,12,opt,name=source_service,json=sourceService,proto3" json:"source_service,omitempty"`
 	Status             int32                  `protobuf:"varint,13,opt,name=status,proto3" json:"status,omitempty"`
@@ -4167,16 +4167,16 @@ func (x *TrafficUsageRecordItem) GetTrafficBytes() int64 {
 	return 0
 }
 
-func (x *TrafficUsageRecordItem) GetUnitPriceFenPerGib() string {
+func (x *TrafficUsageRecordItem) GetUnitPriceYuanPerGb() string {
 	if x != nil {
-		return x.UnitPriceFenPerGib
+		return x.UnitPriceYuanPerGb
 	}
 	return ""
 }
 
-func (x *TrafficUsageRecordItem) GetAmountFen() string {
+func (x *TrafficUsageRecordItem) GetAmountYuan() string {
 	if x != nil {
-		return x.AmountFen
+		return x.AmountYuan
 	}
 	return ""
 }
@@ -4355,8 +4355,8 @@ func (x *ListTrafficUsageRecordsResponse) GetItems() []*TrafficUsageRecordItem {
 type BillingPricing struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	Version               int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
-	IngressPriceFenPerGib string                 `protobuf:"bytes,2,opt,name=ingress_price_fen_per_gib,json=ingressPriceFenPerGib,proto3" json:"ingress_price_fen_per_gib,omitempty"`
-	EgressPriceFenPerGib  string                 `protobuf:"bytes,3,opt,name=egress_price_fen_per_gib,json=egressPriceFenPerGib,proto3" json:"egress_price_fen_per_gib,omitempty"`
+	IngressPriceYuanPerGb string                 `protobuf:"bytes,2,opt,name=ingress_price_yuan_per_gb,json=ingressPriceYuanPerGb,proto3" json:"ingress_price_yuan_per_gb,omitempty"`
+	EgressPriceYuanPerGb  string                 `protobuf:"bytes,3,opt,name=egress_price_yuan_per_gb,json=egressPriceYuanPerGb,proto3" json:"egress_price_yuan_per_gb,omitempty"`
 	Enabled               bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	Remark                string                 `protobuf:"bytes,5,opt,name=remark,proto3" json:"remark,omitempty"`
 	UpdatedByUserId       string                 `protobuf:"bytes,6,opt,name=updated_by_user_id,json=updatedByUserId,proto3" json:"updated_by_user_id,omitempty"`
@@ -4403,16 +4403,16 @@ func (x *BillingPricing) GetVersion() int32 {
 	return 0
 }
 
-func (x *BillingPricing) GetIngressPriceFenPerGib() string {
+func (x *BillingPricing) GetIngressPriceYuanPerGb() string {
 	if x != nil {
-		return x.IngressPriceFenPerGib
+		return x.IngressPriceYuanPerGb
 	}
 	return ""
 }
 
-func (x *BillingPricing) GetEgressPriceFenPerGib() string {
+func (x *BillingPricing) GetEgressPriceYuanPerGb() string {
 	if x != nil {
-		return x.EgressPriceFenPerGib
+		return x.EgressPriceYuanPerGb
 	}
 	return ""
 }
@@ -4534,8 +4534,8 @@ func (x *GetBillingPricingResponse) GetPricing() *BillingPricing {
 
 type UpdateBillingPricingRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
-	IngressPriceFenPerGib string                 `protobuf:"bytes,1,opt,name=ingress_price_fen_per_gib,json=ingressPriceFenPerGib,proto3" json:"ingress_price_fen_per_gib,omitempty"`
-	EgressPriceFenPerGib  string                 `protobuf:"bytes,2,opt,name=egress_price_fen_per_gib,json=egressPriceFenPerGib,proto3" json:"egress_price_fen_per_gib,omitempty"`
+	IngressPriceYuanPerGb string                 `protobuf:"bytes,1,opt,name=ingress_price_yuan_per_gb,json=ingressPriceYuanPerGb,proto3" json:"ingress_price_yuan_per_gb,omitempty"`
+	EgressPriceYuanPerGb  string                 `protobuf:"bytes,2,opt,name=egress_price_yuan_per_gb,json=egressPriceYuanPerGb,proto3" json:"egress_price_yuan_per_gb,omitempty"`
 	Remark                string                 `protobuf:"bytes,3,opt,name=remark,proto3" json:"remark,omitempty"`
 	OperatorUserId        string                 `protobuf:"bytes,4,opt,name=operator_user_id,json=operatorUserId,proto3" json:"operator_user_id,omitempty"`
 	unknownFields         protoimpl.UnknownFields
@@ -4572,16 +4572,16 @@ func (*UpdateBillingPricingRequest) Descriptor() ([]byte, []int) {
 	return file_proto_asset_proto_rawDescGZIP(), []int{64}
 }
 
-func (x *UpdateBillingPricingRequest) GetIngressPriceFenPerGib() string {
+func (x *UpdateBillingPricingRequest) GetIngressPriceYuanPerGb() string {
 	if x != nil {
-		return x.IngressPriceFenPerGib
+		return x.IngressPriceYuanPerGb
 	}
 	return ""
 }
 
-func (x *UpdateBillingPricingRequest) GetEgressPriceFenPerGib() string {
+func (x *UpdateBillingPricingRequest) GetEgressPriceYuanPerGb() string {
 	if x != nil {
-		return x.EgressPriceFenPerGib
+		return x.EgressPriceYuanPerGb
 	}
 	return ""
 }
@@ -5152,10 +5152,10 @@ type BillingShortfallOrderItem struct {
 	ActualIngressBytes int64                  `protobuf:"varint,8,opt,name=actual_ingress_bytes,json=actualIngressBytes,proto3" json:"actual_ingress_bytes,omitempty"`
 	ActualEgressBytes  int64                  `protobuf:"varint,9,opt,name=actual_egress_bytes,json=actualEgressBytes,proto3" json:"actual_egress_bytes,omitempty"`
 	ActualTrafficBytes int64                  `protobuf:"varint,10,opt,name=actual_traffic_bytes,json=actualTrafficBytes,proto3" json:"actual_traffic_bytes,omitempty"`
-	HeldAmountFen      string                 `protobuf:"bytes,11,opt,name=held_amount_fen,json=heldAmountFen,proto3" json:"held_amount_fen,omitempty"`
-	CapturedAmountFen  string                 `protobuf:"bytes,12,opt,name=captured_amount_fen,json=capturedAmountFen,proto3" json:"captured_amount_fen,omitempty"`
-	ReleasedAmountFen  string                 `protobuf:"bytes,13,opt,name=released_amount_fen,json=releasedAmountFen,proto3" json:"released_amount_fen,omitempty"`
-	ShortfallFen       string                 `protobuf:"bytes,14,opt,name=shortfall_fen,json=shortfallFen,proto3" json:"shortfall_fen,omitempty"`
+	HeldAmountYuan     string                 `protobuf:"bytes,11,opt,name=held_amount_yuan,json=heldAmountYuan,proto3" json:"held_amount_yuan,omitempty"`
+	CapturedAmountYuan string                 `protobuf:"bytes,12,opt,name=captured_amount_yuan,json=capturedAmountYuan,proto3" json:"captured_amount_yuan,omitempty"`
+	ReleasedAmountYuan string                 `protobuf:"bytes,13,opt,name=released_amount_yuan,json=releasedAmountYuan,proto3" json:"released_amount_yuan,omitempty"`
+	ShortfallYuan      string                 `protobuf:"bytes,14,opt,name=shortfall_yuan,json=shortfallYuan,proto3" json:"shortfall_yuan,omitempty"`
 	Remark             string                 `protobuf:"bytes,15,opt,name=remark,proto3" json:"remark,omitempty"`
 	CreatedAt          string                 `protobuf:"bytes,16,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt          string                 `protobuf:"bytes,17,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -5263,30 +5263,30 @@ func (x *BillingShortfallOrderItem) GetActualTrafficBytes() int64 {
 	return 0
 }
 
-func (x *BillingShortfallOrderItem) GetHeldAmountFen() string {
+func (x *BillingShortfallOrderItem) GetHeldAmountYuan() string {
 	if x != nil {
-		return x.HeldAmountFen
+		return x.HeldAmountYuan
 	}
 	return ""
 }
 
-func (x *BillingShortfallOrderItem) GetCapturedAmountFen() string {
+func (x *BillingShortfallOrderItem) GetCapturedAmountYuan() string {
 	if x != nil {
-		return x.CapturedAmountFen
+		return x.CapturedAmountYuan
 	}
 	return ""
 }
 
-func (x *BillingShortfallOrderItem) GetReleasedAmountFen() string {
+func (x *BillingShortfallOrderItem) GetReleasedAmountYuan() string {
 	if x != nil {
-		return x.ReleasedAmountFen
+		return x.ReleasedAmountYuan
 	}
 	return ""
 }
 
-func (x *BillingShortfallOrderItem) GetShortfallFen() string {
+func (x *BillingShortfallOrderItem) GetShortfallYuan() string {
 	if x != nil {
-		return x.ShortfallFen
+		return x.ShortfallYuan
 	}
 	return ""
 }
@@ -8207,14 +8207,14 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\tfile_hash\x18\x06 \x01(\tR\bfileHash\x12#\n" +
 	"\rerror_message\x18\a \x01(\tR\ferrorMessage\"7\n" +
 	"\x1bUpdateHistoryStatusResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xb4\x03\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xbc\x03\n" +
 	"\x16BillingAccountSnapshot\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12#\n" +
-	"\rcurrency_code\x18\x02 \x01(\tR\fcurrencyCode\x122\n" +
-	"\x15available_balance_fen\x18\x03 \x01(\tR\x13availableBalanceFen\x120\n" +
-	"\x14reserved_balance_fen\x18\x04 \x01(\tR\x12reservedBalanceFen\x12.\n" +
-	"\x13total_recharged_fen\x18\x05 \x01(\tR\x11totalRechargedFen\x12&\n" +
-	"\x0ftotal_spent_fen\x18\x06 \x01(\tR\rtotalSpentFen\x12.\n" +
+	"\rcurrency_code\x18\x02 \x01(\tR\fcurrencyCode\x124\n" +
+	"\x16available_balance_yuan\x18\x03 \x01(\tR\x14availableBalanceYuan\x122\n" +
+	"\x15reserved_balance_yuan\x18\x04 \x01(\tR\x13reservedBalanceYuan\x120\n" +
+	"\x14total_recharged_yuan\x18\x05 \x01(\tR\x12totalRechargedYuan\x12(\n" +
+	"\x10total_spent_yuan\x18\x06 \x01(\tR\x0etotalSpentYuan\x12.\n" +
 	"\x13total_traffic_bytes\x18\a \x01(\x03R\x11totalTrafficBytes\x12\x16\n" +
 	"\x06status\x18\b \x01(\x05R\x06status\x12\x18\n" +
 	"\aversion\x18\t \x01(\x05R\aversion\x12\x1d\n" +
@@ -8228,15 +8228,15 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\vauto_create\x18\x02 \x01(\bR\n" +
 	"autoCreate\"T\n" +
 	"\x19GetBillingAccountResponse\x127\n" +
-	"\aaccount\x18\x01 \x01(\v2\x1d.asset.BillingAccountSnapshotR\aaccount\"\xff\x01\n" +
+	"\aaccount\x18\x01 \x01(\v2\x1d.asset.BillingAccountSnapshotR\aaccount\"\x81\x02\n" +
 	"\x14BillingStatementItem\x12!\n" +
 	"\fstatement_id\x18\x01 \x01(\tR\vstatementId\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\x05R\x04type\x12\x1d\n" +
 	"\n" +
 	"history_id\x18\x03 \x01(\x03R\thistoryId\x12#\n" +
-	"\rtraffic_bytes\x18\x04 \x01(\x03R\ftrafficBytes\x12\x1d\n" +
-	"\n" +
-	"amount_fen\x18\x05 \x01(\tR\tamountFen\x12\x16\n" +
+	"\rtraffic_bytes\x18\x04 \x01(\x03R\ftrafficBytes\x12\x1f\n" +
+	"\vamount_yuan\x18\x05 \x01(\tR\n" +
+	"amountYuan\x12\x16\n" +
 	"\x06status\x18\x06 \x01(\x05R\x06status\x12\x16\n" +
 	"\x06remark\x18\a \x01(\tR\x06remark\x12\x1d\n" +
 	"\n" +
@@ -8273,15 +8273,15 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n" +
 	"\bplatform\x18\x03 \x01(\tR\bplatform\x12\x12\n" +
 	"\x04mode\x18\x04 \x01(\tR\x04mode\x12E\n" +
-	"\x0fselected_format\x18\x05 \x01(\v2\x1c.asset.BillingSelectedFormatR\x0eselectedFormat\"\xea\x02\n" +
+	"\x0fselected_format\x18\x05 \x01(\v2\x1c.asset.BillingSelectedFormatR\x0eselectedFormat\"\xec\x02\n" +
 	"\x1fEstimateDownloadBillingResponse\x126\n" +
 	"\x17estimated_ingress_bytes\x18\x01 \x01(\x03R\x15estimatedIngressBytes\x124\n" +
 	"\x16estimated_egress_bytes\x18\x02 \x01(\x03R\x14estimatedEgressBytes\x126\n" +
-	"\x17estimated_traffic_bytes\x18\x03 \x01(\x03R\x15estimatedTrafficBytes\x12,\n" +
-	"\x12estimated_cost_fen\x18\x04 \x01(\tR\x10estimatedCostFen\x12'\n" +
+	"\x17estimated_traffic_bytes\x18\x03 \x01(\x03R\x15estimatedTrafficBytes\x12.\n" +
+	"\x13estimated_cost_yuan\x18\x04 \x01(\tR\x11estimatedCostYuan\x12'\n" +
 	"\x0fpricing_version\x18\x05 \x01(\x05R\x0epricingVersion\x12!\n" +
 	"\fis_estimated\x18\x06 \x01(\bR\visEstimated\x12'\n" +
-	"\x0festimate_reason\x18\a \x01(\tR\x0eestimateReason\"\xea\x02\n" +
+	"\x0festimate_reason\x18\a \x01(\tR\x0eestimateReason\"\xec\x02\n" +
 	"\x1aHoldInitialDownloadRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -8289,65 +8289,65 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\atask_id\x18\x03 \x01(\tR\x06taskId\x126\n" +
 	"\x17estimated_ingress_bytes\x18\x04 \x01(\x03R\x15estimatedIngressBytes\x124\n" +
 	"\x16estimated_egress_bytes\x18\x05 \x01(\x03R\x14estimatedEgressBytes\x126\n" +
-	"\x17estimated_traffic_bytes\x18\x06 \x01(\x03R\x15estimatedTrafficBytes\x12,\n" +
-	"\x12estimated_cost_fen\x18\a \x01(\tR\x10estimatedCostFen\x12'\n" +
-	"\x0fpricing_version\x18\b \x01(\x05R\x0epricingVersion\"\xdf\x01\n" +
+	"\x17estimated_traffic_bytes\x18\x06 \x01(\x03R\x15estimatedTrafficBytes\x12.\n" +
+	"\x13estimated_cost_yuan\x18\a \x01(\tR\x11estimatedCostYuan\x12'\n" +
+	"\x0fpricing_version\x18\b \x01(\x05R\x0epricingVersion\"\xe5\x01\n" +
 	"\x1bHoldInitialDownloadResponse\x12\x19\n" +
 	"\border_no\x18\x01 \x01(\tR\aorderNo\x12\x17\n" +
-	"\ahold_no\x18\x02 \x01(\tR\x06holdNo\x12&\n" +
-	"\x0fheld_amount_fen\x18\x03 \x01(\tR\rheldAmountFen\x122\n" +
-	"\x15available_balance_fen\x18\x04 \x01(\tR\x13availableBalanceFen\x120\n" +
-	"\x14reserved_balance_fen\x18\x05 \x01(\tR\x12reservedBalanceFen\"g\n" +
+	"\ahold_no\x18\x02 \x01(\tR\x06holdNo\x12(\n" +
+	"\x10held_amount_yuan\x18\x03 \x01(\tR\x0eheldAmountYuan\x124\n" +
+	"\x16available_balance_yuan\x18\x04 \x01(\tR\x14availableBalanceYuan\x122\n" +
+	"\x15reserved_balance_yuan\x18\x05 \x01(\tR\x13reservedBalanceYuan\"g\n" +
 	"\x1aCaptureIngressUsageRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x120\n" +
-	"\x14actual_ingress_bytes\x18\x02 \x01(\x03R\x12actualIngressBytes\"\xa5\x02\n" +
+	"\x14actual_ingress_bytes\x18\x02 \x01(\x03R\x12actualIngressBytes\"\xa9\x02\n" +
 	"\x1bCaptureIngressUsageResponse\x12\x19\n" +
-	"\border_no\x18\x01 \x01(\tR\aorderNo\x12.\n" +
-	"\x13captured_amount_fen\x18\x02 \x01(\tR\x11capturedAmountFen\x124\n" +
-	"\x16remaining_reserved_fen\x18\x03 \x01(\tR\x14remainingReservedFen\x120\n" +
+	"\border_no\x18\x01 \x01(\tR\aorderNo\x120\n" +
+	"\x14captured_amount_yuan\x18\x02 \x01(\tR\x12capturedAmountYuan\x126\n" +
+	"\x17remaining_reserved_yuan\x18\x03 \x01(\tR\x15remainingReservedYuan\x120\n" +
 	"\x14actual_ingress_bytes\x18\x04 \x01(\x03R\x12actualIngressBytes\x120\n" +
 	"\x14actual_traffic_bytes\x18\x05 \x01(\x03R\x12actualTrafficBytes\x12!\n" +
 	"\forder_status\x18\x06 \x01(\x05R\vorderStatus\"P\n" +
 	"\x1dReleaseInitialDownloadRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"\x85\x01\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\x87\x01\n" +
 	"\x1eReleaseInitialDownloadResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x19\n" +
-	"\border_no\x18\x02 \x01(\tR\aorderNo\x12.\n" +
-	"\x13released_amount_fen\x18\x03 \x01(\tR\x11releasedAmountFen\"\x83\x01\n" +
+	"\border_no\x18\x02 \x01(\tR\aorderNo\x120\n" +
+	"\x14released_amount_yuan\x18\x03 \x01(\tR\x12releasedAmountYuan\"\x83\x01\n" +
 	"!PrepareFileTransferBillingRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
 	"history_id\x18\x02 \x01(\x03R\thistoryId\x12&\n" +
-	"\x0ffile_size_bytes\x18\x03 \x01(\x03R\rfileSizeBytes\"\xc6\x02\n" +
+	"\x0ffile_size_bytes\x18\x03 \x01(\x03R\rfileSizeBytes\"\xcc\x02\n" +
 	"\"PrepareFileTransferBillingResponse\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
 	"transferId\x12\x19\n" +
 	"\border_no\x18\x02 \x01(\tR\aorderNo\x12\x17\n" +
 	"\ahold_no\x18\x03 \x01(\tR\x06holdNo\x12\x14\n" +
-	"\x05scene\x18\x04 \x01(\x05R\x05scene\x12&\n" +
-	"\x0fhold_amount_fen\x18\x05 \x01(\tR\rholdAmountFen\x12'\n" +
-	"\x0fpricing_version\x18\x06 \x01(\x05R\x0epricingVersion\x122\n" +
-	"\x15available_balance_fen\x18\a \x01(\tR\x13availableBalanceFen\x120\n" +
-	"\x14reserved_balance_fen\x18\b \x01(\tR\x12reservedBalanceFen\"u\n" +
+	"\x05scene\x18\x04 \x01(\x05R\x05scene\x12(\n" +
+	"\x10hold_amount_yuan\x18\x05 \x01(\tR\x0eholdAmountYuan\x12'\n" +
+	"\x0fpricing_version\x18\x06 \x01(\x05R\x0epricingVersion\x124\n" +
+	"\x16available_balance_yuan\x18\a \x01(\tR\x14availableBalanceYuan\x122\n" +
+	"\x15reserved_balance_yuan\x18\b \x01(\tR\x13reservedBalanceYuan\"u\n" +
 	"\"CompleteFileTransferBillingRequest\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
 	"transferId\x12.\n" +
-	"\x13actual_egress_bytes\x18\x02 \x01(\x03R\x11actualEgressBytes\"\x80\x02\n" +
+	"\x13actual_egress_bytes\x18\x02 \x01(\x03R\x11actualEgressBytes\"\x84\x02\n" +
 	"#CompleteFileTransferBillingResponse\x12\x19\n" +
-	"\border_no\x18\x01 \x01(\tR\aorderNo\x12.\n" +
-	"\x13captured_amount_fen\x18\x02 \x01(\tR\x11capturedAmountFen\x120\n" +
-	"\x14actual_traffic_bytes\x18\x03 \x01(\x03R\x12actualTrafficBytes\x129\n" +
-	"\x19total_captured_amount_fen\x18\x04 \x01(\tR\x16totalCapturedAmountFen\x12!\n" +
+	"\border_no\x18\x01 \x01(\tR\aorderNo\x120\n" +
+	"\x14captured_amount_yuan\x18\x02 \x01(\tR\x12capturedAmountYuan\x120\n" +
+	"\x14actual_traffic_bytes\x18\x03 \x01(\x03R\x12actualTrafficBytes\x12;\n" +
+	"\x1atotal_captured_amount_yuan\x18\x04 \x01(\tR\x17totalCapturedAmountYuan\x12!\n" +
 	"\forder_status\x18\x05 \x01(\x05R\vorderStatus\"Z\n" +
 	"\x1fAbortFileTransferBillingRequest\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
 	"transferId\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"\x87\x01\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\x89\x01\n" +
 	" AbortFileTransferBillingResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x19\n" +
-	"\border_no\x18\x02 \x01(\tR\aorderNo\x12.\n" +
-	"\x13released_amount_fen\x18\x03 \x01(\tR\x11releasedAmountFen\"\x80\x01\n" +
+	"\border_no\x18\x02 \x01(\tR\aorderNo\x120\n" +
+	"\x14released_amount_yuan\x18\x03 \x01(\tR\x12releasedAmountYuan\"\x80\x01\n" +
 	"\x1aListBillingAccountsRequest\x12\x19\n" +
 	"\buser_ids\x18\x01 \x03(\tR\auserIds\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
@@ -8361,18 +8361,18 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x1eGetBillingAccountDetailRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"Z\n" +
 	"\x1fGetBillingAccountDetailResponse\x127\n" +
-	"\aaccount\x18\x01 \x01(\v2\x1d.asset.BillingAccountSnapshotR\aaccount\"\xba\x01\n" +
+	"\aaccount\x18\x01 \x01(\v2\x1d.asset.BillingAccountSnapshotR\aaccount\"\xbc\x01\n" +
 	"\x1bAdjustBillingBalanceRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
-	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x1d\n" +
-	"\n" +
-	"amount_fen\x18\x03 \x01(\tR\tamountFen\x12\x16\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x1f\n" +
+	"\vamount_yuan\x18\x03 \x01(\tR\n" +
+	"amountYuan\x12\x16\n" +
 	"\x06remark\x18\x04 \x01(\tR\x06remark\x12(\n" +
 	"\x10operator_user_id\x18\x05 \x01(\tR\x0eoperatorUserId\"\x8c\x01\n" +
 	"\x1cAdjustBillingBalanceResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x127\n" +
 	"\aaccount\x18\x02 \x01(\v2\x1d.asset.BillingAccountSnapshotR\aaccount\x12\x19\n" +
-	"\bentry_no\x18\x03 \x01(\tR\aentryNo\"\x91\x05\n" +
+	"\bentry_no\x18\x03 \x01(\tR\aentryNo\"\x9b\x05\n" +
 	"\x0fLedgerEntryItem\x12\x19\n" +
 	"\bentry_no\x18\x01 \x01(\tR\aentryNo\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x19\n" +
@@ -8387,12 +8387,12 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\n" +
 	"entry_type\x18\t \x01(\x05R\tentryType\x12\x14\n" +
 	"\x05scene\x18\n" +
-	" \x01(\x05R\x05scene\x12*\n" +
-	"\x11action_amount_fen\x18\v \x01(\tR\x0factionAmountFen\x12.\n" +
-	"\x13available_delta_fen\x18\f \x01(\tR\x11availableDeltaFen\x12,\n" +
-	"\x12reserved_delta_fen\x18\r \x01(\tR\x10reservedDeltaFen\x12=\n" +
-	"\x1bbalance_after_available_fen\x18\x0e \x01(\tR\x18balanceAfterAvailableFen\x12;\n" +
-	"\x1abalance_after_reserved_fen\x18\x0f \x01(\tR\x17balanceAfterReservedFen\x12(\n" +
+	" \x01(\x05R\x05scene\x12,\n" +
+	"\x12action_amount_yuan\x18\v \x01(\tR\x10actionAmountYuan\x120\n" +
+	"\x14available_delta_yuan\x18\f \x01(\tR\x12availableDeltaYuan\x12.\n" +
+	"\x13reserved_delta_yuan\x18\r \x01(\tR\x11reservedDeltaYuan\x12?\n" +
+	"\x1cbalance_after_available_yuan\x18\x0e \x01(\tR\x19balanceAfterAvailableYuan\x12=\n" +
+	"\x1bbalance_after_reserved_yuan\x18\x0f \x01(\tR\x18balanceAfterReservedYuan\x12(\n" +
 	"\x10operator_user_id\x18\x10 \x01(\tR\x0eoperatorUserId\x12\x16\n" +
 	"\x06remark\x18\x11 \x01(\tR\x06remark\x12\x1d\n" +
 	"\n" +
@@ -8407,7 +8407,7 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12,\n" +
-	"\x05items\x18\x04 \x03(\v2\x16.asset.LedgerEntryItemR\x05items\"\x80\x04\n" +
+	"\x05items\x18\x04 \x03(\v2\x16.asset.LedgerEntryItemR\x05items\"\x82\x04\n" +
 	"\x16TrafficUsageRecordItem\x12\x19\n" +
 	"\busage_no\x18\x01 \x01(\tR\ausageNo\x12\x19\n" +
 	"\border_no\x18\x02 \x01(\tR\aorderNo\x12\x17\n" +
@@ -8419,10 +8419,10 @@ const file_proto_asset_proto_rawDesc = "" +
 	"transferId\x12\x1c\n" +
 	"\tdirection\x18\a \x01(\x05R\tdirection\x12#\n" +
 	"\rtraffic_bytes\x18\b \x01(\x03R\ftrafficBytes\x122\n" +
-	"\x16unit_price_fen_per_gib\x18\t \x01(\tR\x12unitPriceFenPerGib\x12\x1d\n" +
-	"\n" +
-	"amount_fen\x18\n" +
-	" \x01(\tR\tamountFen\x12'\n" +
+	"\x16unit_price_yuan_per_gb\x18\t \x01(\tR\x12unitPriceYuanPerGb\x12\x1f\n" +
+	"\vamount_yuan\x18\n" +
+	" \x01(\tR\n" +
+	"amountYuan\x12'\n" +
 	"\x0fpricing_version\x18\v \x01(\x05R\x0epricingVersion\x12%\n" +
 	"\x0esource_service\x18\f \x01(\tR\rsourceService\x12\x16\n" +
 	"\x06status\x18\r \x01(\x05R\x06status\x12\x1d\n" +
@@ -8441,8 +8441,8 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x05items\x18\x04 \x03(\v2\x1d.asset.TrafficUsageRecordItemR\x05items\"\xbd\x02\n" +
 	"\x0eBillingPricing\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\x05R\aversion\x128\n" +
-	"\x19ingress_price_fen_per_gib\x18\x02 \x01(\tR\x15ingressPriceFenPerGib\x126\n" +
-	"\x18egress_price_fen_per_gib\x18\x03 \x01(\tR\x14egressPriceFenPerGib\x12\x18\n" +
+	"\x19ingress_price_yuan_per_gb\x18\x02 \x01(\tR\x15ingressPriceYuanPerGb\x126\n" +
+	"\x18egress_price_yuan_per_gb\x18\x03 \x01(\tR\x14egressPriceYuanPerGb\x12\x18\n" +
 	"\aenabled\x18\x04 \x01(\bR\aenabled\x12\x16\n" +
 	"\x06remark\x18\x05 \x01(\tR\x06remark\x12+\n" +
 	"\x12updated_by_user_id\x18\x06 \x01(\tR\x0fupdatedByUserId\x12!\n" +
@@ -8453,8 +8453,8 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x19GetBillingPricingResponse\x12/\n" +
 	"\apricing\x18\x01 \x01(\v2\x15.asset.BillingPricingR\apricing\"\xd1\x01\n" +
 	"\x1bUpdateBillingPricingRequest\x128\n" +
-	"\x19ingress_price_fen_per_gib\x18\x01 \x01(\tR\x15ingressPriceFenPerGib\x126\n" +
-	"\x18egress_price_fen_per_gib\x18\x02 \x01(\tR\x14egressPriceFenPerGib\x12\x16\n" +
+	"\x19ingress_price_yuan_per_gb\x18\x01 \x01(\tR\x15ingressPriceYuanPerGb\x126\n" +
+	"\x18egress_price_yuan_per_gb\x18\x02 \x01(\tR\x14egressPriceYuanPerGb\x12\x16\n" +
 	"\x06remark\x18\x03 \x01(\tR\x06remark\x12(\n" +
 	"\x10operator_user_id\x18\x04 \x01(\tR\x0eoperatorUserId\"i\n" +
 	"\x1cUpdateBillingPricingResponse\x12\x18\n" +
@@ -8500,7 +8500,7 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\agranted\x18\x02 \x01(\bR\agranted\x127\n" +
 	"\aaccount\x18\x03 \x01(\v2\x1d.asset.BillingAccountSnapshotR\aaccount\x12\x19\n" +
 	"\bentry_no\x18\x04 \x01(\tR\aentryNo\x127\n" +
-	"\x05grant\x18\x05 \x01(\v2!.asset.WelcomeCreditGrantSnapshotR\x05grant\"\xf5\x04\n" +
+	"\x05grant\x18\x05 \x01(\v2!.asset.WelcomeCreditGrantSnapshotR\x05grant\"\xfd\x04\n" +
 	"\x19BillingShortfallOrderItem\x12\x19\n" +
 	"\border_no\x18\x01 \x01(\tR\aorderNo\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1d\n" +
@@ -8513,11 +8513,11 @@ const file_proto_asset_proto_rawDesc = "" +
 	"\x14actual_ingress_bytes\x18\b \x01(\x03R\x12actualIngressBytes\x12.\n" +
 	"\x13actual_egress_bytes\x18\t \x01(\x03R\x11actualEgressBytes\x120\n" +
 	"\x14actual_traffic_bytes\x18\n" +
-	" \x01(\x03R\x12actualTrafficBytes\x12&\n" +
-	"\x0fheld_amount_fen\x18\v \x01(\tR\rheldAmountFen\x12.\n" +
-	"\x13captured_amount_fen\x18\f \x01(\tR\x11capturedAmountFen\x12.\n" +
-	"\x13released_amount_fen\x18\r \x01(\tR\x11releasedAmountFen\x12#\n" +
-	"\rshortfall_fen\x18\x0e \x01(\tR\fshortfallFen\x12\x16\n" +
+	" \x01(\x03R\x12actualTrafficBytes\x12(\n" +
+	"\x10held_amount_yuan\x18\v \x01(\tR\x0eheldAmountYuan\x120\n" +
+	"\x14captured_amount_yuan\x18\f \x01(\tR\x12capturedAmountYuan\x120\n" +
+	"\x14released_amount_yuan\x18\r \x01(\tR\x12releasedAmountYuan\x12%\n" +
+	"\x0eshortfall_yuan\x18\x0e \x01(\tR\rshortfallYuan\x12\x16\n" +
 	"\x06remark\x18\x0f \x01(\tR\x06remark\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\x10 \x01(\tR\tcreatedAt\x12\x1d\n" +

@@ -44,17 +44,17 @@ func (h *BillingHandler) GetAccount(c *gin.Context) {
 
 	account := resp.GetAccount()
 	models.Success(c, models.BillingAccountOverviewResponse{
-		UserID:              account.GetUserId(),
-		CurrencyCode:        account.GetCurrencyCode(),
-		AvailableBalanceFen: account.GetAvailableBalanceFen(),
-		ReservedBalanceFen:  account.GetReservedBalanceFen(),
-		TotalRechargedFen:   account.GetTotalRechargedFen(),
-		TotalSpentFen:       account.GetTotalSpentFen(),
-		TotalTrafficBytes:   account.GetTotalTrafficBytes(),
-		Status:              account.GetStatus(),
-		Version:             account.GetVersion(),
-		CreatedAt:           account.GetCreatedAt(),
-		UpdatedAt:           account.GetUpdatedAt(),
+		UserID:               account.GetUserId(),
+		CurrencyCode:         account.GetCurrencyCode(),
+		AvailableBalanceYuan: account.GetAvailableBalanceYuan(),
+		ReservedBalanceYuan:  account.GetReservedBalanceYuan(),
+		TotalRechargedYuan:   account.GetTotalRechargedYuan(),
+		TotalSpentYuan:       account.GetTotalSpentYuan(),
+		TotalTrafficBytes:    account.GetTotalTrafficBytes(),
+		Status:               account.GetStatus(),
+		Version:              account.GetVersion(),
+		CreatedAt:            account.GetCreatedAt(),
+		UpdatedAt:            account.GetUpdatedAt(),
 	})
 }
 
@@ -99,7 +99,7 @@ func (h *BillingHandler) ListStatements(c *gin.Context) {
 			Type:         item.GetType(),
 			HistoryID:    item.GetHistoryId(),
 			TrafficBytes: item.GetTrafficBytes(),
-			AmountFen:    item.GetAmountFen(),
+			AmountYuan:   item.GetAmountYuan(),
 			Status:       item.GetStatus(),
 			Remark:       item.GetRemark(),
 			CreatedAt:    item.GetCreatedAt(),
@@ -162,7 +162,7 @@ func (h *BillingHandler) Estimate(c *gin.Context) {
 
 	models.Success(c, models.BillingEstimateResponse{
 		EstimatedTrafficBytes: resp.GetEstimatedTrafficBytes(),
-		EstimatedCostFen:      resp.GetEstimatedCostFen(),
+		EstimatedCostYuan:     resp.GetEstimatedCostYuan(),
 		PricingVersion:        resp.GetPricingVersion(),
 		IsEstimated:           resp.GetIsEstimated(),
 		EstimateReason:        resp.GetEstimateReason(),

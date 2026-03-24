@@ -60,10 +60,10 @@ describe('AccountOverview Component', () => {
     const mockBillingAccount = {
       user_id: "u-123",
       currency_code: "CNY",
-      available_balance_fen: "1000", // 10.00 CNY
-      reserved_balance_fen: "200",   // 2.00 CNY
-      total_recharged_fen: "1200",   // 12.00 CNY
-      total_spent_fen: "200",        // 2.00 CNY
+      available_balance_yuan: "10.00",
+      reserved_balance_yuan: "2.00",
+      total_recharged_yuan: "12.00",
+      total_spent_yuan: "2.00",
       total_traffic_bytes: 1048576,  // 1 MB
       status: 1,                     // Active
       version: 1,
@@ -104,14 +104,14 @@ describe('AccountOverview Component', () => {
     expect(screen.getByText('1.0 MB')).toBeInTheDocument()
   })
 
-  it('AccountOverview renders correctly scaled balance: 100 fen -> ¥1.00, 150 fen -> ¥1.50', () => {
+  it('AccountOverview renders yuan balance directly', () => {
     const mockBillingAccount = {
       user_id: "u-123",
       currency_code: "CNY",
-      available_balance_fen: "100",  // 1.00 CNY
-      reserved_balance_fen: "150",   // 1.50 CNY
-      total_recharged_fen: "0",
-      total_spent_fen: "0",
+      available_balance_yuan: "1.00",
+      reserved_balance_yuan: "1.50",
+      total_recharged_yuan: "0",
+      total_spent_yuan: "0",
       total_traffic_bytes: 0,
       status: 1,
       version: 1,
@@ -141,7 +141,7 @@ describe('AccountOverview Component', () => {
     const balanceValue = screen.getByTestId('account-balance-value')
     expect(balanceValue).toHaveTextContent(/1\.00/)
 
-    // Check Reserved Amount which is 150 fen
+    // Check reserved amount.
     expect(screen.getByText(/1\.50/)).toBeInTheDocument()
   })
 })

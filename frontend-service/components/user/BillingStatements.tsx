@@ -158,7 +158,7 @@ export function BillingStatements() {
                                     </div>
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-slate-400">Amount</p>
-                                        <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrencyYuan(item.amount_fen)}</p>
+                                        <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrencyYuan(item.amount_yuan)}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs uppercase tracking-wide text-slate-400">Statement ID</p>

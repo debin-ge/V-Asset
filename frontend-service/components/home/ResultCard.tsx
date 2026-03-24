@@ -179,11 +179,11 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
         }
     }
 
-    const availableBalanceFen = parseCurrencyYuan(billingAccount?.available_balance_fen)
-    const estimatedCostFen = parseCurrencyYuan(estimate?.estimated_cost_fen)
-    const insufficientBalance = !!estimate && availableBalanceFen < estimatedCostFen
-    const balanceGapFen = estimate ? Math.max(estimatedCostFen - availableBalanceFen, 0) : 0
-    const balanceAfterHoldFen = estimate ? Math.max(availableBalanceFen - estimatedCostFen, 0) : availableBalanceFen
+    const availableBalanceYuan = parseCurrencyYuan(billingAccount?.available_balance_yuan)
+    const estimatedCostYuan = parseCurrencyYuan(estimate?.estimated_cost_yuan)
+    const insufficientBalance = !!estimate && availableBalanceYuan < estimatedCostYuan
+    const balanceGapYuan = estimate ? Math.max(estimatedCostYuan - availableBalanceYuan, 0) : 0
+    const balanceAfterHoldYuan = estimate ? Math.max(availableBalanceYuan - estimatedCostYuan, 0) : availableBalanceYuan
     const selectedFormatLabel = describeSelectedFormat(pendingDownload?.type, pendingDownload?.format)
 
     return (
@@ -415,12 +415,21 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                 <div className="rounded-2xl border border-slate-100 p-4">
                                     <p className="text-xs uppercase tracking-wide text-slate-400">Estimated Cost</p>
                                     <p className="mt-2 text-xl font-semibold text-slate-900">
-                                        {formatCurrencyYuan(estimate.estimated_cost_fen)}
+                                        {formatCurrencyYuan(estimate.estimated_cost_yuan)}
                                     </p>
                                     <p className="mt-1 text-xs text-slate-500">
                                         Pricing version #{estimate.pricing_version}
                                     </p>
                                 </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                                <p className="font-medium">
+                                    当前预估算费用: {formatCurrencyYuan(estimate.estimated_cost_yuan)}
+                                </p>
+                                <p className="mt-1">
+                                    实际费用以文件流量结算为准。
+                                </p>
                             </div>
 
                             <div className="grid gap-3 md:grid-cols-3">
@@ -430,19 +439,19 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                         Available now
                                     </div>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                                        {formatCurrencyYuan(availableBalanceFen)}
+                                        {formatCurrencyYuan(availableBalanceYuan)}
                                     </p>
                                 </div>
                                 <div className="rounded-2xl border border-slate-100 p-4">
                                     <p className="text-xs uppercase tracking-wide text-slate-400">Reserved after submit</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                                        {formatCurrencyYuan(estimatedCostFen)}
+                                        {formatCurrencyYuan(estimatedCostYuan)}
                                     </p>
                                 </div>
                                 <div className="rounded-2xl border border-slate-100 p-4">
                                     <p className="text-xs uppercase tracking-wide text-slate-400">Remaining available</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                                        {formatCurrencyYuan(balanceAfterHoldFen)}
+                                        {formatCurrencyYuan(balanceAfterHoldYuan)}
                                     </p>
                                 </div>
                             </div>
@@ -459,8 +468,8 @@ export function ResultCard({ info, onDownload }: ResultCardProps) {
                                         <div>
                                             <p className="font-medium">Insufficient balance</p>
                                             <p className="mt-1">
-                                                You need {formatCurrencyYuan(balanceGapFen)} more to cover this billing hold.
-                                                Current available balance: {formatCurrencyYuan(availableBalanceFen)}.
+                                                You need {formatCurrencyYuan(balanceGapYuan)} more to cover this billing hold.
+                                                Current available balance: {formatCurrencyYuan(availableBalanceYuan)}.
                                             </p>
                                         </div>
                                     </div>

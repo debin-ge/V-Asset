@@ -105,7 +105,7 @@ describe('BillingStatements Component', () => {
           type: 2, // Download
           history_id: 101,
           traffic_bytes: 5242880, // 5MB
-          amount_fen: "100", // 1.00
+          amount_yuan: "1.00",
           status: 3, // Completed
           remark: "Youtube Video",
           created_at: "2023-01-01T00:00:00Z"

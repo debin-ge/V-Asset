@@ -90,17 +90,17 @@ func (s *BillingService) ListAccounts(ctx context.Context, query string, page, p
 		}
 		user := userMap[userID]
 		items = append(items, models.BillingAccount{
-			UserID:              account.GetUserId(),
-			Email:               safeUserEmail(user),
-			Nickname:            safeUserNickname(user),
-			AvailableBalanceFen: account.GetAvailableBalanceFen(),
-			ReservedBalanceFen:  account.GetReservedBalanceFen(),
-			TotalRechargedFen:   account.GetTotalRechargedFen(),
-			TotalSpentFen:       account.GetTotalSpentFen(),
-			TotalTrafficBytes:   account.GetTotalTrafficBytes(),
-			Status:              account.GetStatus(),
-			Version:             account.GetVersion(),
-			UpdatedAt:           account.GetUpdatedAt(),
+			UserID:               account.GetUserId(),
+			Email:                safeUserEmail(user),
+			Nickname:             safeUserNickname(user),
+			AvailableBalanceYuan: account.GetAvailableBalanceYuan(),
+			ReservedBalanceYuan:  account.GetReservedBalanceYuan(),
+			TotalRechargedYuan:   account.GetTotalRechargedYuan(),
+			TotalSpentYuan:       account.GetTotalSpentYuan(),
+			TotalTrafficBytes:    account.GetTotalTrafficBytes(),
+			Status:               account.GetStatus(),
+			Version:              account.GetVersion(),
+			UpdatedAt:            account.GetUpdatedAt(),
 		})
 	}
 
@@ -126,25 +126,25 @@ func (s *BillingService) GetAccountDetail(ctx context.Context, userID string) (*
 	account := accountResp.GetAccount()
 	user := userResp.GetUser()
 	return &models.BillingAccount{
-		UserID:              account.GetUserId(),
-		Email:               user.GetEmail(),
-		Nickname:            user.GetNickname(),
-		AvailableBalanceFen: account.GetAvailableBalanceFen(),
-		ReservedBalanceFen:  account.GetReservedBalanceFen(),
-		TotalRechargedFen:   account.GetTotalRechargedFen(),
-		TotalSpentFen:       account.GetTotalSpentFen(),
-		TotalTrafficBytes:   account.GetTotalTrafficBytes(),
-		Status:              account.GetStatus(),
-		Version:             account.GetVersion(),
-		UpdatedAt:           account.GetUpdatedAt(),
+		UserID:               account.GetUserId(),
+		Email:                user.GetEmail(),
+		Nickname:             user.GetNickname(),
+		AvailableBalanceYuan: account.GetAvailableBalanceYuan(),
+		ReservedBalanceYuan:  account.GetReservedBalanceYuan(),
+		TotalRechargedYuan:   account.GetTotalRechargedYuan(),
+		TotalSpentYuan:       account.GetTotalSpentYuan(),
+		TotalTrafficBytes:    account.GetTotalTrafficBytes(),
+		Status:               account.GetStatus(),
+		Version:              account.GetVersion(),
+		UpdatedAt:            account.GetUpdatedAt(),
 	}, nil
 }
 
-func (s *BillingService) AdjustBalance(ctx context.Context, userID, operationID, amountFen, remark, operatorUserID string) (*models.BillingAccount, string, error) {
+func (s *BillingService) AdjustBalance(ctx context.Context, userID, operationID, amountYuan, remark, operatorUserID string) (*models.BillingAccount, string, error) {
 	resp, err := s.assetClient.AdjustBillingBalance(ctx, &pb.AdjustBillingBalanceRequest{
 		UserId:         userID,
 		OperationId:    operationID,
-		AmountFen:      amountFen,
+		AmountYuan:     amountYuan,
 		Remark:         remark,
 		OperatorUserId: operatorUserID,
 	})
@@ -159,17 +159,17 @@ func (s *BillingService) AdjustBalance(ctx context.Context, userID, operationID,
 
 	account := resp.GetAccount()
 	return &models.BillingAccount{
-		UserID:              account.GetUserId(),
-		Email:               userResp.GetUser().GetEmail(),
-		Nickname:            userResp.GetUser().GetNickname(),
-		AvailableBalanceFen: account.GetAvailableBalanceFen(),
-		ReservedBalanceFen:  account.GetReservedBalanceFen(),
-		TotalRechargedFen:   account.GetTotalRechargedFen(),
-		TotalSpentFen:       account.GetTotalSpentFen(),
-		TotalTrafficBytes:   account.GetTotalTrafficBytes(),
-		Status:              account.GetStatus(),
-		Version:             account.GetVersion(),
-		UpdatedAt:           account.GetUpdatedAt(),
+		UserID:               account.GetUserId(),
+		Email:                userResp.GetUser().GetEmail(),
+		Nickname:             userResp.GetUser().GetNickname(),
+		AvailableBalanceYuan: account.GetAvailableBalanceYuan(),
+		ReservedBalanceYuan:  account.GetReservedBalanceYuan(),
+		TotalRechargedYuan:   account.GetTotalRechargedYuan(),
+		TotalSpentYuan:       account.GetTotalSpentYuan(),
+		TotalTrafficBytes:    account.GetTotalTrafficBytes(),
+		Status:               account.GetStatus(),
+		Version:              account.GetVersion(),
+		UpdatedAt:            account.GetUpdatedAt(),
 	}, resp.GetEntryNo(), nil
 }
 
@@ -200,10 +200,10 @@ func (s *BillingService) ListShortfalls(ctx context.Context, userID string, page
 			ActualIngressBytes: item.GetActualIngressBytes(),
 			ActualEgressBytes:  item.GetActualEgressBytes(),
 			ActualTrafficBytes: item.GetActualTrafficBytes(),
-			HeldAmountFen:      item.GetHeldAmountFen(),
-			CapturedAmountFen:  item.GetCapturedAmountFen(),
-			ReleasedAmountFen:  item.GetReleasedAmountFen(),
-			ShortfallFen:       item.GetShortfallFen(),
+			HeldAmountYuan:     item.GetHeldAmountYuan(),
+			CapturedAmountYuan: item.GetCapturedAmountYuan(),
+			ReleasedAmountYuan: item.GetReleasedAmountYuan(),
+			ShortfallYuan:      item.GetShortfallYuan(),
 			Remark:             item.GetRemark(),
 			CreatedAt:          item.GetCreatedAt(),
 			UpdatedAt:          item.GetUpdatedAt(),
@@ -247,25 +247,25 @@ func (s *BillingService) ReconcileShortfall(ctx context.Context, orderNo, remark
 			ActualIngressBytes: order.GetActualIngressBytes(),
 			ActualEgressBytes:  order.GetActualEgressBytes(),
 			ActualTrafficBytes: order.GetActualTrafficBytes(),
-			HeldAmountFen:      order.GetHeldAmountFen(),
-			CapturedAmountFen:  order.GetCapturedAmountFen(),
-			ReleasedAmountFen:  order.GetReleasedAmountFen(),
-			ShortfallFen:       order.GetShortfallFen(),
+			HeldAmountYuan:     order.GetHeldAmountYuan(),
+			CapturedAmountYuan: order.GetCapturedAmountYuan(),
+			ReleasedAmountYuan: order.GetReleasedAmountYuan(),
+			ShortfallYuan:      order.GetShortfallYuan(),
 			Remark:             order.GetRemark(),
 			CreatedAt:          order.GetCreatedAt(),
 			UpdatedAt:          order.GetUpdatedAt(),
 		}, &models.BillingAccount{
-			UserID:              account.GetUserId(),
-			Email:               safeUserEmail(user),
-			Nickname:            safeUserNickname(user),
-			AvailableBalanceFen: account.GetAvailableBalanceFen(),
-			ReservedBalanceFen:  account.GetReservedBalanceFen(),
-			TotalRechargedFen:   account.GetTotalRechargedFen(),
-			TotalSpentFen:       account.GetTotalSpentFen(),
-			TotalTrafficBytes:   account.GetTotalTrafficBytes(),
-			Status:              account.GetStatus(),
-			Version:             account.GetVersion(),
-			UpdatedAt:           account.GetUpdatedAt(),
+			UserID:               account.GetUserId(),
+			Email:                safeUserEmail(user),
+			Nickname:             safeUserNickname(user),
+			AvailableBalanceYuan: account.GetAvailableBalanceYuan(),
+			ReservedBalanceYuan:  account.GetReservedBalanceYuan(),
+			TotalRechargedYuan:   account.GetTotalRechargedYuan(),
+			TotalSpentYuan:       account.GetTotalSpentYuan(),
+			TotalTrafficBytes:    account.GetTotalTrafficBytes(),
+			Status:               account.GetStatus(),
+			Version:              account.GetVersion(),
+			UpdatedAt:            account.GetUpdatedAt(),
 		}, resp.GetEntryNo(), nil
 }
 
@@ -285,26 +285,26 @@ func (s *BillingService) ListLedger(ctx context.Context, userID string, page, pa
 	for _, item := range resp.GetItems() {
 		user := userMap[item.GetUserId()]
 		items = append(items, models.BillingLedgerEntry{
-			EntryNo:                  item.GetEntryNo(),
-			UserID:                   item.GetUserId(),
-			Email:                    safeUserEmail(user),
-			Nickname:                 safeUserNickname(user),
-			OrderNo:                  item.GetOrderNo(),
-			HoldNo:                   item.GetHoldNo(),
-			HistoryID:                item.GetHistoryId(),
-			TaskID:                   item.GetTaskId(),
-			TransferID:               item.GetTransferId(),
-			OperationID:              item.GetOperationId(),
-			EntryType:                item.GetEntryType(),
-			Scene:                    item.GetScene(),
-			ActionAmountFen:          item.GetActionAmountFen(),
-			AvailableDeltaFen:        item.GetAvailableDeltaFen(),
-			ReservedDeltaFen:         item.GetReservedDeltaFen(),
-			BalanceAfterAvailableFen: item.GetBalanceAfterAvailableFen(),
-			BalanceAfterReservedFen:  item.GetBalanceAfterReservedFen(),
-			OperatorUserID:           item.GetOperatorUserId(),
-			Remark:                   item.GetRemark(),
-			CreatedAt:                item.GetCreatedAt(),
+			EntryNo:                   item.GetEntryNo(),
+			UserID:                    item.GetUserId(),
+			Email:                     safeUserEmail(user),
+			Nickname:                  safeUserNickname(user),
+			OrderNo:                   item.GetOrderNo(),
+			HoldNo:                    item.GetHoldNo(),
+			HistoryID:                 item.GetHistoryId(),
+			TaskID:                    item.GetTaskId(),
+			TransferID:                item.GetTransferId(),
+			OperationID:               item.GetOperationId(),
+			EntryType:                 item.GetEntryType(),
+			Scene:                     item.GetScene(),
+			ActionAmountYuan:          item.GetActionAmountYuan(),
+			AvailableDeltaYuan:        item.GetAvailableDeltaYuan(),
+			ReservedDeltaYuan:         item.GetReservedDeltaYuan(),
+			BalanceAfterAvailableYuan: item.GetBalanceAfterAvailableYuan(),
+			BalanceAfterReservedYuan:  item.GetBalanceAfterReservedYuan(),
+			OperatorUserID:            item.GetOperatorUserId(),
+			Remark:                    item.GetRemark(),
+			CreatedAt:                 item.GetCreatedAt(),
 		})
 	}
 
@@ -342,8 +342,8 @@ func (s *BillingService) ListUsageRecords(ctx context.Context, userID string, pa
 			TransferID:         item.GetTransferId(),
 			Direction:          item.GetDirection(),
 			TrafficBytes:       item.GetTrafficBytes(),
-			UnitPriceFenPerGiB: item.GetUnitPriceFenPerGib(),
-			AmountFen:          item.GetAmountFen(),
+			UnitPriceYuanPerGB: item.GetUnitPriceYuanPerGb(),
+			AmountYuan:         item.GetAmountYuan(),
 			PricingVersion:     item.GetPricingVersion(),
 			SourceService:      item.GetSourceService(),
 			Status:             item.GetStatus(),
@@ -370,8 +370,8 @@ func (s *BillingService) GetPricing(ctx context.Context) (*models.BillingPricing
 
 func (s *BillingService) UpdatePricing(ctx context.Context, ingressPrice, egressPrice, remark, operatorUserID string) (*models.BillingPricing, error) {
 	resp, err := s.assetClient.UpdateBillingPricing(ctx, &pb.UpdateBillingPricingRequest{
-		IngressPriceFenPerGib: ingressPrice,
-		EgressPriceFenPerGib:  egressPrice,
+		IngressPriceYuanPerGb: ingressPrice,
+		EgressPriceYuanPerGb:  egressPrice,
 		Remark:                remark,
 		OperatorUserId:        operatorUserID,
 	})
@@ -424,8 +424,8 @@ func pricingFromProto(pricing *pb.BillingPricing) *models.BillingPricing {
 	}
 	return &models.BillingPricing{
 		Version:               pricing.GetVersion(),
-		IngressPriceFenPerGiB: pricing.GetIngressPriceFenPerGib(),
-		EgressPriceFenPerGiB:  pricing.GetEgressPriceFenPerGib(),
+		IngressPriceYuanPerGB: pricing.GetIngressPriceYuanPerGb(),
+		EgressPriceYuanPerGB:  pricing.GetEgressPriceYuanPerGb(),
 		Enabled:               pricing.GetEnabled(),
 		Remark:                pricing.GetRemark(),
 		UpdatedByUserID:       pricing.GetUpdatedByUserId(),

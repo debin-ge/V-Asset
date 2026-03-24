@@ -312,10 +312,10 @@ message UpdateHistoryStatusResponse {
 message BillingAccountSnapshot {
   string user_id = 1;
   string currency_code = 2;
-  string available_balance_fen = 3;
-  string reserved_balance_fen = 4;
-  string total_recharged_fen = 5;
-  string total_spent_fen = 6;
+  string available_balance_yuan = 3;
+  string reserved_balance_yuan = 4;
+  string total_recharged_yuan = 5;
+  string total_spent_yuan = 6;
   int64 total_traffic_bytes = 7;
   int32 status = 8;
   int32 version = 9;
@@ -337,7 +337,7 @@ message BillingStatementItem {
   int32 type = 2;
   int64 history_id = 3;
   int64 traffic_bytes = 4;
-  string amount_fen = 5;
+  string amount_yuan = 5;
   int32 status = 6;
   string remark = 7;
   string created_at = 8;
@@ -385,7 +385,7 @@ message EstimateDownloadBillingResponse {
   int64 estimated_ingress_bytes = 1;
   int64 estimated_egress_bytes = 2;
   int64 estimated_traffic_bytes = 3;
-  string estimated_cost_fen = 4;
+  string estimated_cost_yuan = 4;
   int32 pricing_version = 5;
   bool is_estimated = 6;
   string estimate_reason = 7;
@@ -398,16 +398,16 @@ message HoldInitialDownloadRequest {
   int64 estimated_ingress_bytes = 4;
   int64 estimated_egress_bytes = 5;
   int64 estimated_traffic_bytes = 6;
-  string estimated_cost_fen = 7;
+  string estimated_cost_yuan = 7;
   int32 pricing_version = 8;
 }
 
 message HoldInitialDownloadResponse {
   string order_no = 1;
   string hold_no = 2;
-  string held_amount_fen = 3;
-  string available_balance_fen = 4;
-  string reserved_balance_fen = 5;
+  string held_amount_yuan = 3;
+  string available_balance_yuan = 4;
+  string reserved_balance_yuan = 5;
 }
 
 message CaptureIngressUsageRequest {
@@ -417,8 +417,8 @@ message CaptureIngressUsageRequest {
 
 message CaptureIngressUsageResponse {
   string order_no = 1;
-  string captured_amount_fen = 2;
-  string remaining_reserved_fen = 3;
+  string captured_amount_yuan = 2;
+  string remaining_reserved_yuan = 3;
   int64 actual_ingress_bytes = 4;
   int64 actual_traffic_bytes = 5;
   int32 order_status = 6;
@@ -432,7 +432,7 @@ message ReleaseInitialDownloadRequest {
 message ReleaseInitialDownloadResponse {
   bool success = 1;
   string order_no = 2;
-  string released_amount_fen = 3;
+  string released_amount_yuan = 3;
 }
 
 message PrepareFileTransferBillingRequest {
@@ -446,10 +446,10 @@ message PrepareFileTransferBillingResponse {
   string order_no = 2;
   string hold_no = 3;
   int32 scene = 4;
-  string hold_amount_fen = 5;
+  string hold_amount_yuan = 5;
   int32 pricing_version = 6;
-  string available_balance_fen = 7;
-  string reserved_balance_fen = 8;
+  string available_balance_yuan = 7;
+  string reserved_balance_yuan = 8;
 }
 
 message CompleteFileTransferBillingRequest {
@@ -459,9 +459,9 @@ message CompleteFileTransferBillingRequest {
 
 message CompleteFileTransferBillingResponse {
   string order_no = 1;
-  string captured_amount_fen = 2;
+  string captured_amount_yuan = 2;
   int64 actual_traffic_bytes = 3;
-  string total_captured_amount_fen = 4;
+  string total_captured_amount_yuan = 4;
   int32 order_status = 5;
 }
 
@@ -473,7 +473,7 @@ message AbortFileTransferBillingRequest {
 message AbortFileTransferBillingResponse {
   bool success = 1;
   string order_no = 2;
-  string released_amount_fen = 3;
+  string released_amount_yuan = 3;
 }
 
 message ListBillingAccountsRequest {
@@ -501,7 +501,7 @@ message GetBillingAccountDetailResponse {
 message AdjustBillingBalanceRequest {
   string user_id = 1;
   string operation_id = 2;
-  string amount_fen = 3;
+  string amount_yuan = 3;
   string remark = 4;
   string operator_user_id = 5;
 }
@@ -523,11 +523,11 @@ message LedgerEntryItem {
   string operation_id = 8;
   int32 entry_type = 9;
   int32 scene = 10;
-  string action_amount_fen = 11;
-  string available_delta_fen = 12;
-  string reserved_delta_fen = 13;
-  string balance_after_available_fen = 14;
-  string balance_after_reserved_fen = 15;
+  string action_amount_yuan = 11;
+  string available_delta_yuan = 12;
+  string reserved_delta_yuan = 13;
+  string balance_after_available_yuan = 14;
+  string balance_after_reserved_yuan = 15;
   string operator_user_id = 16;
   string remark = 17;
   string created_at = 18;
@@ -556,8 +556,8 @@ message TrafficUsageRecordItem {
   string transfer_id = 6;
   int32 direction = 7;
   int64 traffic_bytes = 8;
-  string unit_price_fen_per_gib = 9;
-  string amount_fen = 10;
+  string unit_price_yuan_per_gb = 9;
+  string amount_yuan = 10;
   int32 pricing_version = 11;
   string source_service = 12;
   int32 status = 13;
@@ -581,8 +581,8 @@ message ListTrafficUsageRecordsResponse {
 
 message BillingPricing {
   int32 version = 1;
-  string ingress_price_fen_per_gib = 2;
-  string egress_price_fen_per_gib = 3;
+  string ingress_price_yuan_per_gb = 2;
+  string egress_price_yuan_per_gb = 3;
   bool enabled = 4;
   string remark = 5;
   string updated_by_user_id = 6;
@@ -597,8 +597,8 @@ message GetBillingPricingResponse {
 }
 
 message UpdateBillingPricingRequest {
-  string ingress_price_fen_per_gib = 1;
-  string egress_price_fen_per_gib = 2;
+  string ingress_price_yuan_per_gb = 1;
+  string egress_price_yuan_per_gb = 2;
   string remark = 3;
   string operator_user_id = 4;
 }
@@ -645,10 +645,10 @@ message BillingShortfallOrderItem {
   int64 actual_ingress_bytes = 8;
   int64 actual_egress_bytes = 9;
   int64 actual_traffic_bytes = 10;
-  string held_amount_fen = 11;
-  string captured_amount_fen = 12;
-  string released_amount_fen = 13;
-  string shortfall_fen = 14;
+  string held_amount_yuan = 11;
+  string captured_amount_yuan = 12;
+  string released_amount_yuan = 13;
+  string shortfall_yuan = 14;
   string remark = 15;
   string created_at = 16;
   string updated_at = 17;

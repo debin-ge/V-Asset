@@ -29,8 +29,8 @@ export default function BillingPage() {
   const [pricing, setPricing] = React.useState<BillingPricing | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [pricingForm, setPricingForm] = React.useState({
-    ingress_price_fen_per_gib: "0",
-    egress_price_fen_per_gib: "0",
+    ingress_price_yuan_per_gb: "0",
+    egress_price_yuan_per_gb: "0",
     remark: "",
   });
 
@@ -64,8 +64,8 @@ export default function BillingPage() {
     const pricingResponse = await billingApi.getPricing();
     setPricing(pricingResponse);
     setPricingForm({
-      ingress_price_fen_per_gib: pricingResponse.ingress_price_fen_per_gib,
-      egress_price_fen_per_gib: pricingResponse.egress_price_fen_per_gib,
+      ingress_price_yuan_per_gb: pricingResponse.ingress_price_yuan_per_gb,
+      egress_price_yuan_per_gb: pricingResponse.egress_price_yuan_per_gb,
       remark: pricingResponse.remark || "",
     });
   }, []);
@@ -148,8 +148,8 @@ export default function BillingPage() {
   const handleUpdatePricing = async () => {
     try {
       await billingApi.updatePricing({
-        ingress_price_fen_per_gib: pricingForm.ingress_price_fen_per_gib,
-        egress_price_fen_per_gib: pricingForm.egress_price_fen_per_gib,
+        ingress_price_yuan_per_gb: pricingForm.ingress_price_yuan_per_gb,
+        egress_price_yuan_per_gb: pricingForm.egress_price_yuan_per_gb,
         remark: pricingForm.remark,
       });
       await loadPricing();
@@ -214,9 +214,9 @@ export default function BillingPage() {
                               nickname={account.nickname}
                             />
                           </TableCell>
-                          <TableCell>{formatCurrencyFen(account.available_balance_fen)}</TableCell>
-                          <TableCell>{formatCurrencyFen(account.reserved_balance_fen)}</TableCell>
-                          <TableCell>{formatCurrencyFen(account.total_spent_fen)}</TableCell>
+                          <TableCell>{formatCurrencyYuan(account.available_balance_yuan)}</TableCell>
+                          <TableCell>{formatCurrencyYuan(account.reserved_balance_yuan)}</TableCell>
+                          <TableCell>{formatCurrencyYuan(account.total_spent_yuan)}</TableCell>
                           <TableCell className="text-right">
                             <Link
                               href={`/billing/accounts/${encodeURIComponent(account.user_id)}`}
@@ -292,17 +292,17 @@ export default function BillingPage() {
                 <CardContent className="space-y-4">
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Ingress Price (yuan / GiB)</label>
+                      <label className="text-sm font-medium text-slate-700">Ingress Price (yuan / GB)</label>
                       <Input
-                        value={pricingForm.ingress_price_fen_per_gib}
-                        onChange={(e) => setPricingForm((prev) => ({ ...prev, ingress_price_fen_per_gib: e.target.value }))}
+                        value={pricingForm.ingress_price_yuan_per_gb}
+                        onChange={(e) => setPricingForm((prev) => ({ ...prev, ingress_price_yuan_per_gb: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Egress Price (yuan / GiB)</label>
+                      <label className="text-sm font-medium text-slate-700">Egress Price (yuan / GB)</label>
                       <Input
-                        value={pricingForm.egress_price_fen_per_gib}
-                        onChange={(e) => setPricingForm((prev) => ({ ...prev, egress_price_fen_per_gib: e.target.value }))}
+                        value={pricingForm.egress_price_yuan_per_gb}
+                        onChange={(e) => setPricingForm((prev) => ({ ...prev, egress_price_yuan_per_gb: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -347,13 +347,13 @@ function UserIdentity({ userId, email, nickname }: { userId: string; email?: str
   );
 }
 
-function formatCurrencyFen(amountFen: string | number) {
-  const normalized = parseCurrency(amountFen);
+function formatCurrencyYuan(amountYuan: string | number) {
+  const normalized = parseCurrency(amountYuan);
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
     minimumFractionDigits: 2,
-  }).format(normalized / 100);
+  }).format(normalized);
 }
 
 function parseCurrency(amount: string | number) {

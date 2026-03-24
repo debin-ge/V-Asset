@@ -47,14 +47,14 @@ describe("Admin billing basePath-safe API paths", () => {
 
   it("routes billing requests through the basePath proxy", async () => {
     await billingApi.listAccounts({ query: "alice", page: 1, page_size: 20 });
-    await billingApi.adjustBalance("user_123", { amount_fen: "100", remark: "manual" });
+    await billingApi.adjustBalance("user_123", { amount_yuan: "100", remark: "manual" });
 
     expect(mockApiClient.get).toHaveBeenCalledWith("/admin-console/api/v1/admin/billing/accounts", {
       params: { query: "alice", page: 1, page_size: 20 },
     });
     expect(mockApiClient.post).toHaveBeenCalledWith(
       "/admin-console/api/v1/admin/billing/accounts/user_123/adjustments",
-      { amount_fen: "100", remark: "manual" }
+      { amount_yuan: "100", remark: "manual" }
     );
   });
 });

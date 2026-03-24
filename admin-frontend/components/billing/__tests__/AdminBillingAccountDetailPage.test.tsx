@@ -46,10 +46,10 @@ function buildAccount(userId = "user_1") {
     user_id: userId,
     email: "test@example.com",
     nickname: "Test User",
-    available_balance_fen: "1000",
-    reserved_balance_fen: "0",
-    total_recharged_fen: "1000",
-    total_spent_fen: "0",
+    available_balance_yuan: "1000",
+    reserved_balance_yuan: "0",
+    total_recharged_yuan: "1000",
+    total_spent_yuan: "0",
     total_traffic_bytes: 1024,
     status: 1,
     version: 1,
@@ -71,10 +71,10 @@ function buildShortfall(orderNo = "order_1") {
     actual_ingress_bytes: 1024,
     actual_egress_bytes: 0,
     actual_traffic_bytes: 1024,
-    held_amount_fen: "0",
-    captured_amount_fen: "0",
-    released_amount_fen: "0",
-    shortfall_fen: "500",
+    held_amount_yuan: "0",
+    captured_amount_yuan: "0",
+    released_amount_yuan: "0",
+    shortfall_yuan: "500",
     remark: "awaiting",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -144,7 +144,7 @@ describe("AdminBillingAccountDetailPage", () => {
 
     await waitFor(() => {
       expect(billingApi.adjustBalance).toHaveBeenCalledWith("user_1", {
-        amount_fen: "100",
+        amount_yuan: "100",
         remark: "manual adjustment",
       });
     });

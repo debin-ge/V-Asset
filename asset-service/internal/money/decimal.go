@@ -78,6 +78,27 @@ func (d Decimal) DivInt64(v int64) Decimal {
 	return Decimal{rat: new(big.Rat).Quo(d.clone(), new(big.Rat).SetInt64(v))}
 }
 
+func (d Decimal) Ceil(scale int) Decimal {
+	if scale < 0 {
+		return d
+	}
+	if d.rat == nil || d.rat.Sign() == 0 {
+		return Zero()
+	}
+
+	factor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(scale)), nil)
+	scaled := new(big.Rat).Mul(d.clone(), new(big.Rat).SetInt(factor))
+
+	quotient := new(big.Int)
+	remainder := new(big.Int)
+	quotient.QuoRem(scaled.Num(), scaled.Denom(), remainder)
+	if remainder.Sign() != 0 && scaled.Sign() > 0 {
+		quotient.Add(quotient, big.NewInt(1))
+	}
+
+	return Decimal{rat: new(big.Rat).SetFrac(quotient, factor)}
+}
+
 func (d Decimal) Abs() Decimal {
 	rat := d.clone()
 	if rat.Sign() < 0 {

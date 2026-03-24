@@ -35,13 +35,13 @@ export function Header() {
                         <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 border border-black/5">
                             <Wallet className="h-4 w-4 text-blue-600" />
                             <span className="text-sm font-medium">
-                                {formatCurrencyYuan(billingAccount?.available_balance_fen)}
+                                {formatCurrencyYuan(billingAccount?.available_balance_yuan)}
                             </span>
                         </div>
                         <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 border border-black/5">
                             <Shield className="h-4 w-4 text-slate-500" />
                             <span className="text-sm font-medium text-slate-700">
-                                Reserved {formatCurrencyYuan(billingAccount?.reserved_balance_fen)}
+                                Reserved {formatCurrencyYuan(billingAccount?.reserved_balance_yuan)}
                             </span>
                         </div>
                         <DropdownMenu>

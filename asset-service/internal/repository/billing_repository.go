@@ -66,8 +66,8 @@ func (r *BillingRepository) GetOrCreateAccountTx(ctx context.Context, tx *sql.Tx
 
 func (r *BillingRepository) GetAccountByUserID(ctx context.Context, userID string) (*models.BillingAccount, error) {
 	return scanBillingAccount(r.db.QueryRowContext(ctx, `
-		SELECT id, user_id, currency_code, available_balance_fen, reserved_balance_fen,
-		       total_recharged_fen, total_spent_fen, total_traffic_bytes, status, version,
+		SELECT id, user_id, currency_code, available_balance_yuan, reserved_balance_yuan,
+		       total_recharged_yuan, total_spent_yuan, total_traffic_bytes, status, version,
 		       created_at, updated_at
 		FROM billing_accounts
 		WHERE user_id = $1
@@ -76,8 +76,8 @@ func (r *BillingRepository) GetAccountByUserID(ctx context.Context, userID strin
 
 func (r *BillingRepository) GetAccountByUserIDForUpdate(ctx context.Context, tx *sql.Tx, userID string) (*models.BillingAccount, error) {
 	return scanBillingAccount(tx.QueryRowContext(ctx, `
-		SELECT id, user_id, currency_code, available_balance_fen, reserved_balance_fen,
-		       total_recharged_fen, total_spent_fen, total_traffic_bytes, status, version,
+		SELECT id, user_id, currency_code, available_balance_yuan, reserved_balance_yuan,
+		       total_recharged_yuan, total_spent_yuan, total_traffic_bytes, status, version,
 		       created_at, updated_at
 		FROM billing_accounts
 		WHERE user_id = $1
@@ -88,16 +88,16 @@ func (r *BillingRepository) GetAccountByUserIDForUpdate(ctx context.Context, tx 
 func (r *BillingRepository) UpdateAccountTx(ctx context.Context, tx *sql.Tx, account *models.BillingAccount) error {
 	result, err := tx.ExecContext(ctx, `
 		UPDATE billing_accounts
-		SET available_balance_fen = $1,
-		    reserved_balance_fen = $2,
-		    total_recharged_fen = $3,
-		    total_spent_fen = $4,
+		SET available_balance_yuan = $1,
+		    reserved_balance_yuan = $2,
+		    total_recharged_yuan = $3,
+		    total_spent_yuan = $4,
 		    total_traffic_bytes = $5,
 		    status = $6,
 		    version = version + 1,
 		    updated_at = $7
 		WHERE id = $8
-	`, account.AvailableBalanceFen, account.ReservedBalanceFen, account.TotalRechargedFen, account.TotalSpentFen, account.TotalTrafficBytes, account.Status, time.Now(), account.ID)
+	`, account.AvailableBalanceYuan, account.ReservedBalanceYuan, account.TotalRechargedYuan, account.TotalSpentYuan, account.TotalTrafficBytes, account.Status, time.Now(), account.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update billing account: %w", err)
 	}
@@ -152,8 +152,8 @@ func (r *BillingRepository) ListAccounts(ctx context.Context, filter models.Bill
 	queryArgs := append([]interface{}{}, args...)
 	queryArgs = append(queryArgs, filter.PageSize, offset)
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, user_id, currency_code, available_balance_fen, reserved_balance_fen,
-		       total_recharged_fen, total_spent_fen, total_traffic_bytes, status, version,
+		SELECT id, user_id, currency_code, available_balance_yuan, reserved_balance_yuan,
+		       total_recharged_yuan, total_spent_yuan, total_traffic_bytes, status, version,
 		       created_at, updated_at
 		FROM billing_accounts
 		WHERE `+whereClause+`
@@ -168,8 +168,8 @@ func (r *BillingRepository) ListAccounts(ctx context.Context, filter models.Bill
 	for rows.Next() {
 		var account models.BillingAccount
 		if err := rows.Scan(
-			&account.ID, &account.UserID, &account.CurrencyCode, &account.AvailableBalanceFen,
-			&account.ReservedBalanceFen, &account.TotalRechargedFen, &account.TotalSpentFen,
+			&account.ID, &account.UserID, &account.CurrencyCode, &account.AvailableBalanceYuan,
+			&account.ReservedBalanceYuan, &account.TotalRechargedYuan, &account.TotalSpentYuan,
 			&account.TotalTrafficBytes, &account.Status, &account.Version, &account.CreatedAt, &account.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan billing account: %w", err)
@@ -190,7 +190,7 @@ func (r *BillingRepository) ListAccounts(ctx context.Context, filter models.Bill
 
 func (r *BillingRepository) GetActivePricing(ctx context.Context) (*models.BillingPricing, error) {
 	return scanBillingPricing(r.db.QueryRowContext(ctx, `
-		SELECT id, version, ingress_price_fen_per_gib, egress_price_fen_per_gib,
+		SELECT id, version, ingress_price_yuan_per_gb, egress_price_yuan_per_gb,
 		       enabled, remark, updated_by_user_id,
 		       effective_at, created_at
 		FROM billing_pricing
@@ -202,7 +202,7 @@ func (r *BillingRepository) GetActivePricing(ctx context.Context) (*models.Billi
 
 func (r *BillingRepository) GetPricingByVersion(ctx context.Context, version int32) (*models.BillingPricing, error) {
 	return scanBillingPricing(r.db.QueryRowContext(ctx, `
-		SELECT id, version, ingress_price_fen_per_gib, egress_price_fen_per_gib,
+		SELECT id, version, ingress_price_yuan_per_gb, egress_price_yuan_per_gb,
 		       enabled, remark, updated_by_user_id,
 		       effective_at, created_at
 		FROM billing_pricing
@@ -228,12 +228,12 @@ func (r *BillingRepository) DisableAllPricingTx(ctx context.Context, tx *sql.Tx)
 func (r *BillingRepository) CreatePricingTx(ctx context.Context, tx *sql.Tx, pricing *models.BillingPricing) error {
 	return tx.QueryRowContext(ctx, `
 		INSERT INTO billing_pricing (
-			version, ingress_price_fen_per_gib, egress_price_fen_per_gib,
+			version, ingress_price_yuan_per_gb, egress_price_yuan_per_gb,
 			enabled, remark, updated_by_user_id, effective_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at
 	`,
-		pricing.Version, pricing.IngressPriceFenPerGiB, pricing.EgressPriceFenPerGiB,
+		pricing.Version, pricing.IngressPriceYuanPerGB, pricing.EgressPriceYuanPerGB,
 		pricing.Enabled, pricing.Remark, pricing.UpdatedByUserID, pricing.EffectiveAt,
 	).Scan(&pricing.ID, &pricing.CreatedAt)
 }
@@ -244,7 +244,7 @@ func (r *BillingRepository) CreateOrderTx(ctx context.Context, tx *sql.Tx, order
 			order_no, user_id, history_id, task_id, scene, status, pricing_version,
 			estimated_ingress_bytes, estimated_egress_bytes, estimated_traffic_bytes,
 			actual_ingress_bytes, actual_egress_bytes, actual_traffic_bytes,
-			held_amount_fen, captured_amount_fen, released_amount_fen, shortfall_fen,
+			held_amount_yuan, captured_amount_yuan, released_amount_yuan, shortfall_yuan,
 			remark, created_at, updated_at, closed_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7,
@@ -258,7 +258,7 @@ func (r *BillingRepository) CreateOrderTx(ctx context.Context, tx *sql.Tx, order
 		order.OrderNo, order.UserID, order.HistoryID, order.TaskID, order.Scene, order.Status, order.PricingVersion,
 		order.EstimatedIngressBytes, order.EstimatedEgressBytes, order.EstimatedTrafficBytes,
 		order.ActualIngressBytes, order.ActualEgressBytes, order.ActualTrafficBytes,
-		order.HeldAmountFen, order.CapturedAmountFen, order.ReleasedAmountFen, order.ShortfallFen,
+		order.HeldAmountYuan, order.CapturedAmountYuan, order.ReleasedAmountYuan, order.ShortfallYuan,
 		order.Remark, time.Now(), time.Now(), order.ClosedAt,
 	).Scan(&order.ID)
 }
@@ -268,7 +268,7 @@ func (r *BillingRepository) GetOrderByTaskID(ctx context.Context, taskID string)
 		SELECT id, order_no, user_id, history_id, task_id, scene, status, pricing_version,
 		       estimated_ingress_bytes, estimated_egress_bytes, estimated_traffic_bytes,
 		       actual_ingress_bytes, actual_egress_bytes, actual_traffic_bytes,
-		       held_amount_fen, captured_amount_fen, released_amount_fen, shortfall_fen,
+		       held_amount_yuan, captured_amount_yuan, released_amount_yuan, shortfall_yuan,
 		       remark, created_at, updated_at, closed_at
 		FROM billing_charge_orders
 		WHERE task_id = $1
@@ -280,7 +280,7 @@ func (r *BillingRepository) GetOrderByTaskIDForUpdate(ctx context.Context, tx *s
 		SELECT id, order_no, user_id, history_id, task_id, scene, status, pricing_version,
 		       estimated_ingress_bytes, estimated_egress_bytes, estimated_traffic_bytes,
 		       actual_ingress_bytes, actual_egress_bytes, actual_traffic_bytes,
-		       held_amount_fen, captured_amount_fen, released_amount_fen, shortfall_fen,
+		       held_amount_yuan, captured_amount_yuan, released_amount_yuan, shortfall_yuan,
 		       remark, created_at, updated_at, closed_at
 		FROM billing_charge_orders
 		WHERE task_id = $1
@@ -293,7 +293,7 @@ func (r *BillingRepository) GetLatestDownloadOrderByHistoryIDForUpdate(ctx conte
 		SELECT id, order_no, user_id, history_id, task_id, scene, status, pricing_version,
 		       estimated_ingress_bytes, estimated_egress_bytes, estimated_traffic_bytes,
 		       actual_ingress_bytes, actual_egress_bytes, actual_traffic_bytes,
-		       held_amount_fen, captured_amount_fen, released_amount_fen, shortfall_fen,
+		       held_amount_yuan, captured_amount_yuan, released_amount_yuan, shortfall_yuan,
 		       remark, created_at, updated_at, closed_at
 		FROM billing_charge_orders
 		WHERE history_id = $1 AND scene = $2
@@ -308,7 +308,7 @@ func (r *BillingRepository) GetOrderByOrderNoForUpdate(ctx context.Context, tx *
 		SELECT id, order_no, user_id, history_id, task_id, scene, status, pricing_version,
 		       estimated_ingress_bytes, estimated_egress_bytes, estimated_traffic_bytes,
 		       actual_ingress_bytes, actual_egress_bytes, actual_traffic_bytes,
-		       held_amount_fen, captured_amount_fen, released_amount_fen, shortfall_fen,
+		       held_amount_yuan, captured_amount_yuan, released_amount_yuan, shortfall_yuan,
 		       remark, created_at, updated_at, closed_at
 		FROM billing_charge_orders
 		WHERE order_no = $1
@@ -319,8 +319,8 @@ func (r *BillingRepository) GetOrderByOrderNoForUpdate(ctx context.Context, tx *
 func (r *BillingRepository) GetLatestPendingTransferHoldByOrderNoForUpdate(ctx context.Context, tx *sql.Tx, orderNo string) (*models.BillingHold, error) {
 	return scanBillingHold(tx.QueryRowContext(ctx, `
 		SELECT id, hold_no, order_no, user_id, history_id, task_id, transfer_id,
-		       hold_type, funding_source, status, amount_fen, captured_amount_fen,
-		       released_amount_fen, expires_at, created_at, updated_at
+		       hold_type, funding_source, status, amount_yuan, captured_amount_yuan,
+		       released_amount_yuan, expires_at, created_at, updated_at
 		FROM billing_holds
 		WHERE order_no = $1
 		  AND hold_type = $2
@@ -341,18 +341,18 @@ func (r *BillingRepository) UpdateOrderTx(ctx context.Context, tx *sql.Tx, order
 		    actual_ingress_bytes = $5,
 		    actual_egress_bytes = $6,
 		    actual_traffic_bytes = $7,
-		    held_amount_fen = $8,
-		    captured_amount_fen = $9,
-		    released_amount_fen = $10,
-		    shortfall_fen = $11,
+		    held_amount_yuan = $8,
+		    captured_amount_yuan = $9,
+		    released_amount_yuan = $10,
+		    shortfall_yuan = $11,
 		    remark = $12,
 		    updated_at = $13,
 		    closed_at = $14
 		WHERE id = $15
 	`,
 		order.Status, order.EstimatedIngressBytes, order.EstimatedEgressBytes, order.EstimatedTrafficBytes,
-		order.ActualIngressBytes, order.ActualEgressBytes, order.ActualTrafficBytes, order.HeldAmountFen,
-		order.CapturedAmountFen, order.ReleasedAmountFen, order.ShortfallFen, order.Remark, time.Now(), order.ClosedAt, order.ID,
+		order.ActualIngressBytes, order.ActualEgressBytes, order.ActualTrafficBytes, order.HeldAmountYuan,
+		order.CapturedAmountYuan, order.ReleasedAmountYuan, order.ShortfallYuan, order.Remark, time.Now(), order.ClosedAt, order.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update billing order: %w", err)
@@ -365,8 +365,8 @@ func (r *BillingRepository) CreateHoldTx(ctx context.Context, tx *sql.Tx, hold *
 	return tx.QueryRowContext(ctx, `
 		INSERT INTO billing_holds (
 			hold_no, order_no, user_id, history_id, task_id, transfer_id,
-			hold_type, funding_source, status, amount_fen, captured_amount_fen,
-			released_amount_fen, expires_at, created_at, updated_at
+			hold_type, funding_source, status, amount_yuan, captured_amount_yuan,
+			released_amount_yuan, expires_at, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6,
 			$7, $8, $9, $10, $11,
@@ -375,16 +375,16 @@ func (r *BillingRepository) CreateHoldTx(ctx context.Context, tx *sql.Tx, hold *
 		RETURNING id
 	`,
 		hold.HoldNo, hold.OrderNo, hold.UserID, hold.HistoryID, hold.TaskID, hold.TransferID,
-		hold.HoldType, hold.FundingSource, hold.Status, hold.AmountFen, hold.CapturedAmountFen,
-		hold.ReleasedAmountFen, hold.ExpiresAt, time.Now(), time.Now(),
+		hold.HoldType, hold.FundingSource, hold.Status, hold.AmountYuan, hold.CapturedAmountYuan,
+		hold.ReleasedAmountYuan, hold.ExpiresAt, time.Now(), time.Now(),
 	).Scan(&hold.ID)
 }
 
 func (r *BillingRepository) GetHoldByTaskIDForUpdate(ctx context.Context, tx *sql.Tx, taskID string, holdType int32) (*models.BillingHold, error) {
 	return scanBillingHold(tx.QueryRowContext(ctx, `
 		SELECT id, hold_no, order_no, user_id, history_id, task_id, transfer_id,
-		       hold_type, funding_source, status, amount_fen, captured_amount_fen,
-		       released_amount_fen, expires_at, created_at, updated_at
+		       hold_type, funding_source, status, amount_yuan, captured_amount_yuan,
+		       released_amount_yuan, expires_at, created_at, updated_at
 		FROM billing_holds
 		WHERE task_id = $1 AND hold_type = $2
 		FOR UPDATE
@@ -394,8 +394,8 @@ func (r *BillingRepository) GetHoldByTaskIDForUpdate(ctx context.Context, tx *sq
 func (r *BillingRepository) GetHoldByTransferIDForUpdate(ctx context.Context, tx *sql.Tx, transferID string) (*models.BillingHold, error) {
 	return scanBillingHold(tx.QueryRowContext(ctx, `
 		SELECT id, hold_no, order_no, user_id, history_id, task_id, transfer_id,
-		       hold_type, funding_source, status, amount_fen, captured_amount_fen,
-		       released_amount_fen, expires_at, created_at, updated_at
+		       hold_type, funding_source, status, amount_yuan, captured_amount_yuan,
+		       released_amount_yuan, expires_at, created_at, updated_at
 		FROM billing_holds
 		WHERE transfer_id = $1
 		FOR UPDATE
@@ -407,13 +407,13 @@ func (r *BillingRepository) UpdateHoldTx(ctx context.Context, tx *sql.Tx, hold *
 		UPDATE billing_holds
 		SET funding_source = $1,
 		    status = $2,
-		    amount_fen = $3,
-		    captured_amount_fen = $4,
-		    released_amount_fen = $5,
+		    amount_yuan = $3,
+		    captured_amount_yuan = $4,
+		    released_amount_yuan = $5,
 		    expires_at = $6,
 		    updated_at = $7
 		WHERE id = $8
-	`, hold.FundingSource, hold.Status, hold.AmountFen, hold.CapturedAmountFen, hold.ReleasedAmountFen, hold.ExpiresAt, time.Now(), hold.ID)
+	`, hold.FundingSource, hold.Status, hold.AmountYuan, hold.CapturedAmountYuan, hold.ReleasedAmountYuan, hold.ExpiresAt, time.Now(), hold.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update hold: %w", err)
 	}
@@ -425,7 +425,7 @@ func (r *BillingRepository) CreateUsageTx(ctx context.Context, tx *sql.Tx, usage
 	return tx.QueryRowContext(ctx, `
 		INSERT INTO traffic_usage_records (
 			usage_no, order_no, user_id, history_id, task_id, transfer_id,
-			direction, traffic_bytes, unit_price_fen_per_gib, amount_fen,
+			direction, traffic_bytes, unit_price_yuan_per_gb, amount_yuan,
 			pricing_version, source_service, status, created_at, confirmed_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6,
@@ -435,7 +435,7 @@ func (r *BillingRepository) CreateUsageTx(ctx context.Context, tx *sql.Tx, usage
 		RETURNING id
 	`,
 		usage.UsageNo, usage.OrderNo, usage.UserID, usage.HistoryID, usage.TaskID, usage.TransferID,
-		usage.Direction, usage.TrafficBytes, usage.UnitPriceFenPerGiB, usage.AmountFen,
+		usage.Direction, usage.TrafficBytes, usage.UnitPriceYuanPerGB, usage.AmountYuan,
 		usage.PricingVersion, usage.SourceService, usage.Status, time.Now(), usage.ConfirmedAt,
 	).Scan(&usage.ID)
 }
@@ -444,9 +444,9 @@ func (r *BillingRepository) CreateLedgerTx(ctx context.Context, tx *sql.Tx, entr
 	return tx.QueryRowContext(ctx, `
 		INSERT INTO billing_ledger_entries (
 			entry_no, account_id, user_id, order_no, hold_no, history_id,
-			task_id, transfer_id, operation_id, entry_type, scene, action_amount_fen,
-			available_delta_fen, reserved_delta_fen, balance_after_available_fen,
-			balance_after_reserved_fen, operator_user_id, remark, created_at
+			task_id, transfer_id, operation_id, entry_type, scene, action_amount_yuan,
+			available_delta_yuan, reserved_delta_yuan, balance_after_available_yuan,
+			balance_after_reserved_yuan, operator_user_id, remark, created_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6,
 			$7, $8, $9, $10, $11, $12,
@@ -455,18 +455,18 @@ func (r *BillingRepository) CreateLedgerTx(ctx context.Context, tx *sql.Tx, entr
 		RETURNING id
 	`,
 		entry.EntryNo, entry.AccountID, entry.UserID, entry.OrderNo, entry.HoldNo, entry.HistoryID,
-		entry.TaskID, entry.TransferID, entry.OperationID, entry.EntryType, entry.Scene, entry.ActionAmountFen,
-		entry.AvailableDeltaFen, entry.ReservedDeltaFen, entry.BalanceAfterAvailableFen,
-		entry.BalanceAfterReservedFen, entry.OperatorUserID, entry.Remark, time.Now(),
+		entry.TaskID, entry.TransferID, entry.OperationID, entry.EntryType, entry.Scene, entry.ActionAmountYuan,
+		entry.AvailableDeltaYuan, entry.ReservedDeltaYuan, entry.BalanceAfterAvailableYuan,
+		entry.BalanceAfterReservedYuan, entry.OperatorUserID, entry.Remark, time.Now(),
 	).Scan(&entry.ID)
 }
 
 func (r *BillingRepository) GetLedgerByOperationID(ctx context.Context, operationID string) (*models.BillingLedgerEntry, error) {
 	return scanBillingLedgerEntry(r.db.QueryRowContext(ctx, `
 		SELECT id, entry_no, account_id, user_id, order_no, hold_no, history_id,
-		       task_id, transfer_id, operation_id, entry_type, scene, action_amount_fen,
-		       available_delta_fen, reserved_delta_fen, balance_after_available_fen,
-		       balance_after_reserved_fen, operator_user_id, remark, created_at
+		       task_id, transfer_id, operation_id, entry_type, scene, action_amount_yuan,
+		       available_delta_yuan, reserved_delta_yuan, balance_after_available_yuan,
+		       balance_after_reserved_yuan, operator_user_id, remark, created_at
 		FROM billing_ledger_entries
 		WHERE operation_id = $1
 	`, operationID))
@@ -526,9 +526,9 @@ func (r *BillingRepository) ListLedger(ctx context.Context, filter models.Billin
 	queryArgs = append(queryArgs, filter.PageSize, offset)
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, entry_no, account_id, user_id, order_no, hold_no, history_id,
-		       task_id, transfer_id, operation_id, entry_type, scene, action_amount_fen,
-		       available_delta_fen, reserved_delta_fen, balance_after_available_fen,
-		       balance_after_reserved_fen, operator_user_id, remark, created_at
+		       task_id, transfer_id, operation_id, entry_type, scene, action_amount_yuan,
+		       available_delta_yuan, reserved_delta_yuan, balance_after_available_yuan,
+		       balance_after_reserved_yuan, operator_user_id, remark, created_at
 		FROM billing_ledger_entries
 		WHERE `+whereClause+`
 		ORDER BY created_at DESC, id DESC
@@ -591,7 +591,7 @@ func (r *BillingRepository) ListUsageRecords(ctx context.Context, filter models.
 	queryArgs = append(queryArgs, filter.PageSize, offset)
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, usage_no, order_no, user_id, history_id, task_id, transfer_id,
-		       direction, traffic_bytes, unit_price_fen_per_gib, amount_fen,
+		       direction, traffic_bytes, unit_price_yuan_per_gb, amount_yuan,
 		       pricing_version, source_service, status, created_at, confirmed_at
 		FROM traffic_usage_records
 		WHERE `+whereClause+`
@@ -653,12 +653,12 @@ func (r *BillingRepository) ListStatements(ctx context.Context, userID string, p
 				2 AS type,
 				history_id,
 				actual_traffic_bytes AS traffic_bytes,
-				captured_amount_fen AS amount_fen,
+				captured_amount_yuan AS amount_yuan,
 				status,
 				remark,
 				created_at
 			FROM billing_charge_orders
-			WHERE user_id = $1 AND captured_amount_fen > 0
+			WHERE user_id = $1 AND captured_amount_yuan > 0
 
 			UNION ALL
 
@@ -667,7 +667,7 @@ func (r *BillingRepository) ListStatements(ctx context.Context, userID string, p
 				CASE WHEN entry_type = 1 THEN 1 ELSE 3 END AS type,
 				history_id,
 				0 AS traffic_bytes,
-				action_amount_fen AS amount_fen,
+				action_amount_yuan AS amount_yuan,
 				3 AS status,
 				remark,
 				created_at
@@ -700,7 +700,7 @@ func (r *BillingRepository) ListStatements(ctx context.Context, userID string, p
 			&item.Type,
 			&item.HistoryID,
 			&item.TrafficBytes,
-			&item.AmountFen,
+			&item.AmountYuan,
 			&item.Status,
 			&item.Remark,
 			&item.CreatedAt,
@@ -730,7 +730,7 @@ func (r *BillingRepository) ListShortfallOrders(ctx context.Context, filter mode
 	}
 
 	args := make([]interface{}, 0, 3)
-	filters := []string{"status = $1", "shortfall_fen > 0"}
+	filters := []string{"status = $1", "shortfall_yuan > 0"}
 	args = append(args, models.BillingOrderStatusAwaitingShortfall)
 	argPos := 2
 	if filter.UserID != "" {
@@ -754,7 +754,7 @@ func (r *BillingRepository) ListShortfallOrders(ctx context.Context, filter mode
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT order_no, user_id, history_id, task_id, scene, status, pricing_version,
 		       actual_ingress_bytes, actual_egress_bytes, actual_traffic_bytes,
-		       held_amount_fen, captured_amount_fen, released_amount_fen, shortfall_fen,
+		       held_amount_yuan, captured_amount_yuan, released_amount_yuan, shortfall_yuan,
 		       remark, created_at, updated_at
 		FROM billing_charge_orders
 		WHERE `+whereClause+`
@@ -779,10 +779,10 @@ func (r *BillingRepository) ListShortfallOrders(ctx context.Context, filter mode
 			&item.ActualIngressBytes,
 			&item.ActualEgressBytes,
 			&item.ActualTrafficBytes,
-			&item.HeldAmountFen,
-			&item.CapturedAmountFen,
-			&item.ReleasedAmountFen,
-			&item.ShortfallFen,
+			&item.HeldAmountYuan,
+			&item.CapturedAmountYuan,
+			&item.ReleasedAmountYuan,
+			&item.ShortfallYuan,
 			&item.Remark,
 			&item.CreatedAt,
 			&item.UpdatedAt,
@@ -806,8 +806,8 @@ func (r *BillingRepository) ListShortfallOrders(ctx context.Context, filter mode
 func scanBillingAccount(row rowScanner) (*models.BillingAccount, error) {
 	var account models.BillingAccount
 	if err := row.Scan(
-		&account.ID, &account.UserID, &account.CurrencyCode, &account.AvailableBalanceFen,
-		&account.ReservedBalanceFen, &account.TotalRechargedFen, &account.TotalSpentFen,
+		&account.ID, &account.UserID, &account.CurrencyCode, &account.AvailableBalanceYuan,
+		&account.ReservedBalanceYuan, &account.TotalRechargedYuan, &account.TotalSpentYuan,
 		&account.TotalTrafficBytes, &account.Status, &account.Version, &account.CreatedAt, &account.UpdatedAt,
 	); err != nil {
 		return nil, err
@@ -818,7 +818,7 @@ func scanBillingAccount(row rowScanner) (*models.BillingAccount, error) {
 func scanBillingPricing(row rowScanner) (*models.BillingPricing, error) {
 	var pricing models.BillingPricing
 	if err := row.Scan(
-		&pricing.ID, &pricing.Version, &pricing.IngressPriceFenPerGiB, &pricing.EgressPriceFenPerGiB,
+		&pricing.ID, &pricing.Version, &pricing.IngressPriceYuanPerGB, &pricing.EgressPriceYuanPerGB,
 		&pricing.Enabled, &pricing.Remark, &pricing.UpdatedByUserID,
 		&pricing.EffectiveAt, &pricing.CreatedAt,
 	); err != nil {
@@ -834,7 +834,7 @@ func scanBillingChargeOrder(row rowScanner) (*models.BillingChargeOrder, error) 
 		&order.ID, &order.OrderNo, &order.UserID, &order.HistoryID, &order.TaskID, &order.Scene, &order.Status, &order.PricingVersion,
 		&order.EstimatedIngressBytes, &order.EstimatedEgressBytes, &order.EstimatedTrafficBytes,
 		&order.ActualIngressBytes, &order.ActualEgressBytes, &order.ActualTrafficBytes,
-		&order.HeldAmountFen, &order.CapturedAmountFen, &order.ReleasedAmountFen, &order.ShortfallFen,
+		&order.HeldAmountYuan, &order.CapturedAmountYuan, &order.ReleasedAmountYuan, &order.ShortfallYuan,
 		&order.Remark, &order.CreatedAt, &order.UpdatedAt, &closedAt,
 	); err != nil {
 		return nil, err
@@ -850,8 +850,8 @@ func scanBillingHold(row rowScanner) (*models.BillingHold, error) {
 	var expiresAt sql.NullTime
 	if err := row.Scan(
 		&hold.ID, &hold.HoldNo, &hold.OrderNo, &hold.UserID, &hold.HistoryID, &hold.TaskID, &hold.TransferID,
-		&hold.HoldType, &hold.FundingSource, &hold.Status, &hold.AmountFen, &hold.CapturedAmountFen,
-		&hold.ReleasedAmountFen, &expiresAt, &hold.CreatedAt, &hold.UpdatedAt,
+		&hold.HoldType, &hold.FundingSource, &hold.Status, &hold.AmountYuan, &hold.CapturedAmountYuan,
+		&hold.ReleasedAmountYuan, &expiresAt, &hold.CreatedAt, &hold.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}
@@ -865,9 +865,9 @@ func scanBillingLedgerEntry(row rowScanner) (*models.BillingLedgerEntry, error) 
 	var entry models.BillingLedgerEntry
 	if err := row.Scan(
 		&entry.ID, &entry.EntryNo, &entry.AccountID, &entry.UserID, &entry.OrderNo, &entry.HoldNo, &entry.HistoryID,
-		&entry.TaskID, &entry.TransferID, &entry.OperationID, &entry.EntryType, &entry.Scene, &entry.ActionAmountFen,
-		&entry.AvailableDeltaFen, &entry.ReservedDeltaFen, &entry.BalanceAfterAvailableFen,
-		&entry.BalanceAfterReservedFen, &entry.OperatorUserID, &entry.Remark, &entry.CreatedAt,
+		&entry.TaskID, &entry.TransferID, &entry.OperationID, &entry.EntryType, &entry.Scene, &entry.ActionAmountYuan,
+		&entry.AvailableDeltaYuan, &entry.ReservedDeltaYuan, &entry.BalanceAfterAvailableYuan,
+		&entry.BalanceAfterReservedYuan, &entry.OperatorUserID, &entry.Remark, &entry.CreatedAt,
 	); err != nil {
 		return nil, err
 	}
@@ -900,7 +900,7 @@ func scanTrafficUsageRecordRows(rows *sql.Rows) (*models.TrafficUsageRecord, err
 	var confirmedAt sql.NullTime
 	if err := rows.Scan(
 		&item.ID, &item.UsageNo, &item.OrderNo, &item.UserID, &item.HistoryID, &item.TaskID, &item.TransferID,
-		&item.Direction, &item.TrafficBytes, &item.UnitPriceFenPerGiB, &item.AmountFen,
+		&item.Direction, &item.TrafficBytes, &item.UnitPriceYuanPerGB, &item.AmountYuan,
 		&item.PricingVersion, &item.SourceService, &item.Status, &item.CreatedAt, &confirmedAt,
 	); err != nil {
 		return nil, fmt.Errorf("failed to scan usage record: %w", err)

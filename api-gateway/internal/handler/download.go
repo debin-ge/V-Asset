@@ -195,7 +195,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 			EstimatedIngressBytes: estimateResp.GetEstimatedIngressBytes(),
 			EstimatedEgressBytes:  estimateResp.GetEstimatedEgressBytes(),
 			EstimatedTrafficBytes: estimateResp.GetEstimatedTrafficBytes(),
-			EstimatedCostFen:      estimateResp.GetEstimatedCostFen(),
+			EstimatedCostYuan:     estimateResp.GetEstimatedCostYuan(),
 			PricingVersion:        estimateResp.GetPricingVersion(),
 		})
 		if err != nil {

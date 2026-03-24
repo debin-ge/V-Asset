@@ -323,17 +323,17 @@ func (s *AdminServer) ListBillingAccounts(ctx context.Context, req *pb.AdminList
 	items := make([]*pb.AdminBillingAccount, 0, len(resp.Items))
 	for _, item := range resp.Items {
 		items = append(items, &pb.AdminBillingAccount{
-			UserId:              item.UserID,
-			Email:               item.Email,
-			Nickname:            item.Nickname,
-			AvailableBalanceFen: item.AvailableBalanceFen,
-			ReservedBalanceFen:  item.ReservedBalanceFen,
-			TotalRechargedFen:   item.TotalRechargedFen,
-			TotalSpentFen:       item.TotalSpentFen,
-			TotalTrafficBytes:   item.TotalTrafficBytes,
-			Status:              item.Status,
-			Version:             item.Version,
-			UpdatedAt:           item.UpdatedAt,
+			UserId:               item.UserID,
+			Email:                item.Email,
+			Nickname:             item.Nickname,
+			AvailableBalanceYuan: item.AvailableBalanceYuan,
+			ReservedBalanceYuan:  item.ReservedBalanceYuan,
+			TotalRechargedYuan:   item.TotalRechargedYuan,
+			TotalSpentYuan:       item.TotalSpentYuan,
+			TotalTrafficBytes:    item.TotalTrafficBytes,
+			Status:               item.Status,
+			Version:              item.Version,
+			UpdatedAt:            item.UpdatedAt,
 		})
 	}
 
@@ -353,23 +353,23 @@ func (s *AdminServer) GetBillingAccountDetail(ctx context.Context, req *pb.Admin
 
 	return &pb.AdminGetBillingAccountDetailResponse{
 		Account: &pb.AdminBillingAccount{
-			UserId:              account.UserID,
-			Email:               account.Email,
-			Nickname:            account.Nickname,
-			AvailableBalanceFen: account.AvailableBalanceFen,
-			ReservedBalanceFen:  account.ReservedBalanceFen,
-			TotalRechargedFen:   account.TotalRechargedFen,
-			TotalSpentFen:       account.TotalSpentFen,
-			TotalTrafficBytes:   account.TotalTrafficBytes,
-			Status:              account.Status,
-			Version:             account.Version,
-			UpdatedAt:           account.UpdatedAt,
+			UserId:               account.UserID,
+			Email:                account.Email,
+			Nickname:             account.Nickname,
+			AvailableBalanceYuan: account.AvailableBalanceYuan,
+			ReservedBalanceYuan:  account.ReservedBalanceYuan,
+			TotalRechargedYuan:   account.TotalRechargedYuan,
+			TotalSpentYuan:       account.TotalSpentYuan,
+			TotalTrafficBytes:    account.TotalTrafficBytes,
+			Status:               account.Status,
+			Version:              account.Version,
+			UpdatedAt:            account.UpdatedAt,
 		},
 	}, nil
 }
 
 func (s *AdminServer) AdjustBillingBalance(ctx context.Context, req *pb.AdminAdjustBillingBalanceRequest) (*pb.AdminAdjustBillingBalanceResponse, error) {
-	account, entryNo, err := s.billingService.AdjustBalance(ctx, req.GetUserId(), req.GetOperationId(), req.GetAmountFen(), req.GetRemark(), req.GetOperatorUserId())
+	account, entryNo, err := s.billingService.AdjustBalance(ctx, req.GetUserId(), req.GetOperationId(), req.GetAmountYuan(), req.GetRemark(), req.GetOperatorUserId())
 	if err != nil {
 		return nil, mapDownstreamError(err)
 	}
@@ -377,17 +377,17 @@ func (s *AdminServer) AdjustBillingBalance(ctx context.Context, req *pb.AdminAdj
 	return &pb.AdminAdjustBillingBalanceResponse{
 		Success: true,
 		Account: &pb.AdminBillingAccount{
-			UserId:              account.UserID,
-			Email:               account.Email,
-			Nickname:            account.Nickname,
-			AvailableBalanceFen: account.AvailableBalanceFen,
-			ReservedBalanceFen:  account.ReservedBalanceFen,
-			TotalRechargedFen:   account.TotalRechargedFen,
-			TotalSpentFen:       account.TotalSpentFen,
-			TotalTrafficBytes:   account.TotalTrafficBytes,
-			Status:              account.Status,
-			Version:             account.Version,
-			UpdatedAt:           account.UpdatedAt,
+			UserId:               account.UserID,
+			Email:                account.Email,
+			Nickname:             account.Nickname,
+			AvailableBalanceYuan: account.AvailableBalanceYuan,
+			ReservedBalanceYuan:  account.ReservedBalanceYuan,
+			TotalRechargedYuan:   account.TotalRechargedYuan,
+			TotalSpentYuan:       account.TotalSpentYuan,
+			TotalTrafficBytes:    account.TotalTrafficBytes,
+			Status:               account.Status,
+			Version:              account.Version,
+			UpdatedAt:            account.UpdatedAt,
 		},
 		EntryNo: entryNo,
 	}, nil
@@ -414,10 +414,10 @@ func (s *AdminServer) ListBillingShortfalls(ctx context.Context, req *pb.AdminLi
 			ActualIngressBytes: item.ActualIngressBytes,
 			ActualEgressBytes:  item.ActualEgressBytes,
 			ActualTrafficBytes: item.ActualTrafficBytes,
-			HeldAmountFen:      item.HeldAmountFen,
-			CapturedAmountFen:  item.CapturedAmountFen,
-			ReleasedAmountFen:  item.ReleasedAmountFen,
-			ShortfallFen:       item.ShortfallFen,
+			HeldAmountYuan:     item.HeldAmountYuan,
+			CapturedAmountYuan: item.CapturedAmountYuan,
+			ReleasedAmountYuan: item.ReleasedAmountYuan,
+			ShortfallYuan:      item.ShortfallYuan,
 			Remark:             item.Remark,
 			CreatedAt:          item.CreatedAt,
 			UpdatedAt:          item.UpdatedAt,
@@ -453,26 +453,26 @@ func (s *AdminServer) ReconcileBillingShortfall(ctx context.Context, req *pb.Adm
 			ActualIngressBytes: order.ActualIngressBytes,
 			ActualEgressBytes:  order.ActualEgressBytes,
 			ActualTrafficBytes: order.ActualTrafficBytes,
-			HeldAmountFen:      order.HeldAmountFen,
-			CapturedAmountFen:  order.CapturedAmountFen,
-			ReleasedAmountFen:  order.ReleasedAmountFen,
-			ShortfallFen:       order.ShortfallFen,
+			HeldAmountYuan:     order.HeldAmountYuan,
+			CapturedAmountYuan: order.CapturedAmountYuan,
+			ReleasedAmountYuan: order.ReleasedAmountYuan,
+			ShortfallYuan:      order.ShortfallYuan,
 			Remark:             order.Remark,
 			CreatedAt:          order.CreatedAt,
 			UpdatedAt:          order.UpdatedAt,
 		},
 		Account: &pb.AdminBillingAccount{
-			UserId:              account.UserID,
-			Email:               account.Email,
-			Nickname:            account.Nickname,
-			AvailableBalanceFen: account.AvailableBalanceFen,
-			ReservedBalanceFen:  account.ReservedBalanceFen,
-			TotalRechargedFen:   account.TotalRechargedFen,
-			TotalSpentFen:       account.TotalSpentFen,
-			TotalTrafficBytes:   account.TotalTrafficBytes,
-			Status:              account.Status,
-			Version:             account.Version,
-			UpdatedAt:           account.UpdatedAt,
+			UserId:               account.UserID,
+			Email:                account.Email,
+			Nickname:             account.Nickname,
+			AvailableBalanceYuan: account.AvailableBalanceYuan,
+			ReservedBalanceYuan:  account.ReservedBalanceYuan,
+			TotalRechargedYuan:   account.TotalRechargedYuan,
+			TotalSpentYuan:       account.TotalSpentYuan,
+			TotalTrafficBytes:    account.TotalTrafficBytes,
+			Status:               account.Status,
+			Version:              account.Version,
+			UpdatedAt:            account.UpdatedAt,
 		},
 		EntryNo: entryNo,
 	}, nil
@@ -487,26 +487,26 @@ func (s *AdminServer) ListBillingLedger(ctx context.Context, req *pb.AdminListBi
 	items := make([]*pb.AdminBillingLedgerEntry, 0, len(resp.Items))
 	for _, item := range resp.Items {
 		items = append(items, &pb.AdminBillingLedgerEntry{
-			EntryNo:                  item.EntryNo,
-			UserId:                   item.UserID,
-			Email:                    item.Email,
-			Nickname:                 item.Nickname,
-			OrderNo:                  item.OrderNo,
-			HoldNo:                   item.HoldNo,
-			HistoryId:                item.HistoryID,
-			TaskId:                   item.TaskID,
-			TransferId:               item.TransferID,
-			OperationId:              item.OperationID,
-			EntryType:                item.EntryType,
-			Scene:                    item.Scene,
-			ActionAmountFen:          item.ActionAmountFen,
-			AvailableDeltaFen:        item.AvailableDeltaFen,
-			ReservedDeltaFen:         item.ReservedDeltaFen,
-			BalanceAfterAvailableFen: item.BalanceAfterAvailableFen,
-			BalanceAfterReservedFen:  item.BalanceAfterReservedFen,
-			OperatorUserId:           item.OperatorUserID,
-			Remark:                   item.Remark,
-			CreatedAt:                item.CreatedAt,
+			EntryNo:                   item.EntryNo,
+			UserId:                    item.UserID,
+			Email:                     item.Email,
+			Nickname:                  item.Nickname,
+			OrderNo:                   item.OrderNo,
+			HoldNo:                    item.HoldNo,
+			HistoryId:                 item.HistoryID,
+			TaskId:                    item.TaskID,
+			TransferId:                item.TransferID,
+			OperationId:               item.OperationID,
+			EntryType:                 item.EntryType,
+			Scene:                     item.Scene,
+			ActionAmountYuan:          item.ActionAmountYuan,
+			AvailableDeltaYuan:        item.AvailableDeltaYuan,
+			ReservedDeltaYuan:         item.ReservedDeltaYuan,
+			BalanceAfterAvailableYuan: item.BalanceAfterAvailableYuan,
+			BalanceAfterReservedYuan:  item.BalanceAfterReservedYuan,
+			OperatorUserId:            item.OperatorUserID,
+			Remark:                    item.Remark,
+			CreatedAt:                 item.CreatedAt,
 		})
 	}
 
@@ -537,8 +537,8 @@ func (s *AdminServer) ListBillingUsageRecords(ctx context.Context, req *pb.Admin
 			TransferId:         item.TransferID,
 			Direction:          item.Direction,
 			TrafficBytes:       item.TrafficBytes,
-			UnitPriceFenPerGib: item.UnitPriceFenPerGiB,
-			AmountFen:          item.AmountFen,
+			UnitPriceYuanPerGb: item.UnitPriceYuanPerGB,
+			AmountYuan:         item.AmountYuan,
 			PricingVersion:     item.PricingVersion,
 			SourceService:      item.SourceService,
 			Status:             item.Status,
@@ -562,8 +562,8 @@ func (s *AdminServer) GetBillingPricing(ctx context.Context, _ *pb.AdminEmpty) (
 	}
 	return &pb.AdminBillingPricingResponse{
 		Version:               pricing.Version,
-		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
-		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
+		IngressPriceYuanPerGb: pricing.IngressPriceYuanPerGB,
+		EgressPriceYuanPerGb:  pricing.EgressPriceYuanPerGB,
 		Enabled:               pricing.Enabled,
 		Remark:                pricing.Remark,
 		UpdatedByUserId:       pricing.UpdatedByUserID,
@@ -573,14 +573,14 @@ func (s *AdminServer) GetBillingPricing(ctx context.Context, _ *pb.AdminEmpty) (
 }
 
 func (s *AdminServer) UpdateBillingPricing(ctx context.Context, req *pb.AdminUpdateBillingPricingRequest) (*pb.AdminBillingPricingResponse, error) {
-	pricing, err := s.billingService.UpdatePricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetRemark(), req.GetOperatorUserId())
+	pricing, err := s.billingService.UpdatePricing(ctx, req.GetIngressPriceYuanPerGb(), req.GetEgressPriceYuanPerGb(), req.GetRemark(), req.GetOperatorUserId())
 	if err != nil {
 		return nil, mapDownstreamError(err)
 	}
 	return &pb.AdminBillingPricingResponse{
 		Version:               pricing.Version,
-		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB,
-		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB,
+		IngressPriceYuanPerGb: pricing.IngressPriceYuanPerGB,
+		EgressPriceYuanPerGb:  pricing.EgressPriceYuanPerGB,
 		Enabled:               pricing.Enabled,
 		Remark:                pricing.Remark,
 		UpdatedByUserId:       pricing.UpdatedByUserID,

@@ -288,10 +288,10 @@ message AdminBillingAccount {
   string user_id = 1;
   string email = 2;
   string nickname = 3;
-  string available_balance_fen = 4;
-  string reserved_balance_fen = 5;
-  string total_recharged_fen = 6;
-  string total_spent_fen = 7;
+  string available_balance_yuan = 4;
+  string reserved_balance_yuan = 5;
+  string total_recharged_yuan = 6;
+  string total_spent_yuan = 7;
   int64 total_traffic_bytes = 8;
   int32 status = 9;
   int32 version = 10;
@@ -323,7 +323,7 @@ message AdminGetBillingAccountDetailResponse {
 message AdminAdjustBillingBalanceRequest {
   string user_id = 1;
   string operation_id = 2;
-  string amount_fen = 3;
+  string amount_yuan = 3;
   string remark = 4;
   string operator_user_id = 5;
 }
@@ -347,10 +347,10 @@ message AdminBillingShortfallOrder {
   int64 actual_ingress_bytes = 10;
   int64 actual_egress_bytes = 11;
   int64 actual_traffic_bytes = 12;
-  string held_amount_fen = 13;
-  string captured_amount_fen = 14;
-  string released_amount_fen = 15;
-  string shortfall_fen = 16;
+  string held_amount_yuan = 13;
+  string captured_amount_yuan = 14;
+  string released_amount_yuan = 15;
+  string shortfall_yuan = 16;
   string remark = 17;
   string created_at = 18;
   string updated_at = 19;
@@ -395,11 +395,11 @@ message AdminBillingLedgerEntry {
   string operation_id = 10;
   int32 entry_type = 11;
   int32 scene = 12;
-  string action_amount_fen = 13;
-  string available_delta_fen = 14;
-  string reserved_delta_fen = 15;
-  string balance_after_available_fen = 16;
-  string balance_after_reserved_fen = 17;
+  string action_amount_yuan = 13;
+  string available_delta_yuan = 14;
+  string reserved_delta_yuan = 15;
+  string balance_after_available_yuan = 16;
+  string balance_after_reserved_yuan = 17;
   string operator_user_id = 18;
   string remark = 19;
   string created_at = 20;
@@ -430,8 +430,8 @@ message AdminBillingUsageRecord {
   string transfer_id = 8;
   int32 direction = 9;
   int64 traffic_bytes = 10;
-  string unit_price_fen_per_gib = 11;
-  string amount_fen = 12;
+  string unit_price_yuan_per_gb = 11;
+  string amount_yuan = 12;
   int32 pricing_version = 13;
   string source_service = 14;
   int32 status = 15;
@@ -455,8 +455,8 @@ message AdminListBillingUsageRecordsResponse {
 
 message AdminBillingPricingResponse {
   int32 version = 1;
-  string ingress_price_fen_per_gib = 2;
-  string egress_price_fen_per_gib = 3;
+  string ingress_price_yuan_per_gb = 2;
+  string egress_price_yuan_per_gb = 3;
   bool enabled = 4;
   string remark = 5;
   string updated_by_user_id = 6;
@@ -465,8 +465,8 @@ message AdminBillingPricingResponse {
 }
 
 message AdminUpdateBillingPricingRequest {
-  string ingress_price_fen_per_gib = 1;
-  string egress_price_fen_per_gib = 2;
+  string ingress_price_yuan_per_gb = 1;
+  string egress_price_yuan_per_gb = 2;
   string remark = 3;
   string operator_user_id = 4;
 }

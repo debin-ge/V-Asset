@@ -57,16 +57,15 @@ function normalizeCurrencyAmount(amount: string | number | null | undefined): nu
 }
 
 /**
- * Format fen amount to CNY (Yuan).
+ * Format yuan amount to CNY.
  */
 export function formatCurrencyYuan(amount: string | number | null | undefined): string {
-    const normalizedAmountFen = normalizeCurrencyAmount(amount);
-    const amountYuan = normalizedAmountFen / 100;
+    const normalizedAmountYuan = normalizeCurrencyAmount(amount);
     return new Intl.NumberFormat('zh-CN', {
         style: 'currency',
         currency: 'CNY',
         minimumFractionDigits: 2,
-    }).format(amountYuan);
+    }).format(normalizedAmountYuan);
 }
 
 export function parseCurrencyYuan(amount: string | number | null | undefined): number {

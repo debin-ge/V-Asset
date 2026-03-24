@@ -306,7 +306,7 @@ func (s *GRPCServer) ListBillingStatements(ctx context.Context, req *pb.ListBill
 			Type:         item.Type,
 			HistoryId:    item.HistoryID,
 			TrafficBytes: item.TrafficBytes,
-			AmountFen:    item.AmountFen.String(),
+			AmountYuan:   item.AmountYuan.String(),
 			Status:       item.Status,
 			Remark:       item.Remark,
 			CreatedAt:    item.CreatedAt.Format(time.RFC3339),
@@ -336,7 +336,7 @@ func (s *GRPCServer) EstimateDownloadBilling(ctx context.Context, req *pb.Estima
 		EstimatedIngressBytes: estimate.EstimatedIngressBytes,
 		EstimatedEgressBytes:  estimate.EstimatedEgressBytes,
 		EstimatedTrafficBytes: estimate.EstimatedTrafficBytes,
-		EstimatedCostFen:      estimate.EstimatedCostFen.String(),
+		EstimatedCostYuan:     estimate.EstimatedCostYuan.String(),
 		PricingVersion:        estimate.PricingVersion,
 		IsEstimated:           estimate.IsEstimated,
 		EstimateReason:        estimate.EstimateReason,
@@ -344,16 +344,16 @@ func (s *GRPCServer) EstimateDownloadBilling(ctx context.Context, req *pb.Estima
 }
 
 func (s *GRPCServer) HoldInitialDownload(ctx context.Context, req *pb.HoldInitialDownloadRequest) (*pb.HoldInitialDownloadResponse, error) {
-	estimatedCost, err := money.Parse(req.GetEstimatedCostFen())
+	estimatedCost, err := money.Parse(req.GetEstimatedCostYuan())
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "estimated_cost_fen 非法")
+		return nil, status.Error(codes.InvalidArgument, "estimated_cost_yuan 非法")
 	}
 
 	estimate := &models.BillingEstimate{
 		EstimatedIngressBytes: req.GetEstimatedIngressBytes(),
 		EstimatedEgressBytes:  req.GetEstimatedEgressBytes(),
 		EstimatedTrafficBytes: req.GetEstimatedTrafficBytes(),
-		EstimatedCostFen:      estimatedCost,
+		EstimatedCostYuan:     estimatedCost,
 		PricingVersion:        req.GetPricingVersion(),
 	}
 
@@ -366,11 +366,11 @@ func (s *GRPCServer) HoldInitialDownload(ctx context.Context, req *pb.HoldInitia
 	}
 
 	return &pb.HoldInitialDownloadResponse{
-		OrderNo:             order.OrderNo,
-		HoldNo:              hold.HoldNo,
-		HeldAmountFen:       hold.AmountFen.String(),
-		AvailableBalanceFen: account.AvailableBalanceFen.String(),
-		ReservedBalanceFen:  account.ReservedBalanceFen.String(),
+		OrderNo:              order.OrderNo,
+		HoldNo:               hold.HoldNo,
+		HeldAmountYuan:       hold.AmountYuan.String(),
+		AvailableBalanceYuan: account.AvailableBalanceYuan.String(),
+		ReservedBalanceYuan:  account.ReservedBalanceYuan.String(),
 	}, nil
 }
 
@@ -387,12 +387,12 @@ func (s *GRPCServer) CaptureIngressUsage(ctx context.Context, req *pb.CaptureIng
 	}
 
 	return &pb.CaptureIngressUsageResponse{
-		OrderNo:              order.OrderNo,
-		CapturedAmountFen:    capturedAmount.String(),
-		RemainingReservedFen: order.HeldAmountFen.Sub(order.CapturedAmountFen).Sub(order.ReleasedAmountFen).String(),
-		ActualIngressBytes:   order.ActualIngressBytes,
-		ActualTrafficBytes:   order.ActualTrafficBytes,
-		OrderStatus:          order.Status,
+		OrderNo:               order.OrderNo,
+		CapturedAmountYuan:    capturedAmount.String(),
+		RemainingReservedYuan: order.HeldAmountYuan.Sub(order.CapturedAmountYuan).Sub(order.ReleasedAmountYuan).String(),
+		ActualIngressBytes:    order.ActualIngressBytes,
+		ActualTrafficBytes:    order.ActualTrafficBytes,
+		OrderStatus:           order.Status,
 	}, nil
 }
 
@@ -406,9 +406,9 @@ func (s *GRPCServer) ReleaseInitialDownload(ctx context.Context, req *pb.Release
 	}
 
 	return &pb.ReleaseInitialDownloadResponse{
-		Success:           true,
-		OrderNo:           order.OrderNo,
-		ReleasedAmountFen: releasedAmount.String(),
+		Success:            true,
+		OrderNo:            order.OrderNo,
+		ReleasedAmountYuan: releasedAmount.String(),
 	}, nil
 }
 
@@ -422,14 +422,14 @@ func (s *GRPCServer) PrepareFileTransferBilling(ctx context.Context, req *pb.Pre
 	}
 
 	return &pb.PrepareFileTransferBillingResponse{
-		TransferId:          hold.TransferID,
-		OrderNo:             order.OrderNo,
-		HoldNo:              hold.HoldNo,
-		Scene:               order.Scene,
-		HoldAmountFen:       hold.AmountFen.String(),
-		PricingVersion:      pricing.Version,
-		AvailableBalanceFen: account.AvailableBalanceFen.String(),
-		ReservedBalanceFen:  account.ReservedBalanceFen.String(),
+		TransferId:           hold.TransferID,
+		OrderNo:              order.OrderNo,
+		HoldNo:               hold.HoldNo,
+		Scene:                order.Scene,
+		HoldAmountYuan:       hold.AmountYuan.String(),
+		PricingVersion:       pricing.Version,
+		AvailableBalanceYuan: account.AvailableBalanceYuan.String(),
+		ReservedBalanceYuan:  account.ReservedBalanceYuan.String(),
 	}, nil
 }
 
@@ -446,11 +446,11 @@ func (s *GRPCServer) CompleteFileTransferBilling(ctx context.Context, req *pb.Co
 	}
 
 	return &pb.CompleteFileTransferBillingResponse{
-		OrderNo:                order.OrderNo,
-		CapturedAmountFen:      capturedAmount.String(),
-		ActualTrafficBytes:     order.ActualTrafficBytes,
-		TotalCapturedAmountFen: order.CapturedAmountFen.String(),
-		OrderStatus:            order.Status,
+		OrderNo:                 order.OrderNo,
+		CapturedAmountYuan:      capturedAmount.String(),
+		ActualTrafficBytes:      order.ActualTrafficBytes,
+		TotalCapturedAmountYuan: order.CapturedAmountYuan.String(),
+		OrderStatus:             order.Status,
 	}, nil
 }
 
@@ -464,9 +464,9 @@ func (s *GRPCServer) AbortFileTransferBilling(ctx context.Context, req *pb.Abort
 	}
 
 	return &pb.AbortFileTransferBillingResponse{
-		Success:           true,
-		OrderNo:           order.OrderNo,
-		ReleasedAmountFen: releasedAmount.String(),
+		Success:            true,
+		OrderNo:            order.OrderNo,
+		ReleasedAmountYuan: releasedAmount.String(),
 	}, nil
 }
 
@@ -515,9 +515,9 @@ func (s *GRPCServer) GetBillingAccountDetail(ctx context.Context, req *pb.GetBil
 }
 
 func (s *GRPCServer) AdjustBillingBalance(ctx context.Context, req *pb.AdjustBillingBalanceRequest) (*pb.AdjustBillingBalanceResponse, error) {
-	amount, err := money.Parse(req.GetAmountFen())
+	amount, err := money.Parse(req.GetAmountYuan())
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "amount_fen 非法")
+		return nil, status.Error(codes.InvalidArgument, "amount_yuan 非法")
 	}
 
 	account, entry, err := s.billingService.AdjustBillingBalance(ctx, req.GetUserId(), req.GetOperationId(), amount, req.GetRemark(), req.GetOperatorUserId())
@@ -561,24 +561,24 @@ func (s *GRPCServer) ListBillingLedger(ctx context.Context, req *pb.ListBillingL
 	items := make([]*pb.LedgerEntryItem, 0, len(result.Items))
 	for _, item := range result.Items {
 		items = append(items, &pb.LedgerEntryItem{
-			EntryNo:                  item.EntryNo,
-			UserId:                   item.UserID,
-			OrderNo:                  item.OrderNo,
-			HoldNo:                   item.HoldNo,
-			HistoryId:                item.HistoryID,
-			TaskId:                   item.TaskID,
-			TransferId:               item.TransferID,
-			OperationId:              item.OperationID,
-			EntryType:                item.EntryType,
-			Scene:                    item.Scene,
-			ActionAmountFen:          item.ActionAmountFen.String(),
-			AvailableDeltaFen:        item.AvailableDeltaFen.String(),
-			ReservedDeltaFen:         item.ReservedDeltaFen.String(),
-			BalanceAfterAvailableFen: item.BalanceAfterAvailableFen.String(),
-			BalanceAfterReservedFen:  item.BalanceAfterReservedFen.String(),
-			OperatorUserId:           item.OperatorUserID,
-			Remark:                   item.Remark,
-			CreatedAt:                item.CreatedAt.Format(time.RFC3339),
+			EntryNo:                   item.EntryNo,
+			UserId:                    item.UserID,
+			OrderNo:                   item.OrderNo,
+			HoldNo:                    item.HoldNo,
+			HistoryId:                 item.HistoryID,
+			TaskId:                    item.TaskID,
+			TransferId:                item.TransferID,
+			OperationId:               item.OperationID,
+			EntryType:                 item.EntryType,
+			Scene:                     item.Scene,
+			ActionAmountYuan:          item.ActionAmountYuan.String(),
+			AvailableDeltaYuan:        item.AvailableDeltaYuan.String(),
+			ReservedDeltaYuan:         item.ReservedDeltaYuan.String(),
+			BalanceAfterAvailableYuan: item.BalanceAfterAvailableYuan.String(),
+			BalanceAfterReservedYuan:  item.BalanceAfterReservedYuan.String(),
+			OperatorUserId:            item.OperatorUserID,
+			Remark:                    item.Remark,
+			CreatedAt:                 item.CreatedAt.Format(time.RFC3339),
 		})
 	}
 
@@ -628,8 +628,8 @@ func (s *GRPCServer) ListTrafficUsageRecords(ctx context.Context, req *pb.ListTr
 			TransferId:         item.TransferID,
 			Direction:          item.Direction,
 			TrafficBytes:       item.TrafficBytes,
-			UnitPriceFenPerGib: item.UnitPriceFenPerGiB.String(),
-			AmountFen:          item.AmountFen.String(),
+			UnitPriceYuanPerGb: item.UnitPriceYuanPerGB.String(),
+			AmountYuan:         item.AmountYuan.String(),
 			PricingVersion:     item.PricingVersion,
 			SourceService:      item.SourceService,
 			Status:             item.Status,
@@ -655,7 +655,7 @@ func (s *GRPCServer) GetBillingPricing(ctx context.Context, _ *pb.GetBillingPric
 }
 
 func (s *GRPCServer) UpdateBillingPricing(ctx context.Context, req *pb.UpdateBillingPricingRequest) (*pb.UpdateBillingPricingResponse, error) {
-	pricing, err := s.billingService.UpdateBillingPricing(ctx, req.GetIngressPriceFenPerGib(), req.GetEgressPriceFenPerGib(), req.GetRemark(), req.GetOperatorUserId())
+	pricing, err := s.billingService.UpdateBillingPricing(ctx, req.GetIngressPriceYuanPerGb(), req.GetEgressPriceYuanPerGb(), req.GetRemark(), req.GetOperatorUserId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "更新费率失败")
 	}
@@ -798,10 +798,10 @@ func (s *GRPCServer) ReconcileBillingShortfall(ctx context.Context, req *pb.Reco
 			ActualIngressBytes: order.ActualIngressBytes,
 			ActualEgressBytes:  order.ActualEgressBytes,
 			ActualTrafficBytes: order.ActualTrafficBytes,
-			HeldAmountFen:      order.HeldAmountFen,
-			CapturedAmountFen:  order.CapturedAmountFen,
-			ReleasedAmountFen:  order.ReleasedAmountFen,
-			ShortfallFen:       order.ShortfallFen,
+			HeldAmountYuan:     order.HeldAmountYuan,
+			CapturedAmountYuan: order.CapturedAmountYuan,
+			ReleasedAmountYuan: order.ReleasedAmountYuan,
+			ShortfallYuan:      order.ShortfallYuan,
 			Remark:             order.Remark,
 			CreatedAt:          order.CreatedAt,
 			UpdatedAt:          order.UpdatedAt,
@@ -813,17 +813,17 @@ func (s *GRPCServer) ReconcileBillingShortfall(ctx context.Context, req *pb.Reco
 
 func toBillingAccountSnapshotPB(account *models.BillingAccount) *pb.BillingAccountSnapshot {
 	return &pb.BillingAccountSnapshot{
-		UserId:              account.UserID,
-		CurrencyCode:        account.CurrencyCode,
-		AvailableBalanceFen: account.AvailableBalanceFen.String(),
-		ReservedBalanceFen:  account.ReservedBalanceFen.String(),
-		TotalRechargedFen:   account.TotalRechargedFen.String(),
-		TotalSpentFen:       account.TotalSpentFen.String(),
-		TotalTrafficBytes:   account.TotalTrafficBytes,
-		Status:              account.Status,
-		Version:             account.Version,
-		CreatedAt:           account.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:           account.UpdatedAt.Format(time.RFC3339),
+		UserId:               account.UserID,
+		CurrencyCode:         account.CurrencyCode,
+		AvailableBalanceYuan: account.AvailableBalanceYuan.String(),
+		ReservedBalanceYuan:  account.ReservedBalanceYuan.String(),
+		TotalRechargedYuan:   account.TotalRechargedYuan.String(),
+		TotalSpentYuan:       account.TotalSpentYuan.String(),
+		TotalTrafficBytes:    account.TotalTrafficBytes,
+		Status:               account.Status,
+		Version:              account.Version,
+		CreatedAt:            account.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:            account.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
@@ -839,10 +839,10 @@ func toBillingShortfallOrderPB(order models.BillingShortfallOrder) *pb.BillingSh
 		ActualIngressBytes: order.ActualIngressBytes,
 		ActualEgressBytes:  order.ActualEgressBytes,
 		ActualTrafficBytes: order.ActualTrafficBytes,
-		HeldAmountFen:      order.HeldAmountFen.String(),
-		CapturedAmountFen:  order.CapturedAmountFen.String(),
-		ReleasedAmountFen:  order.ReleasedAmountFen.String(),
-		ShortfallFen:       order.ShortfallFen.String(),
+		HeldAmountYuan:     order.HeldAmountYuan.String(),
+		CapturedAmountYuan: order.CapturedAmountYuan.String(),
+		ReleasedAmountYuan: order.ReleasedAmountYuan.String(),
+		ShortfallYuan:      order.ShortfallYuan.String(),
 		Remark:             order.Remark,
 		CreatedAt:          order.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:          order.UpdatedAt.Format(time.RFC3339),
@@ -852,8 +852,8 @@ func toBillingShortfallOrderPB(order models.BillingShortfallOrder) *pb.BillingSh
 func toBillingPricingPB(pricing *models.BillingPricing) *pb.BillingPricing {
 	return &pb.BillingPricing{
 		Version:               pricing.Version,
-		IngressPriceFenPerGib: pricing.IngressPriceFenPerGiB.String(),
-		EgressPriceFenPerGib:  pricing.EgressPriceFenPerGiB.String(),
+		IngressPriceYuanPerGb: pricing.IngressPriceYuanPerGB.String(),
+		EgressPriceYuanPerGb:  pricing.EgressPriceYuanPerGB.String(),
 		Enabled:               pricing.Enabled,
 		Remark:                pricing.Remark,
 		UpdatedByUserId:       pricing.UpdatedByUserID,

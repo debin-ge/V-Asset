@@ -1,17 +1,17 @@
 package models
 
 type BillingAccountOverviewResponse struct {
-	UserID              string `json:"user_id"`
-	CurrencyCode        string `json:"currency_code"`
-	AvailableBalanceFen string `json:"available_balance_fen"`
-	ReservedBalanceFen  string `json:"reserved_balance_fen"`
-	TotalRechargedFen   string `json:"total_recharged_fen"`
-	TotalSpentFen       string `json:"total_spent_fen"`
-	TotalTrafficBytes   int64  `json:"total_traffic_bytes"`
-	Status              int32  `json:"status"`
-	Version             int32  `json:"version"`
-	CreatedAt           string `json:"created_at"`
-	UpdatedAt           string `json:"updated_at"`
+	UserID               string `json:"user_id"`
+	CurrencyCode         string `json:"currency_code"`
+	AvailableBalanceYuan string `json:"available_balance_yuan"`
+	ReservedBalanceYuan  string `json:"reserved_balance_yuan"`
+	TotalRechargedYuan   string `json:"total_recharged_yuan"`
+	TotalSpentYuan       string `json:"total_spent_yuan"`
+	TotalTrafficBytes    int64  `json:"total_traffic_bytes"`
+	Status               int32  `json:"status"`
+	Version              int32  `json:"version"`
+	CreatedAt            string `json:"created_at"`
+	UpdatedAt            string `json:"updated_at"`
 }
 
 type BillingStatementListResponse struct {
@@ -33,7 +33,7 @@ type BillingStatementItem struct {
 	Type         int32  `json:"type"`
 	HistoryID    int64  `json:"history_id"`
 	TrafficBytes int64  `json:"traffic_bytes"`
-	AmountFen    string `json:"amount_fen"`
+	AmountYuan   string `json:"amount_yuan"`
 	Status       int32  `json:"status"`
 	Remark       string `json:"remark"`
 	CreatedAt    string `json:"created_at"`
@@ -48,7 +48,7 @@ type BillingEstimateRequest struct {
 
 type BillingEstimateResponse struct {
 	EstimatedTrafficBytes int64  `json:"estimated_traffic_bytes"`
-	EstimatedCostFen      string `json:"estimated_cost_fen"`
+	EstimatedCostYuan     string `json:"estimated_cost_yuan"`
 	PricingVersion        int32  `json:"pricing_version"`
 	IsEstimated           bool   `json:"is_estimated"`
 	EstimateReason        string `json:"estimate_reason,omitempty"`
@@ -62,22 +62,22 @@ type AdminBillingListRequest struct {
 }
 
 type AdminBillingAccount struct {
-	UserID              string `json:"user_id"`
-	Email               string `json:"email,omitempty"`
-	Nickname            string `json:"nickname,omitempty"`
-	AvailableBalanceFen string `json:"available_balance_fen"`
-	ReservedBalanceFen  string `json:"reserved_balance_fen"`
-	TotalRechargedFen   string `json:"total_recharged_fen"`
-	TotalSpentFen       string `json:"total_spent_fen"`
-	TotalTrafficBytes   int64  `json:"total_traffic_bytes"`
-	Status              int32  `json:"status"`
-	Version             int32  `json:"version"`
-	UpdatedAt           string `json:"updated_at"`
+	UserID               string `json:"user_id"`
+	Email                string `json:"email,omitempty"`
+	Nickname             string `json:"nickname,omitempty"`
+	AvailableBalanceYuan string `json:"available_balance_yuan"`
+	ReservedBalanceYuan  string `json:"reserved_balance_yuan"`
+	TotalRechargedYuan   string `json:"total_recharged_yuan"`
+	TotalSpentYuan       string `json:"total_spent_yuan"`
+	TotalTrafficBytes    int64  `json:"total_traffic_bytes"`
+	Status               int32  `json:"status"`
+	Version              int32  `json:"version"`
+	UpdatedAt            string `json:"updated_at"`
 }
 
 type AdminAdjustBillingBalanceRequest struct {
 	OperationID string `json:"operation_id"`
-	AmountFen   string `json:"amount_fen" binding:"required"`
+	AmountYuan  string `json:"amount_yuan" binding:"required"`
 	Remark      string `json:"remark" binding:"required"`
 }
 
@@ -104,10 +104,10 @@ type AdminBillingShortfallOrder struct {
 	ActualIngressBytes int64  `json:"actual_ingress_bytes"`
 	ActualEgressBytes  int64  `json:"actual_egress_bytes"`
 	ActualTrafficBytes int64  `json:"actual_traffic_bytes"`
-	HeldAmountFen      string `json:"held_amount_fen"`
-	CapturedAmountFen  string `json:"captured_amount_fen"`
-	ReleasedAmountFen  string `json:"released_amount_fen"`
-	ShortfallFen       string `json:"shortfall_fen"`
+	HeldAmountYuan     string `json:"held_amount_yuan"`
+	CapturedAmountYuan string `json:"captured_amount_yuan"`
+	ReleasedAmountYuan string `json:"released_amount_yuan"`
+	ShortfallYuan      string `json:"shortfall_yuan"`
 	Remark             string `json:"remark"`
 	CreatedAt          string `json:"created_at"`
 	UpdatedAt          string `json:"updated_at"`
@@ -121,26 +121,26 @@ type AdminBillingLedgerRequest struct {
 }
 
 type AdminBillingLedgerEntry struct {
-	EntryNo                  string `json:"entry_no"`
-	UserID                   string `json:"user_id"`
-	Email                    string `json:"email,omitempty"`
-	Nickname                 string `json:"nickname,omitempty"`
-	OrderNo                  string `json:"order_no"`
-	HoldNo                   string `json:"hold_no"`
-	HistoryID                int64  `json:"history_id"`
-	TaskID                   string `json:"task_id"`
-	TransferID               string `json:"transfer_id"`
-	OperationID              string `json:"operation_id"`
-	EntryType                int32  `json:"entry_type"`
-	Scene                    int32  `json:"scene"`
-	ActionAmountFen          string `json:"action_amount_fen"`
-	AvailableDeltaFen        string `json:"available_delta_fen"`
-	ReservedDeltaFen         string `json:"reserved_delta_fen"`
-	BalanceAfterAvailableFen string `json:"balance_after_available_fen"`
-	BalanceAfterReservedFen  string `json:"balance_after_reserved_fen"`
-	OperatorUserID           string `json:"operator_user_id"`
-	Remark                   string `json:"remark"`
-	CreatedAt                string `json:"created_at"`
+	EntryNo                   string `json:"entry_no"`
+	UserID                    string `json:"user_id"`
+	Email                     string `json:"email,omitempty"`
+	Nickname                  string `json:"nickname,omitempty"`
+	OrderNo                   string `json:"order_no"`
+	HoldNo                    string `json:"hold_no"`
+	HistoryID                 int64  `json:"history_id"`
+	TaskID                    string `json:"task_id"`
+	TransferID                string `json:"transfer_id"`
+	OperationID               string `json:"operation_id"`
+	EntryType                 int32  `json:"entry_type"`
+	Scene                     int32  `json:"scene"`
+	ActionAmountYuan          string `json:"action_amount_yuan"`
+	AvailableDeltaYuan        string `json:"available_delta_yuan"`
+	ReservedDeltaYuan         string `json:"reserved_delta_yuan"`
+	BalanceAfterAvailableYuan string `json:"balance_after_available_yuan"`
+	BalanceAfterReservedYuan  string `json:"balance_after_reserved_yuan"`
+	OperatorUserID            string `json:"operator_user_id"`
+	Remark                    string `json:"remark"`
+	CreatedAt                 string `json:"created_at"`
 }
 
 type AdminBillingUsageRequest struct {
@@ -161,8 +161,8 @@ type AdminBillingUsageRecord struct {
 	TransferID         string `json:"transfer_id"`
 	Direction          int32  `json:"direction"`
 	TrafficBytes       int64  `json:"traffic_bytes"`
-	UnitPriceFenPerGiB string `json:"unit_price_fen_per_gib"`
-	AmountFen          string `json:"amount_fen"`
+	UnitPriceYuanPerGB string `json:"unit_price_yuan_per_gb"`
+	AmountYuan         string `json:"amount_yuan"`
 	PricingVersion     int32  `json:"pricing_version"`
 	SourceService      string `json:"source_service"`
 	Status             int32  `json:"status"`
@@ -172,8 +172,8 @@ type AdminBillingUsageRecord struct {
 
 type AdminBillingPricing struct {
 	Version               int32  `json:"version"`
-	IngressPriceFenPerGiB string `json:"ingress_price_fen_per_gib"`
-	EgressPriceFenPerGiB  string `json:"egress_price_fen_per_gib"`
+	IngressPriceYuanPerGB string `json:"ingress_price_yuan_per_gb"`
+	EgressPriceYuanPerGB  string `json:"egress_price_yuan_per_gb"`
 	Enabled               bool   `json:"enabled"`
 	Remark                string `json:"remark"`
 	UpdatedByUserID       string `json:"updated_by_user_id"`
@@ -182,8 +182,8 @@ type AdminBillingPricing struct {
 }
 
 type AdminUpdateBillingPricingRequest struct {
-	IngressPriceFenPerGiB string `json:"ingress_price_fen_per_gib" binding:"required"`
-	EgressPriceFenPerGiB  string `json:"egress_price_fen_per_gib" binding:"required"`
+	IngressPriceYuanPerGB string `json:"ingress_price_yuan_per_gb" binding:"required"`
+	EgressPriceYuanPerGB  string `json:"egress_price_yuan_per_gb" binding:"required"`
 	Remark                string `json:"remark"`
 }
 

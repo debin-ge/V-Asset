@@ -71,25 +71,25 @@ const (
 )
 
 type BillingAccount struct {
-	ID                  int64         `db:"id"`
-	UserID              string        `db:"user_id"`
-	CurrencyCode        string        `db:"currency_code"`
-	AvailableBalanceFen money.Decimal `db:"available_balance_fen"`
-	ReservedBalanceFen  money.Decimal `db:"reserved_balance_fen"`
-	TotalRechargedFen   money.Decimal `db:"total_recharged_fen"`
-	TotalSpentFen       money.Decimal `db:"total_spent_fen"`
-	TotalTrafficBytes   int64         `db:"total_traffic_bytes"`
-	Status              int32         `db:"status"`
-	Version             int32         `db:"version"`
-	CreatedAt           time.Time     `db:"created_at"`
-	UpdatedAt           time.Time     `db:"updated_at"`
+	ID                   int64         `db:"id"`
+	UserID               string        `db:"user_id"`
+	CurrencyCode         string        `db:"currency_code"`
+	AvailableBalanceYuan money.Decimal `db:"available_balance_yuan"`
+	ReservedBalanceYuan  money.Decimal `db:"reserved_balance_yuan"`
+	TotalRechargedYuan   money.Decimal `db:"total_recharged_yuan"`
+	TotalSpentYuan       money.Decimal `db:"total_spent_yuan"`
+	TotalTrafficBytes    int64         `db:"total_traffic_bytes"`
+	Status               int32         `db:"status"`
+	Version              int32         `db:"version"`
+	CreatedAt            time.Time     `db:"created_at"`
+	UpdatedAt            time.Time     `db:"updated_at"`
 }
 
 type BillingPricing struct {
 	ID                    int64         `db:"id"`
 	Version               int32         `db:"version"`
-	IngressPriceFenPerGiB money.Decimal `db:"ingress_price_fen_per_gib"`
-	EgressPriceFenPerGiB  money.Decimal `db:"egress_price_fen_per_gib"`
+	IngressPriceYuanPerGB money.Decimal `db:"ingress_price_yuan_per_gb"`
+	EgressPriceYuanPerGB  money.Decimal `db:"egress_price_yuan_per_gb"`
 	Enabled               bool          `db:"enabled"`
 	Remark                string        `db:"remark"`
 	UpdatedByUserID       string        `db:"updated_by_user_id"`
@@ -112,10 +112,10 @@ type BillingChargeOrder struct {
 	ActualIngressBytes    int64         `db:"actual_ingress_bytes"`
 	ActualEgressBytes     int64         `db:"actual_egress_bytes"`
 	ActualTrafficBytes    int64         `db:"actual_traffic_bytes"`
-	HeldAmountFen         money.Decimal `db:"held_amount_fen"`
-	CapturedAmountFen     money.Decimal `db:"captured_amount_fen"`
-	ReleasedAmountFen     money.Decimal `db:"released_amount_fen"`
-	ShortfallFen          money.Decimal `db:"shortfall_fen"`
+	HeldAmountYuan        money.Decimal `db:"held_amount_yuan"`
+	CapturedAmountYuan    money.Decimal `db:"captured_amount_yuan"`
+	ReleasedAmountYuan    money.Decimal `db:"released_amount_yuan"`
+	ShortfallYuan         money.Decimal `db:"shortfall_yuan"`
 	Remark                string        `db:"remark"`
 	CreatedAt             time.Time     `db:"created_at"`
 	UpdatedAt             time.Time     `db:"updated_at"`
@@ -123,22 +123,22 @@ type BillingChargeOrder struct {
 }
 
 type BillingHold struct {
-	ID                int64         `db:"id"`
-	HoldNo            string        `db:"hold_no"`
-	OrderNo           string        `db:"order_no"`
-	UserID            string        `db:"user_id"`
-	HistoryID         int64         `db:"history_id"`
-	TaskID            string        `db:"task_id"`
-	TransferID        string        `db:"transfer_id"`
-	HoldType          int32         `db:"hold_type"`
-	FundingSource     int32         `db:"funding_source"`
-	Status            int32         `db:"status"`
-	AmountFen         money.Decimal `db:"amount_fen"`
-	CapturedAmountFen money.Decimal `db:"captured_amount_fen"`
-	ReleasedAmountFen money.Decimal `db:"released_amount_fen"`
-	ExpiresAt         *time.Time    `db:"expires_at"`
-	CreatedAt         time.Time     `db:"created_at"`
-	UpdatedAt         time.Time     `db:"updated_at"`
+	ID                 int64         `db:"id"`
+	HoldNo             string        `db:"hold_no"`
+	OrderNo            string        `db:"order_no"`
+	UserID             string        `db:"user_id"`
+	HistoryID          int64         `db:"history_id"`
+	TaskID             string        `db:"task_id"`
+	TransferID         string        `db:"transfer_id"`
+	HoldType           int32         `db:"hold_type"`
+	FundingSource      int32         `db:"funding_source"`
+	Status             int32         `db:"status"`
+	AmountYuan         money.Decimal `db:"amount_yuan"`
+	CapturedAmountYuan money.Decimal `db:"captured_amount_yuan"`
+	ReleasedAmountYuan money.Decimal `db:"released_amount_yuan"`
+	ExpiresAt          *time.Time    `db:"expires_at"`
+	CreatedAt          time.Time     `db:"created_at"`
+	UpdatedAt          time.Time     `db:"updated_at"`
 }
 
 type TrafficUsageRecord struct {
@@ -151,8 +151,8 @@ type TrafficUsageRecord struct {
 	TransferID         string        `db:"transfer_id"`
 	Direction          int32         `db:"direction"`
 	TrafficBytes       int64         `db:"traffic_bytes"`
-	UnitPriceFenPerGiB money.Decimal `db:"unit_price_fen_per_gib"`
-	AmountFen          money.Decimal `db:"amount_fen"`
+	UnitPriceYuanPerGB money.Decimal `db:"unit_price_yuan_per_gb"`
+	AmountYuan         money.Decimal `db:"amount_yuan"`
 	PricingVersion     int32         `db:"pricing_version"`
 	SourceService      string        `db:"source_service"`
 	Status             int32         `db:"status"`
@@ -161,26 +161,26 @@ type TrafficUsageRecord struct {
 }
 
 type BillingLedgerEntry struct {
-	ID                       int64         `db:"id"`
-	EntryNo                  string        `db:"entry_no"`
-	AccountID                int64         `db:"account_id"`
-	UserID                   string        `db:"user_id"`
-	OrderNo                  string        `db:"order_no"`
-	HoldNo                   string        `db:"hold_no"`
-	HistoryID                int64         `db:"history_id"`
-	TaskID                   string        `db:"task_id"`
-	TransferID               string        `db:"transfer_id"`
-	OperationID              string        `db:"operation_id"`
-	EntryType                int32         `db:"entry_type"`
-	Scene                    int32         `db:"scene"`
-	ActionAmountFen          money.Decimal `db:"action_amount_fen"`
-	AvailableDeltaFen        money.Decimal `db:"available_delta_fen"`
-	ReservedDeltaFen         money.Decimal `db:"reserved_delta_fen"`
-	BalanceAfterAvailableFen money.Decimal `db:"balance_after_available_fen"`
-	BalanceAfterReservedFen  money.Decimal `db:"balance_after_reserved_fen"`
-	OperatorUserID           string        `db:"operator_user_id"`
-	Remark                   string        `db:"remark"`
-	CreatedAt                time.Time     `db:"created_at"`
+	ID                        int64         `db:"id"`
+	EntryNo                   string        `db:"entry_no"`
+	AccountID                 int64         `db:"account_id"`
+	UserID                    string        `db:"user_id"`
+	OrderNo                   string        `db:"order_no"`
+	HoldNo                    string        `db:"hold_no"`
+	HistoryID                 int64         `db:"history_id"`
+	TaskID                    string        `db:"task_id"`
+	TransferID                string        `db:"transfer_id"`
+	OperationID               string        `db:"operation_id"`
+	EntryType                 int32         `db:"entry_type"`
+	Scene                     int32         `db:"scene"`
+	ActionAmountYuan          money.Decimal `db:"action_amount_yuan"`
+	AvailableDeltaYuan        money.Decimal `db:"available_delta_yuan"`
+	ReservedDeltaYuan         money.Decimal `db:"reserved_delta_yuan"`
+	BalanceAfterAvailableYuan money.Decimal `db:"balance_after_available_yuan"`
+	BalanceAfterReservedYuan  money.Decimal `db:"balance_after_reserved_yuan"`
+	OperatorUserID            string        `db:"operator_user_id"`
+	Remark                    string        `db:"remark"`
+	CreatedAt                 time.Time     `db:"created_at"`
 }
 
 type BillingStatementItem struct {
@@ -188,7 +188,7 @@ type BillingStatementItem struct {
 	Type         int32         `db:"type"`
 	HistoryID    int64         `db:"history_id"`
 	TrafficBytes int64         `db:"traffic_bytes"`
-	AmountFen    money.Decimal `db:"amount_fen"`
+	AmountYuan   money.Decimal `db:"amount_yuan"`
 	Status       int32         `db:"status"`
 	Remark       string        `db:"remark"`
 	CreatedAt    time.Time     `db:"created_at"`
@@ -212,10 +212,10 @@ type BillingShortfallOrder struct {
 	ActualIngressBytes int64
 	ActualEgressBytes  int64
 	ActualTrafficBytes int64
-	HeldAmountFen      money.Decimal
-	CapturedAmountFen  money.Decimal
-	ReleasedAmountFen  money.Decimal
-	ShortfallFen       money.Decimal
+	HeldAmountYuan     money.Decimal
+	CapturedAmountYuan money.Decimal
+	ReleasedAmountYuan money.Decimal
+	ShortfallYuan      money.Decimal
 	Remark             string
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
@@ -280,7 +280,7 @@ type BillingEstimate struct {
 	EstimatedIngressBytes int64
 	EstimatedEgressBytes  int64
 	EstimatedTrafficBytes int64
-	EstimatedCostFen      money.Decimal
+	EstimatedCostYuan     money.Decimal
 	PricingVersion        int32
 	IsEstimated           bool
 	EstimateReason        string
