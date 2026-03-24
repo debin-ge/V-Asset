@@ -3,12 +3,15 @@ package client
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"vasset/api-gateway/internal/config"
+	"vasset/api-gateway/internal/trace"
 	pb "vasset/api-gateway/proto"
 )
 
@@ -30,6 +33,7 @@ func NewGRPCClients(cfg *config.GRPCConfig) (*GRPCClients, error) {
 	// 通用 gRPC 选项
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(requestIDUnaryClientInterceptor),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(10*1024*1024), // 10MB
 			grpc.MaxCallSendMsgSize(10*1024*1024), // 10MB
@@ -100,4 +104,20 @@ func (c *GRPCClients) Close() {
 // WithTimeout 创建带超时的上下文
 func WithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), timeout)
+}
+
+func requestIDUnaryClientInterceptor(
+	ctx context.Context,
+	method string,
+	req any,
+	reply any,
+	cc *grpc.ClientConn,
+	invoker grpc.UnaryInvoker,
+	opts ...grpc.CallOption,
+) error {
+	requestID := strings.TrimSpace(trace.RequestIDFromContext(ctx))
+	if requestID != "" {
+		ctx = metadata.AppendToOutgoingContext(ctx, "x-request-id", requestID)
+	}
+	return invoker(ctx, method, req, reply, cc, opts...)
 }

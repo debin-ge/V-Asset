@@ -291,9 +291,10 @@ func (s *GRPCServer) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
-// LogRequest 记录请求日志
+// LogRequest records method-level trace without dumping sensitive payload fields.
 func LogRequest(method string, req any) {
-	fmt.Printf("[gRPC] Method: %s, Request: %+v\n", method, req)
+	_ = req
+	fmt.Printf("[gRPC] Method: %s\n", method)
 }
 
 func authStatusError(err error) error {

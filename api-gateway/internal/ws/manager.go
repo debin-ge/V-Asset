@@ -174,7 +174,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 	go m.heartbeat(connID, conn, done, stop)
 	go m.readPump(connID, conn, stop)
 
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	channelName := fmt.Sprintf("progress:%s", taskID)
 	pubsub := m.rdb.Subscribe(ctx, channelName)
 	defer pubsub.Close()

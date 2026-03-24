@@ -17,6 +17,11 @@ services:
       - frontend-service
       - api-gateway
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "7"
 
   # PostgreSQL 数据库
   postgres:
@@ -99,6 +104,11 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "7"
 
   # Media Service - 解析+下载融合服务
   media-service:
@@ -127,6 +137,11 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "7"
 
   # Asset Service - 资产服务
   asset-service:
@@ -154,6 +169,11 @@ services:
       auth-service:
         condition: service_started
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "7"
 
   # API Gateway - API 网关
   api-gateway:
@@ -184,6 +204,11 @@ services:
       - media-service
       - asset-service
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "7"
 
   # Admin Service - 管理后台后端
   admin-service:
@@ -204,6 +229,11 @@ services:
       - asset-service
       - redis
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "7"
 
   # Frontend Service - 前端服务
   frontend-service:

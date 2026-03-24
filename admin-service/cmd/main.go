@@ -16,6 +16,7 @@ import (
 	"vasset/admin-service/internal/client"
 	"vasset/admin-service/internal/config"
 	grpcserver "vasset/admin-service/internal/grpc"
+	"vasset/admin-service/internal/observability"
 	"vasset/admin-service/internal/service"
 	pb "vasset/admin-service/proto"
 )
@@ -58,7 +59,9 @@ func main() {
 		log.Fatalf("failed to listen on port %d: %v", cfg.Server.Port, err)
 	}
 
-	grpcSrv := grpc.NewServer()
+	grpcSrv := grpc.NewServer(
+		grpc.UnaryInterceptor(observability.UnaryServerInterceptor("admin-service")),
+	)
 	pb.RegisterAdminServiceServer(grpcSrv, grpcserver.NewAdminServer(authService, statsService, proxyService, cookieService, billingService))
 
 	go func() {

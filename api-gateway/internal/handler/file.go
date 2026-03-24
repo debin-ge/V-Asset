@@ -219,13 +219,13 @@ func (h *FileHandler) streamFile(c *gin.Context, userID string, historyID int64)
 			if err == io.EOF {
 				break
 			}
-			h.abortTransferBilling(transferID, "read file failed")
+			h.abortTransferBilling(c.Request.Context(), transferID, "read file failed")
 			return
 		}
 		written, writeErr := c.Writer.Write(buffer[:n])
 		bytesSent += int64(written)
 		if writeErr != nil {
-			h.abortTransferBilling(transferID, "client disconnected")
+			h.abortTransferBilling(c.Request.Context(), transferID, "client disconnected")
 			return
 		}
 		c.Writer.Flush()
@@ -233,7 +233,7 @@ func (h *FileHandler) streamFile(c *gin.Context, userID string, historyID int64)
 
 	if h.billingEnabled && transferID != "" {
 		if bytesSent == fileInfo.Size() {
-			completeCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
+			completeCtx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 			defer cancel()
 			if _, err := h.assetClient.CompleteFileTransferBilling(completeCtx, &pb.CompleteFileTransferBillingRequest{
 				TransferId:        transferID,
@@ -242,17 +242,21 @@ func (h *FileHandler) streamFile(c *gin.Context, userID string, historyID int64)
 				fmt.Printf("[File] failed to complete transfer billing %s: %v\n", transferID, err)
 			}
 		} else {
-			h.abortTransferBilling(transferID, "incomplete transfer")
+			h.abortTransferBilling(c.Request.Context(), transferID, "incomplete transfer")
 		}
 	}
 }
 
-func (h *FileHandler) abortTransferBilling(transferID, reason string) {
+func (h *FileHandler) abortTransferBilling(parentCtx context.Context, transferID, reason string) {
 	if !h.billingEnabled || transferID == "" {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), h.timeout)
+	if parentCtx == nil {
+		parentCtx = context.Background()
+	}
+
+	ctx, cancel := context.WithTimeout(parentCtx, h.timeout)
 	defer cancel()
 	if _, err := h.assetClient.AbortFileTransferBilling(ctx, &pb.AbortFileTransferBillingRequest{
 		TransferId: transferID,

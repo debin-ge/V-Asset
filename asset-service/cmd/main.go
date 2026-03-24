@@ -15,6 +15,7 @@ import (
 	"vasset/asset-service/internal/config"
 	"vasset/asset-service/internal/database"
 	"vasset/asset-service/internal/handler"
+	"vasset/asset-service/internal/observability"
 	"vasset/asset-service/internal/repository"
 	"vasset/asset-service/internal/service"
 	pb "vasset/asset-service/proto"
@@ -77,7 +78,9 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(observability.UnaryServerInterceptor("asset-service")),
+	)
 	pb.RegisterAssetServiceServer(s, grpcServer)
 
 	// 7. 优雅关闭

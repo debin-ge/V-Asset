@@ -182,7 +182,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		})
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to estimate billing: %v", err)
-			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
+			h.cleanupFailedSubmission(ctx, userID, historyResp.HistoryId, taskID, false, false)
 			writeGRPCError(c, err)
 			return
 		}
@@ -200,7 +200,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		})
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to hold initial billing: %v", err)
-			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
+			h.cleanupFailedSubmission(ctx, userID, historyResp.HistoryId, taskID, false, false)
 			writeGRPCError(c, err)
 			return
 		}
@@ -210,7 +210,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 		_, err = h.assetClient.ConsumeQuota(ctx, &pb.ConsumeQuotaRequest{UserId: userID})
 		if err != nil {
 			log.Printf("[Download] ❌ Failed to consume quota: %v", err)
-			h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, false, false)
+			h.cleanupFailedSubmission(ctx, userID, historyResp.HistoryId, taskID, false, false)
 			writeGRPCError(c, err)
 			return
 		}
@@ -238,7 +238,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 
 	if err := h.publisher.Publish(ctx, task); err != nil {
 		log.Printf("[Download] ❌ Failed to publish task to RabbitMQ: %v", err)
-		h.cleanupFailedSubmission(userID, historyResp.HistoryId, taskID, !h.billingEnabled, h.billingEnabled)
+		h.cleanupFailedSubmission(ctx, userID, historyResp.HistoryId, taskID, !h.billingEnabled, h.billingEnabled)
 		if status.Code(err) == codes.Unavailable {
 			models.Error(c, http.StatusServiceUnavailable, grpcErrorMessage(err))
 			return
@@ -324,8 +324,11 @@ func toBillingSelectedFormat(selected *models.SelectedFormat) *pb.BillingSelecte
 	}
 }
 
-func (h *DownloadHandler) cleanupFailedSubmission(userID string, historyID int64, taskID string, refundQuota bool, releaseBilling bool) {
-	compensateCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
+func (h *DownloadHandler) cleanupFailedSubmission(parentCtx context.Context, userID string, historyID int64, taskID string, refundQuota bool, releaseBilling bool) {
+	if parentCtx == nil {
+		parentCtx = context.Background()
+	}
+	compensateCtx, cancel := context.WithTimeout(parentCtx, h.timeout)
 	defer cancel()
 
 	if refundQuota {

@@ -20,6 +20,7 @@ import (
 	"vasset/auth-service/internal/config"
 	"vasset/auth-service/internal/database"
 	"vasset/auth-service/internal/handler"
+	"vasset/auth-service/internal/observability"
 	"vasset/auth-service/internal/repository"
 	"vasset/auth-service/internal/service"
 	"vasset/auth-service/internal/utils"
@@ -100,7 +101,9 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(observability.UnaryServerInterceptor("auth-service")),
+	)
 	pb.RegisterAuthServiceServer(s, grpcServer)
 
 	// 9. 启动会话清理任务

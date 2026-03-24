@@ -28,6 +28,7 @@ import (
 	dlworker "vasset/media-service/internal/download/worker"
 	dlytdlp "vasset/media-service/internal/download/ytdlp"
 	"vasset/media-service/internal/handler"
+	"vasset/media-service/internal/observability"
 	"vasset/media-service/internal/service"
 	pb "vasset/media-service/proto"
 )
@@ -139,7 +140,9 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to listen", zap.Error(err))
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(observability.UnaryServerInterceptor("media-service")),
+	)
 	pb.RegisterMediaServiceServer(grpcServer, grpcHandler)
 
 	go func() {
