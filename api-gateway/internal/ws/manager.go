@@ -23,34 +23,81 @@ import (
 	pb "youdlp/api-gateway/proto"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		origin := strings.TrimSpace(r.Header.Get("Origin"))
-		if origin == "" {
-			return true
-		}
+func newWebSocketUpgrader(allowedOrigins []string) websocket.Upgrader {
+	allowedHosts := buildAllowedOriginHosts(allowedOrigins)
 
-		parsedOrigin, err := url.Parse(origin)
+	return websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			origin := strings.TrimSpace(r.Header.Get("Origin"))
+			if origin == "" {
+				return true
+			}
+
+			parsedOrigin, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+
+			scheme := requestScheme(r)
+			requestHost := strings.ToLower(strings.TrimSpace(requestHostName(r)))
+			originHost := strings.ToLower(strings.TrimSpace(parsedOrigin.Hostname()))
+
+			hostMatches := originHost != "" && strings.EqualFold(originHost, requestHost)
+			if !hostMatches && len(allowedHosts) > 0 {
+				_, originAllowed := allowedHosts[originHost]
+				_, requestAllowed := allowedHosts[requestHost]
+				hostMatches = originAllowed && requestAllowed
+			}
+			if !hostMatches && isInternalProxyHost(requestHost) {
+				hostMatches = originHost != ""
+			}
+
+			allowed := originHost != "" && hostMatches
+			if !allowed {
+				log.Printf("[WS] Rejecting websocket origin: remote=%s host=%s origin=%s expected_scheme=%s expected_host=%s", r.RemoteAddr, r.Host, origin, scheme, requestHost)
+			}
+			return allowed
+		},
+	}
+}
+
+func buildAllowedOriginHosts(allowedOrigins []string) map[string]struct{} {
+	allowedHosts := make(map[string]struct{}, len(allowedOrigins))
+	for _, rawOrigin := range allowedOrigins {
+		host := normalizeAllowedOriginHost(rawOrigin)
+		if host == "" || host == "*" {
+			continue
+		}
+		allowedHosts[host] = struct{}{}
+	}
+	return allowedHosts
+}
+
+func normalizeAllowedOriginHost(origin string) string {
+	candidate := strings.ToLower(strings.TrimSpace(origin))
+	if candidate == "" {
+		return ""
+	}
+
+	if strings.Contains(candidate, "://") {
+		parsedOrigin, err := url.Parse(candidate)
 		if err != nil {
-			return false
+			return ""
 		}
+		return strings.ToLower(strings.TrimSpace(parsedOrigin.Hostname()))
+	}
 
-		scheme := requestScheme(r)
-		requestHost := requestHostName(r)
-		originHost := parsedOrigin.Hostname()
-		hostMatches := originHost != "" && strings.EqualFold(originHost, requestHost)
-		if !hostMatches && isInternalProxyHost(requestHost) {
-			hostMatches = originHost != ""
-		}
+	if idx := strings.Index(candidate, "/"); idx >= 0 {
+		candidate = candidate[:idx]
+	}
 
-		allowed := originHost != "" && hostMatches
-		if !allowed {
-			log.Printf("[WS] Rejecting websocket origin: remote=%s host=%s origin=%s expected_scheme=%s expected_host=%s", r.RemoteAddr, r.Host, origin, scheme, requestHost)
-		}
-		return allowed
-	},
+	if parsedHost, _, err := net.SplitHostPort(candidate); err == nil {
+		candidate = parsedHost
+	}
+
+	return strings.ToLower(strings.TrimSpace(candidate))
 }
 
 const (
@@ -80,6 +127,7 @@ type Manager struct {
 	rdb         *redis.Client
 	authClient  authVerifier
 	assetClient taskAccessChecker
+	upgrader    websocket.Upgrader
 }
 
 type authVerifier interface {
@@ -91,11 +139,12 @@ type taskAccessChecker interface {
 }
 
 // NewManager 创建 WebSocket 管理器
-func NewManager(rdb *redis.Client, authClient authVerifier, assetClient taskAccessChecker) *Manager {
+func NewManager(rdb *redis.Client, authClient authVerifier, assetClient taskAccessChecker, allowedOrigins []string) *Manager {
 	return &Manager{
 		rdb:         rdb,
 		authClient:  authClient,
 		assetClient: assetClient,
+		upgrader:    newWebSocketUpgrader(allowedOrigins),
 	}
 }
 
@@ -140,7 +189,7 @@ func (m *Manager) HandleConnection(c *gin.Context) {
 		}
 	}
 
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
+	conn, err := m.upgrader.Upgrade(c.Writer, c.Request, responseHeader)
 	if err != nil {
 		log.Printf("[WS] Failed to upgrade connection from %s for user %s task %s: %v", c.ClientIP(), claims.UserID, taskID, err)
 		return

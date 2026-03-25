@@ -45,6 +45,9 @@ cors:
     - "X-Request-ID"
   max_age: 86400
 
+websocket:
+  allowed_origins: []
+
 rate_limit:
   global_rps: 200
   user_rps: 10

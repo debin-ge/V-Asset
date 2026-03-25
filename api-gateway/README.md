@@ -158,6 +158,7 @@ go test ./...
 - `redis.*`：缓存与进度订阅 Redis
 - `rabbitmq.*`：下载任务投递配置
 - `cors.*`：跨域白名单
+- `websocket.allowed_origins`：WS Origin 别名白名单（用于 `www` / 裸域名并存）
 - `file_download.buffer_size`：文件流 buffer 大小
 
 常见环境变量覆盖：
@@ -169,6 +170,7 @@ go test ./...
 - `REDIS_ADDR`
 - `REDIS_PASSWORD`
 - `RABBITMQ_URL`
+- `WS_ALLOWED_ORIGINS`
 - `ADMIN_SESSION_COOKIE_NAME`
 - `ADMIN_SESSION_COOKIE_DOMAIN`
 - `ADMIN_SESSION_SAME_SITE`

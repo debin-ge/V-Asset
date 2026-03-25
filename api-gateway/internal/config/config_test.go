@@ -11,6 +11,7 @@ func TestLoadConfigOverridesCORSFromEnv(t *testing.T) {
 	t.Setenv("CORS_ALLOWED_ORIGINS", "https://ytdlp.obstream.com, https://admin.obstream.com")
 	t.Setenv("CORS_ALLOWED_METHODS", "GET, POST, OPTIONS")
 	t.Setenv("CORS_ALLOWED_HEADERS", "Content-Type, Authorization, X-Request-ID")
+	t.Setenv("WS_ALLOWED_ORIGINS", "https://ytdlp.obstream.com,https://www.ytdlp.obstream.com")
 
 	cfg, err := LoadConfig(filepath.Join("..", "..", "config", "dev.yaml"))
 	if err != nil {
@@ -31,6 +32,11 @@ func TestLoadConfigOverridesCORSFromEnv(t *testing.T) {
 	if !reflect.DeepEqual(cfg.CORS.AllowedHeaders, wantHeaders) {
 		t.Fatalf("AllowedHeaders = %#v, want %#v", cfg.CORS.AllowedHeaders, wantHeaders)
 	}
+
+	wantWSOrigins := []string{"https://ytdlp.obstream.com", "https://www.ytdlp.obstream.com"}
+	if !reflect.DeepEqual(cfg.WebSocket.AllowedOrigins, wantWSOrigins) {
+		t.Fatalf("WebSocket.AllowedOrigins = %#v, want %#v", cfg.WebSocket.AllowedOrigins, wantWSOrigins)
+	}
 }
 
 func TestSplitAndTrimSkipsEmptyValues(t *testing.T) {
@@ -46,6 +52,7 @@ func TestLoadConfigUsesYamlWhenCORSEnvUnset(t *testing.T) {
 	unsetEnv(t, "CORS_ALLOWED_ORIGINS")
 	unsetEnv(t, "CORS_ALLOWED_METHODS")
 	unsetEnv(t, "CORS_ALLOWED_HEADERS")
+	unsetEnv(t, "WS_ALLOWED_ORIGINS")
 
 	cfg, err := LoadConfig(filepath.Join("..", "..", "config", "dev.yaml"))
 	if err != nil {
@@ -54,6 +61,9 @@ func TestLoadConfigUsesYamlWhenCORSEnvUnset(t *testing.T) {
 
 	if len(cfg.CORS.AllowedOrigins) != 0 {
 		t.Fatalf("AllowedOrigins = %#v, want empty slice from yaml", cfg.CORS.AllowedOrigins)
+	}
+	if len(cfg.WebSocket.AllowedOrigins) != 0 {
+		t.Fatalf("WebSocket.AllowedOrigins = %#v, want empty slice from yaml", cfg.WebSocket.AllowedOrigins)
 	}
 
 	if !cfg.Billing.Enabled {

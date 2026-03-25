@@ -39,7 +39,7 @@ func TestValidateTaskAccessNotFoundMapsToForbidden(t *testing.T) {
 
 	manager := NewManager(nil, &fakeAuthVerifier{}, &fakeTaskAccessChecker{
 		err: grpcstatus.Error(codes.NotFound, "missing"),
-	})
+	}, nil)
 
 	err := manager.validateTaskAccess(context.Background(), "user-1", "task-1")
 	if err == nil || err.Error() != "task not found or access denied" {
@@ -52,7 +52,7 @@ func TestValidateTaskAccessInternalFailureIsHidden(t *testing.T) {
 
 	manager := NewManager(nil, &fakeAuthVerifier{}, &fakeTaskAccessChecker{
 		err: grpcstatus.Error(codes.Internal, "db broken"),
-	})
+	}, nil)
 
 	err := manager.validateTaskAccess(context.Background(), "user-1", "task-1")
 	if err == nil || err.Error() != "failed to validate task access" {
@@ -65,7 +65,7 @@ func TestHandleConnectionRequiresTaskID(t *testing.T) {
 
 	manager := NewManager(nil, &fakeAuthVerifier{
 		verifyResp: &pb.VerifyTokenResponse{Valid: true, UserId: "user-1"},
-	}, &fakeTaskAccessChecker{})
+	}, &fakeTaskAccessChecker{}, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -88,7 +88,7 @@ func TestHandleConnectionRejectsUnauthorizedTaskAccess(t *testing.T) {
 		verifyResp: &pb.VerifyTokenResponse{Valid: true, UserId: "user-1"},
 	}, &fakeTaskAccessChecker{
 		err: grpcstatus.Error(codes.NotFound, "missing"),
-	})
+	}, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -107,6 +107,7 @@ func TestHandleConnectionRejectsUnauthorizedTaskAccess(t *testing.T) {
 func TestCheckOriginAllowsSameHostnameWithPortDifference(t *testing.T) {
 	t.Parallel()
 
+	upgrader := newWebSocketUpgrader(nil)
 	req := httptest.NewRequest(http.MethodGet, "http://ytdlp.obstream.com:8080/api/v1/ws/progress", nil)
 	req.Host = "ytdlp.obstream.com:8080"
 	req.Header.Set("Origin", "http://ytdlp.obstream.com")
@@ -119,6 +120,7 @@ func TestCheckOriginAllowsSameHostnameWithPortDifference(t *testing.T) {
 func TestCheckOriginUsesForwardedHeaders(t *testing.T) {
 	t.Parallel()
 
+	upgrader := newWebSocketUpgrader(nil)
 	req := httptest.NewRequest(http.MethodGet, "http://internal:8080/api/v1/ws/progress", nil)
 	req.Host = "internal:8080"
 	req.Header.Set("Origin", "https://ytdlp.obstream.com")
@@ -133,6 +135,7 @@ func TestCheckOriginUsesForwardedHeaders(t *testing.T) {
 func TestCheckOriginUsesCloudflareVisitorScheme(t *testing.T) {
 	t.Parallel()
 
+	upgrader := newWebSocketUpgrader(nil)
 	req := httptest.NewRequest(http.MethodGet, "http://internal:8080/api/v1/ws/progress", nil)
 	req.Host = "internal:8080"
 	req.Header.Set("Origin", "https://ytdlp.obstream.com")
@@ -147,6 +150,7 @@ func TestCheckOriginUsesCloudflareVisitorScheme(t *testing.T) {
 func TestCheckOriginAllowsInternalProxyHostWithoutForwardedHost(t *testing.T) {
 	t.Parallel()
 
+	upgrader := newWebSocketUpgrader(nil)
 	req := httptest.NewRequest(http.MethodGet, "http://api-gateway:8080/api/v1/ws/progress", nil)
 	req.Host = "api-gateway:8080"
 	req.Header.Set("Origin", "http://ytdlp.obstream.com")
@@ -160,6 +164,7 @@ func TestCheckOriginAllowsInternalProxyHostWithoutForwardedHost(t *testing.T) {
 func TestCheckOriginAllowsSchemeMismatchForSameHostname(t *testing.T) {
 	t.Parallel()
 
+	upgrader := newWebSocketUpgrader(nil)
 	req := httptest.NewRequest(http.MethodGet, "http://internal:8080/api/v1/ws/progress", nil)
 	req.Host = "internal:8080"
 	req.Header.Set("Origin", "http://ytdlp.obstream.com")
@@ -168,6 +173,39 @@ func TestCheckOriginAllowsSchemeMismatchForSameHostname(t *testing.T) {
 
 	if !upgrader.CheckOrigin(req) {
 		t.Fatalf("expected same hostname origin to be accepted regardless of proxy scheme")
+	}
+}
+
+func TestCheckOriginAllowsConfiguredAliasHosts(t *testing.T) {
+	t.Parallel()
+
+	upgrader := newWebSocketUpgrader([]string{
+		"https://youdlp.com",
+		"https://www.youdlp.com",
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "https://youdlp.com/api/v1/ws/progress", nil)
+	req.Host = "youdlp.com"
+	req.Header.Set("Origin", "https://www.youdlp.com")
+
+	if !upgrader.CheckOrigin(req) {
+		t.Fatalf("expected configured alias hosts to be accepted")
+	}
+}
+
+func TestCheckOriginRejectsWhenRequestHostNotInConfiguredAliasSet(t *testing.T) {
+	t.Parallel()
+
+	upgrader := newWebSocketUpgrader([]string{
+		"https://www.youdlp.com",
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "https://youdlp.com/api/v1/ws/progress", nil)
+	req.Host = "youdlp.com"
+	req.Header.Set("Origin", "https://www.youdlp.com")
+
+	if upgrader.CheckOrigin(req) {
+		t.Fatalf("expected request host outside configured alias set to be rejected")
 	}
 }
 

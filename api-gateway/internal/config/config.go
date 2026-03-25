@@ -17,6 +17,7 @@ type Config struct {
 	RabbitMQ     RabbitMQConfig     `yaml:"rabbitmq"`
 	AdminSession AdminSessionConfig `yaml:"admin_session"`
 	CORS         CORSConfig         `yaml:"cors"`
+	WebSocket    WebSocketConfig    `yaml:"websocket"`
 	RateLimit    RateLimitConfig    `yaml:"rate_limit"`
 	FileDownload FileDownloadConfig `yaml:"file_download"`
 	Billing      BillingConfig      `yaml:"billing"`
@@ -71,6 +72,10 @@ type CORSConfig struct {
 	AllowedMethods []string `yaml:"allowed_methods"`
 	AllowedHeaders []string `yaml:"allowed_headers"`
 	MaxAge         int      `yaml:"max_age"`
+}
+
+type WebSocketConfig struct {
+	AllowedOrigins []string `yaml:"allowed_origins"`
 }
 
 // RateLimitConfig 限流配置
@@ -143,6 +148,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if corsAllowedHeaders := os.Getenv("CORS_ALLOWED_HEADERS"); corsAllowedHeaders != "" {
 		cfg.CORS.AllowedHeaders = splitAndTrim(corsAllowedHeaders)
+	}
+	if wsAllowedOrigins := os.Getenv("WS_ALLOWED_ORIGINS"); wsAllowedOrigins != "" {
+		cfg.WebSocket.AllowedOrigins = splitAndTrim(wsAllowedOrigins)
 	}
 	if adminCookieName := os.Getenv("ADMIN_SESSION_COOKIE_NAME"); adminCookieName != "" {
 		cfg.AdminSession.CookieName = adminCookieName
