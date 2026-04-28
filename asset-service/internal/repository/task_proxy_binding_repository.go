@@ -115,6 +115,76 @@ func (r *TaskProxyBindingRepository) CreateIfAbsent(ctx context.Context, binding
 	return nil
 }
 
+// UpdateBinding 使用新的代理结果更新已有任务绑定。
+func (r *TaskProxyBindingRepository) UpdateBinding(ctx context.Context, binding *models.TaskProxyBinding) error {
+	query := `
+		UPDATE task_proxy_bindings
+		SET source_type = $2,
+		    source_policy_id = $3,
+		    proxy_id = $4,
+		    proxy_lease_id = $5,
+		    proxy_url_snapshot = $6,
+		    protocol = $7,
+		    region = $8,
+		    platform = $9,
+		    expire_at = $10,
+		    bind_status = $11,
+		    is_degraded = $12,
+		    degrade_reason = $13,
+		    last_report_stage = NULL,
+		    last_report_success = NULL,
+		    last_report_at = NULL,
+		    updated_at = $14
+		WHERE task_id = $1`
+
+	now := time.Now()
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		binding.TaskID,
+		binding.SourceType,
+		binding.SourcePolicyID,
+		binding.ProxyID,
+		binding.ProxyLeaseID,
+		binding.ProxyURLSnapshot,
+		binding.Protocol,
+		binding.Region,
+		binding.Platform,
+		binding.ExpireAt,
+		binding.BindStatus,
+		binding.IsDegraded,
+		binding.DegradeReason,
+		now,
+	)
+	if err != nil {
+		return fmt.Errorf("update task proxy binding failed: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get update task proxy binding rows affected failed: %w", err)
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// MarkFailed 将任务绑定标记为失败，允许后续重新绑定。
+func (r *TaskProxyBindingRepository) MarkFailed(ctx context.Context, taskID string) error {
+	query := `
+		UPDATE task_proxy_bindings
+		SET bind_status = $2,
+		    updated_at = $3
+		WHERE task_id = $1`
+
+	now := time.Now()
+	if _, err := r.db.ExecContext(ctx, query, taskID, models.TaskProxyBindStatusFailed, now); err != nil {
+		return fmt.Errorf("mark task proxy binding failed: %w", err)
+	}
+	return nil
+}
+
 // UpdateReport 更新任务绑定的最近上报信息
 func (r *TaskProxyBindingRepository) UpdateReport(ctx context.Context, taskID, stage string, success bool) error {
 	query := `
