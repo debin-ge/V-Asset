@@ -20,14 +20,15 @@ import (
 
 // ParserService 解析服务
 type ParserService struct {
-	detector      *detector.PlatformDetector
-	cache         parserCache
-	adapters      map[string]adapter.Adapter
-	limiter       *utils.ConcurrencyLimiter
-	logger        *zap.Logger
-	assetClient   parserAssetClient
-	enableCookies bool
-	youtubePolicy platformpolicy.YouTubePolicy
+	detector              *detector.PlatformDetector
+	cache                 parserCache
+	adapters              map[string]adapter.Adapter
+	limiter               *utils.ConcurrencyLimiter
+	logger                *zap.Logger
+	assetClient           parserAssetClient
+	enableCookies         bool
+	youtubePolicy         platformpolicy.YouTubePolicy
+	proxyRetryMaxAttempts int
 }
 
 type parserCache interface {
@@ -105,14 +106,15 @@ func NewParserService(
 	}
 
 	return &ParserService{
-		detector:      detector.NewPlatformDetector(),
-		cache:         cacheService,
-		adapters:      adapters,
-		limiter:       utils.NewConcurrencyLimiter(cfg.YTDLP.MaxConcurrent),
-		logger:        logger,
-		assetClient:   assetClient,
-		enableCookies: cfg.AssetService.EnableCookies && assetClient != nil,
-		youtubePolicy: cfg.YTDLP.YouTube,
+		detector:              detector.NewPlatformDetector(),
+		cache:                 cacheService,
+		adapters:              adapters,
+		limiter:               utils.NewConcurrencyLimiter(cfg.YTDLP.MaxConcurrent),
+		logger:                logger,
+		assetClient:           assetClient,
+		enableCookies:         cfg.AssetService.EnableCookies && assetClient != nil,
+		youtubePolicy:         cfg.YTDLP.YouTube,
+		proxyRetryMaxAttempts: cfg.AssetService.ProxyRetryMaxAttempts,
 	}
 }
 
@@ -161,64 +163,25 @@ func (s *ParserService) ParseURL(ctx context.Context, taskID, url string, skipCa
 		zap.String("url", url),
 		zap.String("platform", platform))
 
-	accessCtx, err := s.getParseAccessContext(ctx, taskID, platform)
-	if err != nil {
-		s.logger.Error("failed to get proxy lease for parsing",
-			zap.String("url", url),
-			zap.String("platform", platform),
-			zap.Error(err))
-		return nil, err
-	}
-	if accessCtx.cookieFile != "" {
-		defer s.cleanupCookieFile(accessCtx.cookieFile)
-	}
-
-	// 8. 调用适配器解析（传递 proxy 和 cookie）
-	s.logger.Info("parsing video",
-		zap.String("url", url),
-		zap.String("platform", platform),
-		zap.String("adapter", fmt.Sprintf("%T", adpt)),
-		zap.Bool("youtube_cookie_disabled", platformpolicy.IsYouTubePlatform(platform) && s.youtubePolicy.CookiesDisabled()),
-		zap.Bool("has_cookie", accessCtx.cookieFile != ""),
-		zap.Bool("has_proxy", accessCtx.proxyLease != nil && accessCtx.proxyLease.URL != ""))
-
-	proxyURL := ""
-	proxyLeaseID := ""
-	proxyExpireAt := ""
-	if accessCtx.proxyLease != nil {
-		proxyURL = accessCtx.proxyLease.URL
-		proxyLeaseID = accessCtx.proxyLease.LeaseID
-		proxyExpireAt = accessCtx.proxyLease.ExpireAt
-	}
-
-	videoInfo, err := adpt.ParseWithProxyAndCookie(ctx, url, proxyURL, accessCtx.cookieFile)
-
-	// 报告代理使用结果
-	if accessCtx.proxyLease != nil && s.assetClient != nil {
-		success := err == nil
-		if reportErr := s.assetClient.ReportProxyUsage(taskID, accessCtx.proxyLease.LeaseID, "parse", success); reportErr != nil {
-			s.logger.Warn("failed to report proxy usage", zap.Error(reportErr))
-		}
-	}
-
-	// 报告Cookie使用结果
-	if accessCtx.cookieID != 0 && s.assetClient != nil {
-		success := err == nil
-		s.logger.Info("reporting cookie usage",
-			zap.Int64("cookie_id", accessCtx.cookieID),
-			zap.Bool("success", success))
-
-		if reportErr := s.assetClient.ReportCookieUsage(accessCtx.cookieID, success); reportErr != nil {
-			s.logger.Warn("failed to report cookie usage", zap.Error(reportErr))
-		}
-	}
-
+	videoInfo, accessCtx, err := s.parseWithProxyRetry(ctx, taskID, url, platform, adpt)
 	if err != nil {
 		s.logger.Error("parse failed",
 			zap.String("url", url),
 			zap.String("platform", platform),
 			zap.Error(err))
 		return nil, err
+	}
+	if accessCtx != nil && accessCtx.cookieFile != "" {
+		defer s.cleanupCookieFile(accessCtx.cookieFile)
+	}
+
+	proxyURL := ""
+	proxyLeaseID := ""
+	proxyExpireAt := ""
+	if accessCtx != nil && accessCtx.proxyLease != nil {
+		proxyURL = accessCtx.proxyLease.URL
+		proxyLeaseID = accessCtx.proxyLease.LeaseID
+		proxyExpireAt = accessCtx.proxyLease.ExpireAt
 	}
 
 	s.logger.Info("parse completed successfully",
@@ -261,6 +224,104 @@ func (s *ParserService) ParseURL(ctx context.Context, taskID, url string, skipCa
 		zap.Int("format_count", len(result.Formats)))
 
 	return result, nil
+}
+
+func (s *ParserService) parseWithProxyRetry(ctx context.Context, taskID, url, platform string, adpt adapter.Adapter) (*ytdlp.VideoInfo, *parseAccessContext, error) {
+	maxAttempts := s.parseProxyMaxAttempts()
+	var lastErr error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		accessCtx, err := s.getParseAccessContext(ctx, taskID, platform)
+		if err != nil {
+			s.logger.Error("failed to get proxy lease for parsing",
+				zap.String("url", url),
+				zap.String("platform", platform),
+				zap.Int("attempt", attempt),
+				zap.Int("max_attempts", maxAttempts),
+				zap.Error(err))
+			if lastErr != nil {
+				return nil, nil, lastErr
+			}
+			return nil, nil, err
+		}
+
+		s.logger.Info("parsing video",
+			zap.String("url", url),
+			zap.String("platform", platform),
+			zap.String("adapter", fmt.Sprintf("%T", adpt)),
+			zap.Int("attempt", attempt),
+			zap.Int("max_attempts", maxAttempts),
+			zap.Bool("youtube_cookie_disabled", platformpolicy.IsYouTubePlatform(platform) && s.youtubePolicy.CookiesDisabled()),
+			zap.Bool("has_cookie", accessCtx.cookieFile != ""),
+			zap.Bool("has_proxy", accessCtx.proxyLease != nil && accessCtx.proxyLease.URL != ""))
+
+		proxyURL := ""
+		if accessCtx.proxyLease != nil {
+			proxyURL = accessCtx.proxyLease.URL
+		}
+
+		videoInfo, err := adpt.ParseWithProxyAndCookie(ctx, url, proxyURL, accessCtx.cookieFile)
+		usageReported := s.reportParseAccessUsage(taskID, accessCtx, err == nil)
+		if err == nil {
+			return videoInfo, accessCtx, nil
+		}
+
+		lastErr = err
+		if !s.shouldRetryParseWithNewProxy(attempt, maxAttempts, accessCtx, err, usageReported) {
+			s.cleanupCookieFile(accessCtx.cookieFile)
+			return nil, nil, err
+		}
+
+		s.logger.Warn("parse failed with retryable proxy or bot-detection error, rotating proxy",
+			zap.String("url", url),
+			zap.String("platform", platform),
+			zap.Int("attempt", attempt),
+			zap.Int("max_attempts", maxAttempts),
+			zap.Error(err))
+		s.cleanupCookieFile(accessCtx.cookieFile)
+	}
+
+	return nil, nil, lastErr
+}
+
+func (s *ParserService) reportParseAccessUsage(taskID string, accessCtx *parseAccessContext, success bool) bool {
+	if accessCtx == nil || s.assetClient == nil {
+		return true
+	}
+
+	usageReported := true
+	if accessCtx.proxyLease != nil {
+		if reportErr := s.assetClient.ReportProxyUsage(taskID, accessCtx.proxyLease.LeaseID, "parse", success); reportErr != nil {
+			s.logger.Warn("failed to report proxy usage", zap.Error(reportErr))
+			usageReported = false
+		}
+	}
+
+	if accessCtx.cookieID != 0 {
+		s.logger.Info("reporting cookie usage",
+			zap.Int64("cookie_id", accessCtx.cookieID),
+			zap.Bool("success", success))
+
+		if reportErr := s.assetClient.ReportCookieUsage(accessCtx.cookieID, success); reportErr != nil {
+			s.logger.Warn("failed to report cookie usage", zap.Error(reportErr))
+		}
+	}
+
+	return usageReported
+}
+
+func (s *ParserService) shouldRetryParseWithNewProxy(attempt, maxAttempts int, accessCtx *parseAccessContext, err error, usageReported bool) bool {
+	if !usageReported || attempt >= maxAttempts || accessCtx == nil || accessCtx.proxyLease == nil || accessCtx.proxyLease.URL == "" {
+		return false
+	}
+	return utils.IsProxyOrBotRetryableError(err)
+}
+
+func (s *ParserService) parseProxyMaxAttempts() int {
+	if s.proxyRetryMaxAttempts <= 0 {
+		return 1
+	}
+	return s.proxyRetryMaxAttempts
 }
 
 func (s *ParserService) getParseAccessContext(ctx context.Context, taskID, platform string) (*parseAccessContext, error) {

@@ -21,6 +21,8 @@ type ProxyService struct {
 	provider    *dynamicproxy.Provider
 }
 
+const proxyUsageStageParse = "parse"
+
 // NewProxyService 创建代理服务
 func NewProxyService(
 	repo *repository.ProxyRepository,
@@ -46,7 +48,7 @@ func (s *ProxyService) GetAvailableProxy(ctx context.Context, protocol *models.P
 		return lease.URL, lease.LeaseID, lease.ExpireAt, nil
 	}
 
-	proxy, err := s.repo.GetAvailableProxy(ctx, protocol, region)
+	proxy, err := s.repo.AcquireAvailableProxy(ctx, protocol, region)
 	if err != nil {
 		return "", "", "", err
 	}
@@ -86,12 +88,24 @@ func (s *ProxyService) AcquireProxyForTask(
 		return nil, errors.New("no active proxy source policy")
 	}
 
-	result, degraded, degradeReason, err := s.acquireWithPolicy(ctx, policy, protocol, region)
+	var excludedProxyID *int64
+	if existing != nil && existing.ProxyID != nil {
+		excludedProxyID = existing.ProxyID
+	}
+
+	result, degraded, degradeReason, err := s.acquireWithPolicy(ctx, policy, protocol, region, excludedProxyID)
 	if err != nil {
 		return nil, err
 	}
 
 	binding := s.buildBinding(taskID, policy, result, protocol, region, platform, degraded, degradeReason)
+	if existing != nil {
+		if err := s.bindingRepo.UpdateBinding(ctx, binding); err != nil {
+			return nil, err
+		}
+		return s.bindingRepo.GetByTaskID(ctx, taskID)
+	}
+
 	if err := s.bindingRepo.CreateIfAbsent(ctx, binding); err != nil {
 		if errors.Is(err, repository.ErrTaskProxyBindingAlreadyExists) {
 			return s.bindingRepo.GetByTaskID(ctx, taskID)
@@ -112,6 +126,11 @@ func (s *ProxyService) ReportUsage(ctx context.Context, taskID, leaseID, stage s
 		if binding != nil {
 			if err := s.bindingRepo.UpdateReport(ctx, taskID, stage, success); err != nil {
 				return err
+			}
+			if stage == proxyUsageStageParse && !success {
+				if err := s.bindingRepo.MarkFailed(ctx, taskID); err != nil {
+					return err
+				}
 			}
 			if binding.SourceType == models.ProxySourceTypeManualPool && binding.ProxyID != nil {
 				return s.repo.UpdateUsage(ctx, *binding.ProxyID, success)
@@ -139,8 +158,9 @@ func (s *ProxyService) acquireWithPolicy(
 	policy *models.ProxySourcePolicy,
 	protocol *models.ProxyProtocol,
 	region *string,
+	excludedProxyID *int64,
 ) (*models.ProxyAcquireResult, bool, *string, error) {
-	result, err := s.trySource(ctx, policy.PrimarySource, policy, protocol, region)
+	result, err := s.trySource(ctx, policy.PrimarySource, policy, protocol, region, excludedProxyID)
 	if err == nil {
 		return result, false, nil, nil
 	}
@@ -151,7 +171,7 @@ func (s *ProxyService) acquireWithPolicy(
 
 	degradeReason := err.Error()
 	fallbackType := models.ProxySourceType(*policy.FallbackSource)
-	result, err = s.trySource(ctx, fallbackType, policy, protocol, region)
+	result, err = s.trySource(ctx, fallbackType, policy, protocol, region, excludedProxyID)
 	if err != nil {
 		return nil, false, nil, err
 	}
@@ -165,12 +185,13 @@ func (s *ProxyService) trySource(
 	policy *models.ProxySourcePolicy,
 	protocol *models.ProxyProtocol,
 	region *string,
+	excludedProxyID *int64,
 ) (*models.ProxyAcquireResult, error) {
 	switch sourceType {
 	case models.ProxySourceTypeDynamicAPI:
 		return s.tryDynamicSource(ctx, policy)
 	case models.ProxySourceTypeManualPool:
-		return s.tryManualSource(ctx, protocol, region)
+		return s.tryManualSource(ctx, protocol, region, excludedProxyID)
 	default:
 		return nil, fmt.Errorf("unsupported proxy source type: %s", sourceType)
 	}
@@ -211,8 +232,9 @@ func (s *ProxyService) tryManualSource(
 	ctx context.Context,
 	protocol *models.ProxyProtocol,
 	region *string,
+	excludedProxyID *int64,
 ) (*models.ProxyAcquireResult, error) {
-	proxy, err := s.repo.GetAvailableProxy(ctx, protocol, region)
+	proxy, err := s.repo.AcquireAvailableProxyExcluding(ctx, protocol, region, excludedProxyID)
 	if err != nil {
 		return nil, err
 	}

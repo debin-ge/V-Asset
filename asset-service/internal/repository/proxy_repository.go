@@ -32,17 +32,17 @@ func (r *ProxyRepository) UpdateUsage(ctx context.Context, id int64, success boo
 	if success {
 		query = `
 			UPDATE proxies 
-			SET success_count = success_count + 1, last_used_at = $2, updated_at = $3
+			SET success_count = success_count + 1, updated_at = $2
 			WHERE id = $1`
 	} else {
 		query = `
 			UPDATE proxies 
-			SET fail_count = fail_count + 1, last_used_at = $2, updated_at = $3
+			SET fail_count = fail_count + 1, updated_at = $2
 			WHERE id = $1`
 	}
 
 	now := time.Now()
-	_, err := r.db.ExecContext(ctx, query, id, now, now)
+	_, err := r.db.ExecContext(ctx, query, id, now)
 	if err != nil {
 		return fmt.Errorf("update usage failed: %w", err)
 	}
@@ -52,6 +52,21 @@ func (r *ProxyRepository) UpdateUsage(ctx context.Context, id int64, success boo
 
 // GetAvailableProxy 获取一个可用的代理（轮询策略：最久未使用的活跃代理）
 func (r *ProxyRepository) GetAvailableProxy(ctx context.Context, protocol *models.ProxyProtocol, region *string) (*models.Proxy, error) {
+	return r.AcquireAvailableProxy(ctx, protocol, region)
+}
+
+// GetAvailableProxyExcluding 获取一个可用代理，并可排除指定代理 ID。
+func (r *ProxyRepository) GetAvailableProxyExcluding(ctx context.Context, protocol *models.ProxyProtocol, region *string, excludedID *int64) (*models.Proxy, error) {
+	return r.AcquireAvailableProxyExcluding(ctx, protocol, region, excludedID)
+}
+
+// AcquireAvailableProxy 原子分配一个可用代理，并立即标记最近分配时间。
+func (r *ProxyRepository) AcquireAvailableProxy(ctx context.Context, protocol *models.ProxyProtocol, region *string) (*models.Proxy, error) {
+	return r.AcquireAvailableProxyExcluding(ctx, protocol, region, nil)
+}
+
+// AcquireAvailableProxyExcluding 原子分配一个可用代理，并可排除指定代理 ID。
+func (r *ProxyRepository) AcquireAvailableProxyExcluding(ctx context.Context, protocol *models.ProxyProtocol, region *string, excludedID *int64) (*models.Proxy, error) {
 	var conditions []string
 	var args []interface{}
 	argIdx := 1
@@ -74,14 +89,40 @@ func (r *ProxyRepository) GetAvailableProxy(ctx context.Context, protocol *model
 		argIdx++
 	}
 
+	if excludedID != nil {
+		conditions = append(conditions, fmt.Sprintf("id <> $%d", argIdx))
+		args = append(args, *excludedID)
+		argIdx++
+	}
+
+	allocatedAtArg := argIdx
+	args = append(args, time.Now())
+
 	query := fmt.Sprintf(`
-		SELECT id, host, ip, port, username, password, protocol, region, priority, platform_tags, remark, status,
-		       last_check_at, last_check_result, success_count, fail_count,
-		       last_used_at, deleted_at, created_at, updated_at
-		FROM proxies
-		WHERE %s
-		ORDER BY last_used_at ASC NULLS FIRST, priority DESC, success_count DESC
-		LIMIT 1`, strings.Join(conditions, " AND "))
+		WITH candidate AS (
+			SELECT id
+			FROM proxies
+			WHERE %s
+			ORDER BY last_used_at ASC NULLS FIRST,
+			         priority DESC,
+			         success_count DESC,
+			         id ASC
+			LIMIT 1
+			FOR UPDATE SKIP LOCKED
+		)
+		UPDATE proxies p
+		SET last_used_at = $%d,
+		    updated_at = $%d
+		FROM candidate
+		WHERE p.id = candidate.id
+		RETURNING p.id, p.host, p.ip, p.port, p.username, p.password,
+		          p.protocol, p.region, p.priority, p.platform_tags, p.remark, p.status,
+		          p.last_check_at, p.last_check_result, p.success_count, p.fail_count,
+		          p.last_used_at, p.deleted_at, p.created_at, p.updated_at`,
+		strings.Join(conditions, " AND "),
+		allocatedAtArg,
+		allocatedAtArg,
+	)
 
 	proxy := &models.Proxy{}
 	err := r.db.QueryRowContext(ctx, query, args...).Scan(

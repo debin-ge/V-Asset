@@ -50,3 +50,81 @@ func MapYTDLPError(stderr string) error {
 		return ErrYTDLPFailed
 	}
 }
+
+// IsProxyOrBotRetryableError 判断解析失败是否适合通过更换代理重试。
+func IsProxyOrBotRetryableError(err error) bool {
+	if err == nil || isTerminalVideoError(err) {
+		return false
+	}
+
+	if errors.Is(err, ErrTimeout) {
+		return true
+	}
+
+	text := normalizeRetryableErrorText(err.Error())
+	return containsAny(text, botDetectionKeywords) || containsAny(text, proxyRetryableKeywords)
+}
+
+func isTerminalVideoError(err error) bool {
+	return errors.Is(err, ErrVideoNotFound) ||
+		errors.Is(err, ErrVideoPrivate) ||
+		errors.Is(err, ErrVideoDeleted) ||
+		errors.Is(err, ErrGeoRestricted) ||
+		errors.Is(err, ErrAgeRestricted) ||
+		errors.Is(err, ErrCopyrightClaim)
+}
+
+func normalizeRetryableErrorText(text string) string {
+	replacer := strings.NewReplacer(
+		"’", "'",
+		"‘", "'",
+		"“", "\"",
+		"”", "\"",
+	)
+	return replacer.Replace(strings.ToLower(text))
+}
+
+func containsAny(text string, keywords []string) bool {
+	for _, keyword := range keywords {
+		if strings.Contains(text, keyword) {
+			return true
+		}
+	}
+	return false
+}
+
+var botDetectionKeywords = []string{
+	"sign in to confirm you're not a bot",
+	"not a bot",
+	"use --cookies-from-browser or --cookies",
+	"cookies for the authentication",
+	"captcha",
+	"verify you are human",
+	"verify that you are human",
+	"verify human",
+	"unusual traffic",
+	"automated queries",
+	"challenge",
+	"cloudflare",
+	"too many requests",
+	"http error 429",
+}
+
+var proxyRetryableKeywords = []string{
+	"proxy",
+	"connection refused",
+	"connection reset",
+	"connection timed out",
+	"connect timeout",
+	"read timeout",
+	"timeout awaiting response headers",
+	"tunnel",
+	"407",
+	"socks",
+	"eof",
+	"unexpected eof",
+	"tls handshake timeout",
+	"no route to host",
+	"network is unreachable",
+	"temporary failure in name resolution",
+}

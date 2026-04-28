@@ -118,3 +118,4 @@ asset_service:
   timeout: 30
   enable_cookies: true
   cookie_temp_dir: "/tmp/media-cookies"
+  proxy_retry_max_attempts: 3
