@@ -1,0 +1,4 @@
+DROP INDEX IF EXISTS idx_proxy_usage_events_category_created_at;
+DROP INDEX IF EXISTS idx_proxy_usage_events_success_created_at;
+DROP INDEX IF EXISTS idx_proxy_usage_events_stage_created_at;
+DROP INDEX IF EXISTS idx_proxy_usage_events_platform_created_at;

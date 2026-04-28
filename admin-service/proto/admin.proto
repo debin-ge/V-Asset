@@ -17,6 +17,7 @@ service AdminService {
   rpc GetProxySourcePolicy(AdminEmpty) returns (AdminProxySourcePolicyResponse);
   rpc UpdateProxySourcePolicy(AdminUpdateProxySourcePolicyRequest) returns (AdminOperationResponse);
   rpc ListProxies(AdminListProxiesRequest) returns (AdminListProxiesResponse);
+  rpc ListProxyUsageEvents(AdminListProxyUsageEventsRequest) returns (AdminListProxyUsageEventsResponse);
   rpc CreateProxy(AdminCreateProxyRequest) returns (AdminCreateResourceResponse);
   rpc UpdateProxy(AdminUpdateProxyRequest) returns (AdminOperationResponse);
   rpc UpdateProxyStatus(AdminUpdateProxyStatusRequest) returns (AdminOperationResponse);
@@ -118,6 +119,8 @@ message AdminProxySourceStatusResponse {
   string proxy_lease_id = 5;
   string proxy_expire_at = 6;
   string checked_at = 7;
+  int64 available_manual_proxy_count = 8;
+  bool dynamic_configured = 9;
 }
 
 message AdminProxySourcePolicyResponse {
@@ -162,6 +165,13 @@ message AdminProxyInfo {
   int32 fail_count = 13;
   string created_at = 14;
   string updated_at = 15;
+  string cooldown_until = 16;
+  int32 consecutive_fail_count = 17;
+  int32 risk_score = 18;
+  string last_error_category = 19;
+  string last_fail_at = 20;
+  int32 max_concurrent = 21;
+  int32 active_task_count = 22;
 }
 
 message AdminListProxiesRequest {
@@ -174,6 +184,66 @@ message AdminListProxiesRequest {
 
 message AdminListProxiesResponse {
   repeated AdminProxyInfo items = 1;
+}
+
+message AdminListProxyUsageEventsRequest {
+  string task_id = 1;
+  int64 proxy_id = 2;
+  string proxy_lease_id = 3;
+  string source_type = 4;
+  string stage = 5;
+  string platform = 6;
+  string success = 7;
+  string error_category = 8;
+  int64 start_time_unix = 9;
+  int64 end_time_unix = 10;
+  int32 page = 11;
+  int32 page_size = 12;
+  string sort_order = 13;
+}
+
+message AdminProxyUsageEventItem {
+  int64 id = 1;
+  string task_id = 2;
+  int64 proxy_id = 3;
+  string proxy_lease_id = 4;
+  string source_type = 5;
+  string stage = 6;
+  string platform = 7;
+  bool success = 8;
+  string error_category = 9;
+  string error_message = 10;
+  string created_at = 11;
+  string proxy_host = 12;
+  int32 proxy_port = 13;
+  string proxy_protocol = 14;
+  string proxy_region = 15;
+  int32 proxy_risk_score = 16;
+  string proxy_cooldown_until = 17;
+  int32 proxy_active_task_count = 18;
+  int32 proxy_max_concurrent = 19;
+}
+
+message AdminProxyUsageEventCount {
+  string key = 1;
+  int64 count = 2;
+}
+
+message AdminProxyUsageEventSummary {
+  int64 success_count = 1;
+  int64 failure_count = 2;
+  double failure_rate = 3;
+  repeated AdminProxyUsageEventCount category_counts = 4;
+  repeated AdminProxyUsageEventCount stage_counts = 5;
+  repeated AdminProxyUsageEventCount platform_counts = 6;
+}
+
+message AdminListProxyUsageEventsResponse {
+  repeated AdminProxyUsageEventItem events = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  AdminProxyUsageEventSummary summary = 5;
 }
 
 message AdminCreateProxyRequest {

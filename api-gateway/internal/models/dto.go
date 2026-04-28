@@ -192,13 +192,15 @@ type DailyActivity struct {
 
 // ProxySourceStatusResponse 动态代理源状态响应
 type ProxySourceStatusResponse struct {
-	Healthy       bool   `json:"healthy"`
-	Mode          string `json:"mode"`
-	Message       string `json:"message"`
-	ProxyURL      string `json:"proxy_url,omitempty"`
-	ProxyLeaseID  string `json:"proxy_lease_id,omitempty"`
-	ProxyExpireAt string `json:"proxy_expire_at,omitempty"`
-	CheckedAt     string `json:"checked_at"`
+	Healthy                   bool   `json:"healthy"`
+	Mode                      string `json:"mode"`
+	Message                   string `json:"message"`
+	ProxyURL                  string `json:"proxy_url,omitempty"`
+	ProxyLeaseID              string `json:"proxy_lease_id,omitempty"`
+	ProxyExpireAt             string `json:"proxy_expire_at,omitempty"`
+	CheckedAt                 string `json:"checked_at"`
+	AvailableManualProxyCount int64  `json:"available_manual_proxy_count"`
+	DynamicConfigured         bool   `json:"dynamic_configured"`
 }
 
 // ==================== Cookie 管理 ====================

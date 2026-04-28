@@ -1,8 +1,9 @@
 import * as React from "react";
+import Link from "next/link";
 
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -60,12 +61,20 @@ export function ProxyTable({
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <InfoStat label="Usage" value={`${item.success_count}/${item.fail_count}`} />
+                    <InfoStat label="Risk" value={`${item.risk_score}/100`} />
+                    <InfoStat label="Concurrency" value={`${item.active_task_count}/${item.max_concurrent}`} />
+                    <InfoStat label="Cooldown" value={item.cooldown_until || "None"} />
+                    <InfoStat label="Failure Streak" value={String(item.consecutive_fail_count)} />
+                    <InfoStat label="Last Error" value={item.last_error_category || "None"} />
                     <InfoStat label="Platforms" value={item.platform_tags || "Any"} />
                     <InfoStat label="Remark" value={item.remark || "No remark"} />
                     <InfoStat label="Updated" value={item.updated_at} />
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 lg:justify-end">
+                  <Link className={buttonVariants({ variant: "ghost", size: "sm" })} href={`/proxies/events?proxy_id=${item.id}`}>
+                    Events
+                  </Link>
                   <Button variant="ghost" size="sm" onClick={() => setEditingItem(item)}>
                     Edit
                   </Button>

@@ -96,19 +96,22 @@ func (c *AssetClient) GetCookieContent(cookieID int64, platform, taskID string) 
 }
 
 // ReportCookieUsage 报告 Cookie 使用结果
-func (c *AssetClient) ReportCookieUsage(cookieID int64, success bool, taskID string) error {
+func (c *AssetClient) ReportCookieUsage(cookieID int64, success bool, taskID, errorCategory, errorMessage string) error {
 	if cookieID <= 0 {
 		return nil
 	}
 
-	log.Printf("[AssetClient] [Task %s] Reporting cookie usage: ID=%d, success=%v", taskID, cookieID, success)
+	log.Printf("[AssetClient] [Task %s] Reporting cookie usage: ID=%d, success=%v, category=%s", taskID, cookieID, success, errorCategory)
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
 	_, err := c.client.ReportCookieUsage(ctx, &pb.ReportCookieUsageRequest{
-		CookieId: cookieID,
-		Success:  success,
+		CookieId:      cookieID,
+		Success:       success,
+		ErrorCategory: errorCategory,
+		ErrorMessage:  errorMessage,
+		TaskId:        taskID,
 	})
 
 	if err != nil {
@@ -161,22 +164,50 @@ func (c *AssetClient) GetAvailableProxy(ctx context.Context) (*ProxyLease, error
 	}, nil
 }
 
+// AcquireProxyForTask 为下载重试刷新任务绑定代理。
+func (c *AssetClient) AcquireProxyForTask(ctx context.Context, taskID, platform string) (*ProxyLease, error) {
+	if taskID == "" {
+		return nil, fmt.Errorf("task id is required")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
+	resp, err := c.client.AcquireProxyForTask(ctx, &pb.AcquireProxyForTaskRequest{
+		TaskId:   taskID,
+		Platform: platform,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to acquire task proxy: %w", err)
+	}
+	if resp.ProxyUrl == "" {
+		return nil, nil
+	}
+	return &ProxyLease{
+		URL:      resp.ProxyUrl,
+		LeaseID:  resp.ProxyLeaseId,
+		ExpireAt: resp.ExpireAt,
+	}, nil
+}
+
 // ReportProxyUsage 报告代理使用结果
-func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error {
+func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool, errorCategory, errorMessage string) error {
 	if taskID == "" && proxyLeaseID == "" {
 		return nil
 	}
 
-	log.Printf("[AssetClient] Reporting proxy usage: task_id=%s, lease_id=%s, stage=%s, success=%v", taskID, proxyLeaseID, stage, success)
+	log.Printf("[AssetClient] Reporting proxy usage: task_id=%s, lease_id=%s, stage=%s, success=%v, category=%s", taskID, proxyLeaseID, stage, success, errorCategory)
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
 	_, err := c.client.ReportProxyUsage(ctx, &pb.ReportProxyUsageRequest{
-		ProxyLeaseId: proxyLeaseID,
-		Success:      success,
-		TaskId:       taskID,
-		Stage:        stage,
+		ProxyLeaseId:  proxyLeaseID,
+		Success:       success,
+		TaskId:        taskID,
+		Stage:         stage,
+		ErrorCategory: errorCategory,
+		ErrorMessage:  errorMessage,
 	})
 
 	if err != nil {
@@ -186,6 +217,29 @@ func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, succe
 	}
 
 	return err
+}
+
+// ReleaseProxyForTask 释放任务代理绑定。
+func (c *AssetClient) ReleaseProxyForTask(taskID, reason string) error {
+	if taskID == "" {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	_, err := c.client.ReleaseProxyForTask(ctx, &pb.ReleaseProxyForTaskRequest{
+		TaskId: taskID,
+		Reason: reason,
+	})
+	if err != nil {
+		if code := status.Code(err); code == codes.NotFound || code == codes.Unimplemented {
+			return nil
+		}
+		log.Printf("[AssetClient] ERROR: Failed to release proxy binding for task %s: %v", taskID, err)
+		return err
+	}
+	return nil
 }
 
 // UpdateHistoryCompleted 同步下载完成状态到 Asset Service

@@ -44,10 +44,11 @@ type fakeParserAssetClient struct {
 }
 
 type proxyUsageReport struct {
-	taskID       string
-	proxyLeaseID string
-	stage        string
-	success      bool
+	taskID        string
+	proxyLeaseID  string
+	stage         string
+	success       bool
+	errorCategory string
 }
 
 func (f *fakeParserAssetClient) GetAvailableCookie(string) (string, int64, error) {
@@ -62,17 +63,18 @@ func (f *fakeParserAssetClient) GetAvailableProxy() (*client.ProxyLease, error) 
 	return f.nextProxyLease()
 }
 
-func (f *fakeParserAssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error {
+func (f *fakeParserAssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool, errorCategory, _ string) error {
 	f.reports = append(f.reports, proxyUsageReport{
-		taskID:       taskID,
-		proxyLeaseID: proxyLeaseID,
-		stage:        stage,
-		success:      success,
+		taskID:        taskID,
+		proxyLeaseID:  proxyLeaseID,
+		stage:         stage,
+		success:       success,
+		errorCategory: errorCategory,
 	})
 	return nil
 }
 
-func (f *fakeParserAssetClient) ReportCookieUsage(int64, bool) error {
+func (f *fakeParserAssetClient) ReportCookieUsage(int64, bool, string, string, string) error {
 	return nil
 }
 
@@ -210,7 +212,7 @@ func TestParseURLRotatesProxyOnBotDetection(t *testing.T) {
 		assetClient:           assetStub,
 		enableCookies:         false,
 		youtubePolicy:         platformpolicy.YouTubePolicy{},
-		proxyRetryMaxAttempts: 2,
+		proxyRetryMaxAttempts: 1,
 	}
 
 	result, err := svc.ParseURL(context.Background(), "task-rotate", "https://example.com/video", true)
@@ -238,6 +240,70 @@ func TestParseURLRotatesProxyOnBotDetection(t *testing.T) {
 	}
 }
 
+func TestParseURLAllowsOnlyOneProxyRetry(t *testing.T) {
+	t.Parallel()
+
+	firstProxy := &client.ProxyLease{URL: "http://proxy-a:8080", LeaseID: "lease-a"}
+	secondProxy := &client.ProxyLease{URL: "http://proxy-b:8080", LeaseID: "lease-b"}
+	thirdProxy := &client.ProxyLease{URL: "http://proxy-c:8080", LeaseID: "lease-c"}
+	cacheStub := &fakeParserCache{getErr: utils.ErrCacheMiss}
+	assetStub := &fakeParserAssetClient{proxyLeases: []*client.ProxyLease{firstProxy, secondProxy, thirdProxy}}
+	adapterStub := &fakeAdapter{
+		parseErrors: []error{
+			fmt.Errorf("%w: HTTP Error 429: too many requests", utils.ErrYTDLPFailed),
+			fmt.Errorf("%w: connection timed out", utils.ErrTimeout),
+			nil,
+		},
+		parseResponses: []*ytdlp.VideoInfo{
+			nil,
+			nil,
+			{
+				ID:        "vid-should-not-run",
+				Title:     "Third Attempt",
+				Uploader:  "Author",
+				Duration:  60,
+				Thumbnail: "thumb",
+			},
+		},
+	}
+
+	svc := &ParserService{
+		detector: detectorForTests(),
+		cache:    cacheStub,
+		adapters: map[string]adapter.Adapter{
+			"generic": adapterStub,
+		},
+		limiter:               utils.NewConcurrencyLimiter(1),
+		logger:                zap.NewNop(),
+		assetClient:           assetStub,
+		enableCookies:         false,
+		youtubePolicy:         platformpolicy.YouTubePolicy{},
+		proxyRetryMaxAttempts: 1,
+	}
+
+	_, err := svc.ParseURL(context.Background(), "task-retry-once", "https://example.com/video", true)
+	if err == nil {
+		t.Fatalf("expected ParseURL to fail after one proxy retry")
+	}
+	if assetStub.acquireCalls != 2 {
+		t.Fatalf("expected two proxy acquisitions, got %d", assetStub.acquireCalls)
+	}
+	if adapterStub.parseCalls != 2 {
+		t.Fatalf("expected two parse attempts, got %d", adapterStub.parseCalls)
+	}
+	if len(adapterStub.proxyURLs) != 2 || adapterStub.proxyURLs[0] != firstProxy.URL || adapterStub.proxyURLs[1] != secondProxy.URL {
+		t.Fatalf("expected first attempt and one retry with rotated proxies, got %#v", adapterStub.proxyURLs)
+	}
+	if len(assetStub.reports) != 2 {
+		t.Fatalf("expected two failed proxy usage reports, got %#v", assetStub.reports)
+	}
+	for _, report := range assetStub.reports {
+		if report.success {
+			t.Fatalf("expected failed proxy usage report, got %+v", report)
+		}
+	}
+}
+
 func TestParseURLDoesNotRotateProxyForTerminalVideoError(t *testing.T) {
 	t.Parallel()
 
@@ -259,7 +325,7 @@ func TestParseURLDoesNotRotateProxyForTerminalVideoError(t *testing.T) {
 		assetClient:           assetStub,
 		enableCookies:         false,
 		youtubePolicy:         platformpolicy.YouTubePolicy{},
-		proxyRetryMaxAttempts: 2,
+		proxyRetryMaxAttempts: 1,
 	}
 
 	_, err := svc.ParseURL(context.Background(), "task-private", "https://example.com/video", true)

@@ -63,7 +63,7 @@ type AssetServiceConfig struct {
 	Timeout               int    `yaml:"timeout"`                  // gRPC超时(秒)
 	EnableCookies         bool   `yaml:"enable_cookies"`           // 是否启用Cookie获取
 	CookieTempDir         string `yaml:"cookie_temp_dir"`          // Cookie临时文件目录
-	ProxyRetryMaxAttempts int    `yaml:"proxy_retry_max_attempts"` // 解析阶段代理重试总次数
+	ProxyRetryMaxAttempts int    `yaml:"proxy_retry_max_attempts"` // 解析阶段代理重试次数，不含首次尝试
 }
 
 // LoadConfig 加载配置文件
@@ -111,7 +111,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		cfg.AssetService.CookieTempDir = "/tmp/parser-cookies"
 	}
 	if cfg.AssetService.ProxyRetryMaxAttempts <= 0 {
-		cfg.AssetService.ProxyRetryMaxAttempts = 3
+		cfg.AssetService.ProxyRetryMaxAttempts = 1
 	}
 
 	return &cfg, nil

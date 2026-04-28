@@ -125,13 +125,15 @@ func (s *AdminServer) GetProxySourceStatus(ctx context.Context, _ *pb.AdminEmpty
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &pb.AdminProxySourceStatusResponse{
-		Healthy:       resp.Healthy,
-		Mode:          resp.Mode,
-		Message:       resp.Message,
-		ProxyUrl:      resp.ProxyURL,
-		ProxyLeaseId:  resp.ProxyLeaseID,
-		ProxyExpireAt: resp.ProxyExpireAt,
-		CheckedAt:     resp.CheckedAt,
+		Healthy:                   resp.Healthy,
+		Mode:                      resp.Mode,
+		Message:                   resp.Message,
+		ProxyUrl:                  resp.ProxyURL,
+		ProxyLeaseId:              resp.ProxyLeaseID,
+		ProxyExpireAt:             resp.ProxyExpireAt,
+		CheckedAt:                 resp.CheckedAt,
+		AvailableManualProxyCount: resp.AvailableManualProxyCount,
+		DynamicConfigured:         resp.DynamicConfigured,
 	}, nil
 }
 
@@ -181,6 +183,40 @@ func (s *AdminServer) ListProxies(ctx context.Context, req *pb.AdminListProxiesR
 		items = append(items, proxyInfoToProto(item))
 	}
 	return &pb.AdminListProxiesResponse{Items: items}, nil
+}
+
+func (s *AdminServer) ListProxyUsageEvents(ctx context.Context, req *pb.AdminListProxyUsageEventsRequest) (*pb.AdminListProxyUsageEventsResponse, error) {
+	resp, err := s.proxyService.ListUsageEvents(ctx, models.ProxyUsageEventFilter{
+		TaskID:        req.GetTaskId(),
+		ProxyID:       req.GetProxyId(),
+		ProxyLeaseID:  req.GetProxyLeaseId(),
+		SourceType:    req.GetSourceType(),
+		Stage:         req.GetStage(),
+		Platform:      req.GetPlatform(),
+		Success:       req.GetSuccess(),
+		ErrorCategory: req.GetErrorCategory(),
+		StartTimeUnix: req.GetStartTimeUnix(),
+		EndTimeUnix:   req.GetEndTimeUnix(),
+		Page:          req.GetPage(),
+		PageSize:      req.GetPageSize(),
+		SortOrder:     req.GetSortOrder(),
+	})
+	if err != nil {
+		return nil, mapDownstreamError(err)
+	}
+
+	events := make([]*pb.AdminProxyUsageEventItem, 0, len(resp.Events))
+	for _, item := range resp.Events {
+		events = append(events, proxyUsageEventToProto(item))
+	}
+
+	return &pb.AdminListProxyUsageEventsResponse{
+		Events:   events,
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+		Summary:  proxyUsageSummaryToProto(resp.Summary),
+	}, nil
 }
 
 func (s *AdminServer) CreateProxy(ctx context.Context, req *pb.AdminCreateProxyRequest) (*pb.AdminCreateResourceResponse, error) {
@@ -646,22 +682,75 @@ func proxyPolicyToProto(policy *models.ProxySourcePolicy) *pb.AdminProxySourcePo
 
 func proxyInfoToProto(item models.ProxyInfo) *pb.AdminProxyInfo {
 	return &pb.AdminProxyInfo{
-		Id:           item.ID,
-		Host:         item.Host,
-		Port:         item.Port,
-		Protocol:     item.Protocol,
-		Username:     item.Username,
-		Region:       item.Region,
-		Priority:     item.Priority,
-		PlatformTags: item.PlatformTags,
-		Remark:       item.Remark,
-		Status:       item.Status,
-		LastUsedAt:   item.LastUsedAt,
-		SuccessCount: item.SuccessCount,
-		FailCount:    item.FailCount,
-		CreatedAt:    item.CreatedAt,
-		UpdatedAt:    item.UpdatedAt,
+		Id:                   item.ID,
+		Host:                 item.Host,
+		Port:                 item.Port,
+		Protocol:             item.Protocol,
+		Username:             item.Username,
+		Region:               item.Region,
+		Priority:             item.Priority,
+		PlatformTags:         item.PlatformTags,
+		Remark:               item.Remark,
+		Status:               item.Status,
+		LastUsedAt:           item.LastUsedAt,
+		SuccessCount:         item.SuccessCount,
+		FailCount:            item.FailCount,
+		CreatedAt:            item.CreatedAt,
+		UpdatedAt:            item.UpdatedAt,
+		CooldownUntil:        item.CooldownUntil,
+		ConsecutiveFailCount: item.ConsecutiveFailCount,
+		RiskScore:            item.RiskScore,
+		LastErrorCategory:    item.LastErrorCategory,
+		LastFailAt:           item.LastFailAt,
+		MaxConcurrent:        item.MaxConcurrent,
+		ActiveTaskCount:      item.ActiveTaskCount,
 	}
+}
+
+func proxyUsageEventToProto(item models.ProxyUsageEventInfo) *pb.AdminProxyUsageEventItem {
+	return &pb.AdminProxyUsageEventItem{
+		Id:                   item.ID,
+		TaskId:               item.TaskID,
+		ProxyId:              item.ProxyID,
+		ProxyLeaseId:         item.ProxyLeaseID,
+		SourceType:           item.SourceType,
+		Stage:                item.Stage,
+		Platform:             item.Platform,
+		Success:              item.Success,
+		ErrorCategory:        item.ErrorCategory,
+		ErrorMessage:         item.ErrorMessage,
+		CreatedAt:            item.CreatedAt,
+		ProxyHost:            item.ProxyHost,
+		ProxyPort:            item.ProxyPort,
+		ProxyProtocol:        item.ProxyProtocol,
+		ProxyRegion:          item.ProxyRegion,
+		ProxyRiskScore:       item.ProxyRiskScore,
+		ProxyCooldownUntil:   item.ProxyCooldownUntil,
+		ProxyActiveTaskCount: item.ProxyActiveTaskCount,
+		ProxyMaxConcurrent:   item.ProxyMaxConcurrent,
+	}
+}
+
+func proxyUsageSummaryToProto(summary models.ProxyUsageEventSummary) *pb.AdminProxyUsageEventSummary {
+	return &pb.AdminProxyUsageEventSummary{
+		SuccessCount:   summary.SuccessCount,
+		FailureCount:   summary.FailureCount,
+		FailureRate:    summary.FailureRate,
+		CategoryCounts: proxyUsageCountsToProto(summary.CategoryCounts),
+		StageCounts:    proxyUsageCountsToProto(summary.StageCounts),
+		PlatformCounts: proxyUsageCountsToProto(summary.PlatformCounts),
+	}
+}
+
+func proxyUsageCountsToProto(items []models.ProxyUsageEventCount) []*pb.AdminProxyUsageEventCount {
+	result := make([]*pb.AdminProxyUsageEventCount, 0, len(items))
+	for _, item := range items {
+		result = append(result, &pb.AdminProxyUsageEventCount{
+			Key:   item.Key,
+			Count: item.Count,
+		})
+	}
+	return result
 }
 
 func cookieInfoToProto(item models.CookieInfo) *pb.AdminCookieInfo {

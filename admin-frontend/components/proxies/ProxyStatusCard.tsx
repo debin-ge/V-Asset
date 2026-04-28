@@ -28,8 +28,8 @@ export function ProxyStatusCard({ status }: { status: ProxySourceStatus | null }
               icon={status.healthy ? ShieldCheck : ShieldAlert}
             />
             <ProxyInfoCell label="Mode" value={status.mode} icon={Activity} />
-            <ProxyInfoCell label="Lease" value={status.proxy_lease_id || "N/A"} />
-            <ProxyInfoCell label="Expires" value={status.proxy_expire_at || "N/A"} />
+            <ProxyInfoCell label="Dynamic" value={status.dynamic_configured ? "Configured" : "Not configured"} />
+            <ProxyInfoCell label="Manual Capacity" value={String(status.available_manual_proxy_count)} />
             <ProxyInfoCell label="Checked" value={status.checked_at} />
             <ProxyInfoCell label="Message" value={status.message || "N/A"} />
           </div>

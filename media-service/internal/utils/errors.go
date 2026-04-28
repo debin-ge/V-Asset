@@ -25,6 +25,17 @@ var (
 	ErrYTDLPFailed   = errors.New("yt-dlp execution failed")
 )
 
+const (
+	ErrorCategoryNetworkTimeout   = "network_timeout"
+	ErrorCategoryProxyAuth        = "proxy_auth"
+	ErrorCategoryProxyUnreachable = "proxy_unreachable"
+	ErrorCategoryRateLimited      = "rate_limited"
+	ErrorCategoryBotDetected      = "bot_detected"
+	ErrorCategoryCookieInvalid    = "cookie_invalid"
+	ErrorCategoryTerminalVideo    = "terminal_video"
+	ErrorCategoryUnknown          = "unknown"
+)
+
 // MapYTDLPError 将yt-dlp的错误输出映射到具体错误
 func MapYTDLPError(stderr string) error {
 	lowerStderr := strings.ToLower(stderr)
@@ -53,16 +64,42 @@ func MapYTDLPError(stderr string) error {
 
 // IsProxyOrBotRetryableError 判断解析失败是否适合通过更换代理重试。
 func IsProxyOrBotRetryableError(err error) bool {
-	if err == nil || isTerminalVideoError(err) {
-		return false
-	}
+	category := ClassifyAccessError(err)
+	return category == ErrorCategoryNetworkTimeout ||
+		category == ErrorCategoryProxyAuth ||
+		category == ErrorCategoryProxyUnreachable ||
+		category == ErrorCategoryRateLimited ||
+		category == ErrorCategoryBotDetected
+}
 
+func ClassifyAccessError(err error) string {
+	if err == nil {
+		return ""
+	}
+	if isTerminalVideoError(err) {
+		return ErrorCategoryTerminalVideo
+	}
 	if errors.Is(err, ErrTimeout) {
-		return true
+		return ErrorCategoryNetworkTimeout
 	}
 
 	text := normalizeRetryableErrorText(err.Error())
-	return containsAny(text, botDetectionKeywords) || containsAny(text, proxyRetryableKeywords)
+	switch {
+	case containsAny(text, cookieInvalidKeywords):
+		return ErrorCategoryCookieInvalid
+	case containsAny(text, proxyAuthKeywords):
+		return ErrorCategoryProxyAuth
+	case containsAny(text, rateLimitKeywords):
+		return ErrorCategoryRateLimited
+	case containsAny(text, botDetectionKeywords):
+		return ErrorCategoryBotDetected
+	case containsAny(text, timeoutKeywords):
+		return ErrorCategoryNetworkTimeout
+	case containsAny(text, proxyRetryableKeywords):
+		return ErrorCategoryProxyUnreachable
+	default:
+		return ErrorCategoryUnknown
+	}
 }
 
 func isTerminalVideoError(err error) bool {
@@ -106,24 +143,51 @@ var botDetectionKeywords = []string{
 	"automated queries",
 	"challenge",
 	"cloudflare",
+}
+
+var rateLimitKeywords = []string{
 	"too many requests",
 	"http error 429",
+	"429 too many",
+	"rate limit",
+	"rate-limit",
+}
+
+var proxyAuthKeywords = []string{
+	"proxy authentication required",
+	"http error 407",
+	"407 proxy",
+	"proxy auth",
+}
+
+var timeoutKeywords = []string{
+	"timed out",
+	"timeout",
+	"deadline exceeded",
+	"context deadline exceeded",
+	"connection timed out",
+	"connect timeout",
+	"read timeout",
+	"timeout awaiting response headers",
+	"tls handshake timeout",
+}
+
+var cookieInvalidKeywords = []string{
+	"invalid cookie",
+	"cookies are no longer valid",
+	"cookie has expired",
+	"cookies have expired",
+	"login cookies",
 }
 
 var proxyRetryableKeywords = []string{
 	"proxy",
 	"connection refused",
 	"connection reset",
-	"connection timed out",
-	"connect timeout",
-	"read timeout",
-	"timeout awaiting response headers",
 	"tunnel",
-	"407",
 	"socks",
 	"eof",
 	"unexpected eof",
-	"tls handshake timeout",
 	"no route to host",
 	"network is unreachable",
 	"temporary failure in name resolution",

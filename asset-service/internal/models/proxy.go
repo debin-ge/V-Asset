@@ -22,26 +22,33 @@ const (
 
 // Proxy 代理数据模型
 type Proxy struct {
-	ID              int64         `db:"id"`
-	Host            *string       `db:"host"`
-	IP              string        `db:"ip"`
-	Port            int           `db:"port"`
-	Username        *string       `db:"username"` // 认证用户名（可选）
-	Password        *string       `db:"password"` // 认证密码（可选）
-	Protocol        ProxyProtocol `db:"protocol"` // 协议类型：http/https/socks5
-	Region          *string       `db:"region"`   // 地区标签
-	Priority        int           `db:"priority"`
-	PlatformTags    *string       `db:"platform_tags"`
-	Remark          *string       `db:"remark"`
-	Status          ProxyStatus   `db:"status"`            // 健康状态
-	LastCheckAt     *time.Time    `db:"last_check_at"`     // 上次健康检查时间
-	LastCheckResult *string       `db:"last_check_result"` // 上次检查结果
-	SuccessCount    int           `db:"success_count"`     // 成功使用次数
-	FailCount       int           `db:"fail_count"`        // 失败使用次数
-	LastUsedAt      *time.Time    `db:"last_used_at"`      // 上次使用时间
-	DeletedAt       *time.Time    `db:"deleted_at"`
-	CreatedAt       time.Time     `db:"created_at"`
-	UpdatedAt       time.Time     `db:"updated_at"`
+	ID                   int64         `db:"id"`
+	Host                 *string       `db:"host"`
+	IP                   string        `db:"ip"`
+	Port                 int           `db:"port"`
+	Username             *string       `db:"username"` // 认证用户名（可选）
+	Password             *string       `db:"password"` // 认证密码（可选）
+	Protocol             ProxyProtocol `db:"protocol"` // 协议类型：http/https/socks5
+	Region               *string       `db:"region"`   // 地区标签
+	Priority             int           `db:"priority"`
+	PlatformTags         *string       `db:"platform_tags"`
+	Remark               *string       `db:"remark"`
+	Status               ProxyStatus   `db:"status"`            // 健康状态
+	LastCheckAt          *time.Time    `db:"last_check_at"`     // 上次健康检查时间
+	LastCheckResult      *string       `db:"last_check_result"` // 上次检查结果
+	SuccessCount         int           `db:"success_count"`     // 成功使用次数
+	FailCount            int           `db:"fail_count"`        // 失败使用次数
+	LastUsedAt           *time.Time    `db:"last_used_at"`      // 上次使用时间
+	CooldownUntil        *time.Time    `db:"cooldown_until"`
+	ConsecutiveFailCount int           `db:"consecutive_fail_count"`
+	RiskScore            int           `db:"risk_score"`
+	LastErrorCategory    *string       `db:"last_error_category"`
+	LastFailAt           *time.Time    `db:"last_fail_at"`
+	MaxConcurrent        int           `db:"max_concurrent"`
+	ActiveTaskCount      int           `db:"active_task_count"`
+	DeletedAt            *time.Time    `db:"deleted_at"`
+	CreatedAt            time.Time     `db:"created_at"`
+	UpdatedAt            time.Time     `db:"updated_at"`
 }
 
 // GetURL 获取代理完整 URL

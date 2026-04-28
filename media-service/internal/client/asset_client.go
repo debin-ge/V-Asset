@@ -85,15 +85,18 @@ func (c *AssetClient) GetAvailableCookie(platform string) (string, int64, error)
 }
 
 // ReportCookieUsage 报告Cookie使用结果
-func (c *AssetClient) ReportCookieUsage(cookieID int64, success bool) error {
-	log.Printf("[AssetClient] Reporting cookie usage: ID=%d, success=%v", cookieID, success)
+func (c *AssetClient) ReportCookieUsage(cookieID int64, success bool, taskID, errorCategory, errorMessage string) error {
+	log.Printf("[AssetClient] Reporting cookie usage: ID=%d, task_id=%s, success=%v, category=%s", cookieID, taskID, success, errorCategory)
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
 	_, err := c.client.ReportCookieUsage(ctx, &pb.ReportCookieUsageRequest{
-		CookieId: cookieID,
-		Success:  success,
+		CookieId:      cookieID,
+		Success:       success,
+		ErrorCategory: errorCategory,
+		ErrorMessage:  errorMessage,
+		TaskId:        taskID,
 	})
 
 	if err != nil {
@@ -186,21 +189,23 @@ func (c *AssetClient) AcquireProxyForTask(ctx context.Context, taskID, platform 
 }
 
 // ReportProxyUsage 报告代理使用结果
-func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error {
+func (c *AssetClient) ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool, errorCategory, errorMessage string) error {
 	if taskID == "" && proxyLeaseID == "" {
 		return nil
 	}
 
-	log.Printf("[AssetClient] Reporting proxy usage: task_id=%s, lease_id=%s, stage=%s, success=%v", taskID, proxyLeaseID, stage, success)
+	log.Printf("[AssetClient] Reporting proxy usage: task_id=%s, lease_id=%s, stage=%s, success=%v, category=%s", taskID, proxyLeaseID, stage, success, errorCategory)
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
 	_, err := c.client.ReportProxyUsage(ctx, &pb.ReportProxyUsageRequest{
-		ProxyLeaseId: proxyLeaseID,
-		Success:      success,
-		TaskId:       taskID,
-		Stage:        stage,
+		ProxyLeaseId:  proxyLeaseID,
+		Success:       success,
+		TaskId:        taskID,
+		Stage:         stage,
+		ErrorCategory: errorCategory,
+		ErrorMessage:  errorMessage,
 	})
 
 	if err != nil {

@@ -54,7 +54,10 @@ const (
 	AssetService_ReconcileBillingShortfall_FullMethodName   = "/asset.AssetService/ReconcileBillingShortfall"
 	AssetService_AcquireProxyForTask_FullMethodName         = "/asset.AssetService/AcquireProxyForTask"
 	AssetService_GetAvailableProxy_FullMethodName           = "/asset.AssetService/GetAvailableProxy"
+	AssetService_CheckProxySourceStatus_FullMethodName      = "/asset.AssetService/CheckProxySourceStatus"
 	AssetService_ReportProxyUsage_FullMethodName            = "/asset.AssetService/ReportProxyUsage"
+	AssetService_ReleaseProxyForTask_FullMethodName         = "/asset.AssetService/ReleaseProxyForTask"
+	AssetService_ListProxyUsageEvents_FullMethodName        = "/asset.AssetService/ListProxyUsageEvents"
 	AssetService_GetProxySourcePolicy_FullMethodName        = "/asset.AssetService/GetProxySourcePolicy"
 	AssetService_UpdateProxySourcePolicy_FullMethodName     = "/asset.AssetService/UpdateProxySourcePolicy"
 	AssetService_ListProxies_FullMethodName                 = "/asset.AssetService/ListProxies"
@@ -145,8 +148,14 @@ type AssetServiceClient interface {
 	AcquireProxyForTask(ctx context.Context, in *AcquireProxyForTaskRequest, opts ...grpc.CallOption) (*AcquireProxyForTaskResponse, error)
 	// 获取可用代理（供其他服务调用）
 	GetAvailableProxy(ctx context.Context, in *GetAvailableProxyRequest, opts ...grpc.CallOption) (*GetAvailableProxyResponse, error)
+	// 只读检查代理来源状态（不消耗代理、不更新 last_used_at）
+	CheckProxySourceStatus(ctx context.Context, in *CheckProxySourceStatusRequest, opts ...grpc.CallOption) (*CheckProxySourceStatusResponse, error)
 	// 报告代理使用结果
 	ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error)
+	// 释放任务级代理绑定
+	ReleaseProxyForTask(ctx context.Context, in *ReleaseProxyForTaskRequest, opts ...grpc.CallOption) (*ReleaseProxyForTaskResponse, error)
+	// 查询代理使用事件
+	ListProxyUsageEvents(ctx context.Context, in *ListProxyUsageEventsRequest, opts ...grpc.CallOption) (*ListProxyUsageEventsResponse, error)
 	// 获取当前代理来源策略
 	GetProxySourcePolicy(ctx context.Context, in *GetProxySourcePolicyRequest, opts ...grpc.CallOption) (*GetProxySourcePolicyResponse, error)
 	// 更新当前代理来源策略
@@ -538,10 +547,40 @@ func (c *assetServiceClient) GetAvailableProxy(ctx context.Context, in *GetAvail
 	return out, nil
 }
 
+func (c *assetServiceClient) CheckProxySourceStatus(ctx context.Context, in *CheckProxySourceStatusRequest, opts ...grpc.CallOption) (*CheckProxySourceStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckProxySourceStatusResponse)
+	err := c.cc.Invoke(ctx, AssetService_CheckProxySourceStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *assetServiceClient) ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReportProxyUsageResponse)
 	err := c.cc.Invoke(ctx, AssetService_ReportProxyUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ReleaseProxyForTask(ctx context.Context, in *ReleaseProxyForTaskRequest, opts ...grpc.CallOption) (*ReleaseProxyForTaskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReleaseProxyForTaskResponse)
+	err := c.cc.Invoke(ctx, AssetService_ReleaseProxyForTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListProxyUsageEvents(ctx context.Context, in *ListProxyUsageEventsRequest, opts ...grpc.CallOption) (*ListProxyUsageEventsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProxyUsageEventsResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListProxyUsageEvents_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -771,8 +810,14 @@ type AssetServiceServer interface {
 	AcquireProxyForTask(context.Context, *AcquireProxyForTaskRequest) (*AcquireProxyForTaskResponse, error)
 	// 获取可用代理（供其他服务调用）
 	GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error)
+	// 只读检查代理来源状态（不消耗代理、不更新 last_used_at）
+	CheckProxySourceStatus(context.Context, *CheckProxySourceStatusRequest) (*CheckProxySourceStatusResponse, error)
 	// 报告代理使用结果
 	ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error)
+	// 释放任务级代理绑定
+	ReleaseProxyForTask(context.Context, *ReleaseProxyForTaskRequest) (*ReleaseProxyForTaskResponse, error)
+	// 查询代理使用事件
+	ListProxyUsageEvents(context.Context, *ListProxyUsageEventsRequest) (*ListProxyUsageEventsResponse, error)
 	// 获取当前代理来源策略
 	GetProxySourcePolicy(context.Context, *GetProxySourcePolicyRequest) (*GetProxySourcePolicyResponse, error)
 	// 更新当前代理来源策略
@@ -919,8 +964,17 @@ func (UnimplementedAssetServiceServer) AcquireProxyForTask(context.Context, *Acq
 func (UnimplementedAssetServiceServer) GetAvailableProxy(context.Context, *GetAvailableProxyRequest) (*GetAvailableProxyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAvailableProxy not implemented")
 }
+func (UnimplementedAssetServiceServer) CheckProxySourceStatus(context.Context, *CheckProxySourceStatusRequest) (*CheckProxySourceStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckProxySourceStatus not implemented")
+}
 func (UnimplementedAssetServiceServer) ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReportProxyUsage not implemented")
+}
+func (UnimplementedAssetServiceServer) ReleaseProxyForTask(context.Context, *ReleaseProxyForTaskRequest) (*ReleaseProxyForTaskResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReleaseProxyForTask not implemented")
+}
+func (UnimplementedAssetServiceServer) ListProxyUsageEvents(context.Context, *ListProxyUsageEventsRequest) (*ListProxyUsageEventsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListProxyUsageEvents not implemented")
 }
 func (UnimplementedAssetServiceServer) GetProxySourcePolicy(context.Context, *GetProxySourcePolicyRequest) (*GetProxySourcePolicyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProxySourcePolicy not implemented")
@@ -1618,6 +1672,24 @@ func _AssetService_GetAvailableProxy_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_CheckProxySourceStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckProxySourceStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).CheckProxySourceStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_CheckProxySourceStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).CheckProxySourceStatus(ctx, req.(*CheckProxySourceStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AssetService_ReportProxyUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReportProxyUsageRequest)
 	if err := dec(in); err != nil {
@@ -1632,6 +1704,42 @@ func _AssetService_ReportProxyUsage_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).ReportProxyUsage(ctx, req.(*ReportProxyUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ReleaseProxyForTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReleaseProxyForTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ReleaseProxyForTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ReleaseProxyForTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ReleaseProxyForTask(ctx, req.(*ReleaseProxyForTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListProxyUsageEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProxyUsageEventsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListProxyUsageEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListProxyUsageEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListProxyUsageEvents(ctx, req.(*ListProxyUsageEventsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2054,8 +2162,20 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AssetService_GetAvailableProxy_Handler,
 		},
 		{
+			MethodName: "CheckProxySourceStatus",
+			Handler:    _AssetService_CheckProxySourceStatus_Handler,
+		},
+		{
 			MethodName: "ReportProxyUsage",
 			Handler:    _AssetService_ReportProxyUsage_Handler,
+		},
+		{
+			MethodName: "ReleaseProxyForTask",
+			Handler:    _AssetService_ReleaseProxyForTask_Handler,
+		},
+		{
+			MethodName: "ListProxyUsageEvents",
+			Handler:    _AssetService_ListProxyUsageEvents_Handler,
 		},
 		{
 			MethodName: "GetProxySourcePolicy",

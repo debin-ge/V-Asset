@@ -100,18 +100,103 @@ func (h *ProxyHandler) GetAvailableProxy(ctx context.Context, req *pb.GetAvailab
 	}, nil
 }
 
+// CheckProxySourceStatus 只读检查代理来源状态。
+func (h *ProxyHandler) CheckProxySourceStatus(ctx context.Context, req *pb.CheckProxySourceStatusRequest) (*pb.CheckProxySourceStatusResponse, error) {
+	var protocol *models.ProxyProtocol
+	var region *string
+
+	if req.Protocol != "" {
+		p := models.ProxyProtocol(req.Protocol)
+		protocol = &p
+	}
+	if req.Region != "" {
+		region = &req.Region
+	}
+
+	sourceStatus, err := h.proxyService.CheckSourceStatus(ctx, protocol, region)
+	if err != nil {
+		log.Printf("CheckProxySourceStatus error: %v", err)
+		return nil, status.Error(codes.Internal, "检查代理来源失败")
+	}
+
+	return &pb.CheckProxySourceStatusResponse{
+		Healthy:                   sourceStatus.Healthy,
+		Mode:                      sourceStatus.Mode,
+		Message:                   sourceStatus.Message,
+		AvailableManualProxyCount: sourceStatus.AvailableManualProxyCount,
+		DynamicConfigured:         sourceStatus.DynamicConfigured,
+		CheckedAt:                 sourceStatus.CheckedAt.Format(time.RFC3339),
+	}, nil
+}
+
 // ReportProxyUsage 报告代理使用结果
 func (h *ProxyHandler) ReportProxyUsage(ctx context.Context, req *pb.ReportProxyUsageRequest) (*pb.ReportProxyUsageResponse, error) {
 	if req.TaskId == "" && req.ProxyLeaseId == "" {
 		return nil, status.Error(codes.InvalidArgument, "任务 ID 和代理租约 ID 不能同时为空")
 	}
 
-	if err := h.proxyService.ReportUsage(ctx, req.TaskId, req.ProxyLeaseId, req.Stage, req.Success); err != nil {
+	if err := h.proxyService.ReportUsage(ctx, req.TaskId, req.ProxyLeaseId, req.Stage, req.Success, req.ErrorCategory, req.ErrorMessage); err != nil {
 		log.Printf("ReportProxyUsage error: %v", err)
 		return nil, status.Error(codes.Internal, "报告使用结果失败")
 	}
 
 	return &pb.ReportProxyUsageResponse{Success: true}, nil
+}
+
+// ReleaseProxyForTask 释放任务代理绑定。
+func (h *ProxyHandler) ReleaseProxyForTask(ctx context.Context, req *pb.ReleaseProxyForTaskRequest) (*pb.ReleaseProxyForTaskResponse, error) {
+	if req.TaskId == "" {
+		return nil, status.Error(codes.InvalidArgument, "任务 ID 不能为空")
+	}
+
+	if err := h.proxyService.ReleaseProxyForTask(ctx, req.TaskId, req.Reason); err != nil {
+		log.Printf("ReleaseProxyForTask error: %v", err)
+		return nil, status.Error(codes.Internal, "释放代理绑定失败")
+	}
+
+	return &pb.ReleaseProxyForTaskResponse{Success: true}, nil
+}
+
+// ListProxyUsageEvents 查询代理使用事件。
+func (h *ProxyHandler) ListProxyUsageEvents(ctx context.Context, req *pb.ListProxyUsageEventsRequest) (*pb.ListProxyUsageEventsResponse, error) {
+	filter := models.ProxyUsageEventFilter{
+		TaskID:        req.TaskId,
+		ProxyID:       req.ProxyId,
+		ProxyLeaseID:  req.ProxyLeaseId,
+		SourceType:    req.SourceType,
+		Stage:         req.Stage,
+		Platform:      req.Platform,
+		Success:       req.Success,
+		ErrorCategory: req.ErrorCategory,
+		Page:          int(req.Page),
+		PageSize:      int(req.PageSize),
+		SortOrder:     req.SortOrder,
+	}
+	if req.StartTimeUnix > 0 {
+		filter.StartTime = time.Unix(req.StartTimeUnix, 0)
+	}
+	if req.EndTimeUnix > 0 {
+		filter.EndTime = time.Unix(req.EndTimeUnix, 0)
+	}
+
+	result, err := h.proxyService.ListUsageEvents(ctx, filter)
+	if err != nil {
+		log.Printf("ListProxyUsageEvents error: %v", err)
+		return nil, status.Error(codes.Internal, "查询代理使用事件失败")
+	}
+
+	events := make([]*pb.ProxyUsageEventItem, 0, len(result.Events))
+	for _, event := range result.Events {
+		events = append(events, proxyUsageEventToProto(event))
+	}
+
+	return &pb.ListProxyUsageEventsResponse{
+		Events:   events,
+		Total:    result.Total,
+		Page:     int32(result.Page),
+		PageSize: int32(result.PageSize),
+		Summary:  proxyUsageSummaryToProto(result.Summary),
+	}, nil
 }
 
 // GetProxySourcePolicy 获取当前生效策略
@@ -318,6 +403,55 @@ func (h *ProxyHandler) DeleteProxy(ctx context.Context, req *pb.DeleteProxyReque
 	return &pb.DeleteProxyResponse{Success: true}, nil
 }
 
+func proxyUsageEventToProto(event models.ProxyUsageEvent) *pb.ProxyUsageEventItem {
+	resp := &pb.ProxyUsageEventItem{
+		Id:                   event.ID,
+		TaskId:               event.TaskID,
+		ProxyId:              event.ProxyID,
+		ProxyLeaseId:         event.ProxyLeaseID,
+		SourceType:           event.SourceType,
+		Stage:                event.Stage,
+		Platform:             event.Platform,
+		Success:              event.Success,
+		ErrorCategory:        event.ErrorCategory,
+		ErrorMessage:         event.ErrorMessage,
+		CreatedAt:            event.CreatedAt.Format(time.RFC3339),
+		ProxyHost:            event.ProxyHost,
+		ProxyPort:            event.ProxyPort,
+		ProxyProtocol:        event.ProxyProtocol,
+		ProxyRegion:          event.ProxyRegion,
+		ProxyRiskScore:       event.ProxyRiskScore,
+		ProxyActiveTaskCount: event.ProxyActiveTaskCount,
+		ProxyMaxConcurrent:   event.ProxyMaxConcurrent,
+	}
+	if event.ProxyCooldownUntil != nil {
+		resp.ProxyCooldownUntil = event.ProxyCooldownUntil.Format(time.RFC3339)
+	}
+	return resp
+}
+
+func proxyUsageSummaryToProto(summary models.ProxyUsageEventSummary) *pb.ProxyUsageEventSummary {
+	return &pb.ProxyUsageEventSummary{
+		SuccessCount:   summary.SuccessCount,
+		FailureCount:   summary.FailureCount,
+		FailureRate:    summary.FailureRate,
+		CategoryCounts: proxyUsageCountsToProto(summary.CategoryCounts),
+		StageCounts:    proxyUsageCountsToProto(summary.StageCounts),
+		PlatformCounts: proxyUsageCountsToProto(summary.PlatformCounts),
+	}
+}
+
+func proxyUsageCountsToProto(items []models.ProxyUsageEventCount) []*pb.ProxyUsageEventCount {
+	result := make([]*pb.ProxyUsageEventCount, 0, len(items))
+	for _, item := range items {
+		result = append(result, &pb.ProxyUsageEventCount{
+			Key:   item.Key,
+			Count: item.Count,
+		})
+	}
+	return result
+}
+
 func toProxyInfo(item *models.Proxy) *pb.ProxyInfo {
 	resp := &pb.ProxyInfo{
 		Id:           item.ID,
@@ -349,5 +483,18 @@ func toProxyInfo(item *models.Proxy) *pb.ProxyInfo {
 	if item.LastUsedAt != nil {
 		resp.LastUsedAt = item.LastUsedAt.Format(time.RFC3339)
 	}
+	if item.CooldownUntil != nil {
+		resp.CooldownUntil = item.CooldownUntil.Format(time.RFC3339)
+	}
+	resp.ConsecutiveFailCount = int32(item.ConsecutiveFailCount)
+	resp.RiskScore = int32(item.RiskScore)
+	if item.LastErrorCategory != nil {
+		resp.LastErrorCategory = *item.LastErrorCategory
+	}
+	if item.LastFailAt != nil {
+		resp.LastFailAt = item.LastFailAt.Format(time.RFC3339)
+	}
+	resp.MaxConcurrent = int32(item.MaxConcurrent)
+	resp.ActiveTaskCount = int32(item.ActiveTaskCount)
 	return resp
 }

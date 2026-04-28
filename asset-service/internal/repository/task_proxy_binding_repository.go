@@ -29,7 +29,8 @@ func (r *TaskProxyBindingRepository) GetByTaskID(ctx context.Context, taskID str
 		SELECT id, task_id, source_type, source_policy_id, proxy_id, proxy_lease_id,
 		       proxy_url_snapshot, protocol, region, platform, expire_at, bind_status,
 		       is_degraded, degrade_reason, last_report_stage, last_report_success,
-		       last_report_at, created_at, updated_at
+		       last_report_at, last_error_category, failure_count, released_at,
+		       expired_reason, binding_generation, created_at, updated_at
 		FROM task_proxy_bindings
 		WHERE task_id = $1
 		LIMIT 1`
@@ -53,6 +54,11 @@ func (r *TaskProxyBindingRepository) GetByTaskID(ctx context.Context, taskID str
 		&binding.LastReportStage,
 		&binding.LastReportSuccess,
 		&binding.LastReportAt,
+		&binding.LastErrorCategory,
+		&binding.FailureCount,
+		&binding.ReleasedAt,
+		&binding.ExpiredReason,
+		&binding.BindingGeneration,
 		&binding.CreatedAt,
 		&binding.UpdatedAt,
 	)
@@ -72,12 +78,12 @@ func (r *TaskProxyBindingRepository) CreateIfAbsent(ctx context.Context, binding
 		INSERT INTO task_proxy_bindings (
 			task_id, source_type, source_policy_id, proxy_id, proxy_lease_id,
 			proxy_url_snapshot, protocol, region, platform, expire_at, bind_status,
-			is_degraded, degrade_reason, created_at, updated_at
+			is_degraded, degrade_reason, binding_generation, created_at, updated_at
 		)
 		VALUES (
 			$1, $2, $3, $4, $5,
 			$6, $7, $8, $9, $10, $11,
-			$12, $13, $14, $15
+			$12, $13, $14, $15, $16
 		)
 		ON CONFLICT (task_id) DO NOTHING`
 
@@ -98,6 +104,7 @@ func (r *TaskProxyBindingRepository) CreateIfAbsent(ctx context.Context, binding
 		binding.BindStatus,
 		binding.IsDegraded,
 		binding.DegradeReason,
+		1,
 		now,
 		now,
 	)
@@ -134,6 +141,11 @@ func (r *TaskProxyBindingRepository) UpdateBinding(ctx context.Context, binding 
 		    last_report_stage = NULL,
 		    last_report_success = NULL,
 		    last_report_at = NULL,
+		    last_error_category = NULL,
+		    failure_count = 0,
+		    released_at = NULL,
+		    expired_reason = NULL,
+		    binding_generation = binding_generation + 1,
 		    updated_at = $14
 		WHERE task_id = $1`
 
@@ -171,33 +183,89 @@ func (r *TaskProxyBindingRepository) UpdateBinding(ctx context.Context, binding 
 }
 
 // MarkFailed 将任务绑定标记为失败，允许后续重新绑定。
-func (r *TaskProxyBindingRepository) MarkFailed(ctx context.Context, taskID string) error {
+func (r *TaskProxyBindingRepository) MarkFailed(ctx context.Context, taskID, errorCategory string) error {
 	query := `
 		UPDATE task_proxy_bindings
 		SET bind_status = $2,
-		    updated_at = $3
+		    last_error_category = $3,
+		    failure_count = failure_count + 1,
+		    updated_at = $4
 		WHERE task_id = $1`
 
 	now := time.Now()
-	if _, err := r.db.ExecContext(ctx, query, taskID, models.TaskProxyBindStatusFailed, now); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, taskID, models.TaskProxyBindStatusFailed, nullableString(errorCategory), now); err != nil {
 		return fmt.Errorf("mark task proxy binding failed: %w", err)
 	}
 	return nil
 }
 
 // UpdateReport 更新任务绑定的最近上报信息
-func (r *TaskProxyBindingRepository) UpdateReport(ctx context.Context, taskID, stage string, success bool) error {
+func (r *TaskProxyBindingRepository) UpdateReport(ctx context.Context, taskID, stage string, success bool, errorCategory string) error {
 	query := `
 		UPDATE task_proxy_bindings
 		SET last_report_stage = $2,
 		    last_report_success = $3,
 		    last_report_at = $4,
+		    last_error_category = $5,
 		    updated_at = $4
 		WHERE task_id = $1`
 
 	now := time.Now()
-	if _, err := r.db.ExecContext(ctx, query, taskID, stage, success, now); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, taskID, stage, success, now, nullableString(errorCategory)); err != nil {
 		return fmt.Errorf("update task proxy binding report failed: %w", err)
 	}
 	return nil
+}
+
+// ReleaseBound 将 bound 状态绑定幂等迁移为指定终态，并返回被释放的绑定。
+func (r *TaskProxyBindingRepository) ReleaseBound(ctx context.Context, taskID string, status models.TaskProxyBindStatus, reason string) (*models.TaskProxyBinding, bool, error) {
+	query := `
+		UPDATE task_proxy_bindings
+		SET bind_status = $2,
+		    released_at = $3,
+		    expired_reason = $4,
+		    updated_at = $3
+		WHERE task_id = $1
+		  AND bind_status = $5
+		RETURNING id, task_id, source_type, source_policy_id, proxy_id, proxy_lease_id,
+		          proxy_url_snapshot, protocol, region, platform, expire_at, bind_status,
+		          is_degraded, degrade_reason, last_report_stage, last_report_success,
+		          last_report_at, last_error_category, failure_count, released_at,
+		          expired_reason, binding_generation, created_at, updated_at`
+
+	binding := &models.TaskProxyBinding{}
+	now := time.Now()
+	err := r.db.QueryRowContext(ctx, query, taskID, status, now, nullableString(reason), models.TaskProxyBindStatusBound).Scan(
+		&binding.ID,
+		&binding.TaskID,
+		&binding.SourceType,
+		&binding.SourcePolicyID,
+		&binding.ProxyID,
+		&binding.ProxyLeaseID,
+		&binding.ProxyURLSnapshot,
+		&binding.Protocol,
+		&binding.Region,
+		&binding.Platform,
+		&binding.ExpireAt,
+		&binding.BindStatus,
+		&binding.IsDegraded,
+		&binding.DegradeReason,
+		&binding.LastReportStage,
+		&binding.LastReportSuccess,
+		&binding.LastReportAt,
+		&binding.LastErrorCategory,
+		&binding.FailureCount,
+		&binding.ReleasedAt,
+		&binding.ExpiredReason,
+		&binding.BindingGeneration,
+		&binding.CreatedAt,
+		&binding.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, fmt.Errorf("release task proxy binding failed: %w", err)
+	}
+	return binding, true, nil
 }

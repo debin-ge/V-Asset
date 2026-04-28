@@ -82,8 +82,8 @@ func (s *CookieService) GetAvailableCookie(ctx context.Context, platform string)
 	return cookie.ID, cookie.Content, nil
 }
 
-// ReportUsage 报告 Cookie 使用结果（更新统计但不冷冻）
-func (s *CookieService) ReportUsage(ctx context.Context, id int64, success bool) error {
+// ReportUsage 报告 Cookie 使用结果，并按错误分类进行自动冷冻。
+func (s *CookieService) ReportUsage(ctx context.Context, id int64, success bool, errorCategory, taskID string) error {
 	cookie, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -92,8 +92,14 @@ func (s *CookieService) ReportUsage(ctx context.Context, id int64, success bool)
 		return errors.New("cookie not found")
 	}
 
-	// 传入 freezeSeconds = 0，不设置冷冻时间
-	return s.repo.UpdateUsage(ctx, id, success, 0)
+	freezeSeconds := 0
+	if !success {
+		freezeSeconds = cookieFreezeSeconds(errorCategory)
+	}
+	if err := s.repo.UpdateUsage(ctx, id, success, freezeSeconds); err != nil {
+		return err
+	}
+	return s.repo.UpsertProxyAffinity(ctx, id, taskID, success)
 }
 
 // Freeze 手动冷冻 Cookie
@@ -103,4 +109,17 @@ func (s *CookieService) Freeze(ctx context.Context, id int64, freezeSeconds int)
 	}
 
 	return s.repo.Freeze(ctx, id, freezeSeconds)
+}
+
+func cookieFreezeSeconds(errorCategory string) int {
+	switch errorCategory {
+	case models.ErrorCategoryCookieInvalid:
+		return 24 * 60 * 60
+	case models.ErrorCategoryBotDetected:
+		return 2 * 60 * 60
+	case models.ErrorCategoryRateLimited:
+		return 60 * 60
+	default:
+		return 0
+	}
 }

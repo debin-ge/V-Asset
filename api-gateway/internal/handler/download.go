@@ -37,6 +37,7 @@ type assetDownloadClient interface {
 	EstimateDownloadBilling(ctx context.Context, in *pb.EstimateDownloadBillingRequest, opts ...grpc.CallOption) (*pb.EstimateDownloadBillingResponse, error)
 	HoldInitialDownload(ctx context.Context, in *pb.HoldInitialDownloadRequest, opts ...grpc.CallOption) (*pb.HoldInitialDownloadResponse, error)
 	ReleaseInitialDownload(ctx context.Context, in *pb.ReleaseInitialDownloadRequest, opts ...grpc.CallOption) (*pb.ReleaseInitialDownloadResponse, error)
+	ReleaseProxyForTask(ctx context.Context, in *pb.ReleaseProxyForTaskRequest, opts ...grpc.CallOption) (*pb.ReleaseProxyForTaskResponse, error)
 }
 
 type mediaDownloadClient interface {
@@ -166,6 +167,7 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("[Download] ❌ Failed to create history: %v", err)
+		h.releaseProxyBinding(ctx, taskID, "create history failed")
 		writeGRPCError(c, err)
 		return
 	}
@@ -331,6 +333,8 @@ func (h *DownloadHandler) cleanupFailedSubmission(parentCtx context.Context, use
 	compensateCtx, cancel := context.WithTimeout(parentCtx, h.timeout)
 	defer cancel()
 
+	h.releaseProxyBinding(compensateCtx, taskID, "submit compensation")
+
 	if refundQuota {
 		if _, err := h.assetClient.RefundQuota(compensateCtx, &pb.RefundQuotaRequest{
 			UserId: userID,
@@ -363,6 +367,20 @@ func (h *DownloadHandler) cleanupFailedSubmission(parentCtx context.Context, use
 		log.Printf("[Download] ⚠ Failed to delete history %d during compensation: %v", historyID, err)
 	} else {
 		log.Printf("[Download] ✓ Deleted history %d during compensation", historyID)
+	}
+}
+
+func (h *DownloadHandler) releaseProxyBinding(ctx context.Context, taskID, reason string) {
+	if taskID == "" {
+		return
+	}
+	if _, err := h.assetClient.ReleaseProxyForTask(ctx, &pb.ReleaseProxyForTaskRequest{
+		TaskId: taskID,
+		Reason: reason,
+	}); err != nil && status.Code(err) != codes.NotFound && status.Code(err) != codes.Unimplemented {
+		log.Printf("[Download] ⚠ Failed to release proxy binding for task %s: %v", taskID, err)
+	} else {
+		log.Printf("[Download] ✓ Released proxy binding for task %s during compensation", taskID)
 	}
 }
 

@@ -164,6 +164,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 		adminV1.GET("/proxies/source/status", adminProxyHandler.GetSourceStatus)
 		adminV1.GET("/proxy-policies/current", adminProxyHandler.GetSourcePolicy)
 		adminV1.PUT("/proxy-policies/:id", adminProxyHandler.UpdateSourcePolicy)
+		adminV1.GET("/proxy-usage-events", adminProxyHandler.ListUsageEvents)
 		adminV1.GET("/proxies", adminProxyHandler.List)
 		adminV1.POST("/proxies", adminProxyHandler.Create)
 		adminV1.PUT("/proxies/:id", adminProxyHandler.Update)

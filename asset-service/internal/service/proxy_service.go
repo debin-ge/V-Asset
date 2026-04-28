@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"youdlp/asset-service/internal/config"
@@ -21,7 +23,30 @@ type ProxyService struct {
 	provider    *dynamicproxy.Provider
 }
 
-const proxyUsageStageParse = "parse"
+const (
+	proxyUsageStageParse    = "parse"
+	proxyUsageStageDownload = "download"
+	proxyUsageMaxRange      = 31 * 24 * time.Hour
+)
+
+var proxyUsageMessageRedactors = []struct {
+	pattern     *regexp.Regexp
+	replacement string
+}{
+	{regexp.MustCompile(`(?i)([a-z][a-z0-9+.-]*://)([^/\s:@]+):([^/\s@]+)@`), `${1}${2}:***@`},
+	{regexp.MustCompile(`(?i)((?:proxy-authorization|authorization|cookie|x-api-key|api-key):\s*)[^\r\n]+`), `${1}***`},
+	{regexp.MustCompile(`(?i)((?:cookie|token|api[_-]?key|password)=)[^&\s]+`), `${1}***`},
+	{regexp.MustCompile(`(?i)("(?:cookie|token|api[_-]?key|password)"\s*:\s*")[^"]*(")`), `${1}***${2}`},
+}
+
+type ProxySourceStatus struct {
+	Healthy                   bool
+	Mode                      string
+	Message                   string
+	AvailableManualProxyCount int64
+	DynamicConfigured         bool
+	CheckedAt                 time.Time
+}
 
 // NewProxyService 创建代理服务
 func NewProxyService(
@@ -77,7 +102,16 @@ func (s *ProxyService) AcquireProxyForTask(
 		return nil, err
 	}
 	if existing != nil && existing.BindStatus == models.TaskProxyBindStatusBound {
-		return existing, nil
+		valid, reason, err := s.isBindingReusable(ctx, existing)
+		if err != nil {
+			return nil, err
+		}
+		if valid {
+			return existing, nil
+		}
+		if err := s.releaseBinding(ctx, taskID, models.TaskProxyBindStatusExpired, reason); err != nil {
+			return nil, err
+		}
 	}
 
 	policy, err := s.policyRepo.GetEffectivePolicy(ctx, platform)
@@ -117,23 +151,45 @@ func (s *ProxyService) AcquireProxyForTask(
 }
 
 // ReportUsage 报告代理使用结果
-func (s *ProxyService) ReportUsage(ctx context.Context, taskID, leaseID, stage string, success bool) error {
+func (s *ProxyService) ReportUsage(ctx context.Context, taskID, leaseID, stage string, success bool, errorCategory, errorMessage string) error {
+	if errorCategory == "" && !success {
+		errorCategory = models.ErrorCategoryUnknown
+	}
+	errorMessage = sanitizeProxyUsageErrorMessage(errorMessage)
+
 	if taskID != "" {
 		binding, err := s.bindingRepo.GetByTaskID(ctx, taskID)
 		if err != nil {
 			return err
 		}
 		if binding != nil {
-			if err := s.bindingRepo.UpdateReport(ctx, taskID, stage, success); err != nil {
+			platform := ""
+			if binding.Platform != nil {
+				platform = *binding.Platform
+			}
+			sourceType := string(binding.SourceType)
+			if err := s.repo.RecordUsageEvent(ctx, taskID, binding.ProxyID, leaseID, sourceType, stage, platform, success, errorCategory, errorMessage); err != nil {
 				return err
 			}
-			if stage == proxyUsageStageParse && !success {
-				if err := s.bindingRepo.MarkFailed(ctx, taskID); err != nil {
+			if err := s.bindingRepo.UpdateReport(ctx, taskID, stage, success, errorCategory); err != nil {
+				return err
+			}
+			if binding.SourceType == models.ProxySourceTypeManualPool && binding.ProxyID != nil {
+				if err := s.repo.UpdateUsage(ctx, *binding.ProxyID, success, errorCategory, riskDelta(errorCategory), cooldownUntil(errorCategory)); err != nil {
 					return err
 				}
 			}
-			if binding.SourceType == models.ProxySourceTypeManualPool && binding.ProxyID != nil {
-				return s.repo.UpdateUsage(ctx, *binding.ProxyID, success)
+			if err := s.repo.UpdatePlatformRisk(ctx, platform, errorCategory, timePtr(time.Now().Add(5*time.Minute))); err != nil {
+				return err
+			}
+			if !success && stage == proxyUsageStageParse {
+				if err := s.releaseBinding(ctx, taskID, models.TaskProxyBindStatusFailed, errorCategory); err != nil {
+					return err
+				}
+				return s.bindingRepo.MarkFailed(ctx, taskID, errorCategory)
+			}
+			if stage == proxyUsageStageDownload {
+				return s.releaseBinding(ctx, taskID, models.TaskProxyBindStatusReleased, "download reported")
 			}
 			return nil
 		}
@@ -150,7 +206,58 @@ func (s *ProxyService) ReportUsage(ctx context.Context, taskID, leaseID, stage s
 	if _, err := fmt.Sscanf(leaseID, "static-%d", &proxyID); err != nil {
 		return nil
 	}
-	return s.repo.UpdateUsage(ctx, proxyID, success)
+	return s.repo.UpdateUsage(ctx, proxyID, success, errorCategory, riskDelta(errorCategory), cooldownUntil(errorCategory))
+}
+
+func (s *ProxyService) ReleaseProxyForTask(ctx context.Context, taskID, reason string) error {
+	if taskID == "" {
+		return errors.New("task id is required")
+	}
+	if reason == "" {
+		reason = "released"
+	}
+	return s.releaseBinding(ctx, taskID, models.TaskProxyBindStatusReleased, reason)
+}
+
+func (s *ProxyService) ListUsageEvents(ctx context.Context, filter models.ProxyUsageEventFilter) (*models.ProxyUsageEventResult, error) {
+	filter = normalizeProxyUsageEventFilter(filter)
+
+	result, err := s.repo.ListUsageEvents(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range result.Events {
+		result.Events[i].ErrorMessage = sanitizeProxyUsageErrorMessage(result.Events[i].ErrorMessage)
+	}
+	return result, nil
+}
+
+func (s *ProxyService) CheckSourceStatus(ctx context.Context, protocol *models.ProxyProtocol, region *string) (*ProxySourceStatus, error) {
+	count, err := s.repo.CountSelectableProxies(ctx, protocol, region)
+	if err != nil {
+		return nil, err
+	}
+
+	dynamicConfigured := s.provider != nil && s.provider.Enabled()
+	healthy := dynamicConfigured || count > 0
+	message := "manual proxy pool has available capacity"
+	mode := string(models.ProxySourceTypeManualPool)
+	if dynamicConfigured {
+		mode = string(models.ProxySourceTypeDynamicAPI)
+		message = "dynamic proxy source configured"
+	} else if count == 0 {
+		message = "no selectable proxy source"
+	}
+
+	return &ProxySourceStatus{
+		Healthy:                   healthy,
+		Mode:                      mode,
+		Message:                   message,
+		AvailableManualProxyCount: count,
+		DynamicConfigured:         dynamicConfigured,
+		CheckedAt:                 time.Now(),
+	}, nil
 }
 
 func (s *ProxyService) acquireWithPolicy(
@@ -202,7 +309,7 @@ func (s *ProxyService) tryDynamicSource(ctx context.Context, policy *models.Prox
 		return nil, errors.New("dynamic proxy API is not configured")
 	}
 
-	lease, err := s.provider.GetLeaseWithRetry(ctx)
+	lease, err := s.provider.GetLeaseWithPolicy(ctx, policy.DynamicTimeoutMS, policy.DynamicRetryCount, policy.DynamicCircuitBreakerSec)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +341,7 @@ func (s *ProxyService) tryManualSource(
 	region *string,
 	excludedProxyID *int64,
 ) (*models.ProxyAcquireResult, error) {
-	proxy, err := s.repo.AcquireAvailableProxyExcluding(ctx, protocol, region, excludedProxyID)
+	proxy, err := s.repo.AcquireTaskProxyExcluding(ctx, protocol, region, excludedProxyID)
 	if err != nil {
 		return nil, err
 	}
@@ -283,6 +390,130 @@ func (s *ProxyService) buildBinding(
 		IsDegraded:       degraded,
 		DegradeReason:    degradeReason,
 	}
+}
+
+func (s *ProxyService) isBindingReusable(ctx context.Context, binding *models.TaskProxyBinding) (bool, string, error) {
+	if binding == nil {
+		return false, "missing binding", nil
+	}
+	now := time.Now()
+	if binding.ReleasedAt != nil {
+		return false, "binding released", nil
+	}
+	if binding.ExpireAt != nil && !binding.ExpireAt.After(now) {
+		return false, "binding expired", nil
+	}
+	if binding.SourceType == models.ProxySourceTypeManualPool && binding.ProxyID != nil {
+		usable, err := s.repo.IsUsableForBoundTask(ctx, *binding.ProxyID)
+		if err != nil {
+			return false, "", err
+		}
+		if !usable {
+			return false, "manual proxy no longer selectable", nil
+		}
+	}
+	return true, "", nil
+}
+
+func (s *ProxyService) releaseBinding(ctx context.Context, taskID string, status models.TaskProxyBindStatus, reason string) error {
+	released, changed, err := s.bindingRepo.ReleaseBound(ctx, taskID, status, reason)
+	if err != nil {
+		return err
+	}
+	if !changed || released == nil {
+		return nil
+	}
+	if released.SourceType == models.ProxySourceTypeManualPool && released.ProxyID != nil {
+		return s.repo.ReleaseActiveTask(ctx, *released.ProxyID)
+	}
+	return nil
+}
+
+func riskDelta(errorCategory string) int {
+	switch errorCategory {
+	case models.ErrorCategoryNetworkTimeout, models.ErrorCategoryProxyUnreachable:
+		return 10
+	case models.ErrorCategoryRateLimited:
+		return 30
+	case models.ErrorCategoryProxyAuth:
+		return 40
+	case models.ErrorCategoryBotDetected:
+		return 50
+	default:
+		return 5
+	}
+}
+
+func cooldownUntil(errorCategory string) *time.Time {
+	var duration time.Duration
+	switch errorCategory {
+	case models.ErrorCategoryNetworkTimeout, models.ErrorCategoryProxyUnreachable:
+		duration = 10 * time.Minute
+	case models.ErrorCategoryProxyAuth:
+		duration = 60 * time.Minute
+	case models.ErrorCategoryRateLimited:
+		duration = 30 * time.Minute
+	case models.ErrorCategoryBotDetected:
+		duration = 60 * time.Minute
+	default:
+		duration = 5 * time.Minute
+	}
+	return timePtr(time.Now().Add(duration))
+}
+
+func timePtr(t time.Time) *time.Time {
+	return &t
+}
+
+func normalizeProxyUsageEventFilter(filter models.ProxyUsageEventFilter) models.ProxyUsageEventFilter {
+	now := time.Now()
+	if filter.EndTime.IsZero() {
+		filter.EndTime = now
+	}
+	if filter.StartTime.IsZero() {
+		filter.StartTime = filter.EndTime.Add(-24 * time.Hour)
+	}
+	if filter.StartTime.After(filter.EndTime) {
+		filter.StartTime = filter.EndTime.Add(-24 * time.Hour)
+	}
+	if filter.EndTime.Sub(filter.StartTime) > proxyUsageMaxRange {
+		filter.StartTime = filter.EndTime.Add(-proxyUsageMaxRange)
+	}
+	if filter.Page <= 0 {
+		filter.Page = models.ProxyUsageDefaultPage
+	}
+	if filter.PageSize <= 0 {
+		filter.PageSize = models.ProxyUsageDefaultPerPage
+	}
+	if filter.PageSize > models.ProxyUsageMaxPerPage {
+		filter.PageSize = models.ProxyUsageMaxPerPage
+	}
+	filter.SortOrder = strings.ToLower(filter.SortOrder)
+	if filter.SortOrder != models.ProxyUsageSortOrderAsc {
+		filter.SortOrder = models.ProxyUsageSortOrderDesc
+	}
+	filter.Success = strings.ToLower(filter.Success)
+	if filter.Success != models.ProxyUsageSuccessOnly && filter.Success != models.ProxyUsageSuccessFailed {
+		filter.Success = models.ProxyUsageSuccessAll
+	}
+	switch strings.ToLower(filter.SourceType) {
+	case "manual":
+		filter.SourceType = string(models.ProxySourceTypeManualPool)
+	case "dynamic":
+		filter.SourceType = string(models.ProxySourceTypeDynamicAPI)
+	}
+	return filter
+}
+
+func sanitizeProxyUsageErrorMessage(message string) string {
+	if message == "" {
+		return ""
+	}
+	sanitized := message
+	for _, redactor := range proxyUsageMessageRedactors {
+		sanitized = redactor.pattern.ReplaceAllString(sanitized, redactor.replacement)
+	}
+	return sanitized
 }
 
 // GetSourcePolicy 获取当前生效的全局策略

@@ -29,6 +29,7 @@ const (
 	AdminService_GetProxySourcePolicy_FullMethodName        = "/admin.AdminService/GetProxySourcePolicy"
 	AdminService_UpdateProxySourcePolicy_FullMethodName     = "/admin.AdminService/UpdateProxySourcePolicy"
 	AdminService_ListProxies_FullMethodName                 = "/admin.AdminService/ListProxies"
+	AdminService_ListProxyUsageEvents_FullMethodName        = "/admin.AdminService/ListProxyUsageEvents"
 	AdminService_CreateProxy_FullMethodName                 = "/admin.AdminService/CreateProxy"
 	AdminService_UpdateProxy_FullMethodName                 = "/admin.AdminService/UpdateProxy"
 	AdminService_UpdateProxyStatus_FullMethodName           = "/admin.AdminService/UpdateProxyStatus"
@@ -66,6 +67,7 @@ type AdminServiceClient interface {
 	GetProxySourcePolicy(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminProxySourcePolicyResponse, error)
 	UpdateProxySourcePolicy(ctx context.Context, in *AdminUpdateProxySourcePolicyRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	ListProxies(ctx context.Context, in *AdminListProxiesRequest, opts ...grpc.CallOption) (*AdminListProxiesResponse, error)
+	ListProxyUsageEvents(ctx context.Context, in *AdminListProxyUsageEventsRequest, opts ...grpc.CallOption) (*AdminListProxyUsageEventsResponse, error)
 	CreateProxy(ctx context.Context, in *AdminCreateProxyRequest, opts ...grpc.CallOption) (*AdminCreateResourceResponse, error)
 	UpdateProxy(ctx context.Context, in *AdminUpdateProxyRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
 	UpdateProxyStatus(ctx context.Context, in *AdminUpdateProxyStatusRequest, opts ...grpc.CallOption) (*AdminOperationResponse, error)
@@ -191,6 +193,16 @@ func (c *adminServiceClient) ListProxies(ctx context.Context, in *AdminListProxi
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AdminListProxiesResponse)
 	err := c.cc.Invoke(ctx, AdminService_ListProxies_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ListProxyUsageEvents(ctx context.Context, in *AdminListProxyUsageEventsRequest, opts ...grpc.CallOption) (*AdminListProxyUsageEventsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListProxyUsageEventsResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListProxyUsageEvents_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -421,6 +433,7 @@ type AdminServiceServer interface {
 	GetProxySourcePolicy(context.Context, *AdminEmpty) (*AdminProxySourcePolicyResponse, error)
 	UpdateProxySourcePolicy(context.Context, *AdminUpdateProxySourcePolicyRequest) (*AdminOperationResponse, error)
 	ListProxies(context.Context, *AdminListProxiesRequest) (*AdminListProxiesResponse, error)
+	ListProxyUsageEvents(context.Context, *AdminListProxyUsageEventsRequest) (*AdminListProxyUsageEventsResponse, error)
 	CreateProxy(context.Context, *AdminCreateProxyRequest) (*AdminCreateResourceResponse, error)
 	UpdateProxy(context.Context, *AdminUpdateProxyRequest) (*AdminOperationResponse, error)
 	UpdateProxyStatus(context.Context, *AdminUpdateProxyStatusRequest) (*AdminOperationResponse, error)
@@ -481,6 +494,9 @@ func (UnimplementedAdminServiceServer) UpdateProxySourcePolicy(context.Context, 
 }
 func (UnimplementedAdminServiceServer) ListProxies(context.Context, *AdminListProxiesRequest) (*AdminListProxiesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListProxies not implemented")
+}
+func (UnimplementedAdminServiceServer) ListProxyUsageEvents(context.Context, *AdminListProxyUsageEventsRequest) (*AdminListProxyUsageEventsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListProxyUsageEvents not implemented")
 }
 func (UnimplementedAdminServiceServer) CreateProxy(context.Context, *AdminCreateProxyRequest) (*AdminCreateResourceResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateProxy not implemented")
@@ -742,6 +758,24 @@ func _AdminService_ListProxies_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).ListProxies(ctx, req.(*AdminListProxiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ListProxyUsageEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListProxyUsageEventsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListProxyUsageEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListProxyUsageEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListProxyUsageEvents(ctx, req.(*AdminListProxyUsageEventsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1170,6 +1204,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListProxies",
 			Handler:    _AdminService_ListProxies_Handler,
+		},
+		{
+			MethodName: "ListProxyUsageEvents",
+			Handler:    _AdminService_ListProxyUsageEvents_Handler,
 		},
 		{
 			MethodName: "CreateProxy",

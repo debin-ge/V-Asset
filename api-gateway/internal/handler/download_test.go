@@ -35,10 +35,13 @@ type fakeAssetDownloadClient struct {
 	holdErr           error
 	releaseResp       *pb.ReleaseInitialDownloadResponse
 	releaseErr        error
+	releaseProxyResp  *pb.ReleaseProxyForTaskResponse
+	releaseProxyErr   error
 
-	refundCalls  []string
-	deleteCalls  []int64
-	releaseCalls []string
+	refundCalls       []string
+	deleteCalls       []int64
+	releaseCalls      []string
+	releaseProxyCalls []string
 }
 
 func (f *fakeAssetDownloadClient) CheckQuota(context.Context, *pb.CheckQuotaRequest, ...grpc.CallOption) (*pb.CheckQuotaResponse, error) {
@@ -74,6 +77,11 @@ func (f *fakeAssetDownloadClient) HoldInitialDownload(context.Context, *pb.HoldI
 func (f *fakeAssetDownloadClient) ReleaseInitialDownload(_ context.Context, req *pb.ReleaseInitialDownloadRequest, _ ...grpc.CallOption) (*pb.ReleaseInitialDownloadResponse, error) {
 	f.releaseCalls = append(f.releaseCalls, req.TaskId)
 	return f.releaseResp, f.releaseErr
+}
+
+func (f *fakeAssetDownloadClient) ReleaseProxyForTask(_ context.Context, req *pb.ReleaseProxyForTaskRequest, _ ...grpc.CallOption) (*pb.ReleaseProxyForTaskResponse, error) {
+	f.releaseProxyCalls = append(f.releaseProxyCalls, req.TaskId)
+	return f.releaseProxyResp, f.releaseProxyErr
 }
 
 type fakeMediaDownloadClient struct {
@@ -255,6 +263,7 @@ func newTestDownloadHandler() (*DownloadHandler, *fakeAssetDownloadClient, *fake
 			OrderNo:            "ord-1",
 			ReleasedAmountYuan: "10",
 		},
+		releaseProxyResp: &pb.ReleaseProxyForTaskResponse{Success: true},
 	}
 	mediaClient := &fakeMediaDownloadClient{
 		validateResp: &pb.ValidateURLResponse{Valid: true, Platform: "youtube"},

@@ -57,6 +57,11 @@ type TaskProxyBinding struct {
 	LastReportStage   *string             `db:"last_report_stage"`
 	LastReportSuccess *bool               `db:"last_report_success"`
 	LastReportAt      *time.Time          `db:"last_report_at"`
+	LastErrorCategory *string             `db:"last_error_category"`
+	FailureCount      int                 `db:"failure_count"`
+	ReleasedAt        *time.Time          `db:"released_at"`
+	ExpiredReason     *string             `db:"expired_reason"`
+	BindingGeneration int                 `db:"binding_generation"`
 	CreatedAt         time.Time           `db:"created_at"`
 	UpdatedAt         time.Time           `db:"updated_at"`
 }

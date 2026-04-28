@@ -29,6 +29,7 @@ import (
 	dlytdlp "youdlp/media-service/internal/download/ytdlp"
 	"youdlp/media-service/internal/handler"
 	"youdlp/media-service/internal/observability"
+	"youdlp/media-service/internal/ratelimit"
 	"youdlp/media-service/internal/service"
 	pb "youdlp/media-service/proto"
 )
@@ -82,6 +83,7 @@ func main() {
 		logger.Fatal("Failed to create storage directory", zap.Error(err))
 	}
 	progressPublisher := dlworker.NewProgressPublisher(redisClient)
+	platformLimiter := ratelimit.NewPlatformLimiter(redisClient)
 
 	var assetClient *dlclient.AssetClient
 	if downloadCfg.AssetService.Addr != "" {
@@ -109,6 +111,7 @@ func main() {
 		progressPublisher,
 		assetClient,
 		downloadCfg.YtDLP.YouTube,
+		platformLimiter,
 	)
 	workerPool.Start()
 
@@ -132,7 +135,7 @@ func main() {
 
 	// 5. 初始化解析服务
 	cacheService := cache.NewService(redisClient, parseCfg.Cache.GetCacheTTL())
-	parserService := service.NewParserService(parseCfg, cacheService, logger)
+	parserService := service.NewParserService(parseCfg, cacheService, redisClient, logger)
 	grpcHandler := handler.NewGRPCServer(parserService, logger)
 
 	// 6. 启动 gRPC 服务

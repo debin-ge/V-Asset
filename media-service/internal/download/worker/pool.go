@@ -2,31 +2,39 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"log"
 	"path/filepath"
 	"sync"
 	"time"
 
+	dlclient "youdlp/media-service/internal/download/client"
 	"youdlp/media-service/internal/download/config"
 	"youdlp/media-service/internal/download/models"
 	"youdlp/media-service/internal/download/repository"
 	"youdlp/media-service/internal/download/storage"
 	"youdlp/media-service/internal/download/ytdlp"
 	"youdlp/media-service/internal/platformpolicy"
+	"youdlp/media-service/internal/ratelimit"
 	"youdlp/media-service/internal/redact"
+	"youdlp/media-service/internal/utils"
 )
 
 // AssetClientInterface Asset 服务客户端接口
 type AssetClientInterface interface {
 	GetCookieContent(cookieID int64, platform, taskID string) (string, error)
-	ReportCookieUsage(cookieID int64, success bool, taskID string) error
-	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error
+	AcquireProxyForTask(ctx context.Context, taskID, platform string) (*ProxyLease, error)
+	ReportCookieUsage(cookieID int64, success bool, taskID, errorCategory, errorMessage string) error
+	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool, errorCategory, errorMessage string) error
+	ReleaseProxyForTask(taskID, reason string) error
 	CleanupCookieFile(cookieFile string) error
 	UpdateHistoryCompleted(taskID, filePath, fileName, fileHash string, fileSize int64, pendingCleanup bool) error
 	UpdateHistoryFailed(taskID, errorMessage string) error
 	CaptureIngressUsage(taskID string, actualIngressBytes int64) error
 	ReleaseInitialDownload(taskID, reason string) error
 }
+
+type ProxyLease = dlclient.ProxyLease
 
 // Pool Worker 池
 type Pool struct {
@@ -46,9 +54,10 @@ type Pool struct {
 	assetClient       AssetClientInterface // 新增：Asset 客户端
 
 	// 配置
-	storageCfg    *config.StorageConfig
-	retryCfg      *config.RetryConfig
-	youtubePolicy platformpolicy.YouTubePolicy
+	storageCfg      *config.StorageConfig
+	retryCfg        *config.RetryConfig
+	youtubePolicy   platformpolicy.YouTubePolicy
+	platformLimiter *ratelimit.PlatformLimiter
 }
 
 // TaskWrapper 任务包装器
@@ -69,6 +78,7 @@ func NewPool(
 	progressPublisher *ProgressPublisher,
 	assetClient AssetClientInterface, // 新增：Asset 客户端（可选）
 	youtubePolicy platformpolicy.YouTubePolicy,
+	platformLimiter *ratelimit.PlatformLimiter,
 ) *Pool {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -87,6 +97,7 @@ func NewPool(
 		storageCfg:        storageCfg,
 		retryCfg:          retryCfg,
 		youtubePolicy:     youtubePolicy,
+		platformLimiter:   platformLimiter,
 	}
 
 	return pool
@@ -179,6 +190,16 @@ func (p *Pool) worker(id int) {
 func (p *Pool) processTask(task *models.DownloadTask) error {
 	ctx := p.ctx
 	taskID := task.TaskID
+	platform := task.Metadata.Platform
+	if platform == "" {
+		platform = task.Platform
+	}
+
+	if allowed, limitErr := p.platformLimiter.Allow(ctx, platform, ratelimit.StageDownload); limitErr != nil {
+		log.Printf("[Worker] [Task %s] ⚠ Platform download limiter failed open: %v", taskID, limitErr)
+	} else if !allowed {
+		return p.handleError(ctx, task, errors.New("platform download rate limited"))
+	}
 
 	log.Printf("[Worker] [Task %s] Step 1/10: Updating status to processing...", taskID)
 	// 1. 更新状态为处理中
@@ -282,7 +303,6 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 
 	// 6. 获取 Cookie 并执行下载
 	var cookieFile string
-	platform := task.Metadata.Platform
 	log.Printf("[Worker] [Task %s] Download access policy: platform=%s youtube_cookie_disabled=%t has_proxy=%t", taskID, platform, platformpolicy.IsYouTubePlatform(platform) && p.youtubePolicy.CookiesDisabled(), proxyURL != "")
 
 	// 如果有 CookieID，从 Asset Service 获取 cookie 内容
@@ -306,10 +326,15 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 	}
 
 	downloadErr := p.executor.Download(ctx, task, proxyURL, outputPath, cookieFile, progressCallback)
+	errorCategory := utils.ClassifyAccessError(downloadErr)
+	errorMessage := ""
+	if downloadErr != nil {
+		errorMessage = downloadErr.Error()
+	}
 
 	if proxyURL != "" && task.ProxyLeaseID != "" && p.assetClient != nil {
 		success := downloadErr == nil
-		if reportErr := p.assetClient.ReportProxyUsage(task.TaskID, task.ProxyLeaseID, "download", success); reportErr != nil {
+		if reportErr := p.assetClient.ReportProxyUsage(task.TaskID, task.ProxyLeaseID, "download", success, errorCategory, errorMessage); reportErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to report proxy usage: %v", taskID, reportErr)
 		}
 	}
@@ -319,7 +344,7 @@ func (p *Pool) processTask(task *models.DownloadTask) error {
 		log.Printf("[Worker] [Task %s] youtube_cookie_disabled=true, skipping cookie usage report", taskID)
 	} else if task.CookieID > 0 && p.assetClient != nil {
 		success := downloadErr == nil
-		if reportErr := p.assetClient.ReportCookieUsage(task.CookieID, success, taskID); reportErr != nil {
+		if reportErr := p.assetClient.ReportCookieUsage(task.CookieID, success, taskID, errorCategory, errorMessage); reportErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to report cookie usage: %v", taskID, reportErr)
 		}
 	}
@@ -439,6 +464,10 @@ func (p *Pool) handleError(ctx context.Context, task *models.DownloadTask, err e
 	}
 
 	if p.assetClient != nil {
+		if releaseErr := p.assetClient.ReleaseProxyForTask(taskID, err.Error()); releaseErr != nil {
+			log.Printf("[Worker] [Task %s] ⚠ Failed to release proxy binding: %v", taskID, releaseErr)
+		}
+
 		if releaseErr := p.assetClient.ReleaseInitialDownload(taskID, err.Error()); releaseErr != nil {
 			log.Printf("[Worker] [Task %s] ⚠ Failed to release initial billing hold: %v", taskID, releaseErr)
 		} else {
@@ -453,6 +482,30 @@ func (p *Pool) handleError(ctx context.Context, task *models.DownloadTask, err e
 	}
 
 	return err
+}
+
+func (p *Pool) RefreshTaskProxy(ctx context.Context, task *models.DownloadTask) error {
+	if p == nil || p.assetClient == nil || task == nil {
+		return nil
+	}
+	platform := task.Metadata.Platform
+	if platform == "" {
+		platform = task.Platform
+	}
+	lease, err := p.assetClient.AcquireProxyForTask(ctx, task.TaskID, platform)
+	if err != nil {
+		return err
+	}
+	if lease == nil {
+		task.ProxyURL = ""
+		task.ProxyLeaseID = ""
+		task.ProxyExpireAt = ""
+		return nil
+	}
+	task.ProxyURL = lease.URL
+	task.ProxyLeaseID = lease.LeaseID
+	task.ProxyExpireAt = lease.ExpireAt
+	return nil
 }
 
 // calcOverallPercent 计算加权整体进度

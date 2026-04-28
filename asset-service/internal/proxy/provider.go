@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sync"
 	"time"
 
 	"youdlp/asset-service/internal/config"
@@ -31,10 +32,12 @@ type APIResponse struct {
 
 // Provider 负责实时拉取动态代理。
 type Provider struct {
-	apiKey     string
-	endpoint   string
-	client     *http.Client
-	retryCount int
+	apiKey       string
+	endpoint     string
+	client       *http.Client
+	retryCount   int
+	mu           sync.Mutex
+	circuitUntil time.Time
 }
 
 // NewProvider 创建动态代理提供者。
@@ -56,19 +59,38 @@ func (p *Provider) Enabled() bool {
 
 // GetLeaseWithRetry 获取动态代理租约并带重试。
 func (p *Provider) GetLeaseWithRetry(ctx context.Context) (*Lease, error) {
+	return p.GetLeaseWithPolicy(ctx, 0, p.retryCount, 0)
+}
+
+// GetLeaseWithPolicy 获取动态代理租约，并使用策略中的超时、重试和熔断参数。
+func (p *Provider) GetLeaseWithPolicy(ctx context.Context, timeoutMS, retryCount, circuitBreakerSec int) (*Lease, error) {
 	if !p.Enabled() {
 		return nil, fmt.Errorf("dynamic proxy API is not configured")
 	}
+	if retryCount <= 0 {
+		retryCount = p.retryCount
+	}
+	if retryCount <= 0 {
+		retryCount = 1
+	}
+
+	p.mu.Lock()
+	if !p.circuitUntil.IsZero() && time.Now().Before(p.circuitUntil) {
+		until := p.circuitUntil
+		p.mu.Unlock()
+		return nil, fmt.Errorf("dynamic proxy API circuit open until %s", until.Format(time.RFC3339))
+	}
+	p.mu.Unlock()
 
 	var lastErr error
-	for i := 0; i < p.retryCount; i++ {
-		lease, err := p.GetLease(ctx)
+	for i := 0; i < retryCount; i++ {
+		lease, err := p.getLeaseWithTimeout(ctx, timeoutMS)
 		if err == nil {
 			return lease, nil
 		}
 
 		lastErr = err
-		if i == p.retryCount-1 {
+		if i == retryCount-1 {
 			break
 		}
 
@@ -80,7 +102,21 @@ func (p *Provider) GetLeaseWithRetry(ctx context.Context) (*Lease, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("failed to get proxy lease after %d attempts: %w", p.retryCount, lastErr)
+	if circuitBreakerSec > 0 {
+		p.mu.Lock()
+		p.circuitUntil = time.Now().Add(time.Duration(circuitBreakerSec) * time.Second)
+		p.mu.Unlock()
+	}
+	return nil, fmt.Errorf("failed to get proxy lease after %d attempts: %w", retryCount, lastErr)
+}
+
+func (p *Provider) getLeaseWithTimeout(ctx context.Context, timeoutMS int) (*Lease, error) {
+	if timeoutMS <= 0 {
+		return p.GetLease(ctx)
+	}
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Duration(timeoutMS)*time.Millisecond)
+	defer cancel()
+	return p.GetLease(timeoutCtx)
 }
 
 // GetLease 获取一次动态代理租约。

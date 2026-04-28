@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,35 +22,24 @@ func (h *ProxyHandler) GetProxySourceStatus(c *gin.Context) {
 	defer cancel()
 
 	checkedAt := time.Now().Format(time.RFC3339)
-	resp, err := h.assetClient.GetAvailableProxy(ctx, &pb.GetAvailableProxyRequest{})
+	resp, err := h.assetClient.CheckProxySourceStatus(ctx, &pb.CheckProxySourceStatusRequest{})
 	if err != nil {
 		models.Success(c, models.ProxySourceStatusResponse{
 			Healthy:   false,
-			Mode:      "dynamic-lease",
-			Message:   "Failed to acquire proxy lease: " + err.Error(),
-			CheckedAt: checkedAt,
-		})
-		return
-	}
-
-	if resp.ProxyUrl == "" {
-		models.Success(c, models.ProxySourceStatusResponse{
-			Healthy:   false,
-			Mode:      "dynamic-lease",
-			Message:   "Proxy source returned an empty lease",
+			Mode:      "read-only",
+			Message:   "Failed to check proxy source: " + err.Error(),
 			CheckedAt: checkedAt,
 		})
 		return
 	}
 
 	models.Success(c, models.ProxySourceStatusResponse{
-		Healthy:       true,
-		Mode:          "dynamic-lease",
-		Message:       "Dynamic proxy source is ready",
-		ProxyURL:      maskProxyURL(resp.ProxyUrl),
-		ProxyLeaseID:  resp.ProxyLeaseId,
-		ProxyExpireAt: resp.ExpireAt,
-		CheckedAt:     checkedAt,
+		Healthy:                   resp.GetHealthy(),
+		Mode:                      resp.GetMode(),
+		Message:                   resp.GetMessage(),
+		CheckedAt:                 resp.GetCheckedAt(),
+		AvailableManualProxyCount: resp.GetAvailableManualProxyCount(),
+		DynamicConfigured:         resp.GetDynamicConfigured(),
 	})
 }
 
@@ -61,18 +49,4 @@ func NewProxyHandler(assetClient pb.AssetServiceClient, timeout time.Duration) *
 		assetClient: assetClient,
 		timeout:     timeout,
 	}
-}
-
-func maskProxyURL(raw string) string {
-	parsed, err := url.Parse(raw)
-	if err != nil {
-		return raw
-	}
-	if parsed.User != nil {
-		username := parsed.User.Username()
-		if username != "" {
-			parsed.User = url.UserPassword(username, "***")
-		}
-	}
-	return parsed.String()
 }

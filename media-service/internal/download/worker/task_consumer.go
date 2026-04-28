@@ -179,6 +179,20 @@ func (c *TaskConsumer) retryOrFinalize(msg amqp.Delivery, task *models.DownloadT
 	publishCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	body := msg.Body
+	if c.pool != nil {
+		if err := c.pool.RefreshTaskProxy(publishCtx, task); err != nil {
+			log.Printf("[TaskConsumer] Failed to refresh proxy for retry task %s: %v", task.TaskID, err)
+		} else {
+			refreshedBody, err := json.Marshal(task)
+			if err != nil {
+				log.Printf("[TaskConsumer] Failed to marshal refreshed retry task %s: %v", task.TaskID, err)
+			} else {
+				body = refreshedBody
+			}
+		}
+	}
+
 	if err := c.channel.PublishWithContext(
 		publishCtx,
 		"",
@@ -189,7 +203,7 @@ func (c *TaskConsumer) retryOrFinalize(msg amqp.Delivery, task *models.DownloadT
 			Headers:         headers,
 			ContentType:     msg.ContentType,
 			ContentEncoding: msg.ContentEncoding,
-			Body:            msg.Body,
+			Body:            body,
 			DeliveryMode:    amqp.Persistent,
 			Priority:        msg.Priority,
 			Timestamp:       time.Now(),

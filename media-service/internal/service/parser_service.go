@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"youdlp/media-service/internal/adapter"
@@ -13,6 +14,7 @@ import (
 	"youdlp/media-service/internal/config"
 	"youdlp/media-service/internal/detector"
 	"youdlp/media-service/internal/platformpolicy"
+	"youdlp/media-service/internal/ratelimit"
 	"youdlp/media-service/internal/redact"
 	"youdlp/media-service/internal/utils"
 	"youdlp/media-service/internal/ytdlp"
@@ -29,6 +31,7 @@ type ParserService struct {
 	enableCookies         bool
 	youtubePolicy         platformpolicy.YouTubePolicy
 	proxyRetryMaxAttempts int
+	platformLimiter       *ratelimit.PlatformLimiter
 }
 
 type parserCache interface {
@@ -40,8 +43,8 @@ type parserAssetClient interface {
 	GetAvailableCookie(platform string) (string, int64, error)
 	AcquireProxyForTask(ctx context.Context, taskID, platform string) (*client.ProxyLease, error)
 	GetAvailableProxy() (*client.ProxyLease, error)
-	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool) error
-	ReportCookieUsage(cookieID int64, success bool) error
+	ReportProxyUsage(taskID, proxyLeaseID, stage string, success bool, errorCategory, errorMessage string) error
+	ReportCookieUsage(cookieID int64, success bool, taskID, errorCategory, errorMessage string) error
 	CleanupCookieFile(cookieFile string) error
 }
 
@@ -55,6 +58,7 @@ type parseAccessContext struct {
 func NewParserService(
 	cfg *config.Config,
 	cacheService *cache.Service,
+	redisClient *redis.Client,
 	logger *zap.Logger,
 ) *ParserService {
 	// 创建yt-dlp wrapper
@@ -115,6 +119,7 @@ func NewParserService(
 		enableCookies:         cfg.AssetService.EnableCookies && assetClient != nil,
 		youtubePolicy:         cfg.YTDLP.YouTube,
 		proxyRetryMaxAttempts: cfg.AssetService.ProxyRetryMaxAttempts,
+		platformLimiter:       ratelimit.NewPlatformLimiter(redisClient),
 	}
 }
 
@@ -153,6 +158,12 @@ func (s *ParserService) ParseURL(ctx context.Context, taskID, url string, skipCa
 		if !ok {
 			return nil, utils.ErrUnsupportedPlatform
 		}
+	}
+
+	if allowed, limitErr := s.platformLimiter.Allow(ctx, platform, ratelimit.StageParse); limitErr != nil {
+		s.logger.Warn("platform parse limiter failed open", zap.String("platform", platform), zap.Error(limitErr))
+	} else if !allowed {
+		return nil, fmt.Errorf("platform parse rate limited: %s", platform)
 	}
 
 	// 6. 并发控制
@@ -261,7 +272,7 @@ func (s *ParserService) parseWithProxyRetry(ctx context.Context, taskID, url, pl
 		}
 
 		videoInfo, err := adpt.ParseWithProxyAndCookie(ctx, url, proxyURL, accessCtx.cookieFile)
-		usageReported := s.reportParseAccessUsage(taskID, accessCtx, err == nil)
+		usageReported := s.reportParseAccessUsage(taskID, accessCtx, err)
 		if err == nil {
 			return videoInfo, accessCtx, nil
 		}
@@ -284,14 +295,21 @@ func (s *ParserService) parseWithProxyRetry(ctx context.Context, taskID, url, pl
 	return nil, nil, lastErr
 }
 
-func (s *ParserService) reportParseAccessUsage(taskID string, accessCtx *parseAccessContext, success bool) bool {
+func (s *ParserService) reportParseAccessUsage(taskID string, accessCtx *parseAccessContext, parseErr error) bool {
 	if accessCtx == nil || s.assetClient == nil {
 		return true
 	}
 
+	success := parseErr == nil
+	errorCategory := utils.ClassifyAccessError(parseErr)
+	errorMessage := ""
+	if parseErr != nil {
+		errorMessage = parseErr.Error()
+	}
+
 	usageReported := true
 	if accessCtx.proxyLease != nil {
-		if reportErr := s.assetClient.ReportProxyUsage(taskID, accessCtx.proxyLease.LeaseID, "parse", success); reportErr != nil {
+		if reportErr := s.assetClient.ReportProxyUsage(taskID, accessCtx.proxyLease.LeaseID, "parse", success, errorCategory, errorMessage); reportErr != nil {
 			s.logger.Warn("failed to report proxy usage", zap.Error(reportErr))
 			usageReported = false
 		}
@@ -302,7 +320,7 @@ func (s *ParserService) reportParseAccessUsage(taskID string, accessCtx *parseAc
 			zap.Int64("cookie_id", accessCtx.cookieID),
 			zap.Bool("success", success))
 
-		if reportErr := s.assetClient.ReportCookieUsage(accessCtx.cookieID, success); reportErr != nil {
+		if reportErr := s.assetClient.ReportCookieUsage(accessCtx.cookieID, success, taskID, errorCategory, errorMessage); reportErr != nil {
 			s.logger.Warn("failed to report cookie usage", zap.Error(reportErr))
 		}
 	}
@@ -321,7 +339,7 @@ func (s *ParserService) parseProxyMaxAttempts() int {
 	if s.proxyRetryMaxAttempts <= 0 {
 		return 1
 	}
-	return s.proxyRetryMaxAttempts
+	return s.proxyRetryMaxAttempts + 1
 }
 
 func (s *ParserService) getParseAccessContext(ctx context.Context, taskID, platform string) (*parseAccessContext, error) {

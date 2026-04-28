@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Cookie, CreditCard, Globe, LayoutDashboard } from "lucide-react";
+import { Activity, Cookie, CreditCard, Globe, LayoutDashboard } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, note: "Overview" },
   { href: "/billing", label: "Billing", icon: CreditCard, note: "Accounts & pricing" },
   { href: "/proxies", label: "Proxies", icon: Globe, note: "Pool & policy" },
+  { href: "/proxies/events", label: "Proxy Events", icon: Activity, note: "Usage logs" },
   { href: "/cookies", label: "Cookies", icon: Cookie, note: "Session assets" },
 ];
 
@@ -27,7 +28,10 @@ export function SidebarNav({ compact = false, className }: SidebarNavProps) {
       {links.map((link) => {
         const Icon = link.icon;
         const routePath = pathname?.startsWith("/admin-console") ? `/admin-console${link.href}` : link.href;
-        const active = pathname === routePath || pathname === link.href || pathname?.startsWith(`${routePath}/`) || pathname?.startsWith(`${link.href}/`);
+        const active =
+          link.href === "/proxies"
+            ? pathname === routePath || pathname === link.href
+            : pathname === routePath || pathname === link.href || pathname?.startsWith(`${routePath}/`) || pathname?.startsWith(`${link.href}/`);
 
         return (
           <Link

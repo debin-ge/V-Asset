@@ -1,6 +1,8 @@
 import apiClient from "@/lib/api-client";
 import { buildAdminApiPath } from "@/lib/admin-api-path";
 import type {
+  ListProxyUsageEventsParams,
+  ListProxyUsageEventsResponse,
   ProxyCreatePayload,
   ProxyListParams,
   ProxyListResponse,
@@ -25,6 +27,10 @@ export const proxyApi = {
   list: async (params?: ProxyListParams): Promise<ProxyListResponse> => {
     const response = await apiClient.get(buildAdminApiPath("/api/v1/admin/proxies"), { params });
     return response.data as ProxyListResponse;
+  },
+  listUsageEvents: async (params?: ListProxyUsageEventsParams): Promise<ListProxyUsageEventsResponse> => {
+    const response = await apiClient.get(buildAdminApiPath("/api/v1/admin/proxy-usage-events"), { params });
+    return response.data as ListProxyUsageEventsResponse;
   },
   create: async (payload: ProxyCreatePayload): Promise<void> => {
     await apiClient.post(buildAdminApiPath("/api/v1/admin/proxies"), payload);

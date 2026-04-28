@@ -1073,8 +1073,20 @@ func (s *GRPCServer) GetAvailableProxy(ctx context.Context, req *pb.GetAvailable
 	return s.proxyHandler.GetAvailableProxy(ctx, req)
 }
 
+func (s *GRPCServer) CheckProxySourceStatus(ctx context.Context, req *pb.CheckProxySourceStatusRequest) (*pb.CheckProxySourceStatusResponse, error) {
+	return s.proxyHandler.CheckProxySourceStatus(ctx, req)
+}
+
 func (s *GRPCServer) ReportProxyUsage(ctx context.Context, req *pb.ReportProxyUsageRequest) (*pb.ReportProxyUsageResponse, error) {
 	return s.proxyHandler.ReportProxyUsage(ctx, req)
+}
+
+func (s *GRPCServer) ReleaseProxyForTask(ctx context.Context, req *pb.ReleaseProxyForTaskRequest) (*pb.ReleaseProxyForTaskResponse, error) {
+	return s.proxyHandler.ReleaseProxyForTask(ctx, req)
+}
+
+func (s *GRPCServer) ListProxyUsageEvents(ctx context.Context, req *pb.ListProxyUsageEventsRequest) (*pb.ListProxyUsageEventsResponse, error) {
+	return s.proxyHandler.ListProxyUsageEvents(ctx, req)
 }
 
 func (s *GRPCServer) GetProxySourcePolicy(ctx context.Context, req *pb.GetProxySourcePolicyRequest) (*pb.GetProxySourcePolicyResponse, error) {

@@ -86,8 +86,14 @@ service AssetService {
   rpc AcquireProxyForTask(AcquireProxyForTaskRequest) returns (AcquireProxyForTaskResponse);
   // 获取可用代理（供其他服务调用）
   rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
+  // 只读检查代理来源状态（不消耗代理、不更新 last_used_at）
+  rpc CheckProxySourceStatus(CheckProxySourceStatusRequest) returns (CheckProxySourceStatusResponse);
   // 报告代理使用结果
   rpc ReportProxyUsage(ReportProxyUsageRequest) returns (ReportProxyUsageResponse);
+  // 释放任务级代理绑定
+  rpc ReleaseProxyForTask(ReleaseProxyForTaskRequest) returns (ReleaseProxyForTaskResponse);
+  // 查询代理使用事件
+  rpc ListProxyUsageEvents(ListProxyUsageEventsRequest) returns (ListProxyUsageEventsResponse);
   // 获取当前代理来源策略
   rpc GetProxySourcePolicy(GetProxySourcePolicyRequest) returns (GetProxySourcePolicyResponse);
   // 更新当前代理来源策略
@@ -711,6 +717,20 @@ message GetAvailableProxyResponse {
   string expire_at = 3;          // 代理过期时间（RFC3339，可选）
 }
 
+message CheckProxySourceStatusRequest {
+  string protocol = 1;      // 可选：协议过滤
+  string region = 2;        // 可选：地区过滤
+}
+
+message CheckProxySourceStatusResponse {
+  bool healthy = 1;
+  string mode = 2;
+  string message = 3;
+  int64 available_manual_proxy_count = 4;
+  bool dynamic_configured = 5;
+  string checked_at = 6;
+}
+
 // 报告代理使用结果
 message ReportProxyUsageRequest {
   string proxy_lease_id = 1;
@@ -720,10 +740,80 @@ message ReportProxyUsageRequest {
   int64 proxy_id = 5;       // 可选
   string source_type = 6;   // 可选
   string error_message = 7; // 可选
+  string error_category = 8; // 可选
 }
 
 message ReportProxyUsageResponse {
   bool success = 1;
+}
+
+message ReleaseProxyForTaskRequest {
+  string task_id = 1;
+  string reason = 2;
+}
+
+message ReleaseProxyForTaskResponse {
+  bool success = 1;
+}
+
+message ListProxyUsageEventsRequest {
+  string task_id = 1;
+  int64 proxy_id = 2;
+  string proxy_lease_id = 3;
+  string source_type = 4;
+  string stage = 5;
+  string platform = 6;
+  string success = 7; // all/success/failed
+  string error_category = 8;
+  int64 start_time_unix = 9;
+  int64 end_time_unix = 10;
+  int32 page = 11;
+  int32 page_size = 12;
+  string sort_order = 13; // asc/desc
+}
+
+message ProxyUsageEventItem {
+  int64 id = 1;
+  string task_id = 2;
+  int64 proxy_id = 3;
+  string proxy_lease_id = 4;
+  string source_type = 5;
+  string stage = 6;
+  string platform = 7;
+  bool success = 8;
+  string error_category = 9;
+  string error_message = 10;
+  string created_at = 11;
+  string proxy_host = 12;
+  int32 proxy_port = 13;
+  string proxy_protocol = 14;
+  string proxy_region = 15;
+  int32 proxy_risk_score = 16;
+  string proxy_cooldown_until = 17;
+  int32 proxy_active_task_count = 18;
+  int32 proxy_max_concurrent = 19;
+}
+
+message ProxyUsageEventCount {
+  string key = 1;
+  int64 count = 2;
+}
+
+message ProxyUsageEventSummary {
+  int64 success_count = 1;
+  int64 failure_count = 2;
+  double failure_rate = 3;
+  repeated ProxyUsageEventCount category_counts = 4;
+  repeated ProxyUsageEventCount stage_counts = 5;
+  repeated ProxyUsageEventCount platform_counts = 6;
+}
+
+message ListProxyUsageEventsResponse {
+  repeated ProxyUsageEventItem events = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  ProxyUsageEventSummary summary = 5;
 }
 
 message GetProxySourcePolicyRequest {}
@@ -774,6 +864,13 @@ message ProxyInfo {
   int32 fail_count = 13;
   string created_at = 14;
   string updated_at = 15;
+  string cooldown_until = 16;
+  int32 consecutive_fail_count = 17;
+  int32 risk_score = 18;
+  string last_error_category = 19;
+  string last_fail_at = 20;
+  int32 max_concurrent = 21;
+  int32 active_task_count = 22;
 }
 
 message ListProxiesRequest {
@@ -931,6 +1028,9 @@ message GetAvailableCookieResponse {
 message ReportCookieUsageRequest {
   int64 cookie_id = 1;
   bool success = 2;
+  string error_category = 3;
+  string error_message = 4;
+  string task_id = 5;
 }
 
 message ReportCookieUsageResponse {

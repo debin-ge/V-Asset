@@ -279,6 +279,37 @@ func (r *CookieRepository) UpdateUsage(ctx context.Context, id int64, success bo
 	return nil
 }
 
+// UpsertProxyAffinity records the most recent successful cookie/proxy pairing for a task.
+func (r *CookieRepository) UpsertProxyAffinity(ctx context.Context, cookieID int64, taskID string, success bool) error {
+	if cookieID <= 0 || taskID == "" {
+		return nil
+	}
+
+	query := `
+		INSERT INTO cookie_proxy_affinities (
+			cookie_id, platform, proxy_id, source_type, region, last_used_at,
+			success_count, fail_count
+		)
+		SELECT c.id, c.platform, b.proxy_id, b.source_type, b.region, $3,
+		       CASE WHEN $4 THEN 1 ELSE 0 END,
+		       CASE WHEN $4 THEN 0 ELSE 1 END
+		FROM cookies c
+		JOIN task_proxy_bindings b ON b.task_id = $2
+		WHERE c.id = $1
+		ON CONFLICT (cookie_id, platform) DO UPDATE
+		SET proxy_id = EXCLUDED.proxy_id,
+		    source_type = EXCLUDED.source_type,
+		    region = EXCLUDED.region,
+		    last_used_at = EXCLUDED.last_used_at,
+		    success_count = cookie_proxy_affinities.success_count + CASE WHEN $4 THEN 1 ELSE 0 END,
+		    fail_count = cookie_proxy_affinities.fail_count + CASE WHEN $4 THEN 0 ELSE 1 END`
+
+	if _, err := r.db.ExecContext(ctx, query, cookieID, taskID, time.Now(), success); err != nil {
+		return fmt.Errorf("upsert cookie proxy affinity failed: %w", err)
+	}
+	return nil
+}
+
 // GetAvailableCookie 获取可用 Cookie（未过期、未冷冻、使用次数最少）
 func (r *CookieRepository) GetAvailableCookie(ctx context.Context, platform string) (*models.Cookie, error) {
 	now := time.Now()

@@ -84,8 +84,12 @@ service AssetService {
   rpc AcquireProxyForTask(AcquireProxyForTaskRequest) returns (AcquireProxyForTaskResponse);
   // 获取可用代理（供其他服务调用）
   rpc GetAvailableProxy(GetAvailableProxyRequest) returns (GetAvailableProxyResponse);
+  // 只读检查代理来源状态（不消耗代理、不更新 last_used_at）
+  rpc CheckProxySourceStatus(CheckProxySourceStatusRequest) returns (CheckProxySourceStatusResponse);
   // 报告代理使用结果
   rpc ReportProxyUsage(ReportProxyUsageRequest) returns (ReportProxyUsageResponse);
+  // 释放任务级代理绑定
+  rpc ReleaseProxyForTask(ReleaseProxyForTaskRequest) returns (ReleaseProxyForTaskResponse);
   // 获取当前代理来源策略
   rpc GetProxySourcePolicy(GetProxySourcePolicyRequest) returns (GetProxySourcePolicyResponse);
   // 更新当前代理来源策略
@@ -683,6 +687,20 @@ message GetAvailableProxyResponse {
   string expire_at = 3;          // 代理过期时间（RFC3339，可选）
 }
 
+message CheckProxySourceStatusRequest {
+  string protocol = 1;      // 可选：协议过滤
+  string region = 2;        // 可选：地区过滤
+}
+
+message CheckProxySourceStatusResponse {
+  bool healthy = 1;
+  string mode = 2;
+  string message = 3;
+  int64 available_manual_proxy_count = 4;
+  bool dynamic_configured = 5;
+  string checked_at = 6;
+}
+
 // 报告代理使用结果
 message ReportProxyUsageRequest {
   string proxy_lease_id = 1;
@@ -692,9 +710,19 @@ message ReportProxyUsageRequest {
   int64 proxy_id = 5;       // 可选
   string source_type = 6;   // 可选
   string error_message = 7; // 可选
+  string error_category = 8; // 可选
 }
 
 message ReportProxyUsageResponse {
+  bool success = 1;
+}
+
+message ReleaseProxyForTaskRequest {
+  string task_id = 1;
+  string reason = 2;
+}
+
+message ReleaseProxyForTaskResponse {
   bool success = 1;
 }
 
@@ -746,6 +774,13 @@ message ProxyInfo {
   int32 fail_count = 13;
   string created_at = 14;
   string updated_at = 15;
+  string cooldown_until = 16;
+  int32 consecutive_fail_count = 17;
+  int32 risk_score = 18;
+  string last_error_category = 19;
+  string last_fail_at = 20;
+  int32 max_concurrent = 21;
+  int32 active_task_count = 22;
 }
 
 message ListProxiesRequest {
@@ -903,6 +938,9 @@ message GetAvailableCookieResponse {
 message ReportCookieUsageRequest {
   int64 cookie_id = 1;
   bool success = 2;
+  string error_category = 3;
+  string error_message = 4;
+  string task_id = 5;
 }
 
 message ReportCookieUsageResponse {

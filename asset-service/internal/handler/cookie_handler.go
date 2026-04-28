@@ -175,7 +175,7 @@ func (h *CookieHandler) ReportCookieUsage(ctx context.Context, req *pb.ReportCoo
 		return nil, status.Error(codes.InvalidArgument, "Cookie ID 不能为空")
 	}
 
-	if err := h.cookieService.ReportUsage(ctx, req.CookieId, req.Success); err != nil {
+	if err := h.cookieService.ReportUsage(ctx, req.CookieId, req.Success, req.ErrorCategory, req.TaskId); err != nil {
 		log.Printf("ReportCookieUsage error: %v", err)
 		return nil, status.Error(codes.Internal, "报告使用结果失败")
 	}
