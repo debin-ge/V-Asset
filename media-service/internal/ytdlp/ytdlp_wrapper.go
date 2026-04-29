@@ -1,13 +1,16 @@
 package ytdlp
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,6 +30,78 @@ type VideoInfo struct {
 	UploadDate  string              `json:"upload_date"`
 	ViewCount   int64               `json:"view_count"`
 	Formats     []utils.VideoFormat `json:"formats"`
+}
+
+func (v *VideoInfo) UnmarshalJSON(data []byte) error {
+	type alias VideoInfo
+	aux := &struct {
+		Duration flexibleInt64 `json:"duration"`
+		*alias
+	}{
+		alias: (*alias)(v),
+	}
+
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+
+	v.Duration = int64(aux.Duration)
+	return nil
+}
+
+type flexibleInt64 int64
+
+func (d *flexibleInt64) UnmarshalJSON(data []byte) error {
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" || trimmed == "null" {
+		*d = 0
+		return nil
+	}
+
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	var number json.Number
+	if err := decoder.Decode(&number); err == nil {
+		value, err := jsonNumberToInt64(number)
+		if err != nil {
+			return err
+		}
+		*d = flexibleInt64(value)
+		return nil
+	}
+
+	var text string
+	if err := json.Unmarshal(data, &text); err != nil {
+		return err
+	}
+	if text == "" {
+		*d = 0
+		return nil
+	}
+	value, err := parseFloatSecondsToInt64(text)
+	if err != nil {
+		return fmt.Errorf("invalid duration %q: %w", text, err)
+	}
+	*d = flexibleInt64(value)
+	return nil
+}
+
+func jsonNumberToInt64(number json.Number) (int64, error) {
+	if value, err := number.Int64(); err == nil {
+		return value, nil
+	}
+	return parseFloatSecondsToInt64(number.String())
+}
+
+func parseFloatSecondsToInt64(value string) (int64, error) {
+	seconds, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, err
+	}
+	if seconds > math.MaxInt64 || seconds < math.MinInt64 {
+		return 0, fmt.Errorf("value out of int64 range")
+	}
+	return int64(seconds), nil
 }
 
 // Wrapper yt-dlp命令封装器
