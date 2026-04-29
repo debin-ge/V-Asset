@@ -74,8 +74,12 @@ type DailyActivity struct {
 
 // TrendPoint 趋势点
 type TrendPoint struct {
-	Label string `json:"label" db:"label"`
-	Count int64  `json:"count" db:"count"`
+	Label        string  `json:"label" db:"label"`
+	Count        int64   `json:"count" db:"count"`
+	TotalCount   int64   `json:"total_count" db:"total_count"`
+	SuccessCount int64   `json:"success_count" db:"success_count"`
+	FailedCount  int64   `json:"failed_count" db:"failed_count"`
+	SuccessRate  float64 `json:"success_rate" db:"success_rate"`
 }
 
 // PlatformStats 平台整体统计
@@ -86,6 +90,58 @@ type PlatformStats struct {
 	DownloadsToday    int64 `json:"downloads_today"`
 	DailyActiveUsers  int64 `json:"daily_active_users"`
 	WeeklyActiveUsers int64 `json:"weekly_active_users"`
+}
+
+type DashboardDownloads struct {
+	Total        int64
+	TodayTotal   int64
+	SuccessTotal int64
+	FailedTotal  int64
+	SuccessRate  float64
+	FailureRate  float64
+}
+
+type DashboardCount struct {
+	Key   string
+	Count int64
+}
+
+type DashboardProxies struct {
+	Total              int64
+	Active             int64
+	Available          int64
+	Cooling            int64
+	Saturated          int64
+	HighRisk           int64
+	RecentSuccess      int64
+	RecentFailure      int64
+	RecentFailureRate  float64
+	TopErrorCategories []DashboardCount
+}
+
+type DashboardCookies struct {
+	Total   int64
+	Active  int64
+	Expired int64
+	Frozen  int64
+}
+
+type DashboardBilling struct {
+	ShortfallCount int64
+}
+
+type DashboardUsers struct {
+	DailyActive  int64
+	WeeklyActive int64
+}
+
+type DashboardHealth struct {
+	GeneratedAt time.Time
+	Downloads   DashboardDownloads
+	Users       DashboardUsers
+	Proxies     DashboardProxies
+	Cookies     DashboardCookies
+	Billing     DashboardBilling
 }
 
 // HistoryFilter 历史查询过滤条件

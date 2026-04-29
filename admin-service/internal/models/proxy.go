@@ -63,7 +63,10 @@ type ProxyInfo struct {
 }
 
 type ProxyListResponse struct {
-	Items []ProxyInfo `json:"items"`
+	Items    []ProxyInfo `json:"items"`
+	Total    int64       `json:"total"`
+	Page     int32       `json:"page"`
+	PageSize int32       `json:"page_size"`
 }
 
 type ProxyUsageEventFilter struct {
@@ -127,10 +130,14 @@ type ProxyUsageEventListResponse struct {
 }
 
 type ListProxiesRequest struct {
-	Search   string `form:"search"`
-	Protocol string `form:"protocol"`
-	Region   string `form:"region"`
-	Status   *int32 `form:"status"`
+	Search    string `form:"search"`
+	Protocol  string `form:"protocol"`
+	Region    string `form:"region"`
+	Status    *int32 `form:"status"`
+	Page      int32  `form:"page"`
+	PageSize  int32  `form:"page_size"`
+	SortBy    string `form:"sort_by"`
+	SortOrder string `form:"sort_order"`
 }
 
 type CreateProxyRequest struct {

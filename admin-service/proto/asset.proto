@@ -31,6 +31,8 @@ service AssetService {
 
   // 获取平台请求趋势
   rpc GetRequestTrend(GetRequestTrendRequest) returns (GetRequestTrendResponse);
+  // 获取后台 Dashboard 健康聚合
+  rpc GetDashboardHealth(GetDashboardHealthRequest) returns (GetDashboardHealthResponse);
   
   // 获取文件信息(用于下载)
   rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
@@ -76,6 +78,7 @@ service AssetService {
   rpc UpdateBillingPricing(UpdateBillingPricingRequest) returns (UpdateBillingPricingResponse);
   rpc GetWelcomeCreditSettings(GetWelcomeCreditSettingsRequest) returns (GetWelcomeCreditSettingsResponse);
   rpc UpdateWelcomeCreditSettings(UpdateWelcomeCreditSettingsRequest) returns (UpdateWelcomeCreditSettingsResponse);
+  rpc GrantWelcomeCredit(GrantWelcomeCreditRequest) returns (GrantWelcomeCreditResponse);
   // 后台：查询待补扣短款订单
   rpc ListBillingShortfalls(ListBillingShortfallsRequest) returns (ListBillingShortfallsResponse);
   // 后台：手动补扣短款订单
@@ -261,11 +264,86 @@ message GetRequestTrendRequest {
 message TrendPoint {
   string label = 1;
   int64 count = 2;
+  int64 total_count = 3;
+  int64 success_count = 4;
+  int64 failed_count = 5;
+  double success_rate = 6;
 }
 
 message GetRequestTrendResponse {
   string granularity = 1;
   repeated TrendPoint points = 2;
+}
+
+message GetDashboardHealthRequest {}
+
+message AssetDashboardDownloads {
+  int64 total = 1;
+  int64 today_total = 2;
+  int64 success_total = 3;
+  int64 failed_total = 4;
+  double success_rate = 5;
+  double failure_rate = 6;
+}
+
+message AssetDashboardProxyErrorCategory {
+  string key = 1;
+  int64 count = 2;
+}
+
+message AssetDashboardProxies {
+  int64 total = 1;
+  int64 active = 2;
+  int64 available = 3;
+  int64 cooling = 4;
+  int64 saturated = 5;
+  int64 high_risk = 6;
+  int64 recent_success = 7;
+  int64 recent_failure = 8;
+  double recent_failure_rate = 9;
+  repeated AssetDashboardProxyErrorCategory top_error_categories = 10;
+}
+
+message AssetDashboardProxySource {
+  bool healthy = 1;
+  string mode = 2;
+  string message = 3;
+  bool dynamic_configured = 4;
+  string proxy_lease_id = 5;
+  string proxy_expire_at = 6;
+}
+
+message AssetDashboardProxyPolicy {
+  string primary_source = 1;
+  string fallback_source = 2;
+  bool fallback_enabled = 3;
+}
+
+message AssetDashboardCookies {
+  int64 total = 1;
+  int64 active = 2;
+  int64 expired = 3;
+  int64 frozen = 4;
+}
+
+message AssetDashboardBilling {
+  int64 shortfall_count = 1;
+}
+
+message AssetDashboardUsers {
+  int64 daily_active = 1;
+  int64 weekly_active = 2;
+}
+
+message GetDashboardHealthResponse {
+  string generated_at = 1;
+  AssetDashboardDownloads downloads = 2;
+  AssetDashboardProxies proxies = 3;
+  AssetDashboardProxySource proxy_source = 4;
+  AssetDashboardProxyPolicy proxy_policy = 5;
+  AssetDashboardCookies cookies = 6;
+  AssetDashboardBilling billing = 7;
+  AssetDashboardUsers users = 8;
 }
 
 // 获取文件信息请求
@@ -640,6 +718,28 @@ message UpdateWelcomeCreditSettingsResponse {
   WelcomeCreditSettings settings = 2;
 }
 
+message WelcomeCreditGrantSnapshot {
+  string operation_id = 1;
+  string ledger_entry_no = 2;
+  string reason_code = 3;
+  string amount_yuan = 4;
+  string currency_code = 5;
+  string created_at = 6;
+}
+
+message GrantWelcomeCreditRequest {
+  string user_id = 1;
+  string operation_id = 2;
+}
+
+message GrantWelcomeCreditResponse {
+  bool success = 1;
+  bool granted = 2;
+  BillingAccountSnapshot account = 3;
+  string entry_no = 4;
+  WelcomeCreditGrantSnapshot grant = 5;
+}
+
 message BillingShortfallOrderItem {
   string order_no = 1;
   string user_id = 2;
@@ -878,10 +978,17 @@ message ListProxiesRequest {
   string protocol = 2;
   string region = 3;
   int32 status = 4; // -1 表示不过滤
+  int32 page = 5;
+  int32 page_size = 6;
+  string sort_by = 7;
+  string sort_order = 8;
 }
 
 message ListProxiesResponse {
   repeated ProxyInfo items = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message CreateProxyRequest {

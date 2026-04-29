@@ -28,6 +28,7 @@ const (
 	AssetService_GetUserStats_FullMethodName                = "/asset.AssetService/GetUserStats"
 	AssetService_GetPlatformStats_FullMethodName            = "/asset.AssetService/GetPlatformStats"
 	AssetService_GetRequestTrend_FullMethodName             = "/asset.AssetService/GetRequestTrend"
+	AssetService_GetDashboardHealth_FullMethodName          = "/asset.AssetService/GetDashboardHealth"
 	AssetService_GetFileInfo_FullMethodName                 = "/asset.AssetService/GetFileInfo"
 	AssetService_CreateHistory_FullMethodName               = "/asset.AssetService/CreateHistory"
 	AssetService_UpdateHistoryStatus_FullMethodName         = "/asset.AssetService/UpdateHistoryStatus"
@@ -49,6 +50,7 @@ const (
 	AssetService_UpdateBillingPricing_FullMethodName        = "/asset.AssetService/UpdateBillingPricing"
 	AssetService_GetWelcomeCreditSettings_FullMethodName    = "/asset.AssetService/GetWelcomeCreditSettings"
 	AssetService_UpdateWelcomeCreditSettings_FullMethodName = "/asset.AssetService/UpdateWelcomeCreditSettings"
+	AssetService_GrantWelcomeCredit_FullMethodName          = "/asset.AssetService/GrantWelcomeCredit"
 	AssetService_ListBillingShortfalls_FullMethodName       = "/asset.AssetService/ListBillingShortfalls"
 	AssetService_ReconcileBillingShortfall_FullMethodName   = "/asset.AssetService/ReconcileBillingShortfall"
 	AssetService_AcquireProxyForTask_FullMethodName         = "/asset.AssetService/AcquireProxyForTask"
@@ -96,6 +98,8 @@ type AssetServiceClient interface {
 	GetPlatformStats(ctx context.Context, in *GetPlatformStatsRequest, opts ...grpc.CallOption) (*GetPlatformStatsResponse, error)
 	// 获取平台请求趋势
 	GetRequestTrend(ctx context.Context, in *GetRequestTrendRequest, opts ...grpc.CallOption) (*GetRequestTrendResponse, error)
+	// 获取后台 Dashboard 健康聚合
+	GetDashboardHealth(ctx context.Context, in *GetDashboardHealthRequest, opts ...grpc.CallOption) (*GetDashboardHealthResponse, error)
 	// 获取文件信息(用于下载)
 	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 	// 创建下载历史
@@ -137,6 +141,7 @@ type AssetServiceClient interface {
 	UpdateBillingPricing(ctx context.Context, in *UpdateBillingPricingRequest, opts ...grpc.CallOption) (*UpdateBillingPricingResponse, error)
 	GetWelcomeCreditSettings(ctx context.Context, in *GetWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*GetWelcomeCreditSettingsResponse, error)
 	UpdateWelcomeCreditSettings(ctx context.Context, in *UpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*UpdateWelcomeCreditSettingsResponse, error)
+	GrantWelcomeCredit(ctx context.Context, in *GrantWelcomeCreditRequest, opts ...grpc.CallOption) (*GrantWelcomeCreditResponse, error)
 	// 后台：查询待补扣短款订单
 	ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error)
 	// 后台：手动补扣短款订单
@@ -279,6 +284,16 @@ func (c *assetServiceClient) GetRequestTrend(ctx context.Context, in *GetRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetRequestTrendResponse)
 	err := c.cc.Invoke(ctx, AssetService_GetRequestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetDashboardHealth(ctx context.Context, in *GetDashboardHealthRequest, opts ...grpc.CallOption) (*GetDashboardHealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDashboardHealthResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetDashboardHealth_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -489,6 +504,16 @@ func (c *assetServiceClient) UpdateWelcomeCreditSettings(ctx context.Context, in
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateWelcomeCreditSettingsResponse)
 	err := c.cc.Invoke(ctx, AssetService_UpdateWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GrantWelcomeCredit(ctx context.Context, in *GrantWelcomeCreditRequest, opts ...grpc.CallOption) (*GrantWelcomeCreditResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GrantWelcomeCreditResponse)
+	err := c.cc.Invoke(ctx, AssetService_GrantWelcomeCredit_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -747,6 +772,8 @@ type AssetServiceServer interface {
 	GetPlatformStats(context.Context, *GetPlatformStatsRequest) (*GetPlatformStatsResponse, error)
 	// 获取平台请求趋势
 	GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error)
+	// 获取后台 Dashboard 健康聚合
+	GetDashboardHealth(context.Context, *GetDashboardHealthRequest) (*GetDashboardHealthResponse, error)
 	// 获取文件信息(用于下载)
 	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	// 创建下载历史
@@ -788,6 +815,7 @@ type AssetServiceServer interface {
 	UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error)
 	GetWelcomeCreditSettings(context.Context, *GetWelcomeCreditSettingsRequest) (*GetWelcomeCreditSettingsResponse, error)
 	UpdateWelcomeCreditSettings(context.Context, *UpdateWelcomeCreditSettingsRequest) (*UpdateWelcomeCreditSettingsResponse, error)
+	GrantWelcomeCredit(context.Context, *GrantWelcomeCreditRequest) (*GrantWelcomeCreditResponse, error)
 	// 后台：查询待补扣短款订单
 	ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error)
 	// 后台：手动补扣短款订单
@@ -873,6 +901,9 @@ func (UnimplementedAssetServiceServer) GetPlatformStats(context.Context, *GetPla
 func (UnimplementedAssetServiceServer) GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRequestTrend not implemented")
 }
+func (UnimplementedAssetServiceServer) GetDashboardHealth(context.Context, *GetDashboardHealthRequest) (*GetDashboardHealthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDashboardHealth not implemented")
+}
 func (UnimplementedAssetServiceServer) GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetFileInfo not implemented")
 }
@@ -935,6 +966,9 @@ func (UnimplementedAssetServiceServer) GetWelcomeCreditSettings(context.Context,
 }
 func (UnimplementedAssetServiceServer) UpdateWelcomeCreditSettings(context.Context, *UpdateWelcomeCreditSettingsRequest) (*UpdateWelcomeCreditSettingsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateWelcomeCreditSettings not implemented")
+}
+func (UnimplementedAssetServiceServer) GrantWelcomeCredit(context.Context, *GrantWelcomeCreditRequest) (*GrantWelcomeCreditResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GrantWelcomeCredit not implemented")
 }
 func (UnimplementedAssetServiceServer) ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListBillingShortfalls not implemented")
@@ -1184,6 +1218,24 @@ func _AssetService_GetRequestTrend_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).GetRequestTrend(ctx, req.(*GetRequestTrendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetDashboardHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDashboardHealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetDashboardHealth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetDashboardHealth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetDashboardHealth(ctx, req.(*GetDashboardHealthRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1562,6 +1614,24 @@ func _AssetService_UpdateWelcomeCreditSettings_Handler(srv interface{}, ctx cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).UpdateWelcomeCreditSettings(ctx, req.(*UpdateWelcomeCreditSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GrantWelcomeCredit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GrantWelcomeCreditRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GrantWelcomeCredit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GrantWelcomeCredit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GrantWelcomeCredit(ctx, req.(*GrantWelcomeCreditRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2024,6 +2094,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AssetService_GetRequestTrend_Handler,
 		},
 		{
+			MethodName: "GetDashboardHealth",
+			Handler:    _AssetService_GetDashboardHealth_Handler,
+		},
+		{
 			MethodName: "GetFileInfo",
 			Handler:    _AssetService_GetFileInfo_Handler,
 		},
@@ -2106,6 +2180,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateWelcomeCreditSettings",
 			Handler:    _AssetService_UpdateWelcomeCreditSettings_Handler,
+		},
+		{
+			MethodName: "GrantWelcomeCredit",
+			Handler:    _AssetService_GrantWelcomeCredit_Handler,
 		},
 		{
 			MethodName: "ListBillingShortfalls",

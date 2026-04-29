@@ -28,6 +28,7 @@ const (
 	AssetService_GetUserStats_FullMethodName                = "/asset.AssetService/GetUserStats"
 	AssetService_GetPlatformStats_FullMethodName            = "/asset.AssetService/GetPlatformStats"
 	AssetService_GetRequestTrend_FullMethodName             = "/asset.AssetService/GetRequestTrend"
+	AssetService_GetDashboardHealth_FullMethodName          = "/asset.AssetService/GetDashboardHealth"
 	AssetService_GetFileInfo_FullMethodName                 = "/asset.AssetService/GetFileInfo"
 	AssetService_CreateHistory_FullMethodName               = "/asset.AssetService/CreateHistory"
 	AssetService_UpdateHistoryStatus_FullMethodName         = "/asset.AssetService/UpdateHistoryStatus"
@@ -97,6 +98,8 @@ type AssetServiceClient interface {
 	GetPlatformStats(ctx context.Context, in *GetPlatformStatsRequest, opts ...grpc.CallOption) (*GetPlatformStatsResponse, error)
 	// 获取平台请求趋势
 	GetRequestTrend(ctx context.Context, in *GetRequestTrendRequest, opts ...grpc.CallOption) (*GetRequestTrendResponse, error)
+	// 获取后台 Dashboard 健康聚合
+	GetDashboardHealth(ctx context.Context, in *GetDashboardHealthRequest, opts ...grpc.CallOption) (*GetDashboardHealthResponse, error)
 	// 获取文件信息(用于下载)
 	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 	// 创建下载历史
@@ -281,6 +284,16 @@ func (c *assetServiceClient) GetRequestTrend(ctx context.Context, in *GetRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetRequestTrendResponse)
 	err := c.cc.Invoke(ctx, AssetService_GetRequestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetDashboardHealth(ctx context.Context, in *GetDashboardHealthRequest, opts ...grpc.CallOption) (*GetDashboardHealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDashboardHealthResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetDashboardHealth_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -759,6 +772,8 @@ type AssetServiceServer interface {
 	GetPlatformStats(context.Context, *GetPlatformStatsRequest) (*GetPlatformStatsResponse, error)
 	// 获取平台请求趋势
 	GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error)
+	// 获取后台 Dashboard 健康聚合
+	GetDashboardHealth(context.Context, *GetDashboardHealthRequest) (*GetDashboardHealthResponse, error)
 	// 获取文件信息(用于下载)
 	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	// 创建下载历史
@@ -885,6 +900,9 @@ func (UnimplementedAssetServiceServer) GetPlatformStats(context.Context, *GetPla
 }
 func (UnimplementedAssetServiceServer) GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRequestTrend not implemented")
+}
+func (UnimplementedAssetServiceServer) GetDashboardHealth(context.Context, *GetDashboardHealthRequest) (*GetDashboardHealthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDashboardHealth not implemented")
 }
 func (UnimplementedAssetServiceServer) GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetFileInfo not implemented")
@@ -1200,6 +1218,24 @@ func _AssetService_GetRequestTrend_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).GetRequestTrend(ctx, req.(*GetRequestTrendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetDashboardHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDashboardHealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetDashboardHealth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetDashboardHealth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetDashboardHealth(ctx, req.(*GetDashboardHealthRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2056,6 +2092,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRequestTrend",
 			Handler:    _AssetService_GetRequestTrend_Handler,
+		},
+		{
+			MethodName: "GetDashboardHealth",
+			Handler:    _AssetService_GetDashboardHealth_Handler,
 		},
 		{
 			MethodName: "GetFileInfo",

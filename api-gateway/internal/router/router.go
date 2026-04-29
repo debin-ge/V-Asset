@@ -159,6 +159,7 @@ func SetupRouter(deps *Dependencies) *gin.Engine {
 
 		adminV1.GET("/stats/overview", adminStatsHandler.Overview)
 		adminV1.GET("/stats/requests", adminStatsHandler.RequestTrend)
+		adminV1.GET("/stats/dashboard-health", adminStatsHandler.DashboardHealth)
 		adminV1.GET("/stats/users", adminStatsHandler.Users)
 
 		adminV1.GET("/proxies/source/status", adminProxyHandler.GetSourceStatus)

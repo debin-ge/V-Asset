@@ -60,8 +60,15 @@ export interface ProxyInfo {
   active_task_count: number;
 }
 
+export type ProxyListSortBy = "risk_score" | "priority" | "fail_count" | "active_task_count" | "updated_at" | "last_used_at";
+
 export interface ProxyListResponse {
   items: ProxyInfo[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total: number;
+  };
 }
 
 export interface ProxyListParams {
@@ -69,6 +76,10 @@ export interface ProxyListParams {
   protocol?: string;
   region?: string;
   status?: number;
+  page?: number;
+  page_size?: number;
+  sort_by?: ProxyListSortBy;
+  sort_order?: "asc" | "desc";
 }
 
 export interface ProxyUsageEvent {

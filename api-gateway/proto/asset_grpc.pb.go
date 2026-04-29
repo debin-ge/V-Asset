@@ -28,6 +28,7 @@ const (
 	AssetService_GetUserStats_FullMethodName                = "/asset.AssetService/GetUserStats"
 	AssetService_GetPlatformStats_FullMethodName            = "/asset.AssetService/GetPlatformStats"
 	AssetService_GetRequestTrend_FullMethodName             = "/asset.AssetService/GetRequestTrend"
+	AssetService_GetDashboardHealth_FullMethodName          = "/asset.AssetService/GetDashboardHealth"
 	AssetService_GetFileInfo_FullMethodName                 = "/asset.AssetService/GetFileInfo"
 	AssetService_CreateHistory_FullMethodName               = "/asset.AssetService/CreateHistory"
 	AssetService_UpdateHistoryStatus_FullMethodName         = "/asset.AssetService/UpdateHistoryStatus"
@@ -47,6 +48,9 @@ const (
 	AssetService_ListTrafficUsageRecords_FullMethodName     = "/asset.AssetService/ListTrafficUsageRecords"
 	AssetService_GetBillingPricing_FullMethodName           = "/asset.AssetService/GetBillingPricing"
 	AssetService_UpdateBillingPricing_FullMethodName        = "/asset.AssetService/UpdateBillingPricing"
+	AssetService_GetWelcomeCreditSettings_FullMethodName    = "/asset.AssetService/GetWelcomeCreditSettings"
+	AssetService_UpdateWelcomeCreditSettings_FullMethodName = "/asset.AssetService/UpdateWelcomeCreditSettings"
+	AssetService_GrantWelcomeCredit_FullMethodName          = "/asset.AssetService/GrantWelcomeCredit"
 	AssetService_ListBillingShortfalls_FullMethodName       = "/asset.AssetService/ListBillingShortfalls"
 	AssetService_ReconcileBillingShortfall_FullMethodName   = "/asset.AssetService/ReconcileBillingShortfall"
 	AssetService_AcquireProxyForTask_FullMethodName         = "/asset.AssetService/AcquireProxyForTask"
@@ -54,6 +58,7 @@ const (
 	AssetService_CheckProxySourceStatus_FullMethodName      = "/asset.AssetService/CheckProxySourceStatus"
 	AssetService_ReportProxyUsage_FullMethodName            = "/asset.AssetService/ReportProxyUsage"
 	AssetService_ReleaseProxyForTask_FullMethodName         = "/asset.AssetService/ReleaseProxyForTask"
+	AssetService_ListProxyUsageEvents_FullMethodName        = "/asset.AssetService/ListProxyUsageEvents"
 	AssetService_GetProxySourcePolicy_FullMethodName        = "/asset.AssetService/GetProxySourcePolicy"
 	AssetService_UpdateProxySourcePolicy_FullMethodName     = "/asset.AssetService/UpdateProxySourcePolicy"
 	AssetService_ListProxies_FullMethodName                 = "/asset.AssetService/ListProxies"
@@ -93,6 +98,8 @@ type AssetServiceClient interface {
 	GetPlatformStats(ctx context.Context, in *GetPlatformStatsRequest, opts ...grpc.CallOption) (*GetPlatformStatsResponse, error)
 	// 获取平台请求趋势
 	GetRequestTrend(ctx context.Context, in *GetRequestTrendRequest, opts ...grpc.CallOption) (*GetRequestTrendResponse, error)
+	// 获取后台 Dashboard 健康聚合
+	GetDashboardHealth(ctx context.Context, in *GetDashboardHealthRequest, opts ...grpc.CallOption) (*GetDashboardHealthResponse, error)
 	// 获取文件信息(用于下载)
 	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 	// 创建下载历史
@@ -132,6 +139,9 @@ type AssetServiceClient interface {
 	GetBillingPricing(ctx context.Context, in *GetBillingPricingRequest, opts ...grpc.CallOption) (*GetBillingPricingResponse, error)
 	// 更新费率
 	UpdateBillingPricing(ctx context.Context, in *UpdateBillingPricingRequest, opts ...grpc.CallOption) (*UpdateBillingPricingResponse, error)
+	GetWelcomeCreditSettings(ctx context.Context, in *GetWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*GetWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(ctx context.Context, in *UpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*UpdateWelcomeCreditSettingsResponse, error)
+	GrantWelcomeCredit(ctx context.Context, in *GrantWelcomeCreditRequest, opts ...grpc.CallOption) (*GrantWelcomeCreditResponse, error)
 	// 后台：查询待补扣短款订单
 	ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error)
 	// 后台：手动补扣短款订单
@@ -147,6 +157,8 @@ type AssetServiceClient interface {
 	ReportProxyUsage(ctx context.Context, in *ReportProxyUsageRequest, opts ...grpc.CallOption) (*ReportProxyUsageResponse, error)
 	// 释放任务级代理绑定
 	ReleaseProxyForTask(ctx context.Context, in *ReleaseProxyForTaskRequest, opts ...grpc.CallOption) (*ReleaseProxyForTaskResponse, error)
+	// 查询代理使用事件
+	ListProxyUsageEvents(ctx context.Context, in *ListProxyUsageEventsRequest, opts ...grpc.CallOption) (*ListProxyUsageEventsResponse, error)
 	// 获取当前代理来源策略
 	GetProxySourcePolicy(ctx context.Context, in *GetProxySourcePolicyRequest, opts ...grpc.CallOption) (*GetProxySourcePolicyResponse, error)
 	// 更新当前代理来源策略
@@ -272,6 +284,16 @@ func (c *assetServiceClient) GetRequestTrend(ctx context.Context, in *GetRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetRequestTrendResponse)
 	err := c.cc.Invoke(ctx, AssetService_GetRequestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GetDashboardHealth(ctx context.Context, in *GetDashboardHealthRequest, opts ...grpc.CallOption) (*GetDashboardHealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDashboardHealthResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetDashboardHealth_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -468,6 +490,36 @@ func (c *assetServiceClient) UpdateBillingPricing(ctx context.Context, in *Updat
 	return out, nil
 }
 
+func (c *assetServiceClient) GetWelcomeCreditSettings(ctx context.Context, in *GetWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*GetWelcomeCreditSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetWelcomeCreditSettingsResponse)
+	err := c.cc.Invoke(ctx, AssetService_GetWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) UpdateWelcomeCreditSettings(ctx context.Context, in *UpdateWelcomeCreditSettingsRequest, opts ...grpc.CallOption) (*UpdateWelcomeCreditSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateWelcomeCreditSettingsResponse)
+	err := c.cc.Invoke(ctx, AssetService_UpdateWelcomeCreditSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) GrantWelcomeCredit(ctx context.Context, in *GrantWelcomeCreditRequest, opts ...grpc.CallOption) (*GrantWelcomeCreditResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GrantWelcomeCreditResponse)
+	err := c.cc.Invoke(ctx, AssetService_GrantWelcomeCredit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *assetServiceClient) ListBillingShortfalls(ctx context.Context, in *ListBillingShortfallsRequest, opts ...grpc.CallOption) (*ListBillingShortfallsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListBillingShortfallsResponse)
@@ -532,6 +584,16 @@ func (c *assetServiceClient) ReleaseProxyForTask(ctx context.Context, in *Releas
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReleaseProxyForTaskResponse)
 	err := c.cc.Invoke(ctx, AssetService_ReleaseProxyForTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *assetServiceClient) ListProxyUsageEvents(ctx context.Context, in *ListProxyUsageEventsRequest, opts ...grpc.CallOption) (*ListProxyUsageEventsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProxyUsageEventsResponse)
+	err := c.cc.Invoke(ctx, AssetService_ListProxyUsageEvents_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -710,6 +772,8 @@ type AssetServiceServer interface {
 	GetPlatformStats(context.Context, *GetPlatformStatsRequest) (*GetPlatformStatsResponse, error)
 	// 获取平台请求趋势
 	GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error)
+	// 获取后台 Dashboard 健康聚合
+	GetDashboardHealth(context.Context, *GetDashboardHealthRequest) (*GetDashboardHealthResponse, error)
 	// 获取文件信息(用于下载)
 	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	// 创建下载历史
@@ -749,6 +813,9 @@ type AssetServiceServer interface {
 	GetBillingPricing(context.Context, *GetBillingPricingRequest) (*GetBillingPricingResponse, error)
 	// 更新费率
 	UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error)
+	GetWelcomeCreditSettings(context.Context, *GetWelcomeCreditSettingsRequest) (*GetWelcomeCreditSettingsResponse, error)
+	UpdateWelcomeCreditSettings(context.Context, *UpdateWelcomeCreditSettingsRequest) (*UpdateWelcomeCreditSettingsResponse, error)
+	GrantWelcomeCredit(context.Context, *GrantWelcomeCreditRequest) (*GrantWelcomeCreditResponse, error)
 	// 后台：查询待补扣短款订单
 	ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error)
 	// 后台：手动补扣短款订单
@@ -764,6 +831,8 @@ type AssetServiceServer interface {
 	ReportProxyUsage(context.Context, *ReportProxyUsageRequest) (*ReportProxyUsageResponse, error)
 	// 释放任务级代理绑定
 	ReleaseProxyForTask(context.Context, *ReleaseProxyForTaskRequest) (*ReleaseProxyForTaskResponse, error)
+	// 查询代理使用事件
+	ListProxyUsageEvents(context.Context, *ListProxyUsageEventsRequest) (*ListProxyUsageEventsResponse, error)
 	// 获取当前代理来源策略
 	GetProxySourcePolicy(context.Context, *GetProxySourcePolicyRequest) (*GetProxySourcePolicyResponse, error)
 	// 更新当前代理来源策略
@@ -832,6 +901,9 @@ func (UnimplementedAssetServiceServer) GetPlatformStats(context.Context, *GetPla
 func (UnimplementedAssetServiceServer) GetRequestTrend(context.Context, *GetRequestTrendRequest) (*GetRequestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRequestTrend not implemented")
 }
+func (UnimplementedAssetServiceServer) GetDashboardHealth(context.Context, *GetDashboardHealthRequest) (*GetDashboardHealthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDashboardHealth not implemented")
+}
 func (UnimplementedAssetServiceServer) GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetFileInfo not implemented")
 }
@@ -889,6 +961,15 @@ func (UnimplementedAssetServiceServer) GetBillingPricing(context.Context, *GetBi
 func (UnimplementedAssetServiceServer) UpdateBillingPricing(context.Context, *UpdateBillingPricingRequest) (*UpdateBillingPricingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateBillingPricing not implemented")
 }
+func (UnimplementedAssetServiceServer) GetWelcomeCreditSettings(context.Context, *GetWelcomeCreditSettingsRequest) (*GetWelcomeCreditSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetWelcomeCreditSettings not implemented")
+}
+func (UnimplementedAssetServiceServer) UpdateWelcomeCreditSettings(context.Context, *UpdateWelcomeCreditSettingsRequest) (*UpdateWelcomeCreditSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateWelcomeCreditSettings not implemented")
+}
+func (UnimplementedAssetServiceServer) GrantWelcomeCredit(context.Context, *GrantWelcomeCreditRequest) (*GrantWelcomeCreditResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GrantWelcomeCredit not implemented")
+}
 func (UnimplementedAssetServiceServer) ListBillingShortfalls(context.Context, *ListBillingShortfallsRequest) (*ListBillingShortfallsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListBillingShortfalls not implemented")
 }
@@ -909,6 +990,9 @@ func (UnimplementedAssetServiceServer) ReportProxyUsage(context.Context, *Report
 }
 func (UnimplementedAssetServiceServer) ReleaseProxyForTask(context.Context, *ReleaseProxyForTaskRequest) (*ReleaseProxyForTaskResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReleaseProxyForTask not implemented")
+}
+func (UnimplementedAssetServiceServer) ListProxyUsageEvents(context.Context, *ListProxyUsageEventsRequest) (*ListProxyUsageEventsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListProxyUsageEvents not implemented")
 }
 func (UnimplementedAssetServiceServer) GetProxySourcePolicy(context.Context, *GetProxySourcePolicyRequest) (*GetProxySourcePolicyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProxySourcePolicy not implemented")
@@ -1134,6 +1218,24 @@ func _AssetService_GetRequestTrend_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).GetRequestTrend(ctx, req.(*GetRequestTrendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GetDashboardHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDashboardHealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetDashboardHealth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetDashboardHealth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetDashboardHealth(ctx, req.(*GetDashboardHealthRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1480,6 +1582,60 @@ func _AssetService_UpdateBillingPricing_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AssetService_GetWelcomeCreditSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWelcomeCreditSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GetWelcomeCreditSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GetWelcomeCreditSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GetWelcomeCreditSettings(ctx, req.(*GetWelcomeCreditSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_UpdateWelcomeCreditSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateWelcomeCreditSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).UpdateWelcomeCreditSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_UpdateWelcomeCreditSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).UpdateWelcomeCreditSettings(ctx, req.(*UpdateWelcomeCreditSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_GrantWelcomeCredit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GrantWelcomeCreditRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).GrantWelcomeCredit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_GrantWelcomeCredit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).GrantWelcomeCredit(ctx, req.(*GrantWelcomeCreditRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AssetService_ListBillingShortfalls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListBillingShortfallsRequest)
 	if err := dec(in); err != nil {
@@ -1602,6 +1758,24 @@ func _AssetService_ReleaseProxyForTask_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AssetServiceServer).ReleaseProxyForTask(ctx, req.(*ReleaseProxyForTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AssetService_ListProxyUsageEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProxyUsageEventsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).ListProxyUsageEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_ListProxyUsageEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).ListProxyUsageEvents(ctx, req.(*ListProxyUsageEventsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1920,6 +2094,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AssetService_GetRequestTrend_Handler,
 		},
 		{
+			MethodName: "GetDashboardHealth",
+			Handler:    _AssetService_GetDashboardHealth_Handler,
+		},
+		{
 			MethodName: "GetFileInfo",
 			Handler:    _AssetService_GetFileInfo_Handler,
 		},
@@ -1996,6 +2174,18 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AssetService_UpdateBillingPricing_Handler,
 		},
 		{
+			MethodName: "GetWelcomeCreditSettings",
+			Handler:    _AssetService_GetWelcomeCreditSettings_Handler,
+		},
+		{
+			MethodName: "UpdateWelcomeCreditSettings",
+			Handler:    _AssetService_UpdateWelcomeCreditSettings_Handler,
+		},
+		{
+			MethodName: "GrantWelcomeCredit",
+			Handler:    _AssetService_GrantWelcomeCredit_Handler,
+		},
+		{
 			MethodName: "ListBillingShortfalls",
 			Handler:    _AssetService_ListBillingShortfalls_Handler,
 		},
@@ -2022,6 +2212,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReleaseProxyForTask",
 			Handler:    _AssetService_ReleaseProxyForTask_Handler,
+		},
+		{
+			MethodName: "ListProxyUsageEvents",
+			Handler:    _AssetService_ListProxyUsageEvents_Handler,
 		},
 		{
 			MethodName: "GetProxySourcePolicy",

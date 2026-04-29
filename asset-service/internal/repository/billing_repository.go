@@ -803,6 +803,18 @@ func (r *BillingRepository) ListShortfallOrders(ctx context.Context, filter mode
 	}, nil
 }
 
+func (r *BillingRepository) CountShortfallOrders(ctx context.Context) (int64, error) {
+	var count int64
+	if err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*)
+		FROM billing_charge_orders
+		WHERE status = $1
+		  AND shortfall_yuan > 0`, models.BillingOrderStatusAwaitingShortfall).Scan(&count); err != nil {
+		return 0, fmt.Errorf("failed to count dashboard billing shortfalls: %w", err)
+	}
+	return count, nil
+}
+
 func scanBillingAccount(row rowScanner) (*models.BillingAccount, error) {
 	var account models.BillingAccount
 	if err := row.Scan(

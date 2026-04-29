@@ -52,6 +52,59 @@ func TestParseProxyUsagePaginationDefaultsInvalidLowValues(t *testing.T) {
 	}
 }
 
+func TestParseProxyListPaginationCapsPageAndPageSize(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest(http.MethodGet, "/?page=999999&page_size=999", nil)
+
+	page, err := parsePositiveInt32Query(c, "page", proxyListDefaultPage, proxyListMaxPage)
+	if err != nil {
+		t.Fatalf("parse page returned error: %v", err)
+	}
+	if page != proxyListMaxPage {
+		t.Fatalf("expected page capped to %d, got %d", proxyListMaxPage, page)
+	}
+
+	pageSize, err := parsePositiveInt32Query(c, "page_size", proxyListDefaultPageSize, proxyListMaxPageSize)
+	if err != nil {
+		t.Fatalf("parse page_size returned error: %v", err)
+	}
+	if pageSize != proxyListMaxPageSize {
+		t.Fatalf("expected page_size capped to %d, got %d", proxyListMaxPageSize, pageSize)
+	}
+}
+
+func TestParseProxyListSortQuery(t *testing.T) {
+	t.Parallel()
+
+	sortBy, sortOrder, err := parseProxyListSortQuery("risk_score", "")
+	if err != nil {
+		t.Fatalf("parse sort returned error: %v", err)
+	}
+	if sortBy != "risk_score" || sortOrder != "desc" {
+		t.Fatalf("expected risk_score desc, got %q %q", sortBy, sortOrder)
+	}
+
+	sortBy, sortOrder, err = parseProxyListSortQuery("updated_at", "asc")
+	if err != nil {
+		t.Fatalf("parse sort returned error: %v", err)
+	}
+	if sortBy != "updated_at" || sortOrder != "asc" {
+		t.Fatalf("expected updated_at asc, got %q %q", sortBy, sortOrder)
+	}
+}
+
+func TestParseProxyListSortQueryRejectsInvalidValues(t *testing.T) {
+	t.Parallel()
+
+	if _, _, err := parseProxyListSortQuery("host", "desc"); err == nil {
+		t.Fatal("expected invalid sort_by error")
+	}
+	if _, _, err := parseProxyListSortQuery("risk_score", "sideways"); err == nil {
+		t.Fatal("expected invalid sort_order error")
+	}
+}
+
 func TestPublicProxyUsageSourceType(t *testing.T) {
 	t.Parallel()
 

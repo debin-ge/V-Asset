@@ -11,6 +11,7 @@ service AdminService {
 
   rpc GetOverview(AdminEmpty) returns (AdminOverviewResponse);
   rpc GetRequestTrend(AdminRequestTrendRequest) returns (AdminRequestTrendResponse);
+  rpc GetDashboardHealth(AdminEmpty) returns (AdminDashboardHealthResponse);
   rpc GetUserStats(AdminEmpty) returns (AdminUserStatsResponse);
 
   rpc GetProxySourceStatus(AdminEmpty) returns (AdminProxySourceStatusResponse);
@@ -93,6 +94,10 @@ message AdminOverviewResponse {
 message AdminTrendPoint {
   string label = 1;
   int64 count = 2;
+  int64 total_count = 3;
+  int64 success_count = 4;
+  int64 failed_count = 5;
+  double success_rate = 6;
 }
 
 message AdminRequestTrendRequest {
@@ -103,6 +108,87 @@ message AdminRequestTrendRequest {
 message AdminRequestTrendResponse {
   string granularity = 1;
   repeated AdminTrendPoint points = 2;
+}
+
+message AdminDashboardDownloads {
+  int64 total = 1;
+  int64 today_total = 2;
+  int64 success_total = 3;
+  int64 failed_total = 4;
+  double success_rate = 5;
+  double failure_rate = 6;
+}
+
+message AdminDashboardUsers {
+  int64 total = 1;
+  int64 daily_active = 2;
+  int64 weekly_active = 3;
+  double dau_wau_rate = 4;
+  double wau_total_rate = 5;
+}
+
+message AdminDashboardProxyErrorCategory {
+  string key = 1;
+  int64 count = 2;
+}
+
+message AdminDashboardProxies {
+  int64 total = 1;
+  int64 active = 2;
+  int64 available = 3;
+  int64 cooling = 4;
+  int64 saturated = 5;
+  int64 high_risk = 6;
+  int64 recent_success = 7;
+  int64 recent_failure = 8;
+  double recent_failure_rate = 9;
+  repeated AdminDashboardProxyErrorCategory top_error_categories = 10;
+}
+
+message AdminDashboardProxySource {
+  bool healthy = 1;
+  string mode = 2;
+  string message = 3;
+  bool dynamic_configured = 4;
+  string proxy_lease_id = 5;
+  string proxy_expire_at = 6;
+}
+
+message AdminDashboardProxyPolicy {
+  string primary_source = 1;
+  string fallback_source = 2;
+  bool fallback_enabled = 3;
+}
+
+message AdminDashboardCookies {
+  int64 total = 1;
+  int64 active = 2;
+  int64 expired = 3;
+  int64 frozen = 4;
+}
+
+message AdminDashboardBilling {
+  int64 shortfall_count = 1;
+}
+
+message AdminDashboardException {
+  string area = 1;
+  string severity = 2;
+  string message = 3;
+  string action_label = 4;
+  string action_href = 5;
+}
+
+message AdminDashboardHealthResponse {
+  string generated_at = 1;
+  AdminDashboardDownloads downloads = 2;
+  AdminDashboardUsers users = 3;
+  AdminDashboardProxies proxies = 4;
+  AdminDashboardProxySource proxy_source = 5;
+  AdminDashboardProxyPolicy proxy_policy = 6;
+  AdminDashboardCookies cookies = 7;
+  AdminDashboardBilling billing = 8;
+  repeated AdminDashboardException exceptions = 9;
 }
 
 message AdminUserStatsResponse {
@@ -180,10 +266,17 @@ message AdminListProxiesRequest {
   string region = 3;
   int32 status = 4;
   bool has_status = 5;
+  int32 page = 6;
+  int32 page_size = 7;
+  string sort_by = 8;
+  string sort_order = 9;
 }
 
 message AdminListProxiesResponse {
   repeated AdminProxyInfo items = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message AdminListProxyUsageEventsRequest {

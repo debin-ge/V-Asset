@@ -158,6 +158,86 @@ func TestListUsageEventsSummarizesFailureCategoriesOnly(t *testing.T) {
 	}
 }
 
+func TestListProxiesUsesDefaultPaginationAndSort(t *testing.T) {
+	t.Parallel()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("create sqlmock failed: %v", err)
+	}
+	defer db.Close()
+
+	now := time.Now()
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM proxies p WHERE deleted_at IS NULL`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(2)))
+	mock.ExpectQuery(`(?s)SELECT p\.id,.*FROM proxies p\s+WHERE deleted_at IS NULL\s+ORDER BY p\.status ASC, p\.risk_score ASC, p\.priority DESC, p\.created_at DESC\s+LIMIT \$1 OFFSET \$2`).
+		WithArgs(models.ProxyListDefaultPageSize, 0).
+		WillReturnRows(proxyRepositoryRows().AddRow(
+			int64(1), nil, "127.0.0.1", 8080, nil, nil, string(models.ProxyProtocolHTTP), "US",
+			3, nil, nil, models.ProxyStatusActive, nil, nil, 2, 1, nil, nil, 0, 10, nil, nil, 1, 0, nil, now, now,
+		))
+
+	repo := NewProxyRepository(db)
+	result, err := repo.ListProxies(context.Background(), models.ProxyListFilter{})
+	if err != nil {
+		t.Fatalf("ListProxies returned error: %v", err)
+	}
+	if result.Total != 2 || result.Page != models.ProxyListDefaultPage || result.PageSize != models.ProxyListDefaultPageSize {
+		t.Fatalf("unexpected pagination result: total=%d page=%d page_size=%d", result.Total, result.Page, result.PageSize)
+	}
+	if len(result.Items) != 1 || result.Items[0].ID != 1 {
+		t.Fatalf("unexpected list items: %#v", result.Items)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
+func TestListProxiesAppliesFiltersPaginationAndSort(t *testing.T) {
+	t.Parallel()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("create sqlmock failed: %v", err)
+	}
+	defer db.Close()
+
+	search := "us"
+	status := models.ProxyStatusActive
+	now := time.Now()
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM proxies p WHERE`).
+		WithArgs("%"+search+"%", status).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(75)))
+	mock.ExpectQuery(`(?s)SELECT p\.id,.*ORDER BY p\.last_used_at ASC NULLS LAST, p\.id ASC\s+LIMIT \$3 OFFSET \$4`).
+		WithArgs("%"+search+"%", status, 50, 50).
+		WillReturnRows(proxyRepositoryRows().AddRow(
+			int64(7), nil, "127.0.0.7", 8080, nil, nil, string(models.ProxyProtocolSOCKS5), "US",
+			3, nil, nil, models.ProxyStatusActive, nil, nil, 2, 1, now, nil, 0, 10, nil, nil, 1, 0, nil, now, now,
+		))
+
+	repo := NewProxyRepository(db)
+	result, err := repo.ListProxies(context.Background(), models.ProxyListFilter{
+		Search:    &search,
+		Status:    &status,
+		Page:      2,
+		PageSize:  50,
+		SortBy:    models.ProxyListSortLastUsedAt,
+		SortOrder: models.ProxyListSortOrderAsc,
+	})
+	if err != nil {
+		t.Fatalf("ListProxies returned error: %v", err)
+	}
+	if result.Total != 75 || result.Page != 2 || result.PageSize != 50 {
+		t.Fatalf("unexpected pagination result: total=%d page=%d page_size=%d", result.Total, result.Page, result.PageSize)
+	}
+	if len(result.Items) != 1 || result.Items[0].ID != 7 {
+		t.Fatalf("unexpected list items: %#v", result.Items)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
 func proxyRepositoryRows() *sqlmock.Rows {
 	return sqlmock.NewRows([]string{
 		"id", "host", "ip", "port", "username", "password", "protocol", "region", "priority",

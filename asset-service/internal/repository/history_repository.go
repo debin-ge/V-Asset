@@ -445,6 +445,31 @@ func (r *HistoryRepository) GetPlatformDownloadsToday(ctx context.Context) (int6
 	return count, err
 }
 
+func (r *HistoryRepository) GetDashboardDownloads(ctx context.Context) (models.DashboardDownloads, error) {
+	var downloads models.DashboardDownloads
+	query := `
+		SELECT
+			COUNT(*),
+			COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE),
+			COUNT(*) FILTER (WHERE status = $1),
+			COUNT(*) FILTER (WHERE status = $2)
+		FROM download_history`
+	if err := r.db.QueryRowContext(ctx, query, models.StatusCompleted, models.StatusFailed).Scan(
+		&downloads.Total,
+		&downloads.TodayTotal,
+		&downloads.SuccessTotal,
+		&downloads.FailedTotal,
+	); err != nil {
+		return models.DashboardDownloads{}, fmt.Errorf("failed to query dashboard downloads: %w", err)
+	}
+
+	if downloads.Total > 0 {
+		downloads.SuccessRate = float64(downloads.SuccessTotal) / float64(downloads.Total)
+		downloads.FailureRate = float64(downloads.FailedTotal) / float64(downloads.Total)
+	}
+	return downloads, nil
+}
+
 // GetActiveUserCount 获取活跃用户数
 func (r *HistoryRepository) GetActiveUserCount(ctx context.Context, since time.Time) (int64, error) {
 	var count int64
@@ -471,32 +496,64 @@ func (r *HistoryRepository) GetRequestTrend(ctx context.Context, granularity str
 	switch granularity {
 	case "hour":
 		query = `
-			SELECT TO_CHAR(bucket, 'YYYY-MM-DD HH24:00') AS label, count
-			FROM (
-				SELECT DATE_TRUNC('hour', created_at) AS bucket, COUNT(*) AS count
+			WITH series AS (
+				SELECT generate_series(
+					DATE_TRUNC('hour', NOW()) - (($1::int - 1) * INTERVAL '1 hour'),
+					DATE_TRUNC('hour', NOW()),
+					INTERVAL '1 hour'
+				) AS bucket
+			),
+			aggregated AS (
+				SELECT
+					DATE_TRUNC('hour', created_at) AS bucket,
+					COUNT(*) AS total_count,
+					COUNT(*) FILTER (WHERE status = $2) AS success_count,
+					COUNT(*) FILTER (WHERE status = $3) AS failed_count
 				FROM download_history
-				WHERE created_at >= NOW() - ($1::int * INTERVAL '1 hour')
+				WHERE created_at >= DATE_TRUNC('hour', NOW()) - (($1::int - 1) * INTERVAL '1 hour')
+				  AND created_at < DATE_TRUNC('hour', NOW()) + INTERVAL '1 hour'
 				GROUP BY bucket
-				ORDER BY bucket DESC
-				LIMIT $1
-			) trend
-			ORDER BY bucket ASC
+			)
+			SELECT
+				TO_CHAR(series.bucket, 'YYYY-MM-DD HH24:00') AS label,
+				COALESCE(aggregated.total_count, 0) AS total_count,
+				COALESCE(aggregated.success_count, 0) AS success_count,
+				COALESCE(aggregated.failed_count, 0) AS failed_count
+			FROM series
+			LEFT JOIN aggregated ON aggregated.bucket = series.bucket
+			ORDER BY series.bucket ASC
 		`
-		args = []interface{}{limit}
+		args = []interface{}{limit, models.StatusCompleted, models.StatusFailed}
 	default:
 		query = `
-			SELECT TO_CHAR(bucket, 'YYYY-MM-DD') AS label, count
-			FROM (
-				SELECT DATE_TRUNC('day', created_at) AS bucket, COUNT(*) AS count
+			WITH series AS (
+				SELECT generate_series(
+					CURRENT_DATE - (($1::int - 1) * INTERVAL '1 day'),
+					CURRENT_DATE,
+					INTERVAL '1 day'
+				) AS bucket
+			),
+			aggregated AS (
+				SELECT
+					DATE_TRUNC('day', created_at) AS bucket,
+					COUNT(*) AS total_count,
+					COUNT(*) FILTER (WHERE status = $2) AS success_count,
+					COUNT(*) FILTER (WHERE status = $3) AS failed_count
 				FROM download_history
-				WHERE created_at >= CURRENT_DATE - ($1::int - 1)
+				WHERE created_at >= CURRENT_DATE - (($1::int - 1) * INTERVAL '1 day')
+				  AND created_at < CURRENT_DATE + INTERVAL '1 day'
 				GROUP BY bucket
-				ORDER BY bucket DESC
-				LIMIT $1
-			) trend
-			ORDER BY bucket ASC
+			)
+			SELECT
+				TO_CHAR(series.bucket, 'YYYY-MM-DD') AS label,
+				COALESCE(aggregated.total_count, 0) AS total_count,
+				COALESCE(aggregated.success_count, 0) AS success_count,
+				COALESCE(aggregated.failed_count, 0) AS failed_count
+			FROM series
+			LEFT JOIN aggregated ON aggregated.bucket = series.bucket
+			ORDER BY series.bucket ASC
 		`
-		args = []interface{}{limit}
+		args = []interface{}{limit, models.StatusCompleted, models.StatusFailed}
 	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
@@ -508,10 +565,17 @@ func (r *HistoryRepository) GetRequestTrend(ctx context.Context, granularity str
 	points := make([]models.TrendPoint, 0, limit)
 	for rows.Next() {
 		var point models.TrendPoint
-		if err := rows.Scan(&point.Label, &point.Count); err != nil {
+		if err := rows.Scan(&point.Label, &point.TotalCount, &point.SuccessCount, &point.FailedCount); err != nil {
 			return nil, fmt.Errorf("failed to scan request trend: %w", err)
 		}
+		point.Count = point.TotalCount
+		if point.TotalCount > 0 {
+			point.SuccessRate = float64(point.SuccessCount) / float64(point.TotalCount)
+		}
 		points = append(points, point)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate request trend: %w", err)
 	}
 
 	return points, nil

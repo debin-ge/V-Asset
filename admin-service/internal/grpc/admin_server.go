@@ -98,13 +98,28 @@ func (s *AdminServer) GetRequestTrend(ctx context.Context, req *pb.AdminRequestT
 
 	points := make([]*pb.AdminTrendPoint, 0, len(resp.Points))
 	for _, point := range resp.Points {
-		points = append(points, &pb.AdminTrendPoint{Label: point.Label, Count: point.Count})
+		points = append(points, &pb.AdminTrendPoint{
+			Label:        point.Label,
+			Count:        point.Count,
+			TotalCount:   point.TotalCount,
+			SuccessCount: point.SuccessCount,
+			FailedCount:  point.FailedCount,
+			SuccessRate:  point.SuccessRate,
+		})
 	}
 
 	return &pb.AdminRequestTrendResponse{
 		Granularity: resp.Granularity,
 		Points:      points,
 	}, nil
+}
+
+func (s *AdminServer) GetDashboardHealth(ctx context.Context, _ *pb.AdminEmpty) (*pb.AdminDashboardHealthResponse, error) {
+	resp, err := s.statsService.GetDashboardHealth(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return dashboardHealthToProto(resp), nil
 }
 
 func (s *AdminServer) GetUserStats(ctx context.Context, _ *pb.AdminEmpty) (*pb.AdminUserStatsResponse, error) {
@@ -117,6 +132,87 @@ func (s *AdminServer) GetUserStats(ctx context.Context, _ *pb.AdminEmpty) (*pb.A
 		DailyActiveUsers:  resp.DailyActiveUsers,
 		WeeklyActiveUsers: resp.WeeklyActiveUsers,
 	}, nil
+}
+
+func dashboardHealthToProto(resp *models.DashboardHealthResponse) *pb.AdminDashboardHealthResponse {
+	if resp == nil {
+		return &pb.AdminDashboardHealthResponse{}
+	}
+	return &pb.AdminDashboardHealthResponse{
+		GeneratedAt: resp.GeneratedAt,
+		Downloads: &pb.AdminDashboardDownloads{
+			Total:        resp.Downloads.Total,
+			TodayTotal:   resp.Downloads.TodayTotal,
+			SuccessTotal: resp.Downloads.SuccessTotal,
+			FailedTotal:  resp.Downloads.FailedTotal,
+			SuccessRate:  resp.Downloads.SuccessRate,
+			FailureRate:  resp.Downloads.FailureRate,
+		},
+		Users: &pb.AdminDashboardUsers{
+			Total:        resp.Users.Total,
+			DailyActive:  resp.Users.DailyActive,
+			WeeklyActive: resp.Users.WeeklyActive,
+			DauWauRate:   resp.Users.DAUWAURate,
+			WauTotalRate: resp.Users.WAUTotalRate,
+		},
+		Proxies: &pb.AdminDashboardProxies{
+			Total:              resp.Proxies.Total,
+			Active:             resp.Proxies.Active,
+			Available:          resp.Proxies.Available,
+			Cooling:            resp.Proxies.Cooling,
+			Saturated:          resp.Proxies.Saturated,
+			HighRisk:           resp.Proxies.HighRisk,
+			RecentSuccess:      resp.Proxies.RecentSuccess,
+			RecentFailure:      resp.Proxies.RecentFailure,
+			RecentFailureRate:  resp.Proxies.RecentFailureRate,
+			TopErrorCategories: adminDashboardCountsToProto(resp.Proxies.TopErrorCategories),
+		},
+		ProxySource: &pb.AdminDashboardProxySource{
+			Healthy:           resp.ProxySource.Healthy,
+			Mode:              resp.ProxySource.Mode,
+			Message:           resp.ProxySource.Message,
+			DynamicConfigured: resp.ProxySource.DynamicConfigured,
+			ProxyLeaseId:      resp.ProxySource.ProxyLeaseID,
+			ProxyExpireAt:     resp.ProxySource.ProxyExpireAt,
+		},
+		ProxyPolicy: &pb.AdminDashboardProxyPolicy{
+			PrimarySource:   resp.ProxyPolicy.PrimarySource,
+			FallbackSource:  resp.ProxyPolicy.FallbackSource,
+			FallbackEnabled: resp.ProxyPolicy.FallbackEnabled,
+		},
+		Cookies: &pb.AdminDashboardCookies{
+			Total:   resp.Cookies.Total,
+			Active:  resp.Cookies.Active,
+			Expired: resp.Cookies.Expired,
+			Frozen:  resp.Cookies.Frozen,
+		},
+		Billing: &pb.AdminDashboardBilling{
+			ShortfallCount: resp.Billing.ShortfallCount,
+		},
+		Exceptions: adminDashboardExceptionsToProto(resp.Exceptions),
+	}
+}
+
+func adminDashboardCountsToProto(items []models.DashboardCount) []*pb.AdminDashboardProxyErrorCategory {
+	result := make([]*pb.AdminDashboardProxyErrorCategory, 0, len(items))
+	for _, item := range items {
+		result = append(result, &pb.AdminDashboardProxyErrorCategory{Key: item.Key, Count: item.Count})
+	}
+	return result
+}
+
+func adminDashboardExceptionsToProto(items []models.DashboardException) []*pb.AdminDashboardException {
+	result := make([]*pb.AdminDashboardException, 0, len(items))
+	for _, item := range items {
+		result = append(result, &pb.AdminDashboardException{
+			Area:        item.Area,
+			Severity:    item.Severity,
+			Message:     item.Message,
+			ActionLabel: item.ActionLabel,
+			ActionHref:  item.ActionHref,
+		})
+	}
+	return result
 }
 
 func (s *AdminServer) GetProxySourceStatus(ctx context.Context, _ *pb.AdminEmpty) (*pb.AdminProxySourceStatusResponse, error) {
@@ -164,9 +260,13 @@ func (s *AdminServer) UpdateProxySourcePolicy(ctx context.Context, req *pb.Admin
 
 func (s *AdminServer) ListProxies(ctx context.Context, req *pb.AdminListProxiesRequest) (*pb.AdminListProxiesResponse, error) {
 	modelReq := models.ListProxiesRequest{
-		Search:   req.GetSearch(),
-		Protocol: req.GetProtocol(),
-		Region:   req.GetRegion(),
+		Search:    req.GetSearch(),
+		Protocol:  req.GetProtocol(),
+		Region:    req.GetRegion(),
+		Page:      req.GetPage(),
+		PageSize:  req.GetPageSize(),
+		SortBy:    req.GetSortBy(),
+		SortOrder: req.GetSortOrder(),
 	}
 	if req.GetHasStatus() {
 		status := req.GetStatus()
@@ -182,7 +282,12 @@ func (s *AdminServer) ListProxies(ctx context.Context, req *pb.AdminListProxiesR
 	for _, item := range resp.Items {
 		items = append(items, proxyInfoToProto(item))
 	}
-	return &pb.AdminListProxiesResponse{Items: items}, nil
+	return &pb.AdminListProxiesResponse{
+		Items:    items,
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+	}, nil
 }
 
 func (s *AdminServer) ListProxyUsageEvents(ctx context.Context, req *pb.AdminListProxyUsageEventsRequest) (*pb.AdminListProxyUsageEventsResponse, error) {

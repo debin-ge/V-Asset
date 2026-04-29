@@ -258,6 +258,40 @@ func TestAcquireProxyForTaskRebindsFailedManualProxy(t *testing.T) {
 	}
 }
 
+func TestListProxiesCapsPaginationAtServiceBoundary(t *testing.T) {
+	t.Parallel()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("create sqlmock failed: %v", err)
+	}
+	defer db.Close()
+
+	const expectedMaxPage = 10000
+	expectedOffset := (expectedMaxPage - 1) * models.ProxyListMaxPageSize
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM proxies p WHERE deleted_at IS NULL`).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(0)))
+	mock.ExpectQuery(`(?s)SELECT p\.id,.*FROM proxies p\s+WHERE deleted_at IS NULL\s+ORDER BY p\.status ASC, p\.risk_score ASC, p\.priority DESC, p\.created_at DESC\s+LIMIT \$1 OFFSET \$2`).
+		WithArgs(models.ProxyListMaxPageSize, expectedOffset).
+		WillReturnRows(proxyRows())
+
+	svc := newProxyServiceForTest(db)
+	result, err := svc.ListProxies(context.Background(), models.ProxyListFilter{
+		Page:     expectedMaxPage + 1,
+		PageSize: models.ProxyListMaxPageSize + 1,
+	})
+	if err != nil {
+		t.Fatalf("ListProxies returned error: %v", err)
+	}
+	if result.Page != expectedMaxPage || result.PageSize != models.ProxyListMaxPageSize {
+		t.Fatalf("expected capped pagination page=%d page_size=%d, got page=%d page_size=%d", expectedMaxPage, models.ProxyListMaxPageSize, result.Page, result.PageSize)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
 func newProxyServiceForTest(db *sql.DB) *ProxyService {
 	return NewProxyService(
 		repository.NewProxyRepository(db),

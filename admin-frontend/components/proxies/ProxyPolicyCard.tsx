@@ -13,14 +13,14 @@ export function ProxyPolicyCard({
 }) {
   if (!policy) {
     return (
-      <Card className="rounded-[28px] border-border/60 bg-white/85 shadow-sm">
+      <Card className="rounded-lg border-border/70 bg-white/90 shadow-sm">
         <CardContent className="py-10 text-sm text-muted-foreground">Loading policy...</CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="rounded-[28px] border-border/60 bg-white/85 shadow-sm">
+    <Card className="rounded-lg border-border/70 bg-white/90 shadow-sm">
       <CardHeader>
         <CardTitle>Global Proxy Strategy</CardTitle>
         <CardDescription>配置主代理源、回退策略和租约阈值。</CardDescription>
@@ -55,7 +55,7 @@ export function ProxyPolicyCard({
               <option value="dynamic_api">Dynamic API</option>
             </NativeSelect>
           </Field>
-          <label className="flex min-h-20 items-center gap-3 rounded-2xl border border-border/60 bg-muted/35 px-4">
+          <label className="flex min-h-20 items-center gap-3 rounded-lg border border-border/70 bg-muted/35 px-4">
             <input type="checkbox" name="fallback_enabled" defaultChecked={policy.fallback_enabled} />
             <span className="text-sm font-medium text-foreground">Enable Fallback</span>
           </label>
@@ -89,7 +89,7 @@ export function ProxyPolicyCard({
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="grid gap-2 rounded-2xl border border-border/60 bg-muted/35 p-4">
+    <label className="grid gap-2 rounded-lg border border-border/70 bg-muted/35 p-4">
       <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{label}</span>
       {children}
     </label>

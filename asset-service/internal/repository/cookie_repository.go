@@ -212,6 +212,29 @@ func (r *CookieRepository) List(ctx context.Context, filter *models.CookieFilter
 	}, nil
 }
 
+func (r *CookieRepository) GetDashboardStats(ctx context.Context) (models.DashboardCookies, error) {
+	var stats models.DashboardCookies
+	now := time.Now()
+	query := `
+		SELECT
+			COUNT(*),
+			COUNT(*) FILTER (
+				WHERE (expire_at IS NULL OR expire_at > $1)
+				  AND (frozen_until IS NULL OR frozen_until < $1)
+			),
+			COUNT(*) FILTER (WHERE expire_at IS NOT NULL AND expire_at <= $1),
+			COUNT(*) FILTER (
+				WHERE (expire_at IS NULL OR expire_at > $1)
+				  AND frozen_until IS NOT NULL
+				  AND frozen_until > $1
+			)
+		FROM cookies`
+	if err := r.db.QueryRowContext(ctx, query, now).Scan(&stats.Total, &stats.Active, &stats.Expired, &stats.Frozen); err != nil {
+		return models.DashboardCookies{}, fmt.Errorf("query dashboard cookie stats failed: %w", err)
+	}
+	return stats, nil
+}
+
 // Freeze 冷冻 Cookie
 func (r *CookieRepository) Freeze(ctx context.Context, id int64, freezeSeconds int) (*time.Time, error) {
 	frozenUntil := time.Now().Add(time.Duration(freezeSeconds) * time.Second)

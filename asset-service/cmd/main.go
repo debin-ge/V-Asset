@@ -59,10 +59,10 @@ func main() {
 	// 4. 初始化 Service
 	historyService := service.NewHistoryService(historyRepo)
 	quotaService := service.NewQuotaService(quotaRepo, &cfg.Quota)
-	statsService := service.NewStatsService(historyRepo)
 	proxyService := service.NewProxyService(proxyRepo, proxyPolicyRepo, taskProxyBindingRepo, cfg)
 	cookieService := service.NewCookieService(cookieRepo, cfg)
 	billingService := service.NewBillingService(billingRepo, welcomeCreditRepo)
+	statsService := service.NewStatsService(historyRepo, proxyRepo, cookieRepo, billingRepo)
 	welcomeCreditService := service.NewWelcomeCreditService(welcomeCreditRepo)
 
 	// 5. 初始化 Handler

@@ -1,6 +1,6 @@
 import apiClient from "@/lib/api-client";
 import { buildAdminApiPath } from "@/lib/admin-api-path";
-import type { Overview, RequestTrend, UserStats } from "@/types/stats";
+import type { DashboardHealthResponse, Overview, RequestTrend, UserStats } from "@/types/stats";
 
 export const statsApi = {
   getOverview: async (): Promise<Overview> => {
@@ -12,6 +12,10 @@ export const statsApi = {
       params: { granularity, limit },
     });
     return response.data as RequestTrend;
+  },
+  getDashboardHealth: async (): Promise<DashboardHealthResponse> => {
+    const response = await apiClient.get(buildAdminApiPath("/api/v1/admin/stats/dashboard-health"));
+    return response.data as DashboardHealthResponse;
   },
   getUsers: async (): Promise<UserStats> => {
     const response = await apiClient.get(buildAdminApiPath("/api/v1/admin/stats/users"));

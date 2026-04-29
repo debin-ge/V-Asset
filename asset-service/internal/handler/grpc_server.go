@@ -1023,8 +1023,12 @@ func (s *GRPCServer) GetRequestTrend(ctx context.Context, req *pb.GetRequestTren
 	respPoints := make([]*pb.TrendPoint, 0, len(points))
 	for _, point := range points {
 		respPoints = append(respPoints, &pb.TrendPoint{
-			Label: point.Label,
-			Count: point.Count,
+			Label:        point.Label,
+			Count:        point.Count,
+			TotalCount:   point.TotalCount,
+			SuccessCount: point.SuccessCount,
+			FailedCount:  point.FailedCount,
+			SuccessRate:  point.SuccessRate,
 		})
 	}
 
@@ -1032,6 +1036,91 @@ func (s *GRPCServer) GetRequestTrend(ctx context.Context, req *pb.GetRequestTren
 		Granularity: granularity,
 		Points:      respPoints,
 	}, nil
+}
+
+func (s *GRPCServer) GetDashboardHealth(ctx context.Context, req *pb.GetDashboardHealthRequest) (*pb.GetDashboardHealthResponse, error) {
+	health, err := s.statsService.GetDashboardHealth(ctx)
+	if err != nil {
+		log.Printf("GetDashboardHealth error: %v", err)
+		return nil, status.Error(codes.Internal, "获取 Dashboard 健康聚合失败")
+	}
+
+	sourceStatus, err := s.proxyHandler.proxyService.CheckSourceStatus(ctx, nil, nil)
+	if err != nil {
+		log.Printf("GetDashboardHealth proxy source error: %v", err)
+		return nil, status.Error(codes.Internal, "获取代理来源状态失败")
+	}
+
+	policy, err := s.proxyHandler.proxyService.GetSourcePolicy(ctx)
+	if err != nil {
+		log.Printf("GetDashboardHealth proxy policy error: %v", err)
+		return nil, status.Error(codes.Internal, "获取代理策略失败")
+	}
+
+	resp := &pb.GetDashboardHealthResponse{
+		GeneratedAt: health.GeneratedAt.Format(time.RFC3339),
+		Downloads: &pb.AssetDashboardDownloads{
+			Total:        health.Downloads.Total,
+			TodayTotal:   health.Downloads.TodayTotal,
+			SuccessTotal: health.Downloads.SuccessTotal,
+			FailedTotal:  health.Downloads.FailedTotal,
+			SuccessRate:  health.Downloads.SuccessRate,
+			FailureRate:  health.Downloads.FailureRate,
+		},
+		Users: &pb.AssetDashboardUsers{
+			DailyActive:  health.Users.DailyActive,
+			WeeklyActive: health.Users.WeeklyActive,
+		},
+		Proxies: &pb.AssetDashboardProxies{
+			Total:              health.Proxies.Total,
+			Active:             health.Proxies.Active,
+			Available:          health.Proxies.Available,
+			Cooling:            health.Proxies.Cooling,
+			Saturated:          health.Proxies.Saturated,
+			HighRisk:           health.Proxies.HighRisk,
+			RecentSuccess:      health.Proxies.RecentSuccess,
+			RecentFailure:      health.Proxies.RecentFailure,
+			RecentFailureRate:  health.Proxies.RecentFailureRate,
+			TopErrorCategories: dashboardProxyErrorCategoriesToProto(health.Proxies.TopErrorCategories),
+		},
+		ProxySource: &pb.AssetDashboardProxySource{
+			Healthy:           sourceStatus.Healthy,
+			Mode:              sourceStatus.Mode,
+			Message:           sourceStatus.Message,
+			DynamicConfigured: sourceStatus.DynamicConfigured,
+		},
+		Cookies: &pb.AssetDashboardCookies{
+			Total:   health.Cookies.Total,
+			Active:  health.Cookies.Active,
+			Expired: health.Cookies.Expired,
+			Frozen:  health.Cookies.Frozen,
+		},
+		Billing: &pb.AssetDashboardBilling{
+			ShortfallCount: health.Billing.ShortfallCount,
+		},
+	}
+	if policy != nil {
+		resp.ProxyPolicy = &pb.AssetDashboardProxyPolicy{
+			PrimarySource:   string(policy.PrimarySource),
+			FallbackEnabled: policy.FallbackEnabled,
+		}
+		if policy.FallbackSource != nil {
+			resp.ProxyPolicy.FallbackSource = string(*policy.FallbackSource)
+		}
+	}
+
+	return resp, nil
+}
+
+func dashboardProxyErrorCategoriesToProto(items []models.DashboardCount) []*pb.AssetDashboardProxyErrorCategory {
+	result := make([]*pb.AssetDashboardProxyErrorCategory, 0, len(items))
+	for _, item := range items {
+		result = append(result, &pb.AssetDashboardProxyErrorCategory{
+			Key:   item.Key,
+			Count: item.Count,
+		})
+	}
+	return result
 }
 
 // GetFileInfo 获取文件信息

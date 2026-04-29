@@ -549,12 +549,20 @@ func (s *ProxyService) UpdateSourcePolicy(
 }
 
 // ListProxies 列出手动代理池
-func (s *ProxyService) ListProxies(
-	ctx context.Context,
-	search, protocol, region *string,
-	status *models.ProxyStatus,
-) ([]*models.Proxy, error) {
-	return s.repo.ListProxies(ctx, search, protocol, region, status)
+func (s *ProxyService) ListProxies(ctx context.Context, filter models.ProxyListFilter) (*models.ProxyListResult, error) {
+	if filter.Page < 1 {
+		filter.Page = models.ProxyListDefaultPage
+	}
+	if filter.Page > models.ProxyListMaxPage {
+		filter.Page = models.ProxyListMaxPage
+	}
+	if filter.PageSize < 1 {
+		filter.PageSize = models.ProxyListDefaultPageSize
+	}
+	if filter.PageSize > models.ProxyListMaxPageSize {
+		filter.PageSize = models.ProxyListMaxPageSize
+	}
+	return s.repo.ListProxies(ctx, filter)
 }
 
 // CreateProxy 创建手动代理

@@ -505,6 +505,10 @@ type AdminTrendPoint struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
 	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	TotalCount    int64                  `protobuf:"varint,3,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	SuccessCount  int64                  `protobuf:"varint,4,opt,name=success_count,json=successCount,proto3" json:"success_count,omitempty"`
+	FailedCount   int64                  `protobuf:"varint,5,opt,name=failed_count,json=failedCount,proto3" json:"failed_count,omitempty"`
+	SuccessRate   float64                `protobuf:"fixed64,6,opt,name=success_rate,json=successRate,proto3" json:"success_rate,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -549,6 +553,34 @@ func (x *AdminTrendPoint) GetLabel() string {
 func (x *AdminTrendPoint) GetCount() int64 {
 	if x != nil {
 		return x.Count
+	}
+	return 0
+}
+
+func (x *AdminTrendPoint) GetTotalCount() int64 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+func (x *AdminTrendPoint) GetSuccessCount() int64 {
+	if x != nil {
+		return x.SuccessCount
+	}
+	return 0
+}
+
+func (x *AdminTrendPoint) GetFailedCount() int64 {
+	if x != nil {
+		return x.FailedCount
+	}
+	return 0
+}
+
+func (x *AdminTrendPoint) GetSuccessRate() float64 {
+	if x != nil {
+		return x.SuccessRate
 	}
 	return 0
 }
@@ -657,6 +689,774 @@ func (x *AdminRequestTrendResponse) GetPoints() []*AdminTrendPoint {
 	return nil
 }
 
+type AdminDashboardDownloads struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         int64                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	TodayTotal    int64                  `protobuf:"varint,2,opt,name=today_total,json=todayTotal,proto3" json:"today_total,omitempty"`
+	SuccessTotal  int64                  `protobuf:"varint,3,opt,name=success_total,json=successTotal,proto3" json:"success_total,omitempty"`
+	FailedTotal   int64                  `protobuf:"varint,4,opt,name=failed_total,json=failedTotal,proto3" json:"failed_total,omitempty"`
+	SuccessRate   float64                `protobuf:"fixed64,5,opt,name=success_rate,json=successRate,proto3" json:"success_rate,omitempty"`
+	FailureRate   float64                `protobuf:"fixed64,6,opt,name=failure_rate,json=failureRate,proto3" json:"failure_rate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminDashboardDownloads) Reset() {
+	*x = AdminDashboardDownloads{}
+	mi := &file_proto_admin_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardDownloads) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardDownloads) ProtoMessage() {}
+
+func (x *AdminDashboardDownloads) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardDownloads.ProtoReflect.Descriptor instead.
+func (*AdminDashboardDownloads) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *AdminDashboardDownloads) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *AdminDashboardDownloads) GetTodayTotal() int64 {
+	if x != nil {
+		return x.TodayTotal
+	}
+	return 0
+}
+
+func (x *AdminDashboardDownloads) GetSuccessTotal() int64 {
+	if x != nil {
+		return x.SuccessTotal
+	}
+	return 0
+}
+
+func (x *AdminDashboardDownloads) GetFailedTotal() int64 {
+	if x != nil {
+		return x.FailedTotal
+	}
+	return 0
+}
+
+func (x *AdminDashboardDownloads) GetSuccessRate() float64 {
+	if x != nil {
+		return x.SuccessRate
+	}
+	return 0
+}
+
+func (x *AdminDashboardDownloads) GetFailureRate() float64 {
+	if x != nil {
+		return x.FailureRate
+	}
+	return 0
+}
+
+type AdminDashboardUsers struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         int64                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	DailyActive   int64                  `protobuf:"varint,2,opt,name=daily_active,json=dailyActive,proto3" json:"daily_active,omitempty"`
+	WeeklyActive  int64                  `protobuf:"varint,3,opt,name=weekly_active,json=weeklyActive,proto3" json:"weekly_active,omitempty"`
+	DauWauRate    float64                `protobuf:"fixed64,4,opt,name=dau_wau_rate,json=dauWauRate,proto3" json:"dau_wau_rate,omitempty"`
+	WauTotalRate  float64                `protobuf:"fixed64,5,opt,name=wau_total_rate,json=wauTotalRate,proto3" json:"wau_total_rate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminDashboardUsers) Reset() {
+	*x = AdminDashboardUsers{}
+	mi := &file_proto_admin_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardUsers) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardUsers) ProtoMessage() {}
+
+func (x *AdminDashboardUsers) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardUsers.ProtoReflect.Descriptor instead.
+func (*AdminDashboardUsers) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *AdminDashboardUsers) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *AdminDashboardUsers) GetDailyActive() int64 {
+	if x != nil {
+		return x.DailyActive
+	}
+	return 0
+}
+
+func (x *AdminDashboardUsers) GetWeeklyActive() int64 {
+	if x != nil {
+		return x.WeeklyActive
+	}
+	return 0
+}
+
+func (x *AdminDashboardUsers) GetDauWauRate() float64 {
+	if x != nil {
+		return x.DauWauRate
+	}
+	return 0
+}
+
+func (x *AdminDashboardUsers) GetWauTotalRate() float64 {
+	if x != nil {
+		return x.WauTotalRate
+	}
+	return 0
+}
+
+type AdminDashboardProxyErrorCategory struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminDashboardProxyErrorCategory) Reset() {
+	*x = AdminDashboardProxyErrorCategory{}
+	mi := &file_proto_admin_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardProxyErrorCategory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardProxyErrorCategory) ProtoMessage() {}
+
+func (x *AdminDashboardProxyErrorCategory) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardProxyErrorCategory.ProtoReflect.Descriptor instead.
+func (*AdminDashboardProxyErrorCategory) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *AdminDashboardProxyErrorCategory) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *AdminDashboardProxyErrorCategory) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type AdminDashboardProxies struct {
+	state              protoimpl.MessageState              `protogen:"open.v1"`
+	Total              int64                               `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Active             int64                               `protobuf:"varint,2,opt,name=active,proto3" json:"active,omitempty"`
+	Available          int64                               `protobuf:"varint,3,opt,name=available,proto3" json:"available,omitempty"`
+	Cooling            int64                               `protobuf:"varint,4,opt,name=cooling,proto3" json:"cooling,omitempty"`
+	Saturated          int64                               `protobuf:"varint,5,opt,name=saturated,proto3" json:"saturated,omitempty"`
+	HighRisk           int64                               `protobuf:"varint,6,opt,name=high_risk,json=highRisk,proto3" json:"high_risk,omitempty"`
+	RecentSuccess      int64                               `protobuf:"varint,7,opt,name=recent_success,json=recentSuccess,proto3" json:"recent_success,omitempty"`
+	RecentFailure      int64                               `protobuf:"varint,8,opt,name=recent_failure,json=recentFailure,proto3" json:"recent_failure,omitempty"`
+	RecentFailureRate  float64                             `protobuf:"fixed64,9,opt,name=recent_failure_rate,json=recentFailureRate,proto3" json:"recent_failure_rate,omitempty"`
+	TopErrorCategories []*AdminDashboardProxyErrorCategory `protobuf:"bytes,10,rep,name=top_error_categories,json=topErrorCategories,proto3" json:"top_error_categories,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *AdminDashboardProxies) Reset() {
+	*x = AdminDashboardProxies{}
+	mi := &file_proto_admin_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardProxies) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardProxies) ProtoMessage() {}
+
+func (x *AdminDashboardProxies) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardProxies.ProtoReflect.Descriptor instead.
+func (*AdminDashboardProxies) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *AdminDashboardProxies) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetActive() int64 {
+	if x != nil {
+		return x.Active
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetAvailable() int64 {
+	if x != nil {
+		return x.Available
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetCooling() int64 {
+	if x != nil {
+		return x.Cooling
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetSaturated() int64 {
+	if x != nil {
+		return x.Saturated
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetHighRisk() int64 {
+	if x != nil {
+		return x.HighRisk
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetRecentSuccess() int64 {
+	if x != nil {
+		return x.RecentSuccess
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetRecentFailure() int64 {
+	if x != nil {
+		return x.RecentFailure
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetRecentFailureRate() float64 {
+	if x != nil {
+		return x.RecentFailureRate
+	}
+	return 0
+}
+
+func (x *AdminDashboardProxies) GetTopErrorCategories() []*AdminDashboardProxyErrorCategory {
+	if x != nil {
+		return x.TopErrorCategories
+	}
+	return nil
+}
+
+type AdminDashboardProxySource struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Healthy           bool                   `protobuf:"varint,1,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	Mode              string                 `protobuf:"bytes,2,opt,name=mode,proto3" json:"mode,omitempty"`
+	Message           string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	DynamicConfigured bool                   `protobuf:"varint,4,opt,name=dynamic_configured,json=dynamicConfigured,proto3" json:"dynamic_configured,omitempty"`
+	ProxyLeaseId      string                 `protobuf:"bytes,5,opt,name=proxy_lease_id,json=proxyLeaseId,proto3" json:"proxy_lease_id,omitempty"`
+	ProxyExpireAt     string                 `protobuf:"bytes,6,opt,name=proxy_expire_at,json=proxyExpireAt,proto3" json:"proxy_expire_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *AdminDashboardProxySource) Reset() {
+	*x = AdminDashboardProxySource{}
+	mi := &file_proto_admin_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardProxySource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardProxySource) ProtoMessage() {}
+
+func (x *AdminDashboardProxySource) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardProxySource.ProtoReflect.Descriptor instead.
+func (*AdminDashboardProxySource) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *AdminDashboardProxySource) GetHealthy() bool {
+	if x != nil {
+		return x.Healthy
+	}
+	return false
+}
+
+func (x *AdminDashboardProxySource) GetMode() string {
+	if x != nil {
+		return x.Mode
+	}
+	return ""
+}
+
+func (x *AdminDashboardProxySource) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *AdminDashboardProxySource) GetDynamicConfigured() bool {
+	if x != nil {
+		return x.DynamicConfigured
+	}
+	return false
+}
+
+func (x *AdminDashboardProxySource) GetProxyLeaseId() string {
+	if x != nil {
+		return x.ProxyLeaseId
+	}
+	return ""
+}
+
+func (x *AdminDashboardProxySource) GetProxyExpireAt() string {
+	if x != nil {
+		return x.ProxyExpireAt
+	}
+	return ""
+}
+
+type AdminDashboardProxyPolicy struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	PrimarySource   string                 `protobuf:"bytes,1,opt,name=primary_source,json=primarySource,proto3" json:"primary_source,omitempty"`
+	FallbackSource  string                 `protobuf:"bytes,2,opt,name=fallback_source,json=fallbackSource,proto3" json:"fallback_source,omitempty"`
+	FallbackEnabled bool                   `protobuf:"varint,3,opt,name=fallback_enabled,json=fallbackEnabled,proto3" json:"fallback_enabled,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *AdminDashboardProxyPolicy) Reset() {
+	*x = AdminDashboardProxyPolicy{}
+	mi := &file_proto_admin_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardProxyPolicy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardProxyPolicy) ProtoMessage() {}
+
+func (x *AdminDashboardProxyPolicy) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardProxyPolicy.ProtoReflect.Descriptor instead.
+func (*AdminDashboardProxyPolicy) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *AdminDashboardProxyPolicy) GetPrimarySource() string {
+	if x != nil {
+		return x.PrimarySource
+	}
+	return ""
+}
+
+func (x *AdminDashboardProxyPolicy) GetFallbackSource() string {
+	if x != nil {
+		return x.FallbackSource
+	}
+	return ""
+}
+
+func (x *AdminDashboardProxyPolicy) GetFallbackEnabled() bool {
+	if x != nil {
+		return x.FallbackEnabled
+	}
+	return false
+}
+
+type AdminDashboardCookies struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         int64                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Active        int64                  `protobuf:"varint,2,opt,name=active,proto3" json:"active,omitempty"`
+	Expired       int64                  `protobuf:"varint,3,opt,name=expired,proto3" json:"expired,omitempty"`
+	Frozen        int64                  `protobuf:"varint,4,opt,name=frozen,proto3" json:"frozen,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminDashboardCookies) Reset() {
+	*x = AdminDashboardCookies{}
+	mi := &file_proto_admin_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardCookies) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardCookies) ProtoMessage() {}
+
+func (x *AdminDashboardCookies) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardCookies.ProtoReflect.Descriptor instead.
+func (*AdminDashboardCookies) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AdminDashboardCookies) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *AdminDashboardCookies) GetActive() int64 {
+	if x != nil {
+		return x.Active
+	}
+	return 0
+}
+
+func (x *AdminDashboardCookies) GetExpired() int64 {
+	if x != nil {
+		return x.Expired
+	}
+	return 0
+}
+
+func (x *AdminDashboardCookies) GetFrozen() int64 {
+	if x != nil {
+		return x.Frozen
+	}
+	return 0
+}
+
+type AdminDashboardBilling struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ShortfallCount int64                  `protobuf:"varint,1,opt,name=shortfall_count,json=shortfallCount,proto3" json:"shortfall_count,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *AdminDashboardBilling) Reset() {
+	*x = AdminDashboardBilling{}
+	mi := &file_proto_admin_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardBilling) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardBilling) ProtoMessage() {}
+
+func (x *AdminDashboardBilling) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardBilling.ProtoReflect.Descriptor instead.
+func (*AdminDashboardBilling) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *AdminDashboardBilling) GetShortfallCount() int64 {
+	if x != nil {
+		return x.ShortfallCount
+	}
+	return 0
+}
+
+type AdminDashboardException struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Area          string                 `protobuf:"bytes,1,opt,name=area,proto3" json:"area,omitempty"`
+	Severity      string                 `protobuf:"bytes,2,opt,name=severity,proto3" json:"severity,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	ActionLabel   string                 `protobuf:"bytes,4,opt,name=action_label,json=actionLabel,proto3" json:"action_label,omitempty"`
+	ActionHref    string                 `protobuf:"bytes,5,opt,name=action_href,json=actionHref,proto3" json:"action_href,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminDashboardException) Reset() {
+	*x = AdminDashboardException{}
+	mi := &file_proto_admin_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardException) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardException) ProtoMessage() {}
+
+func (x *AdminDashboardException) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardException.ProtoReflect.Descriptor instead.
+func (*AdminDashboardException) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AdminDashboardException) GetArea() string {
+	if x != nil {
+		return x.Area
+	}
+	return ""
+}
+
+func (x *AdminDashboardException) GetSeverity() string {
+	if x != nil {
+		return x.Severity
+	}
+	return ""
+}
+
+func (x *AdminDashboardException) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *AdminDashboardException) GetActionLabel() string {
+	if x != nil {
+		return x.ActionLabel
+	}
+	return ""
+}
+
+func (x *AdminDashboardException) GetActionHref() string {
+	if x != nil {
+		return x.ActionHref
+	}
+	return ""
+}
+
+type AdminDashboardHealthResponse struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	GeneratedAt   string                     `protobuf:"bytes,1,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	Downloads     *AdminDashboardDownloads   `protobuf:"bytes,2,opt,name=downloads,proto3" json:"downloads,omitempty"`
+	Users         *AdminDashboardUsers       `protobuf:"bytes,3,opt,name=users,proto3" json:"users,omitempty"`
+	Proxies       *AdminDashboardProxies     `protobuf:"bytes,4,opt,name=proxies,proto3" json:"proxies,omitempty"`
+	ProxySource   *AdminDashboardProxySource `protobuf:"bytes,5,opt,name=proxy_source,json=proxySource,proto3" json:"proxy_source,omitempty"`
+	ProxyPolicy   *AdminDashboardProxyPolicy `protobuf:"bytes,6,opt,name=proxy_policy,json=proxyPolicy,proto3" json:"proxy_policy,omitempty"`
+	Cookies       *AdminDashboardCookies     `protobuf:"bytes,7,opt,name=cookies,proto3" json:"cookies,omitempty"`
+	Billing       *AdminDashboardBilling     `protobuf:"bytes,8,opt,name=billing,proto3" json:"billing,omitempty"`
+	Exceptions    []*AdminDashboardException `protobuf:"bytes,9,rep,name=exceptions,proto3" json:"exceptions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminDashboardHealthResponse) Reset() {
+	*x = AdminDashboardHealthResponse{}
+	mi := &file_proto_admin_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminDashboardHealthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminDashboardHealthResponse) ProtoMessage() {}
+
+func (x *AdminDashboardHealthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_admin_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminDashboardHealthResponse.ProtoReflect.Descriptor instead.
+func (*AdminDashboardHealthResponse) Descriptor() ([]byte, []int) {
+	return file_proto_admin_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *AdminDashboardHealthResponse) GetGeneratedAt() string {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return ""
+}
+
+func (x *AdminDashboardHealthResponse) GetDownloads() *AdminDashboardDownloads {
+	if x != nil {
+		return x.Downloads
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetUsers() *AdminDashboardUsers {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetProxies() *AdminDashboardProxies {
+	if x != nil {
+		return x.Proxies
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetProxySource() *AdminDashboardProxySource {
+	if x != nil {
+		return x.ProxySource
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetProxyPolicy() *AdminDashboardProxyPolicy {
+	if x != nil {
+		return x.ProxyPolicy
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetCookies() *AdminDashboardCookies {
+	if x != nil {
+		return x.Cookies
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetBilling() *AdminDashboardBilling {
+	if x != nil {
+		return x.Billing
+	}
+	return nil
+}
+
+func (x *AdminDashboardHealthResponse) GetExceptions() []*AdminDashboardException {
+	if x != nil {
+		return x.Exceptions
+	}
+	return nil
+}
+
 type AdminUserStatsResponse struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	TotalUsers        int64                  `protobuf:"varint,1,opt,name=total_users,json=totalUsers,proto3" json:"total_users,omitempty"`
@@ -668,7 +1468,7 @@ type AdminUserStatsResponse struct {
 
 func (x *AdminUserStatsResponse) Reset() {
 	*x = AdminUserStatsResponse{}
-	mi := &file_proto_admin_proto_msgTypes[11]
+	mi := &file_proto_admin_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -680,7 +1480,7 @@ func (x *AdminUserStatsResponse) String() string {
 func (*AdminUserStatsResponse) ProtoMessage() {}
 
 func (x *AdminUserStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[11]
+	mi := &file_proto_admin_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -693,7 +1493,7 @@ func (x *AdminUserStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUserStatsResponse.ProtoReflect.Descriptor instead.
 func (*AdminUserStatsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{11}
+	return file_proto_admin_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AdminUserStatsResponse) GetTotalUsers() int64 {
@@ -734,7 +1534,7 @@ type AdminProxySourceStatusResponse struct {
 
 func (x *AdminProxySourceStatusResponse) Reset() {
 	*x = AdminProxySourceStatusResponse{}
-	mi := &file_proto_admin_proto_msgTypes[12]
+	mi := &file_proto_admin_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -746,7 +1546,7 @@ func (x *AdminProxySourceStatusResponse) String() string {
 func (*AdminProxySourceStatusResponse) ProtoMessage() {}
 
 func (x *AdminProxySourceStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[12]
+	mi := &file_proto_admin_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -759,7 +1559,7 @@ func (x *AdminProxySourceStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminProxySourceStatusResponse.ProtoReflect.Descriptor instead.
 func (*AdminProxySourceStatusResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{12}
+	return file_proto_admin_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *AdminProxySourceStatusResponse) GetHealthy() bool {
@@ -844,7 +1644,7 @@ type AdminProxySourcePolicyResponse struct {
 
 func (x *AdminProxySourcePolicyResponse) Reset() {
 	*x = AdminProxySourcePolicyResponse{}
-	mi := &file_proto_admin_proto_msgTypes[13]
+	mi := &file_proto_admin_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -856,7 +1656,7 @@ func (x *AdminProxySourcePolicyResponse) String() string {
 func (*AdminProxySourcePolicyResponse) ProtoMessage() {}
 
 func (x *AdminProxySourcePolicyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[13]
+	mi := &file_proto_admin_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -869,7 +1669,7 @@ func (x *AdminProxySourcePolicyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminProxySourcePolicyResponse.ProtoReflect.Descriptor instead.
 func (*AdminProxySourcePolicyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{13}
+	return file_proto_admin_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AdminProxySourcePolicyResponse) GetId() int64 {
@@ -966,7 +1766,7 @@ type AdminUpdateProxySourcePolicyRequest struct {
 
 func (x *AdminUpdateProxySourcePolicyRequest) Reset() {
 	*x = AdminUpdateProxySourcePolicyRequest{}
-	mi := &file_proto_admin_proto_msgTypes[14]
+	mi := &file_proto_admin_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -978,7 +1778,7 @@ func (x *AdminUpdateProxySourcePolicyRequest) String() string {
 func (*AdminUpdateProxySourcePolicyRequest) ProtoMessage() {}
 
 func (x *AdminUpdateProxySourcePolicyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[14]
+	mi := &file_proto_admin_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -991,7 +1791,7 @@ func (x *AdminUpdateProxySourcePolicyRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use AdminUpdateProxySourcePolicyRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateProxySourcePolicyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{14}
+	return file_proto_admin_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AdminUpdateProxySourcePolicyRequest) GetId() int64 {
@@ -1087,7 +1887,7 @@ type AdminProxyInfo struct {
 
 func (x *AdminProxyInfo) Reset() {
 	*x = AdminProxyInfo{}
-	mi := &file_proto_admin_proto_msgTypes[15]
+	mi := &file_proto_admin_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1099,7 +1899,7 @@ func (x *AdminProxyInfo) String() string {
 func (*AdminProxyInfo) ProtoMessage() {}
 
 func (x *AdminProxyInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[15]
+	mi := &file_proto_admin_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1112,7 +1912,7 @@ func (x *AdminProxyInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminProxyInfo.ProtoReflect.Descriptor instead.
 func (*AdminProxyInfo) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{15}
+	return file_proto_admin_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *AdminProxyInfo) GetId() int64 {
@@ -1276,13 +2076,17 @@ type AdminListProxiesRequest struct {
 	Region        string                 `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"`
 	Status        int32                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
 	HasStatus     bool                   `protobuf:"varint,5,opt,name=has_status,json=hasStatus,proto3" json:"has_status,omitempty"`
+	Page          int32                  `protobuf:"varint,6,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,7,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	SortBy        string                 `protobuf:"bytes,8,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`
+	SortOrder     string                 `protobuf:"bytes,9,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AdminListProxiesRequest) Reset() {
 	*x = AdminListProxiesRequest{}
-	mi := &file_proto_admin_proto_msgTypes[16]
+	mi := &file_proto_admin_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1294,7 +2098,7 @@ func (x *AdminListProxiesRequest) String() string {
 func (*AdminListProxiesRequest) ProtoMessage() {}
 
 func (x *AdminListProxiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[16]
+	mi := &file_proto_admin_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1307,7 +2111,7 @@ func (x *AdminListProxiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListProxiesRequest.ProtoReflect.Descriptor instead.
 func (*AdminListProxiesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{16}
+	return file_proto_admin_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AdminListProxiesRequest) GetSearch() string {
@@ -1345,16 +2149,47 @@ func (x *AdminListProxiesRequest) GetHasStatus() bool {
 	return false
 }
 
+func (x *AdminListProxiesRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *AdminListProxiesRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *AdminListProxiesRequest) GetSortBy() string {
+	if x != nil {
+		return x.SortBy
+	}
+	return ""
+}
+
+func (x *AdminListProxiesRequest) GetSortOrder() string {
+	if x != nil {
+		return x.SortOrder
+	}
+	return ""
+}
+
 type AdminListProxiesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Items         []*AdminProxyInfo      `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AdminListProxiesResponse) Reset() {
 	*x = AdminListProxiesResponse{}
-	mi := &file_proto_admin_proto_msgTypes[17]
+	mi := &file_proto_admin_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1366,7 +2201,7 @@ func (x *AdminListProxiesResponse) String() string {
 func (*AdminListProxiesResponse) ProtoMessage() {}
 
 func (x *AdminListProxiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[17]
+	mi := &file_proto_admin_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1379,7 +2214,7 @@ func (x *AdminListProxiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListProxiesResponse.ProtoReflect.Descriptor instead.
 func (*AdminListProxiesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{17}
+	return file_proto_admin_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *AdminListProxiesResponse) GetItems() []*AdminProxyInfo {
@@ -1387,6 +2222,27 @@ func (x *AdminListProxiesResponse) GetItems() []*AdminProxyInfo {
 		return x.Items
 	}
 	return nil
+}
+
+func (x *AdminListProxiesResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *AdminListProxiesResponse) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *AdminListProxiesResponse) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
 }
 
 type AdminListProxyUsageEventsRequest struct {
@@ -1410,7 +2266,7 @@ type AdminListProxyUsageEventsRequest struct {
 
 func (x *AdminListProxyUsageEventsRequest) Reset() {
 	*x = AdminListProxyUsageEventsRequest{}
-	mi := &file_proto_admin_proto_msgTypes[18]
+	mi := &file_proto_admin_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1422,7 +2278,7 @@ func (x *AdminListProxyUsageEventsRequest) String() string {
 func (*AdminListProxyUsageEventsRequest) ProtoMessage() {}
 
 func (x *AdminListProxyUsageEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[18]
+	mi := &file_proto_admin_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1435,7 +2291,7 @@ func (x *AdminListProxyUsageEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListProxyUsageEventsRequest.ProtoReflect.Descriptor instead.
 func (*AdminListProxyUsageEventsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{18}
+	return file_proto_admin_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AdminListProxyUsageEventsRequest) GetTaskId() string {
@@ -1556,7 +2412,7 @@ type AdminProxyUsageEventItem struct {
 
 func (x *AdminProxyUsageEventItem) Reset() {
 	*x = AdminProxyUsageEventItem{}
-	mi := &file_proto_admin_proto_msgTypes[19]
+	mi := &file_proto_admin_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1568,7 +2424,7 @@ func (x *AdminProxyUsageEventItem) String() string {
 func (*AdminProxyUsageEventItem) ProtoMessage() {}
 
 func (x *AdminProxyUsageEventItem) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[19]
+	mi := &file_proto_admin_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1581,7 +2437,7 @@ func (x *AdminProxyUsageEventItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminProxyUsageEventItem.ProtoReflect.Descriptor instead.
 func (*AdminProxyUsageEventItem) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{19}
+	return file_proto_admin_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AdminProxyUsageEventItem) GetId() int64 {
@@ -1727,7 +2583,7 @@ type AdminProxyUsageEventCount struct {
 
 func (x *AdminProxyUsageEventCount) Reset() {
 	*x = AdminProxyUsageEventCount{}
-	mi := &file_proto_admin_proto_msgTypes[20]
+	mi := &file_proto_admin_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1739,7 +2595,7 @@ func (x *AdminProxyUsageEventCount) String() string {
 func (*AdminProxyUsageEventCount) ProtoMessage() {}
 
 func (x *AdminProxyUsageEventCount) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[20]
+	mi := &file_proto_admin_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1752,7 +2608,7 @@ func (x *AdminProxyUsageEventCount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminProxyUsageEventCount.ProtoReflect.Descriptor instead.
 func (*AdminProxyUsageEventCount) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{20}
+	return file_proto_admin_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AdminProxyUsageEventCount) GetKey() string {
@@ -1783,7 +2639,7 @@ type AdminProxyUsageEventSummary struct {
 
 func (x *AdminProxyUsageEventSummary) Reset() {
 	*x = AdminProxyUsageEventSummary{}
-	mi := &file_proto_admin_proto_msgTypes[21]
+	mi := &file_proto_admin_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1795,7 +2651,7 @@ func (x *AdminProxyUsageEventSummary) String() string {
 func (*AdminProxyUsageEventSummary) ProtoMessage() {}
 
 func (x *AdminProxyUsageEventSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[21]
+	mi := &file_proto_admin_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1808,7 +2664,7 @@ func (x *AdminProxyUsageEventSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminProxyUsageEventSummary.ProtoReflect.Descriptor instead.
 func (*AdminProxyUsageEventSummary) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{21}
+	return file_proto_admin_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AdminProxyUsageEventSummary) GetSuccessCount() int64 {
@@ -1866,7 +2722,7 @@ type AdminListProxyUsageEventsResponse struct {
 
 func (x *AdminListProxyUsageEventsResponse) Reset() {
 	*x = AdminListProxyUsageEventsResponse{}
-	mi := &file_proto_admin_proto_msgTypes[22]
+	mi := &file_proto_admin_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1878,7 +2734,7 @@ func (x *AdminListProxyUsageEventsResponse) String() string {
 func (*AdminListProxyUsageEventsResponse) ProtoMessage() {}
 
 func (x *AdminListProxyUsageEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[22]
+	mi := &file_proto_admin_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1891,7 +2747,7 @@ func (x *AdminListProxyUsageEventsResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use AdminListProxyUsageEventsResponse.ProtoReflect.Descriptor instead.
 func (*AdminListProxyUsageEventsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{22}
+	return file_proto_admin_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *AdminListProxyUsageEventsResponse) GetEvents() []*AdminProxyUsageEventItem {
@@ -1947,7 +2803,7 @@ type AdminCreateProxyRequest struct {
 
 func (x *AdminCreateProxyRequest) Reset() {
 	*x = AdminCreateProxyRequest{}
-	mi := &file_proto_admin_proto_msgTypes[23]
+	mi := &file_proto_admin_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1959,7 +2815,7 @@ func (x *AdminCreateProxyRequest) String() string {
 func (*AdminCreateProxyRequest) ProtoMessage() {}
 
 func (x *AdminCreateProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[23]
+	mi := &file_proto_admin_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1972,7 +2828,7 @@ func (x *AdminCreateProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminCreateProxyRequest.ProtoReflect.Descriptor instead.
 func (*AdminCreateProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{23}
+	return file_proto_admin_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *AdminCreateProxyRequest) GetHost() string {
@@ -2063,7 +2919,7 @@ type AdminUpdateProxyRequest struct {
 
 func (x *AdminUpdateProxyRequest) Reset() {
 	*x = AdminUpdateProxyRequest{}
-	mi := &file_proto_admin_proto_msgTypes[24]
+	mi := &file_proto_admin_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2075,7 +2931,7 @@ func (x *AdminUpdateProxyRequest) String() string {
 func (*AdminUpdateProxyRequest) ProtoMessage() {}
 
 func (x *AdminUpdateProxyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[24]
+	mi := &file_proto_admin_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2088,7 +2944,7 @@ func (x *AdminUpdateProxyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpdateProxyRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateProxyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{24}
+	return file_proto_admin_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *AdminUpdateProxyRequest) GetId() int64 {
@@ -2171,7 +3027,7 @@ type AdminUpdateProxyStatusRequest struct {
 
 func (x *AdminUpdateProxyStatusRequest) Reset() {
 	*x = AdminUpdateProxyStatusRequest{}
-	mi := &file_proto_admin_proto_msgTypes[25]
+	mi := &file_proto_admin_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2183,7 +3039,7 @@ func (x *AdminUpdateProxyStatusRequest) String() string {
 func (*AdminUpdateProxyStatusRequest) ProtoMessage() {}
 
 func (x *AdminUpdateProxyStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[25]
+	mi := &file_proto_admin_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2196,7 +3052,7 @@ func (x *AdminUpdateProxyStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpdateProxyStatusRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateProxyStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{25}
+	return file_proto_admin_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *AdminUpdateProxyStatusRequest) GetId() int64 {
@@ -2222,7 +3078,7 @@ type AdminDeleteRequest struct {
 
 func (x *AdminDeleteRequest) Reset() {
 	*x = AdminDeleteRequest{}
-	mi := &file_proto_admin_proto_msgTypes[26]
+	mi := &file_proto_admin_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2234,7 +3090,7 @@ func (x *AdminDeleteRequest) String() string {
 func (*AdminDeleteRequest) ProtoMessage() {}
 
 func (x *AdminDeleteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[26]
+	mi := &file_proto_admin_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2247,7 +3103,7 @@ func (x *AdminDeleteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminDeleteRequest.ProtoReflect.Descriptor instead.
 func (*AdminDeleteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{26}
+	return file_proto_admin_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *AdminDeleteRequest) GetId() int64 {
@@ -2279,7 +3135,7 @@ type AdminCookieInfo struct {
 
 func (x *AdminCookieInfo) Reset() {
 	*x = AdminCookieInfo{}
-	mi := &file_proto_admin_proto_msgTypes[27]
+	mi := &file_proto_admin_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2291,7 +3147,7 @@ func (x *AdminCookieInfo) String() string {
 func (*AdminCookieInfo) ProtoMessage() {}
 
 func (x *AdminCookieInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[27]
+	mi := &file_proto_admin_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2304,7 +3160,7 @@ func (x *AdminCookieInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminCookieInfo.ProtoReflect.Descriptor instead.
 func (*AdminCookieInfo) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{27}
+	return file_proto_admin_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *AdminCookieInfo) GetId() int64 {
@@ -2417,7 +3273,7 @@ type AdminListCookiesRequest struct {
 
 func (x *AdminListCookiesRequest) Reset() {
 	*x = AdminListCookiesRequest{}
-	mi := &file_proto_admin_proto_msgTypes[28]
+	mi := &file_proto_admin_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2429,7 +3285,7 @@ func (x *AdminListCookiesRequest) String() string {
 func (*AdminListCookiesRequest) ProtoMessage() {}
 
 func (x *AdminListCookiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[28]
+	mi := &file_proto_admin_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2442,7 +3298,7 @@ func (x *AdminListCookiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListCookiesRequest.ProtoReflect.Descriptor instead.
 func (*AdminListCookiesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{28}
+	return file_proto_admin_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *AdminListCookiesRequest) GetPlatform() string {
@@ -2485,7 +3341,7 @@ type AdminListCookiesResponse struct {
 
 func (x *AdminListCookiesResponse) Reset() {
 	*x = AdminListCookiesResponse{}
-	mi := &file_proto_admin_proto_msgTypes[29]
+	mi := &file_proto_admin_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2497,7 +3353,7 @@ func (x *AdminListCookiesResponse) String() string {
 func (*AdminListCookiesResponse) ProtoMessage() {}
 
 func (x *AdminListCookiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[29]
+	mi := &file_proto_admin_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2510,7 +3366,7 @@ func (x *AdminListCookiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListCookiesResponse.ProtoReflect.Descriptor instead.
 func (*AdminListCookiesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{29}
+	return file_proto_admin_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *AdminListCookiesResponse) GetTotal() int64 {
@@ -2550,7 +3406,7 @@ type AdminGetCookieRequest struct {
 
 func (x *AdminGetCookieRequest) Reset() {
 	*x = AdminGetCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[30]
+	mi := &file_proto_admin_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2562,7 +3418,7 @@ func (x *AdminGetCookieRequest) String() string {
 func (*AdminGetCookieRequest) ProtoMessage() {}
 
 func (x *AdminGetCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[30]
+	mi := &file_proto_admin_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2575,7 +3431,7 @@ func (x *AdminGetCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminGetCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminGetCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{30}
+	return file_proto_admin_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *AdminGetCookieRequest) GetId() int64 {
@@ -2594,7 +3450,7 @@ type AdminGetCookieResponse struct {
 
 func (x *AdminGetCookieResponse) Reset() {
 	*x = AdminGetCookieResponse{}
-	mi := &file_proto_admin_proto_msgTypes[31]
+	mi := &file_proto_admin_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2606,7 +3462,7 @@ func (x *AdminGetCookieResponse) String() string {
 func (*AdminGetCookieResponse) ProtoMessage() {}
 
 func (x *AdminGetCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[31]
+	mi := &file_proto_admin_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2619,7 +3475,7 @@ func (x *AdminGetCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminGetCookieResponse.ProtoReflect.Descriptor instead.
 func (*AdminGetCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{31}
+	return file_proto_admin_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *AdminGetCookieResponse) GetCookie() *AdminCookieInfo {
@@ -2642,7 +3498,7 @@ type AdminCreateCookieRequest struct {
 
 func (x *AdminCreateCookieRequest) Reset() {
 	*x = AdminCreateCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[32]
+	mi := &file_proto_admin_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2654,7 +3510,7 @@ func (x *AdminCreateCookieRequest) String() string {
 func (*AdminCreateCookieRequest) ProtoMessage() {}
 
 func (x *AdminCreateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[32]
+	mi := &file_proto_admin_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2667,7 +3523,7 @@ func (x *AdminCreateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminCreateCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminCreateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{32}
+	return file_proto_admin_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *AdminCreateCookieRequest) GetPlatform() string {
@@ -2718,7 +3574,7 @@ type AdminUpdateCookieRequest struct {
 
 func (x *AdminUpdateCookieRequest) Reset() {
 	*x = AdminUpdateCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[33]
+	mi := &file_proto_admin_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2730,7 +3586,7 @@ func (x *AdminUpdateCookieRequest) String() string {
 func (*AdminUpdateCookieRequest) ProtoMessage() {}
 
 func (x *AdminUpdateCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[33]
+	mi := &file_proto_admin_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2743,7 +3599,7 @@ func (x *AdminUpdateCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpdateCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{33}
+	return file_proto_admin_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *AdminUpdateCookieRequest) GetId() int64 {
@@ -2791,7 +3647,7 @@ type AdminFreezeCookieRequest struct {
 
 func (x *AdminFreezeCookieRequest) Reset() {
 	*x = AdminFreezeCookieRequest{}
-	mi := &file_proto_admin_proto_msgTypes[34]
+	mi := &file_proto_admin_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2803,7 +3659,7 @@ func (x *AdminFreezeCookieRequest) String() string {
 func (*AdminFreezeCookieRequest) ProtoMessage() {}
 
 func (x *AdminFreezeCookieRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[34]
+	mi := &file_proto_admin_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2816,7 +3672,7 @@ func (x *AdminFreezeCookieRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminFreezeCookieRequest.ProtoReflect.Descriptor instead.
 func (*AdminFreezeCookieRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{34}
+	return file_proto_admin_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *AdminFreezeCookieRequest) GetId() int64 {
@@ -2843,7 +3699,7 @@ type AdminFreezeCookieResponse struct {
 
 func (x *AdminFreezeCookieResponse) Reset() {
 	*x = AdminFreezeCookieResponse{}
-	mi := &file_proto_admin_proto_msgTypes[35]
+	mi := &file_proto_admin_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2855,7 +3711,7 @@ func (x *AdminFreezeCookieResponse) String() string {
 func (*AdminFreezeCookieResponse) ProtoMessage() {}
 
 func (x *AdminFreezeCookieResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[35]
+	mi := &file_proto_admin_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2868,7 +3724,7 @@ func (x *AdminFreezeCookieResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminFreezeCookieResponse.ProtoReflect.Descriptor instead.
 func (*AdminFreezeCookieResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{35}
+	return file_proto_admin_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *AdminFreezeCookieResponse) GetSuccess() bool {
@@ -2894,7 +3750,7 @@ type AdminCreateResourceResponse struct {
 
 func (x *AdminCreateResourceResponse) Reset() {
 	*x = AdminCreateResourceResponse{}
-	mi := &file_proto_admin_proto_msgTypes[36]
+	mi := &file_proto_admin_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2906,7 +3762,7 @@ func (x *AdminCreateResourceResponse) String() string {
 func (*AdminCreateResourceResponse) ProtoMessage() {}
 
 func (x *AdminCreateResourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[36]
+	mi := &file_proto_admin_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2919,7 +3775,7 @@ func (x *AdminCreateResourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminCreateResourceResponse.ProtoReflect.Descriptor instead.
 func (*AdminCreateResourceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{36}
+	return file_proto_admin_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *AdminCreateResourceResponse) GetId() int64 {
@@ -2938,7 +3794,7 @@ type AdminOperationResponse struct {
 
 func (x *AdminOperationResponse) Reset() {
 	*x = AdminOperationResponse{}
-	mi := &file_proto_admin_proto_msgTypes[37]
+	mi := &file_proto_admin_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2950,7 +3806,7 @@ func (x *AdminOperationResponse) String() string {
 func (*AdminOperationResponse) ProtoMessage() {}
 
 func (x *AdminOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[37]
+	mi := &file_proto_admin_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2963,7 +3819,7 @@ func (x *AdminOperationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminOperationResponse.ProtoReflect.Descriptor instead.
 func (*AdminOperationResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{37}
+	return file_proto_admin_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *AdminOperationResponse) GetSuccess() bool {
@@ -2992,7 +3848,7 @@ type AdminBillingAccount struct {
 
 func (x *AdminBillingAccount) Reset() {
 	*x = AdminBillingAccount{}
-	mi := &file_proto_admin_proto_msgTypes[38]
+	mi := &file_proto_admin_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3004,7 +3860,7 @@ func (x *AdminBillingAccount) String() string {
 func (*AdminBillingAccount) ProtoMessage() {}
 
 func (x *AdminBillingAccount) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[38]
+	mi := &file_proto_admin_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3017,7 +3873,7 @@ func (x *AdminBillingAccount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminBillingAccount.ProtoReflect.Descriptor instead.
 func (*AdminBillingAccount) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{38}
+	return file_proto_admin_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *AdminBillingAccount) GetUserId() string {
@@ -3109,7 +3965,7 @@ type AdminListBillingAccountsRequest struct {
 
 func (x *AdminListBillingAccountsRequest) Reset() {
 	*x = AdminListBillingAccountsRequest{}
-	mi := &file_proto_admin_proto_msgTypes[39]
+	mi := &file_proto_admin_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3121,7 +3977,7 @@ func (x *AdminListBillingAccountsRequest) String() string {
 func (*AdminListBillingAccountsRequest) ProtoMessage() {}
 
 func (x *AdminListBillingAccountsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[39]
+	mi := &file_proto_admin_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3134,7 +3990,7 @@ func (x *AdminListBillingAccountsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListBillingAccountsRequest.ProtoReflect.Descriptor instead.
 func (*AdminListBillingAccountsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{39}
+	return file_proto_admin_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *AdminListBillingAccountsRequest) GetQuery() string {
@@ -3177,7 +4033,7 @@ type AdminListBillingAccountsResponse struct {
 
 func (x *AdminListBillingAccountsResponse) Reset() {
 	*x = AdminListBillingAccountsResponse{}
-	mi := &file_proto_admin_proto_msgTypes[40]
+	mi := &file_proto_admin_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3189,7 +4045,7 @@ func (x *AdminListBillingAccountsResponse) String() string {
 func (*AdminListBillingAccountsResponse) ProtoMessage() {}
 
 func (x *AdminListBillingAccountsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[40]
+	mi := &file_proto_admin_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3202,7 +4058,7 @@ func (x *AdminListBillingAccountsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListBillingAccountsResponse.ProtoReflect.Descriptor instead.
 func (*AdminListBillingAccountsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{40}
+	return file_proto_admin_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *AdminListBillingAccountsResponse) GetTotal() int64 {
@@ -3242,7 +4098,7 @@ type AdminGetBillingAccountDetailRequest struct {
 
 func (x *AdminGetBillingAccountDetailRequest) Reset() {
 	*x = AdminGetBillingAccountDetailRequest{}
-	mi := &file_proto_admin_proto_msgTypes[41]
+	mi := &file_proto_admin_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3254,7 +4110,7 @@ func (x *AdminGetBillingAccountDetailRequest) String() string {
 func (*AdminGetBillingAccountDetailRequest) ProtoMessage() {}
 
 func (x *AdminGetBillingAccountDetailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[41]
+	mi := &file_proto_admin_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3267,7 +4123,7 @@ func (x *AdminGetBillingAccountDetailRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use AdminGetBillingAccountDetailRequest.ProtoReflect.Descriptor instead.
 func (*AdminGetBillingAccountDetailRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{41}
+	return file_proto_admin_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *AdminGetBillingAccountDetailRequest) GetUserId() string {
@@ -3286,7 +4142,7 @@ type AdminGetBillingAccountDetailResponse struct {
 
 func (x *AdminGetBillingAccountDetailResponse) Reset() {
 	*x = AdminGetBillingAccountDetailResponse{}
-	mi := &file_proto_admin_proto_msgTypes[42]
+	mi := &file_proto_admin_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3298,7 +4154,7 @@ func (x *AdminGetBillingAccountDetailResponse) String() string {
 func (*AdminGetBillingAccountDetailResponse) ProtoMessage() {}
 
 func (x *AdminGetBillingAccountDetailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[42]
+	mi := &file_proto_admin_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3311,7 +4167,7 @@ func (x *AdminGetBillingAccountDetailResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use AdminGetBillingAccountDetailResponse.ProtoReflect.Descriptor instead.
 func (*AdminGetBillingAccountDetailResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{42}
+	return file_proto_admin_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *AdminGetBillingAccountDetailResponse) GetAccount() *AdminBillingAccount {
@@ -3334,7 +4190,7 @@ type AdminAdjustBillingBalanceRequest struct {
 
 func (x *AdminAdjustBillingBalanceRequest) Reset() {
 	*x = AdminAdjustBillingBalanceRequest{}
-	mi := &file_proto_admin_proto_msgTypes[43]
+	mi := &file_proto_admin_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3346,7 +4202,7 @@ func (x *AdminAdjustBillingBalanceRequest) String() string {
 func (*AdminAdjustBillingBalanceRequest) ProtoMessage() {}
 
 func (x *AdminAdjustBillingBalanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[43]
+	mi := &file_proto_admin_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3359,7 +4215,7 @@ func (x *AdminAdjustBillingBalanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminAdjustBillingBalanceRequest.ProtoReflect.Descriptor instead.
 func (*AdminAdjustBillingBalanceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{43}
+	return file_proto_admin_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *AdminAdjustBillingBalanceRequest) GetUserId() string {
@@ -3408,7 +4264,7 @@ type AdminAdjustBillingBalanceResponse struct {
 
 func (x *AdminAdjustBillingBalanceResponse) Reset() {
 	*x = AdminAdjustBillingBalanceResponse{}
-	mi := &file_proto_admin_proto_msgTypes[44]
+	mi := &file_proto_admin_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3420,7 +4276,7 @@ func (x *AdminAdjustBillingBalanceResponse) String() string {
 func (*AdminAdjustBillingBalanceResponse) ProtoMessage() {}
 
 func (x *AdminAdjustBillingBalanceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[44]
+	mi := &file_proto_admin_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3433,7 +4289,7 @@ func (x *AdminAdjustBillingBalanceResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use AdminAdjustBillingBalanceResponse.ProtoReflect.Descriptor instead.
 func (*AdminAdjustBillingBalanceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{44}
+	return file_proto_admin_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *AdminAdjustBillingBalanceResponse) GetSuccess() bool {
@@ -3484,7 +4340,7 @@ type AdminBillingShortfallOrder struct {
 
 func (x *AdminBillingShortfallOrder) Reset() {
 	*x = AdminBillingShortfallOrder{}
-	mi := &file_proto_admin_proto_msgTypes[45]
+	mi := &file_proto_admin_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3496,7 +4352,7 @@ func (x *AdminBillingShortfallOrder) String() string {
 func (*AdminBillingShortfallOrder) ProtoMessage() {}
 
 func (x *AdminBillingShortfallOrder) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[45]
+	mi := &file_proto_admin_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3509,7 +4365,7 @@ func (x *AdminBillingShortfallOrder) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminBillingShortfallOrder.ProtoReflect.Descriptor instead.
 func (*AdminBillingShortfallOrder) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{45}
+	return file_proto_admin_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *AdminBillingShortfallOrder) GetOrderNo() string {
@@ -3656,7 +4512,7 @@ type AdminListBillingShortfallsRequest struct {
 
 func (x *AdminListBillingShortfallsRequest) Reset() {
 	*x = AdminListBillingShortfallsRequest{}
-	mi := &file_proto_admin_proto_msgTypes[46]
+	mi := &file_proto_admin_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3668,7 +4524,7 @@ func (x *AdminListBillingShortfallsRequest) String() string {
 func (*AdminListBillingShortfallsRequest) ProtoMessage() {}
 
 func (x *AdminListBillingShortfallsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[46]
+	mi := &file_proto_admin_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3681,7 +4537,7 @@ func (x *AdminListBillingShortfallsRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use AdminListBillingShortfallsRequest.ProtoReflect.Descriptor instead.
 func (*AdminListBillingShortfallsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{46}
+	return file_proto_admin_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *AdminListBillingShortfallsRequest) GetUserId() string {
@@ -3717,7 +4573,7 @@ type AdminListBillingShortfallsResponse struct {
 
 func (x *AdminListBillingShortfallsResponse) Reset() {
 	*x = AdminListBillingShortfallsResponse{}
-	mi := &file_proto_admin_proto_msgTypes[47]
+	mi := &file_proto_admin_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3729,7 +4585,7 @@ func (x *AdminListBillingShortfallsResponse) String() string {
 func (*AdminListBillingShortfallsResponse) ProtoMessage() {}
 
 func (x *AdminListBillingShortfallsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[47]
+	mi := &file_proto_admin_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3742,7 +4598,7 @@ func (x *AdminListBillingShortfallsResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use AdminListBillingShortfallsResponse.ProtoReflect.Descriptor instead.
 func (*AdminListBillingShortfallsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{47}
+	return file_proto_admin_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *AdminListBillingShortfallsResponse) GetTotal() int64 {
@@ -3784,7 +4640,7 @@ type AdminReconcileBillingShortfallRequest struct {
 
 func (x *AdminReconcileBillingShortfallRequest) Reset() {
 	*x = AdminReconcileBillingShortfallRequest{}
-	mi := &file_proto_admin_proto_msgTypes[48]
+	mi := &file_proto_admin_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3796,7 +4652,7 @@ func (x *AdminReconcileBillingShortfallRequest) String() string {
 func (*AdminReconcileBillingShortfallRequest) ProtoMessage() {}
 
 func (x *AdminReconcileBillingShortfallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[48]
+	mi := &file_proto_admin_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3809,7 +4665,7 @@ func (x *AdminReconcileBillingShortfallRequest) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use AdminReconcileBillingShortfallRequest.ProtoReflect.Descriptor instead.
 func (*AdminReconcileBillingShortfallRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{48}
+	return file_proto_admin_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *AdminReconcileBillingShortfallRequest) GetOrderNo() string {
@@ -3845,7 +4701,7 @@ type AdminReconcileBillingShortfallResponse struct {
 
 func (x *AdminReconcileBillingShortfallResponse) Reset() {
 	*x = AdminReconcileBillingShortfallResponse{}
-	mi := &file_proto_admin_proto_msgTypes[49]
+	mi := &file_proto_admin_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3857,7 +4713,7 @@ func (x *AdminReconcileBillingShortfallResponse) String() string {
 func (*AdminReconcileBillingShortfallResponse) ProtoMessage() {}
 
 func (x *AdminReconcileBillingShortfallResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[49]
+	mi := &file_proto_admin_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3870,7 +4726,7 @@ func (x *AdminReconcileBillingShortfallResponse) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use AdminReconcileBillingShortfallResponse.ProtoReflect.Descriptor instead.
 func (*AdminReconcileBillingShortfallResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{49}
+	return file_proto_admin_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *AdminReconcileBillingShortfallResponse) GetSuccess() bool {
@@ -3929,7 +4785,7 @@ type AdminBillingLedgerEntry struct {
 
 func (x *AdminBillingLedgerEntry) Reset() {
 	*x = AdminBillingLedgerEntry{}
-	mi := &file_proto_admin_proto_msgTypes[50]
+	mi := &file_proto_admin_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3941,7 +4797,7 @@ func (x *AdminBillingLedgerEntry) String() string {
 func (*AdminBillingLedgerEntry) ProtoMessage() {}
 
 func (x *AdminBillingLedgerEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[50]
+	mi := &file_proto_admin_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3954,7 +4810,7 @@ func (x *AdminBillingLedgerEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminBillingLedgerEntry.ProtoReflect.Descriptor instead.
 func (*AdminBillingLedgerEntry) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{50}
+	return file_proto_admin_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *AdminBillingLedgerEntry) GetEntryNo() string {
@@ -4109,7 +4965,7 @@ type AdminListBillingLedgerRequest struct {
 
 func (x *AdminListBillingLedgerRequest) Reset() {
 	*x = AdminListBillingLedgerRequest{}
-	mi := &file_proto_admin_proto_msgTypes[51]
+	mi := &file_proto_admin_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4121,7 +4977,7 @@ func (x *AdminListBillingLedgerRequest) String() string {
 func (*AdminListBillingLedgerRequest) ProtoMessage() {}
 
 func (x *AdminListBillingLedgerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[51]
+	mi := &file_proto_admin_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4134,7 +4990,7 @@ func (x *AdminListBillingLedgerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListBillingLedgerRequest.ProtoReflect.Descriptor instead.
 func (*AdminListBillingLedgerRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{51}
+	return file_proto_admin_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *AdminListBillingLedgerRequest) GetUserId() string {
@@ -4177,7 +5033,7 @@ type AdminListBillingLedgerResponse struct {
 
 func (x *AdminListBillingLedgerResponse) Reset() {
 	*x = AdminListBillingLedgerResponse{}
-	mi := &file_proto_admin_proto_msgTypes[52]
+	mi := &file_proto_admin_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4189,7 +5045,7 @@ func (x *AdminListBillingLedgerResponse) String() string {
 func (*AdminListBillingLedgerResponse) ProtoMessage() {}
 
 func (x *AdminListBillingLedgerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[52]
+	mi := &file_proto_admin_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4202,7 +5058,7 @@ func (x *AdminListBillingLedgerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListBillingLedgerResponse.ProtoReflect.Descriptor instead.
 func (*AdminListBillingLedgerResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{52}
+	return file_proto_admin_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *AdminListBillingLedgerResponse) GetTotal() int64 {
@@ -4258,7 +5114,7 @@ type AdminBillingUsageRecord struct {
 
 func (x *AdminBillingUsageRecord) Reset() {
 	*x = AdminBillingUsageRecord{}
-	mi := &file_proto_admin_proto_msgTypes[53]
+	mi := &file_proto_admin_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4270,7 +5126,7 @@ func (x *AdminBillingUsageRecord) String() string {
 func (*AdminBillingUsageRecord) ProtoMessage() {}
 
 func (x *AdminBillingUsageRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[53]
+	mi := &file_proto_admin_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4283,7 +5139,7 @@ func (x *AdminBillingUsageRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminBillingUsageRecord.ProtoReflect.Descriptor instead.
 func (*AdminBillingUsageRecord) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{53}
+	return file_proto_admin_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *AdminBillingUsageRecord) GetUsageNo() string {
@@ -4417,7 +5273,7 @@ type AdminListBillingUsageRecordsRequest struct {
 
 func (x *AdminListBillingUsageRecordsRequest) Reset() {
 	*x = AdminListBillingUsageRecordsRequest{}
-	mi := &file_proto_admin_proto_msgTypes[54]
+	mi := &file_proto_admin_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4429,7 +5285,7 @@ func (x *AdminListBillingUsageRecordsRequest) String() string {
 func (*AdminListBillingUsageRecordsRequest) ProtoMessage() {}
 
 func (x *AdminListBillingUsageRecordsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[54]
+	mi := &file_proto_admin_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4442,7 +5298,7 @@ func (x *AdminListBillingUsageRecordsRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use AdminListBillingUsageRecordsRequest.ProtoReflect.Descriptor instead.
 func (*AdminListBillingUsageRecordsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{54}
+	return file_proto_admin_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *AdminListBillingUsageRecordsRequest) GetUserId() string {
@@ -4485,7 +5341,7 @@ type AdminListBillingUsageRecordsResponse struct {
 
 func (x *AdminListBillingUsageRecordsResponse) Reset() {
 	*x = AdminListBillingUsageRecordsResponse{}
-	mi := &file_proto_admin_proto_msgTypes[55]
+	mi := &file_proto_admin_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4497,7 +5353,7 @@ func (x *AdminListBillingUsageRecordsResponse) String() string {
 func (*AdminListBillingUsageRecordsResponse) ProtoMessage() {}
 
 func (x *AdminListBillingUsageRecordsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[55]
+	mi := &file_proto_admin_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4510,7 +5366,7 @@ func (x *AdminListBillingUsageRecordsResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use AdminListBillingUsageRecordsResponse.ProtoReflect.Descriptor instead.
 func (*AdminListBillingUsageRecordsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{55}
+	return file_proto_admin_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *AdminListBillingUsageRecordsResponse) GetTotal() int64 {
@@ -4557,7 +5413,7 @@ type AdminBillingPricingResponse struct {
 
 func (x *AdminBillingPricingResponse) Reset() {
 	*x = AdminBillingPricingResponse{}
-	mi := &file_proto_admin_proto_msgTypes[56]
+	mi := &file_proto_admin_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4569,7 +5425,7 @@ func (x *AdminBillingPricingResponse) String() string {
 func (*AdminBillingPricingResponse) ProtoMessage() {}
 
 func (x *AdminBillingPricingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[56]
+	mi := &file_proto_admin_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4582,7 +5438,7 @@ func (x *AdminBillingPricingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminBillingPricingResponse.ProtoReflect.Descriptor instead.
 func (*AdminBillingPricingResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{56}
+	return file_proto_admin_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *AdminBillingPricingResponse) GetVersion() int32 {
@@ -4653,7 +5509,7 @@ type AdminUpdateBillingPricingRequest struct {
 
 func (x *AdminUpdateBillingPricingRequest) Reset() {
 	*x = AdminUpdateBillingPricingRequest{}
-	mi := &file_proto_admin_proto_msgTypes[57]
+	mi := &file_proto_admin_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4665,7 +5521,7 @@ func (x *AdminUpdateBillingPricingRequest) String() string {
 func (*AdminUpdateBillingPricingRequest) ProtoMessage() {}
 
 func (x *AdminUpdateBillingPricingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[57]
+	mi := &file_proto_admin_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4678,7 +5534,7 @@ func (x *AdminUpdateBillingPricingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpdateBillingPricingRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateBillingPricingRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{57}
+	return file_proto_admin_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *AdminUpdateBillingPricingRequest) GetIngressPriceYuanPerGb() string {
@@ -4722,7 +5578,7 @@ type AdminWelcomeCreditSettingsResponse struct {
 
 func (x *AdminWelcomeCreditSettingsResponse) Reset() {
 	*x = AdminWelcomeCreditSettingsResponse{}
-	mi := &file_proto_admin_proto_msgTypes[58]
+	mi := &file_proto_admin_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4734,7 +5590,7 @@ func (x *AdminWelcomeCreditSettingsResponse) String() string {
 func (*AdminWelcomeCreditSettingsResponse) ProtoMessage() {}
 
 func (x *AdminWelcomeCreditSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[58]
+	mi := &file_proto_admin_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4747,7 +5603,7 @@ func (x *AdminWelcomeCreditSettingsResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use AdminWelcomeCreditSettingsResponse.ProtoReflect.Descriptor instead.
 func (*AdminWelcomeCreditSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{58}
+	return file_proto_admin_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *AdminWelcomeCreditSettingsResponse) GetEnabled() bool {
@@ -4797,7 +5653,7 @@ type AdminUpdateWelcomeCreditSettingsRequest struct {
 
 func (x *AdminUpdateWelcomeCreditSettingsRequest) Reset() {
 	*x = AdminUpdateWelcomeCreditSettingsRequest{}
-	mi := &file_proto_admin_proto_msgTypes[59]
+	mi := &file_proto_admin_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4809,7 +5665,7 @@ func (x *AdminUpdateWelcomeCreditSettingsRequest) String() string {
 func (*AdminUpdateWelcomeCreditSettingsRequest) ProtoMessage() {}
 
 func (x *AdminUpdateWelcomeCreditSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_admin_proto_msgTypes[59]
+	mi := &file_proto_admin_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4822,7 +5678,7 @@ func (x *AdminUpdateWelcomeCreditSettingsRequest) ProtoReflect() protoreflect.Me
 
 // Deprecated: Use AdminUpdateWelcomeCreditSettingsRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateWelcomeCreditSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_admin_proto_rawDescGZIP(), []int{59}
+	return file_proto_admin_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *AdminUpdateWelcomeCreditSettingsRequest) GetEnabled() bool {
@@ -4898,16 +5754,88 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\x11success_downloads\x18\x06 \x01(\x03R\x10successDownloads\x12)\n" +
 	"\x10failed_downloads\x18\a \x01(\x03R\x0ffailedDownloads\x122\n" +
 	"\x15active_manual_proxies\x18\b \x01(\x03R\x13activeManualProxies\x120\n" +
-	"\x14total_manual_proxies\x18\t \x01(\x03R\x12totalManualProxies\"=\n" +
+	"\x14total_manual_proxies\x18\t \x01(\x03R\x12totalManualProxies\"\xc9\x01\n" +
 	"\x0fAdminTrendPoint\x12\x14\n" +
 	"\x05label\x18\x01 \x01(\tR\x05label\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x03R\x05count\"R\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x1f\n" +
+	"\vtotal_count\x18\x03 \x01(\x03R\n" +
+	"totalCount\x12#\n" +
+	"\rsuccess_count\x18\x04 \x01(\x03R\fsuccessCount\x12!\n" +
+	"\ffailed_count\x18\x05 \x01(\x03R\vfailedCount\x12!\n" +
+	"\fsuccess_rate\x18\x06 \x01(\x01R\vsuccessRate\"R\n" +
 	"\x18AdminRequestTrendRequest\x12 \n" +
 	"\vgranularity\x18\x01 \x01(\tR\vgranularity\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\"m\n" +
 	"\x19AdminRequestTrendResponse\x12 \n" +
 	"\vgranularity\x18\x01 \x01(\tR\vgranularity\x12.\n" +
-	"\x06points\x18\x02 \x03(\v2\x16.admin.AdminTrendPointR\x06points\"\x97\x01\n" +
+	"\x06points\x18\x02 \x03(\v2\x16.admin.AdminTrendPointR\x06points\"\xde\x01\n" +
+	"\x17AdminDashboardDownloads\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x1f\n" +
+	"\vtoday_total\x18\x02 \x01(\x03R\n" +
+	"todayTotal\x12#\n" +
+	"\rsuccess_total\x18\x03 \x01(\x03R\fsuccessTotal\x12!\n" +
+	"\ffailed_total\x18\x04 \x01(\x03R\vfailedTotal\x12!\n" +
+	"\fsuccess_rate\x18\x05 \x01(\x01R\vsuccessRate\x12!\n" +
+	"\ffailure_rate\x18\x06 \x01(\x01R\vfailureRate\"\xbb\x01\n" +
+	"\x13AdminDashboardUsers\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x03R\x05total\x12!\n" +
+	"\fdaily_active\x18\x02 \x01(\x03R\vdailyActive\x12#\n" +
+	"\rweekly_active\x18\x03 \x01(\x03R\fweeklyActive\x12 \n" +
+	"\fdau_wau_rate\x18\x04 \x01(\x01R\n" +
+	"dauWauRate\x12$\n" +
+	"\x0ewau_total_rate\x18\x05 \x01(\x01R\fwauTotalRate\"J\n" +
+	" AdminDashboardProxyErrorCategory\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"\x91\x03\n" +
+	"\x15AdminDashboardProxies\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x16\n" +
+	"\x06active\x18\x02 \x01(\x03R\x06active\x12\x1c\n" +
+	"\tavailable\x18\x03 \x01(\x03R\tavailable\x12\x18\n" +
+	"\acooling\x18\x04 \x01(\x03R\acooling\x12\x1c\n" +
+	"\tsaturated\x18\x05 \x01(\x03R\tsaturated\x12\x1b\n" +
+	"\thigh_risk\x18\x06 \x01(\x03R\bhighRisk\x12%\n" +
+	"\x0erecent_success\x18\a \x01(\x03R\rrecentSuccess\x12%\n" +
+	"\x0erecent_failure\x18\b \x01(\x03R\rrecentFailure\x12.\n" +
+	"\x13recent_failure_rate\x18\t \x01(\x01R\x11recentFailureRate\x12Y\n" +
+	"\x14top_error_categories\x18\n" +
+	" \x03(\v2'.admin.AdminDashboardProxyErrorCategoryR\x12topErrorCategories\"\xe0\x01\n" +
+	"\x19AdminDashboardProxySource\x12\x18\n" +
+	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x12\n" +
+	"\x04mode\x18\x02 \x01(\tR\x04mode\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12-\n" +
+	"\x12dynamic_configured\x18\x04 \x01(\bR\x11dynamicConfigured\x12$\n" +
+	"\x0eproxy_lease_id\x18\x05 \x01(\tR\fproxyLeaseId\x12&\n" +
+	"\x0fproxy_expire_at\x18\x06 \x01(\tR\rproxyExpireAt\"\x96\x01\n" +
+	"\x19AdminDashboardProxyPolicy\x12%\n" +
+	"\x0eprimary_source\x18\x01 \x01(\tR\rprimarySource\x12'\n" +
+	"\x0ffallback_source\x18\x02 \x01(\tR\x0efallbackSource\x12)\n" +
+	"\x10fallback_enabled\x18\x03 \x01(\bR\x0ffallbackEnabled\"w\n" +
+	"\x15AdminDashboardCookies\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x16\n" +
+	"\x06active\x18\x02 \x01(\x03R\x06active\x12\x18\n" +
+	"\aexpired\x18\x03 \x01(\x03R\aexpired\x12\x16\n" +
+	"\x06frozen\x18\x04 \x01(\x03R\x06frozen\"@\n" +
+	"\x15AdminDashboardBilling\x12'\n" +
+	"\x0fshortfall_count\x18\x01 \x01(\x03R\x0eshortfallCount\"\xa7\x01\n" +
+	"\x17AdminDashboardException\x12\x12\n" +
+	"\x04area\x18\x01 \x01(\tR\x04area\x12\x1a\n" +
+	"\bseverity\x18\x02 \x01(\tR\bseverity\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12!\n" +
+	"\faction_label\x18\x04 \x01(\tR\vactionLabel\x12\x1f\n" +
+	"\vaction_href\x18\x05 \x01(\tR\n" +
+	"actionHref\"\xa3\x04\n" +
+	"\x1cAdminDashboardHealthResponse\x12!\n" +
+	"\fgenerated_at\x18\x01 \x01(\tR\vgeneratedAt\x12<\n" +
+	"\tdownloads\x18\x02 \x01(\v2\x1e.admin.AdminDashboardDownloadsR\tdownloads\x120\n" +
+	"\x05users\x18\x03 \x01(\v2\x1a.admin.AdminDashboardUsersR\x05users\x126\n" +
+	"\aproxies\x18\x04 \x01(\v2\x1c.admin.AdminDashboardProxiesR\aproxies\x12C\n" +
+	"\fproxy_source\x18\x05 \x01(\v2 .admin.AdminDashboardProxySourceR\vproxySource\x12C\n" +
+	"\fproxy_policy\x18\x06 \x01(\v2 .admin.AdminDashboardProxyPolicyR\vproxyPolicy\x126\n" +
+	"\acookies\x18\a \x01(\v2\x1c.admin.AdminDashboardCookiesR\acookies\x126\n" +
+	"\abilling\x18\b \x01(\v2\x1c.admin.AdminDashboardBillingR\abilling\x12>\n" +
+	"\n" +
+	"exceptions\x18\t \x03(\v2\x1e.admin.AdminDashboardExceptionR\n" +
+	"exceptions\"\x97\x01\n" +
 	"\x16AdminUserStatsResponse\x12\x1f\n" +
 	"\vtotal_users\x18\x01 \x01(\x03R\n" +
 	"totalUsers\x12,\n" +
@@ -4978,16 +5906,24 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\flast_fail_at\x18\x14 \x01(\tR\n" +
 	"lastFailAt\x12%\n" +
 	"\x0emax_concurrent\x18\x15 \x01(\x05R\rmaxConcurrent\x12*\n" +
-	"\x11active_task_count\x18\x16 \x01(\x05R\x0factiveTaskCount\"\x9c\x01\n" +
+	"\x11active_task_count\x18\x16 \x01(\x05R\x0factiveTaskCount\"\x85\x02\n" +
 	"\x17AdminListProxiesRequest\x12\x16\n" +
 	"\x06search\x18\x01 \x01(\tR\x06search\x12\x1a\n" +
 	"\bprotocol\x18\x02 \x01(\tR\bprotocol\x12\x16\n" +
 	"\x06region\x18\x03 \x01(\tR\x06region\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\x05R\x06status\x12\x1d\n" +
 	"\n" +
-	"has_status\x18\x05 \x01(\bR\thasStatus\"G\n" +
+	"has_status\x18\x05 \x01(\bR\thasStatus\x12\x12\n" +
+	"\x04page\x18\x06 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\a \x01(\x05R\bpageSize\x12\x17\n" +
+	"\asort_by\x18\b \x01(\tR\x06sortBy\x12\x1d\n" +
+	"\n" +
+	"sort_order\x18\t \x01(\tR\tsortOrder\"\x8e\x01\n" +
 	"\x18AdminListProxiesResponse\x12+\n" +
-	"\x05items\x18\x01 \x03(\v2\x15.admin.AdminProxyInfoR\x05items\"\xac\x03\n" +
+	"\x05items\x18\x01 \x03(\v2\x15.admin.AdminProxyInfoR\x05items\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"\xac\x03\n" +
 	" AdminListProxyUsageEventsRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x19\n" +
 	"\bproxy_id\x18\x02 \x01(\x03R\aproxyId\x12$\n" +
@@ -5311,13 +6247,14 @@ const file_proto_admin_proto_rawDesc = "" +
 	"\vamount_yuan\x18\x02 \x01(\tR\n" +
 	"amountYuan\x12#\n" +
 	"\rcurrency_code\x18\x03 \x01(\tR\fcurrencyCode\x12(\n" +
-	"\x10operator_user_id\x18\x04 \x01(\tR\x0eoperatorUserId2\xa6\x16\n" +
+	"\x10operator_user_id\x18\x04 \x01(\tR\x0eoperatorUserId2\xf4\x16\n" +
 	"\fAdminService\x12<\n" +
 	"\x05Login\x12\x18.admin.AdminLoginRequest\x1a\x19.admin.AdminLoginResponse\x12B\n" +
 	"\x06Logout\x12\x19.admin.AdminLogoutRequest\x1a\x1d.admin.AdminOperationResponse\x12M\n" +
 	"\x0eGetCurrentUser\x12\x1a.admin.AdminSessionRequest\x1a\x1f.admin.AdminCurrentUserResponse\x12>\n" +
 	"\vGetOverview\x12\x11.admin.AdminEmpty\x1a\x1c.admin.AdminOverviewResponse\x12T\n" +
-	"\x0fGetRequestTrend\x12\x1f.admin.AdminRequestTrendRequest\x1a .admin.AdminRequestTrendResponse\x12@\n" +
+	"\x0fGetRequestTrend\x12\x1f.admin.AdminRequestTrendRequest\x1a .admin.AdminRequestTrendResponse\x12L\n" +
+	"\x12GetDashboardHealth\x12\x11.admin.AdminEmpty\x1a#.admin.AdminDashboardHealthResponse\x12@\n" +
 	"\fGetUserStats\x12\x11.admin.AdminEmpty\x1a\x1d.admin.AdminUserStatsResponse\x12P\n" +
 	"\x14GetProxySourceStatus\x12\x11.admin.AdminEmpty\x1a%.admin.AdminProxySourceStatusResponse\x12P\n" +
 	"\x14GetProxySourcePolicy\x12\x11.admin.AdminEmpty\x1a%.admin.AdminProxySourcePolicyResponse\x12d\n" +
@@ -5358,7 +6295,7 @@ func file_proto_admin_proto_rawDescGZIP() []byte {
 	return file_proto_admin_proto_rawDescData
 }
 
-var file_proto_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
+var file_proto_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 70)
 var file_proto_admin_proto_goTypes = []any{
 	(*AdminEmpty)(nil),                              // 0: admin.AdminEmpty
 	(*AdminUser)(nil),                               // 1: admin.AdminUser
@@ -5371,145 +6308,166 @@ var file_proto_admin_proto_goTypes = []any{
 	(*AdminTrendPoint)(nil),                         // 8: admin.AdminTrendPoint
 	(*AdminRequestTrendRequest)(nil),                // 9: admin.AdminRequestTrendRequest
 	(*AdminRequestTrendResponse)(nil),               // 10: admin.AdminRequestTrendResponse
-	(*AdminUserStatsResponse)(nil),                  // 11: admin.AdminUserStatsResponse
-	(*AdminProxySourceStatusResponse)(nil),          // 12: admin.AdminProxySourceStatusResponse
-	(*AdminProxySourcePolicyResponse)(nil),          // 13: admin.AdminProxySourcePolicyResponse
-	(*AdminUpdateProxySourcePolicyRequest)(nil),     // 14: admin.AdminUpdateProxySourcePolicyRequest
-	(*AdminProxyInfo)(nil),                          // 15: admin.AdminProxyInfo
-	(*AdminListProxiesRequest)(nil),                 // 16: admin.AdminListProxiesRequest
-	(*AdminListProxiesResponse)(nil),                // 17: admin.AdminListProxiesResponse
-	(*AdminListProxyUsageEventsRequest)(nil),        // 18: admin.AdminListProxyUsageEventsRequest
-	(*AdminProxyUsageEventItem)(nil),                // 19: admin.AdminProxyUsageEventItem
-	(*AdminProxyUsageEventCount)(nil),               // 20: admin.AdminProxyUsageEventCount
-	(*AdminProxyUsageEventSummary)(nil),             // 21: admin.AdminProxyUsageEventSummary
-	(*AdminListProxyUsageEventsResponse)(nil),       // 22: admin.AdminListProxyUsageEventsResponse
-	(*AdminCreateProxyRequest)(nil),                 // 23: admin.AdminCreateProxyRequest
-	(*AdminUpdateProxyRequest)(nil),                 // 24: admin.AdminUpdateProxyRequest
-	(*AdminUpdateProxyStatusRequest)(nil),           // 25: admin.AdminUpdateProxyStatusRequest
-	(*AdminDeleteRequest)(nil),                      // 26: admin.AdminDeleteRequest
-	(*AdminCookieInfo)(nil),                         // 27: admin.AdminCookieInfo
-	(*AdminListCookiesRequest)(nil),                 // 28: admin.AdminListCookiesRequest
-	(*AdminListCookiesResponse)(nil),                // 29: admin.AdminListCookiesResponse
-	(*AdminGetCookieRequest)(nil),                   // 30: admin.AdminGetCookieRequest
-	(*AdminGetCookieResponse)(nil),                  // 31: admin.AdminGetCookieResponse
-	(*AdminCreateCookieRequest)(nil),                // 32: admin.AdminCreateCookieRequest
-	(*AdminUpdateCookieRequest)(nil),                // 33: admin.AdminUpdateCookieRequest
-	(*AdminFreezeCookieRequest)(nil),                // 34: admin.AdminFreezeCookieRequest
-	(*AdminFreezeCookieResponse)(nil),               // 35: admin.AdminFreezeCookieResponse
-	(*AdminCreateResourceResponse)(nil),             // 36: admin.AdminCreateResourceResponse
-	(*AdminOperationResponse)(nil),                  // 37: admin.AdminOperationResponse
-	(*AdminBillingAccount)(nil),                     // 38: admin.AdminBillingAccount
-	(*AdminListBillingAccountsRequest)(nil),         // 39: admin.AdminListBillingAccountsRequest
-	(*AdminListBillingAccountsResponse)(nil),        // 40: admin.AdminListBillingAccountsResponse
-	(*AdminGetBillingAccountDetailRequest)(nil),     // 41: admin.AdminGetBillingAccountDetailRequest
-	(*AdminGetBillingAccountDetailResponse)(nil),    // 42: admin.AdminGetBillingAccountDetailResponse
-	(*AdminAdjustBillingBalanceRequest)(nil),        // 43: admin.AdminAdjustBillingBalanceRequest
-	(*AdminAdjustBillingBalanceResponse)(nil),       // 44: admin.AdminAdjustBillingBalanceResponse
-	(*AdminBillingShortfallOrder)(nil),              // 45: admin.AdminBillingShortfallOrder
-	(*AdminListBillingShortfallsRequest)(nil),       // 46: admin.AdminListBillingShortfallsRequest
-	(*AdminListBillingShortfallsResponse)(nil),      // 47: admin.AdminListBillingShortfallsResponse
-	(*AdminReconcileBillingShortfallRequest)(nil),   // 48: admin.AdminReconcileBillingShortfallRequest
-	(*AdminReconcileBillingShortfallResponse)(nil),  // 49: admin.AdminReconcileBillingShortfallResponse
-	(*AdminBillingLedgerEntry)(nil),                 // 50: admin.AdminBillingLedgerEntry
-	(*AdminListBillingLedgerRequest)(nil),           // 51: admin.AdminListBillingLedgerRequest
-	(*AdminListBillingLedgerResponse)(nil),          // 52: admin.AdminListBillingLedgerResponse
-	(*AdminBillingUsageRecord)(nil),                 // 53: admin.AdminBillingUsageRecord
-	(*AdminListBillingUsageRecordsRequest)(nil),     // 54: admin.AdminListBillingUsageRecordsRequest
-	(*AdminListBillingUsageRecordsResponse)(nil),    // 55: admin.AdminListBillingUsageRecordsResponse
-	(*AdminBillingPricingResponse)(nil),             // 56: admin.AdminBillingPricingResponse
-	(*AdminUpdateBillingPricingRequest)(nil),        // 57: admin.AdminUpdateBillingPricingRequest
-	(*AdminWelcomeCreditSettingsResponse)(nil),      // 58: admin.AdminWelcomeCreditSettingsResponse
-	(*AdminUpdateWelcomeCreditSettingsRequest)(nil), // 59: admin.AdminUpdateWelcomeCreditSettingsRequest
+	(*AdminDashboardDownloads)(nil),                 // 11: admin.AdminDashboardDownloads
+	(*AdminDashboardUsers)(nil),                     // 12: admin.AdminDashboardUsers
+	(*AdminDashboardProxyErrorCategory)(nil),        // 13: admin.AdminDashboardProxyErrorCategory
+	(*AdminDashboardProxies)(nil),                   // 14: admin.AdminDashboardProxies
+	(*AdminDashboardProxySource)(nil),               // 15: admin.AdminDashboardProxySource
+	(*AdminDashboardProxyPolicy)(nil),               // 16: admin.AdminDashboardProxyPolicy
+	(*AdminDashboardCookies)(nil),                   // 17: admin.AdminDashboardCookies
+	(*AdminDashboardBilling)(nil),                   // 18: admin.AdminDashboardBilling
+	(*AdminDashboardException)(nil),                 // 19: admin.AdminDashboardException
+	(*AdminDashboardHealthResponse)(nil),            // 20: admin.AdminDashboardHealthResponse
+	(*AdminUserStatsResponse)(nil),                  // 21: admin.AdminUserStatsResponse
+	(*AdminProxySourceStatusResponse)(nil),          // 22: admin.AdminProxySourceStatusResponse
+	(*AdminProxySourcePolicyResponse)(nil),          // 23: admin.AdminProxySourcePolicyResponse
+	(*AdminUpdateProxySourcePolicyRequest)(nil),     // 24: admin.AdminUpdateProxySourcePolicyRequest
+	(*AdminProxyInfo)(nil),                          // 25: admin.AdminProxyInfo
+	(*AdminListProxiesRequest)(nil),                 // 26: admin.AdminListProxiesRequest
+	(*AdminListProxiesResponse)(nil),                // 27: admin.AdminListProxiesResponse
+	(*AdminListProxyUsageEventsRequest)(nil),        // 28: admin.AdminListProxyUsageEventsRequest
+	(*AdminProxyUsageEventItem)(nil),                // 29: admin.AdminProxyUsageEventItem
+	(*AdminProxyUsageEventCount)(nil),               // 30: admin.AdminProxyUsageEventCount
+	(*AdminProxyUsageEventSummary)(nil),             // 31: admin.AdminProxyUsageEventSummary
+	(*AdminListProxyUsageEventsResponse)(nil),       // 32: admin.AdminListProxyUsageEventsResponse
+	(*AdminCreateProxyRequest)(nil),                 // 33: admin.AdminCreateProxyRequest
+	(*AdminUpdateProxyRequest)(nil),                 // 34: admin.AdminUpdateProxyRequest
+	(*AdminUpdateProxyStatusRequest)(nil),           // 35: admin.AdminUpdateProxyStatusRequest
+	(*AdminDeleteRequest)(nil),                      // 36: admin.AdminDeleteRequest
+	(*AdminCookieInfo)(nil),                         // 37: admin.AdminCookieInfo
+	(*AdminListCookiesRequest)(nil),                 // 38: admin.AdminListCookiesRequest
+	(*AdminListCookiesResponse)(nil),                // 39: admin.AdminListCookiesResponse
+	(*AdminGetCookieRequest)(nil),                   // 40: admin.AdminGetCookieRequest
+	(*AdminGetCookieResponse)(nil),                  // 41: admin.AdminGetCookieResponse
+	(*AdminCreateCookieRequest)(nil),                // 42: admin.AdminCreateCookieRequest
+	(*AdminUpdateCookieRequest)(nil),                // 43: admin.AdminUpdateCookieRequest
+	(*AdminFreezeCookieRequest)(nil),                // 44: admin.AdminFreezeCookieRequest
+	(*AdminFreezeCookieResponse)(nil),               // 45: admin.AdminFreezeCookieResponse
+	(*AdminCreateResourceResponse)(nil),             // 46: admin.AdminCreateResourceResponse
+	(*AdminOperationResponse)(nil),                  // 47: admin.AdminOperationResponse
+	(*AdminBillingAccount)(nil),                     // 48: admin.AdminBillingAccount
+	(*AdminListBillingAccountsRequest)(nil),         // 49: admin.AdminListBillingAccountsRequest
+	(*AdminListBillingAccountsResponse)(nil),        // 50: admin.AdminListBillingAccountsResponse
+	(*AdminGetBillingAccountDetailRequest)(nil),     // 51: admin.AdminGetBillingAccountDetailRequest
+	(*AdminGetBillingAccountDetailResponse)(nil),    // 52: admin.AdminGetBillingAccountDetailResponse
+	(*AdminAdjustBillingBalanceRequest)(nil),        // 53: admin.AdminAdjustBillingBalanceRequest
+	(*AdminAdjustBillingBalanceResponse)(nil),       // 54: admin.AdminAdjustBillingBalanceResponse
+	(*AdminBillingShortfallOrder)(nil),              // 55: admin.AdminBillingShortfallOrder
+	(*AdminListBillingShortfallsRequest)(nil),       // 56: admin.AdminListBillingShortfallsRequest
+	(*AdminListBillingShortfallsResponse)(nil),      // 57: admin.AdminListBillingShortfallsResponse
+	(*AdminReconcileBillingShortfallRequest)(nil),   // 58: admin.AdminReconcileBillingShortfallRequest
+	(*AdminReconcileBillingShortfallResponse)(nil),  // 59: admin.AdminReconcileBillingShortfallResponse
+	(*AdminBillingLedgerEntry)(nil),                 // 60: admin.AdminBillingLedgerEntry
+	(*AdminListBillingLedgerRequest)(nil),           // 61: admin.AdminListBillingLedgerRequest
+	(*AdminListBillingLedgerResponse)(nil),          // 62: admin.AdminListBillingLedgerResponse
+	(*AdminBillingUsageRecord)(nil),                 // 63: admin.AdminBillingUsageRecord
+	(*AdminListBillingUsageRecordsRequest)(nil),     // 64: admin.AdminListBillingUsageRecordsRequest
+	(*AdminListBillingUsageRecordsResponse)(nil),    // 65: admin.AdminListBillingUsageRecordsResponse
+	(*AdminBillingPricingResponse)(nil),             // 66: admin.AdminBillingPricingResponse
+	(*AdminUpdateBillingPricingRequest)(nil),        // 67: admin.AdminUpdateBillingPricingRequest
+	(*AdminWelcomeCreditSettingsResponse)(nil),      // 68: admin.AdminWelcomeCreditSettingsResponse
+	(*AdminUpdateWelcomeCreditSettingsRequest)(nil), // 69: admin.AdminUpdateWelcomeCreditSettingsRequest
 }
 var file_proto_admin_proto_depIdxs = []int32{
 	1,  // 0: admin.AdminLoginResponse.user:type_name -> admin.AdminUser
 	1,  // 1: admin.AdminCurrentUserResponse.user:type_name -> admin.AdminUser
 	8,  // 2: admin.AdminRequestTrendResponse.points:type_name -> admin.AdminTrendPoint
-	15, // 3: admin.AdminListProxiesResponse.items:type_name -> admin.AdminProxyInfo
-	20, // 4: admin.AdminProxyUsageEventSummary.category_counts:type_name -> admin.AdminProxyUsageEventCount
-	20, // 5: admin.AdminProxyUsageEventSummary.stage_counts:type_name -> admin.AdminProxyUsageEventCount
-	20, // 6: admin.AdminProxyUsageEventSummary.platform_counts:type_name -> admin.AdminProxyUsageEventCount
-	19, // 7: admin.AdminListProxyUsageEventsResponse.events:type_name -> admin.AdminProxyUsageEventItem
-	21, // 8: admin.AdminListProxyUsageEventsResponse.summary:type_name -> admin.AdminProxyUsageEventSummary
-	27, // 9: admin.AdminListCookiesResponse.items:type_name -> admin.AdminCookieInfo
-	27, // 10: admin.AdminGetCookieResponse.cookie:type_name -> admin.AdminCookieInfo
-	38, // 11: admin.AdminListBillingAccountsResponse.items:type_name -> admin.AdminBillingAccount
-	38, // 12: admin.AdminGetBillingAccountDetailResponse.account:type_name -> admin.AdminBillingAccount
-	38, // 13: admin.AdminAdjustBillingBalanceResponse.account:type_name -> admin.AdminBillingAccount
-	45, // 14: admin.AdminListBillingShortfallsResponse.items:type_name -> admin.AdminBillingShortfallOrder
-	45, // 15: admin.AdminReconcileBillingShortfallResponse.order:type_name -> admin.AdminBillingShortfallOrder
-	38, // 16: admin.AdminReconcileBillingShortfallResponse.account:type_name -> admin.AdminBillingAccount
-	50, // 17: admin.AdminListBillingLedgerResponse.items:type_name -> admin.AdminBillingLedgerEntry
-	53, // 18: admin.AdminListBillingUsageRecordsResponse.items:type_name -> admin.AdminBillingUsageRecord
-	2,  // 19: admin.AdminService.Login:input_type -> admin.AdminLoginRequest
-	4,  // 20: admin.AdminService.Logout:input_type -> admin.AdminLogoutRequest
-	5,  // 21: admin.AdminService.GetCurrentUser:input_type -> admin.AdminSessionRequest
-	0,  // 22: admin.AdminService.GetOverview:input_type -> admin.AdminEmpty
-	9,  // 23: admin.AdminService.GetRequestTrend:input_type -> admin.AdminRequestTrendRequest
-	0,  // 24: admin.AdminService.GetUserStats:input_type -> admin.AdminEmpty
-	0,  // 25: admin.AdminService.GetProxySourceStatus:input_type -> admin.AdminEmpty
-	0,  // 26: admin.AdminService.GetProxySourcePolicy:input_type -> admin.AdminEmpty
-	14, // 27: admin.AdminService.UpdateProxySourcePolicy:input_type -> admin.AdminUpdateProxySourcePolicyRequest
-	16, // 28: admin.AdminService.ListProxies:input_type -> admin.AdminListProxiesRequest
-	18, // 29: admin.AdminService.ListProxyUsageEvents:input_type -> admin.AdminListProxyUsageEventsRequest
-	23, // 30: admin.AdminService.CreateProxy:input_type -> admin.AdminCreateProxyRequest
-	24, // 31: admin.AdminService.UpdateProxy:input_type -> admin.AdminUpdateProxyRequest
-	25, // 32: admin.AdminService.UpdateProxyStatus:input_type -> admin.AdminUpdateProxyStatusRequest
-	26, // 33: admin.AdminService.DeleteProxy:input_type -> admin.AdminDeleteRequest
-	28, // 34: admin.AdminService.ListCookies:input_type -> admin.AdminListCookiesRequest
-	30, // 35: admin.AdminService.GetCookie:input_type -> admin.AdminGetCookieRequest
-	32, // 36: admin.AdminService.CreateCookie:input_type -> admin.AdminCreateCookieRequest
-	33, // 37: admin.AdminService.UpdateCookie:input_type -> admin.AdminUpdateCookieRequest
-	26, // 38: admin.AdminService.DeleteCookie:input_type -> admin.AdminDeleteRequest
-	34, // 39: admin.AdminService.FreezeCookie:input_type -> admin.AdminFreezeCookieRequest
-	39, // 40: admin.AdminService.ListBillingAccounts:input_type -> admin.AdminListBillingAccountsRequest
-	41, // 41: admin.AdminService.GetBillingAccountDetail:input_type -> admin.AdminGetBillingAccountDetailRequest
-	43, // 42: admin.AdminService.AdjustBillingBalance:input_type -> admin.AdminAdjustBillingBalanceRequest
-	46, // 43: admin.AdminService.ListBillingShortfalls:input_type -> admin.AdminListBillingShortfallsRequest
-	48, // 44: admin.AdminService.ReconcileBillingShortfall:input_type -> admin.AdminReconcileBillingShortfallRequest
-	51, // 45: admin.AdminService.ListBillingLedger:input_type -> admin.AdminListBillingLedgerRequest
-	54, // 46: admin.AdminService.ListBillingUsageRecords:input_type -> admin.AdminListBillingUsageRecordsRequest
-	0,  // 47: admin.AdminService.GetBillingPricing:input_type -> admin.AdminEmpty
-	57, // 48: admin.AdminService.UpdateBillingPricing:input_type -> admin.AdminUpdateBillingPricingRequest
-	0,  // 49: admin.AdminService.GetWelcomeCreditSettings:input_type -> admin.AdminEmpty
-	59, // 50: admin.AdminService.UpdateWelcomeCreditSettings:input_type -> admin.AdminUpdateWelcomeCreditSettingsRequest
-	3,  // 51: admin.AdminService.Login:output_type -> admin.AdminLoginResponse
-	37, // 52: admin.AdminService.Logout:output_type -> admin.AdminOperationResponse
-	6,  // 53: admin.AdminService.GetCurrentUser:output_type -> admin.AdminCurrentUserResponse
-	7,  // 54: admin.AdminService.GetOverview:output_type -> admin.AdminOverviewResponse
-	10, // 55: admin.AdminService.GetRequestTrend:output_type -> admin.AdminRequestTrendResponse
-	11, // 56: admin.AdminService.GetUserStats:output_type -> admin.AdminUserStatsResponse
-	12, // 57: admin.AdminService.GetProxySourceStatus:output_type -> admin.AdminProxySourceStatusResponse
-	13, // 58: admin.AdminService.GetProxySourcePolicy:output_type -> admin.AdminProxySourcePolicyResponse
-	37, // 59: admin.AdminService.UpdateProxySourcePolicy:output_type -> admin.AdminOperationResponse
-	17, // 60: admin.AdminService.ListProxies:output_type -> admin.AdminListProxiesResponse
-	22, // 61: admin.AdminService.ListProxyUsageEvents:output_type -> admin.AdminListProxyUsageEventsResponse
-	36, // 62: admin.AdminService.CreateProxy:output_type -> admin.AdminCreateResourceResponse
-	37, // 63: admin.AdminService.UpdateProxy:output_type -> admin.AdminOperationResponse
-	37, // 64: admin.AdminService.UpdateProxyStatus:output_type -> admin.AdminOperationResponse
-	37, // 65: admin.AdminService.DeleteProxy:output_type -> admin.AdminOperationResponse
-	29, // 66: admin.AdminService.ListCookies:output_type -> admin.AdminListCookiesResponse
-	31, // 67: admin.AdminService.GetCookie:output_type -> admin.AdminGetCookieResponse
-	36, // 68: admin.AdminService.CreateCookie:output_type -> admin.AdminCreateResourceResponse
-	37, // 69: admin.AdminService.UpdateCookie:output_type -> admin.AdminOperationResponse
-	37, // 70: admin.AdminService.DeleteCookie:output_type -> admin.AdminOperationResponse
-	35, // 71: admin.AdminService.FreezeCookie:output_type -> admin.AdminFreezeCookieResponse
-	40, // 72: admin.AdminService.ListBillingAccounts:output_type -> admin.AdminListBillingAccountsResponse
-	42, // 73: admin.AdminService.GetBillingAccountDetail:output_type -> admin.AdminGetBillingAccountDetailResponse
-	44, // 74: admin.AdminService.AdjustBillingBalance:output_type -> admin.AdminAdjustBillingBalanceResponse
-	47, // 75: admin.AdminService.ListBillingShortfalls:output_type -> admin.AdminListBillingShortfallsResponse
-	49, // 76: admin.AdminService.ReconcileBillingShortfall:output_type -> admin.AdminReconcileBillingShortfallResponse
-	52, // 77: admin.AdminService.ListBillingLedger:output_type -> admin.AdminListBillingLedgerResponse
-	55, // 78: admin.AdminService.ListBillingUsageRecords:output_type -> admin.AdminListBillingUsageRecordsResponse
-	56, // 79: admin.AdminService.GetBillingPricing:output_type -> admin.AdminBillingPricingResponse
-	56, // 80: admin.AdminService.UpdateBillingPricing:output_type -> admin.AdminBillingPricingResponse
-	58, // 81: admin.AdminService.GetWelcomeCreditSettings:output_type -> admin.AdminWelcomeCreditSettingsResponse
-	58, // 82: admin.AdminService.UpdateWelcomeCreditSettings:output_type -> admin.AdminWelcomeCreditSettingsResponse
-	51, // [51:83] is the sub-list for method output_type
-	19, // [19:51] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	13, // 3: admin.AdminDashboardProxies.top_error_categories:type_name -> admin.AdminDashboardProxyErrorCategory
+	11, // 4: admin.AdminDashboardHealthResponse.downloads:type_name -> admin.AdminDashboardDownloads
+	12, // 5: admin.AdminDashboardHealthResponse.users:type_name -> admin.AdminDashboardUsers
+	14, // 6: admin.AdminDashboardHealthResponse.proxies:type_name -> admin.AdminDashboardProxies
+	15, // 7: admin.AdminDashboardHealthResponse.proxy_source:type_name -> admin.AdminDashboardProxySource
+	16, // 8: admin.AdminDashboardHealthResponse.proxy_policy:type_name -> admin.AdminDashboardProxyPolicy
+	17, // 9: admin.AdminDashboardHealthResponse.cookies:type_name -> admin.AdminDashboardCookies
+	18, // 10: admin.AdminDashboardHealthResponse.billing:type_name -> admin.AdminDashboardBilling
+	19, // 11: admin.AdminDashboardHealthResponse.exceptions:type_name -> admin.AdminDashboardException
+	25, // 12: admin.AdminListProxiesResponse.items:type_name -> admin.AdminProxyInfo
+	30, // 13: admin.AdminProxyUsageEventSummary.category_counts:type_name -> admin.AdminProxyUsageEventCount
+	30, // 14: admin.AdminProxyUsageEventSummary.stage_counts:type_name -> admin.AdminProxyUsageEventCount
+	30, // 15: admin.AdminProxyUsageEventSummary.platform_counts:type_name -> admin.AdminProxyUsageEventCount
+	29, // 16: admin.AdminListProxyUsageEventsResponse.events:type_name -> admin.AdminProxyUsageEventItem
+	31, // 17: admin.AdminListProxyUsageEventsResponse.summary:type_name -> admin.AdminProxyUsageEventSummary
+	37, // 18: admin.AdminListCookiesResponse.items:type_name -> admin.AdminCookieInfo
+	37, // 19: admin.AdminGetCookieResponse.cookie:type_name -> admin.AdminCookieInfo
+	48, // 20: admin.AdminListBillingAccountsResponse.items:type_name -> admin.AdminBillingAccount
+	48, // 21: admin.AdminGetBillingAccountDetailResponse.account:type_name -> admin.AdminBillingAccount
+	48, // 22: admin.AdminAdjustBillingBalanceResponse.account:type_name -> admin.AdminBillingAccount
+	55, // 23: admin.AdminListBillingShortfallsResponse.items:type_name -> admin.AdminBillingShortfallOrder
+	55, // 24: admin.AdminReconcileBillingShortfallResponse.order:type_name -> admin.AdminBillingShortfallOrder
+	48, // 25: admin.AdminReconcileBillingShortfallResponse.account:type_name -> admin.AdminBillingAccount
+	60, // 26: admin.AdminListBillingLedgerResponse.items:type_name -> admin.AdminBillingLedgerEntry
+	63, // 27: admin.AdminListBillingUsageRecordsResponse.items:type_name -> admin.AdminBillingUsageRecord
+	2,  // 28: admin.AdminService.Login:input_type -> admin.AdminLoginRequest
+	4,  // 29: admin.AdminService.Logout:input_type -> admin.AdminLogoutRequest
+	5,  // 30: admin.AdminService.GetCurrentUser:input_type -> admin.AdminSessionRequest
+	0,  // 31: admin.AdminService.GetOverview:input_type -> admin.AdminEmpty
+	9,  // 32: admin.AdminService.GetRequestTrend:input_type -> admin.AdminRequestTrendRequest
+	0,  // 33: admin.AdminService.GetDashboardHealth:input_type -> admin.AdminEmpty
+	0,  // 34: admin.AdminService.GetUserStats:input_type -> admin.AdminEmpty
+	0,  // 35: admin.AdminService.GetProxySourceStatus:input_type -> admin.AdminEmpty
+	0,  // 36: admin.AdminService.GetProxySourcePolicy:input_type -> admin.AdminEmpty
+	24, // 37: admin.AdminService.UpdateProxySourcePolicy:input_type -> admin.AdminUpdateProxySourcePolicyRequest
+	26, // 38: admin.AdminService.ListProxies:input_type -> admin.AdminListProxiesRequest
+	28, // 39: admin.AdminService.ListProxyUsageEvents:input_type -> admin.AdminListProxyUsageEventsRequest
+	33, // 40: admin.AdminService.CreateProxy:input_type -> admin.AdminCreateProxyRequest
+	34, // 41: admin.AdminService.UpdateProxy:input_type -> admin.AdminUpdateProxyRequest
+	35, // 42: admin.AdminService.UpdateProxyStatus:input_type -> admin.AdminUpdateProxyStatusRequest
+	36, // 43: admin.AdminService.DeleteProxy:input_type -> admin.AdminDeleteRequest
+	38, // 44: admin.AdminService.ListCookies:input_type -> admin.AdminListCookiesRequest
+	40, // 45: admin.AdminService.GetCookie:input_type -> admin.AdminGetCookieRequest
+	42, // 46: admin.AdminService.CreateCookie:input_type -> admin.AdminCreateCookieRequest
+	43, // 47: admin.AdminService.UpdateCookie:input_type -> admin.AdminUpdateCookieRequest
+	36, // 48: admin.AdminService.DeleteCookie:input_type -> admin.AdminDeleteRequest
+	44, // 49: admin.AdminService.FreezeCookie:input_type -> admin.AdminFreezeCookieRequest
+	49, // 50: admin.AdminService.ListBillingAccounts:input_type -> admin.AdminListBillingAccountsRequest
+	51, // 51: admin.AdminService.GetBillingAccountDetail:input_type -> admin.AdminGetBillingAccountDetailRequest
+	53, // 52: admin.AdminService.AdjustBillingBalance:input_type -> admin.AdminAdjustBillingBalanceRequest
+	56, // 53: admin.AdminService.ListBillingShortfalls:input_type -> admin.AdminListBillingShortfallsRequest
+	58, // 54: admin.AdminService.ReconcileBillingShortfall:input_type -> admin.AdminReconcileBillingShortfallRequest
+	61, // 55: admin.AdminService.ListBillingLedger:input_type -> admin.AdminListBillingLedgerRequest
+	64, // 56: admin.AdminService.ListBillingUsageRecords:input_type -> admin.AdminListBillingUsageRecordsRequest
+	0,  // 57: admin.AdminService.GetBillingPricing:input_type -> admin.AdminEmpty
+	67, // 58: admin.AdminService.UpdateBillingPricing:input_type -> admin.AdminUpdateBillingPricingRequest
+	0,  // 59: admin.AdminService.GetWelcomeCreditSettings:input_type -> admin.AdminEmpty
+	69, // 60: admin.AdminService.UpdateWelcomeCreditSettings:input_type -> admin.AdminUpdateWelcomeCreditSettingsRequest
+	3,  // 61: admin.AdminService.Login:output_type -> admin.AdminLoginResponse
+	47, // 62: admin.AdminService.Logout:output_type -> admin.AdminOperationResponse
+	6,  // 63: admin.AdminService.GetCurrentUser:output_type -> admin.AdminCurrentUserResponse
+	7,  // 64: admin.AdminService.GetOverview:output_type -> admin.AdminOverviewResponse
+	10, // 65: admin.AdminService.GetRequestTrend:output_type -> admin.AdminRequestTrendResponse
+	20, // 66: admin.AdminService.GetDashboardHealth:output_type -> admin.AdminDashboardHealthResponse
+	21, // 67: admin.AdminService.GetUserStats:output_type -> admin.AdminUserStatsResponse
+	22, // 68: admin.AdminService.GetProxySourceStatus:output_type -> admin.AdminProxySourceStatusResponse
+	23, // 69: admin.AdminService.GetProxySourcePolicy:output_type -> admin.AdminProxySourcePolicyResponse
+	47, // 70: admin.AdminService.UpdateProxySourcePolicy:output_type -> admin.AdminOperationResponse
+	27, // 71: admin.AdminService.ListProxies:output_type -> admin.AdminListProxiesResponse
+	32, // 72: admin.AdminService.ListProxyUsageEvents:output_type -> admin.AdminListProxyUsageEventsResponse
+	46, // 73: admin.AdminService.CreateProxy:output_type -> admin.AdminCreateResourceResponse
+	47, // 74: admin.AdminService.UpdateProxy:output_type -> admin.AdminOperationResponse
+	47, // 75: admin.AdminService.UpdateProxyStatus:output_type -> admin.AdminOperationResponse
+	47, // 76: admin.AdminService.DeleteProxy:output_type -> admin.AdminOperationResponse
+	39, // 77: admin.AdminService.ListCookies:output_type -> admin.AdminListCookiesResponse
+	41, // 78: admin.AdminService.GetCookie:output_type -> admin.AdminGetCookieResponse
+	46, // 79: admin.AdminService.CreateCookie:output_type -> admin.AdminCreateResourceResponse
+	47, // 80: admin.AdminService.UpdateCookie:output_type -> admin.AdminOperationResponse
+	47, // 81: admin.AdminService.DeleteCookie:output_type -> admin.AdminOperationResponse
+	45, // 82: admin.AdminService.FreezeCookie:output_type -> admin.AdminFreezeCookieResponse
+	50, // 83: admin.AdminService.ListBillingAccounts:output_type -> admin.AdminListBillingAccountsResponse
+	52, // 84: admin.AdminService.GetBillingAccountDetail:output_type -> admin.AdminGetBillingAccountDetailResponse
+	54, // 85: admin.AdminService.AdjustBillingBalance:output_type -> admin.AdminAdjustBillingBalanceResponse
+	57, // 86: admin.AdminService.ListBillingShortfalls:output_type -> admin.AdminListBillingShortfallsResponse
+	59, // 87: admin.AdminService.ReconcileBillingShortfall:output_type -> admin.AdminReconcileBillingShortfallResponse
+	62, // 88: admin.AdminService.ListBillingLedger:output_type -> admin.AdminListBillingLedgerResponse
+	65, // 89: admin.AdminService.ListBillingUsageRecords:output_type -> admin.AdminListBillingUsageRecordsResponse
+	66, // 90: admin.AdminService.GetBillingPricing:output_type -> admin.AdminBillingPricingResponse
+	66, // 91: admin.AdminService.UpdateBillingPricing:output_type -> admin.AdminBillingPricingResponse
+	68, // 92: admin.AdminService.GetWelcomeCreditSettings:output_type -> admin.AdminWelcomeCreditSettingsResponse
+	68, // 93: admin.AdminService.UpdateWelcomeCreditSettings:output_type -> admin.AdminWelcomeCreditSettingsResponse
+	61, // [61:94] is the sub-list for method output_type
+	28, // [28:61] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_proto_admin_proto_init() }
@@ -5523,7 +6481,7 @@ func file_proto_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_admin_proto_rawDesc), len(file_proto_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   60,
+			NumMessages:   70,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -82,10 +82,14 @@ func (s *ProxyService) List(ctx context.Context, req models.ListProxiesRequest) 
 	}
 
 	resp, err := s.assetClient.ListProxies(ctx, &pb.ListProxiesRequest{
-		Search:   req.Search,
-		Protocol: req.Protocol,
-		Region:   req.Region,
-		Status:   status,
+		Search:    req.Search,
+		Protocol:  req.Protocol,
+		Region:    req.Region,
+		Status:    status,
+		Page:      req.Page,
+		PageSize:  req.PageSize,
+		SortBy:    req.SortBy,
+		SortOrder: req.SortOrder,
 	})
 	if err != nil {
 		return nil, err
@@ -119,7 +123,12 @@ func (s *ProxyService) List(ctx context.Context, req models.ListProxiesRequest) 
 		})
 	}
 
-	return &models.ProxyListResponse{Items: items}, nil
+	return &models.ProxyListResponse{
+		Items:    items,
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+	}, nil
 }
 
 func (s *ProxyService) ListUsageEvents(ctx context.Context, req models.ProxyUsageEventFilter) (*models.ProxyUsageEventListResponse, error) {

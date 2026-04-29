@@ -261,37 +261,44 @@ func (h *ProxyHandler) UpdateProxySourcePolicy(ctx context.Context, req *pb.Upda
 
 // ListProxies 列出手动代理
 func (h *ProxyHandler) ListProxies(ctx context.Context, req *pb.ListProxiesRequest) (*pb.ListProxiesResponse, error) {
-	var search *string
-	var protocol *string
-	var region *string
-	var proxyStatus *models.ProxyStatus
+	filter := models.ProxyListFilter{
+		Page:      int(req.Page),
+		PageSize:  int(req.PageSize),
+		SortBy:    req.SortBy,
+		SortOrder: req.SortOrder,
+	}
 
 	if req.Search != "" {
-		search = &req.Search
+		filter.Search = &req.Search
 	}
 	if req.Protocol != "" {
-		protocol = &req.Protocol
+		filter.Protocol = &req.Protocol
 	}
 	if req.Region != "" {
-		region = &req.Region
+		filter.Region = &req.Region
 	}
 	if req.Status >= 0 {
 		parsed := models.ProxyStatus(req.Status)
-		proxyStatus = &parsed
+		filter.Status = &parsed
 	}
 
-	items, err := h.proxyService.ListProxies(ctx, search, protocol, region, proxyStatus)
+	result, err := h.proxyService.ListProxies(ctx, filter)
 	if err != nil {
 		log.Printf("ListProxies error: %v", err)
 		return nil, status.Error(codes.Internal, "获取代理列表失败")
 	}
 
-	respItems := make([]*pb.ProxyInfo, 0, len(items))
-	for _, item := range items {
+	respItems := make([]*pb.ProxyInfo, 0, len(result.Items))
+	for _, item := range result.Items {
 		respItems = append(respItems, toProxyInfo(item))
 	}
 
-	return &pb.ListProxiesResponse{Items: respItems}, nil
+	return &pb.ListProxiesResponse{
+		Items:    respItems,
+		Total:    result.Total,
+		Page:     int32(result.Page),
+		PageSize: int32(result.PageSize),
+	}, nil
 }
 
 // CreateProxy 创建手动代理

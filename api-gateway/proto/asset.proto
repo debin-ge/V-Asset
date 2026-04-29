@@ -31,6 +31,8 @@ service AssetService {
 
   // 获取平台请求趋势
   rpc GetRequestTrend(GetRequestTrendRequest) returns (GetRequestTrendResponse);
+  // 获取后台 Dashboard 健康聚合
+  rpc GetDashboardHealth(GetDashboardHealthRequest) returns (GetDashboardHealthResponse);
   
   // 获取文件信息(用于下载)
   rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
@@ -74,6 +76,9 @@ service AssetService {
   rpc GetBillingPricing(GetBillingPricingRequest) returns (GetBillingPricingResponse);
   // 更新费率
   rpc UpdateBillingPricing(UpdateBillingPricingRequest) returns (UpdateBillingPricingResponse);
+  rpc GetWelcomeCreditSettings(GetWelcomeCreditSettingsRequest) returns (GetWelcomeCreditSettingsResponse);
+  rpc UpdateWelcomeCreditSettings(UpdateWelcomeCreditSettingsRequest) returns (UpdateWelcomeCreditSettingsResponse);
+  rpc GrantWelcomeCredit(GrantWelcomeCreditRequest) returns (GrantWelcomeCreditResponse);
   // 后台：查询待补扣短款订单
   rpc ListBillingShortfalls(ListBillingShortfallsRequest) returns (ListBillingShortfallsResponse);
   // 后台：手动补扣短款订单
@@ -90,6 +95,8 @@ service AssetService {
   rpc ReportProxyUsage(ReportProxyUsageRequest) returns (ReportProxyUsageResponse);
   // 释放任务级代理绑定
   rpc ReleaseProxyForTask(ReleaseProxyForTaskRequest) returns (ReleaseProxyForTaskResponse);
+  // 查询代理使用事件
+  rpc ListProxyUsageEvents(ListProxyUsageEventsRequest) returns (ListProxyUsageEventsResponse);
   // 获取当前代理来源策略
   rpc GetProxySourcePolicy(GetProxySourcePolicyRequest) returns (GetProxySourcePolicyResponse);
   // 更新当前代理来源策略
@@ -257,11 +264,86 @@ message GetRequestTrendRequest {
 message TrendPoint {
   string label = 1;
   int64 count = 2;
+  int64 total_count = 3;
+  int64 success_count = 4;
+  int64 failed_count = 5;
+  double success_rate = 6;
 }
 
 message GetRequestTrendResponse {
   string granularity = 1;
   repeated TrendPoint points = 2;
+}
+
+message GetDashboardHealthRequest {}
+
+message AssetDashboardDownloads {
+  int64 total = 1;
+  int64 today_total = 2;
+  int64 success_total = 3;
+  int64 failed_total = 4;
+  double success_rate = 5;
+  double failure_rate = 6;
+}
+
+message AssetDashboardProxyErrorCategory {
+  string key = 1;
+  int64 count = 2;
+}
+
+message AssetDashboardProxies {
+  int64 total = 1;
+  int64 active = 2;
+  int64 available = 3;
+  int64 cooling = 4;
+  int64 saturated = 5;
+  int64 high_risk = 6;
+  int64 recent_success = 7;
+  int64 recent_failure = 8;
+  double recent_failure_rate = 9;
+  repeated AssetDashboardProxyErrorCategory top_error_categories = 10;
+}
+
+message AssetDashboardProxySource {
+  bool healthy = 1;
+  string mode = 2;
+  string message = 3;
+  bool dynamic_configured = 4;
+  string proxy_lease_id = 5;
+  string proxy_expire_at = 6;
+}
+
+message AssetDashboardProxyPolicy {
+  string primary_source = 1;
+  string fallback_source = 2;
+  bool fallback_enabled = 3;
+}
+
+message AssetDashboardCookies {
+  int64 total = 1;
+  int64 active = 2;
+  int64 expired = 3;
+  int64 frozen = 4;
+}
+
+message AssetDashboardBilling {
+  int64 shortfall_count = 1;
+}
+
+message AssetDashboardUsers {
+  int64 daily_active = 1;
+  int64 weekly_active = 2;
+}
+
+message GetDashboardHealthResponse {
+  string generated_at = 1;
+  AssetDashboardDownloads downloads = 2;
+  AssetDashboardProxies proxies = 3;
+  AssetDashboardProxySource proxy_source = 4;
+  AssetDashboardProxyPolicy proxy_policy = 5;
+  AssetDashboardCookies cookies = 6;
+  AssetDashboardBilling billing = 7;
+  AssetDashboardUsers users = 8;
 }
 
 // 获取文件信息请求
@@ -610,6 +692,54 @@ message UpdateBillingPricingResponse {
   BillingPricing pricing = 2;
 }
 
+message WelcomeCreditSettings {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message GetWelcomeCreditSettingsRequest {}
+
+message GetWelcomeCreditSettingsResponse {
+  WelcomeCreditSettings settings = 1;
+}
+
+message UpdateWelcomeCreditSettingsRequest {
+  bool enabled = 1;
+  string amount_yuan = 2;
+  string currency_code = 3;
+  string updated_by = 4;
+}
+
+message UpdateWelcomeCreditSettingsResponse {
+  bool success = 1;
+  WelcomeCreditSettings settings = 2;
+}
+
+message WelcomeCreditGrantSnapshot {
+  string operation_id = 1;
+  string ledger_entry_no = 2;
+  string reason_code = 3;
+  string amount_yuan = 4;
+  string currency_code = 5;
+  string created_at = 6;
+}
+
+message GrantWelcomeCreditRequest {
+  string user_id = 1;
+  string operation_id = 2;
+}
+
+message GrantWelcomeCreditResponse {
+  bool success = 1;
+  bool granted = 2;
+  BillingAccountSnapshot account = 3;
+  string entry_no = 4;
+  WelcomeCreditGrantSnapshot grant = 5;
+}
+
 message BillingShortfallOrderItem {
   string order_no = 1;
   string user_id = 2;
@@ -726,6 +856,66 @@ message ReleaseProxyForTaskResponse {
   bool success = 1;
 }
 
+message ListProxyUsageEventsRequest {
+  string task_id = 1;
+  int64 proxy_id = 2;
+  string proxy_lease_id = 3;
+  string source_type = 4;
+  string stage = 5;
+  string platform = 6;
+  string success = 7; // all/success/failed
+  string error_category = 8;
+  int64 start_time_unix = 9;
+  int64 end_time_unix = 10;
+  int32 page = 11;
+  int32 page_size = 12;
+  string sort_order = 13; // asc/desc
+}
+
+message ProxyUsageEventItem {
+  int64 id = 1;
+  string task_id = 2;
+  int64 proxy_id = 3;
+  string proxy_lease_id = 4;
+  string source_type = 5;
+  string stage = 6;
+  string platform = 7;
+  bool success = 8;
+  string error_category = 9;
+  string error_message = 10;
+  string created_at = 11;
+  string proxy_host = 12;
+  int32 proxy_port = 13;
+  string proxy_protocol = 14;
+  string proxy_region = 15;
+  int32 proxy_risk_score = 16;
+  string proxy_cooldown_until = 17;
+  int32 proxy_active_task_count = 18;
+  int32 proxy_max_concurrent = 19;
+}
+
+message ProxyUsageEventCount {
+  string key = 1;
+  int64 count = 2;
+}
+
+message ProxyUsageEventSummary {
+  int64 success_count = 1;
+  int64 failure_count = 2;
+  double failure_rate = 3;
+  repeated ProxyUsageEventCount category_counts = 4;
+  repeated ProxyUsageEventCount stage_counts = 5;
+  repeated ProxyUsageEventCount platform_counts = 6;
+}
+
+message ListProxyUsageEventsResponse {
+  repeated ProxyUsageEventItem events = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  ProxyUsageEventSummary summary = 5;
+}
+
 message GetProxySourcePolicyRequest {}
 
 message GetProxySourcePolicyResponse {
@@ -788,10 +978,17 @@ message ListProxiesRequest {
   string protocol = 2;
   string region = 3;
   int32 status = 4; // -1 表示不过滤
+  int32 page = 5;
+  int32 page_size = 6;
+  string sort_by = 7;
+  string sort_order = 8;
 }
 
 message ListProxiesResponse {
   repeated ProxyInfo items = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message CreateProxyRequest {

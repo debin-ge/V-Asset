@@ -20,6 +20,21 @@ const (
 	ProxyProtocolSOCKS5 ProxyProtocol = "socks5"
 )
 
+const (
+	ProxyListSortOrderAsc    = "asc"
+	ProxyListSortOrderDesc   = "desc"
+	ProxyListDefaultPage     = 1
+	ProxyListDefaultPageSize = 20
+	ProxyListMaxPage         = 10000
+	ProxyListMaxPageSize     = 100
+	ProxyListSortRiskScore   = "risk_score"
+	ProxyListSortPriority    = "priority"
+	ProxyListSortFailCount   = "fail_count"
+	ProxyListSortActiveTasks = "active_task_count"
+	ProxyListSortUpdatedAt   = "updated_at"
+	ProxyListSortLastUsedAt  = "last_used_at"
+)
+
 // Proxy 代理数据模型
 type Proxy struct {
 	ID                   int64         `db:"id"`
@@ -49,6 +64,24 @@ type Proxy struct {
 	DeletedAt            *time.Time    `db:"deleted_at"`
 	CreatedAt            time.Time     `db:"created_at"`
 	UpdatedAt            time.Time     `db:"updated_at"`
+}
+
+type ProxyListFilter struct {
+	Search    *string
+	Protocol  *string
+	Region    *string
+	Status    *ProxyStatus
+	Page      int
+	PageSize  int
+	SortBy    string
+	SortOrder string
+}
+
+type ProxyListResult struct {
+	Total    int64
+	Page     int
+	PageSize int
+	Items    []*Proxy
 }
 
 // GetURL 获取代理完整 URL

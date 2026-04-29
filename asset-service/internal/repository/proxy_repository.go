@@ -293,6 +293,78 @@ func (r *ProxyRepository) ListUsageEvents(ctx context.Context, filter models.Pro
 	}, nil
 }
 
+func (r *ProxyRepository) GetDashboardStats(ctx context.Context, recentSince time.Time) (models.DashboardProxies, error) {
+	var stats models.DashboardProxies
+	now := time.Now()
+	query := `
+		SELECT
+			COUNT(*) FILTER (WHERE deleted_at IS NULL),
+			COUNT(*) FILTER (WHERE deleted_at IS NULL AND status = $1),
+			COUNT(*) FILTER (
+				WHERE deleted_at IS NULL
+				  AND status = $1
+				  AND (cooldown_until IS NULL OR cooldown_until <= $2)
+				  AND risk_score < $3
+				  AND active_task_count < max_concurrent
+			),
+			COUNT(*) FILTER (WHERE deleted_at IS NULL AND cooldown_until IS NOT NULL AND cooldown_until > $2),
+			COUNT(*) FILTER (WHERE deleted_at IS NULL AND max_concurrent > 0 AND active_task_count >= max_concurrent),
+			COUNT(*) FILTER (WHERE deleted_at IS NULL AND risk_score >= $4)
+		FROM proxies`
+	if err := r.db.QueryRowContext(ctx, query, models.ProxyStatusActive, now, models.ProxyRiskExcludeThreshold, 70).Scan(
+		&stats.Total,
+		&stats.Active,
+		&stats.Available,
+		&stats.Cooling,
+		&stats.Saturated,
+		&stats.HighRisk,
+	); err != nil {
+		return models.DashboardProxies{}, fmt.Errorf("query dashboard proxy pool stats failed: %w", err)
+	}
+
+	usageQuery := `
+		SELECT
+			COUNT(*) FILTER (WHERE success = TRUE),
+			COUNT(*) FILTER (WHERE success = FALSE)
+		FROM proxy_usage_events
+		WHERE created_at >= $1`
+	if err := r.db.QueryRowContext(ctx, usageQuery, recentSince).Scan(&stats.RecentSuccess, &stats.RecentFailure); err != nil {
+		return models.DashboardProxies{}, fmt.Errorf("query dashboard proxy usage stats failed: %w", err)
+	}
+	recentTotal := stats.RecentSuccess + stats.RecentFailure
+	if recentTotal > 0 {
+		stats.RecentFailureRate = float64(stats.RecentFailure) / float64(recentTotal)
+	}
+
+	categoriesQuery := `
+		SELECT COALESCE(error_category, 'unknown') AS key, COUNT(*) AS count
+		FROM proxy_usage_events
+		WHERE created_at >= $1
+		  AND success = FALSE
+		GROUP BY key
+		ORDER BY count DESC, key ASC
+		LIMIT 10`
+	rows, err := r.db.QueryContext(ctx, categoriesQuery, recentSince)
+	if err != nil {
+		return models.DashboardProxies{}, fmt.Errorf("query dashboard proxy error categories failed: %w", err)
+	}
+	defer rows.Close()
+
+	stats.TopErrorCategories = make([]models.DashboardCount, 0)
+	for rows.Next() {
+		var item models.DashboardCount
+		if err := rows.Scan(&item.Key, &item.Count); err != nil {
+			return models.DashboardProxies{}, fmt.Errorf("scan dashboard proxy error category failed: %w", err)
+		}
+		stats.TopErrorCategories = append(stats.TopErrorCategories, item)
+	}
+	if err := rows.Err(); err != nil {
+		return models.DashboardProxies{}, fmt.Errorf("iterate dashboard proxy error categories failed: %w", err)
+	}
+
+	return stats, nil
+}
+
 func (r *ProxyRepository) proxyUsageEventWhereClause(filter models.ProxyUsageEventFilter) (string, []interface{}) {
 	conditions := make([]string, 0)
 	args := make([]interface{}, 0)
@@ -575,36 +647,33 @@ func (r *ProxyRepository) acquireAvailableProxy(ctx context.Context, protocol *m
 }
 
 // ListProxies 列出手动代理池
-func (r *ProxyRepository) ListProxies(
-	ctx context.Context,
-	search, protocol, region *string,
-	status *models.ProxyStatus,
-) ([]*models.Proxy, error) {
-	conditions := []string{"deleted_at IS NULL"}
-	args := make([]interface{}, 0)
-	argIdx := 1
-
-	if search != nil && *search != "" {
-		conditions = append(conditions, fmt.Sprintf("(COALESCE(host, ip) ILIKE $%d OR COALESCE(region, '') ILIKE $%d OR COALESCE(platform_tags, '') ILIKE $%d OR COALESCE(remark, '') ILIKE $%d)", argIdx, argIdx, argIdx, argIdx))
-		args = append(args, "%"+*search+"%")
-		argIdx++
+func (r *ProxyRepository) ListProxies(ctx context.Context, filter models.ProxyListFilter) (*models.ProxyListResult, error) {
+	page := filter.Page
+	if page < 1 {
+		page = models.ProxyListDefaultPage
 	}
-	if protocol != nil && *protocol != "" {
-		conditions = append(conditions, fmt.Sprintf("protocol = $%d", argIdx))
-		args = append(args, *protocol)
-		argIdx++
+	if page > models.ProxyListMaxPage {
+		page = models.ProxyListMaxPage
 	}
-	if region != nil && *region != "" {
-		conditions = append(conditions, fmt.Sprintf("region = $%d", argIdx))
-		args = append(args, *region)
-		argIdx++
+	pageSize := filter.PageSize
+	if pageSize < 1 {
+		pageSize = models.ProxyListDefaultPageSize
 	}
-	if status != nil {
-		conditions = append(conditions, fmt.Sprintf("status = $%d", argIdx))
-		args = append(args, *status)
-		argIdx++
+	if pageSize > models.ProxyListMaxPageSize {
+		pageSize = models.ProxyListMaxPageSize
 	}
 
+	whereClause, args := r.proxyListWhereClause(filter)
+
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM proxies p WHERE %s", whereClause)
+	var total int64
+	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, fmt.Errorf("count proxies failed: %w", err)
+	}
+
+	limitArg := len(args) + 1
+	offsetArg := len(args) + 2
+	queryArgs := append(append([]interface{}{}, args...), pageSize, (page-1)*pageSize)
 	query := fmt.Sprintf(`
 		SELECT p.id, p.host, p.ip, p.port, p.username, p.password, p.protocol, p.region, p.priority,
 		       p.platform_tags, p.remark, p.status, p.last_check_at, p.last_check_result,
@@ -613,9 +682,15 @@ func (r *ProxyRepository) ListProxies(
 		       p.max_concurrent, p.active_task_count, p.deleted_at, p.created_at, p.updated_at
 		FROM proxies p
 		WHERE %s
-		ORDER BY p.status ASC, p.risk_score ASC, p.priority DESC, p.created_at DESC`, strings.Join(conditions, " AND "))
+		ORDER BY %s
+		LIMIT $%d OFFSET $%d`,
+		whereClause,
+		proxyListOrderBy(filter.SortBy, filter.SortOrder),
+		limitArg,
+		offsetArg,
+	)
 
-	rows, err := r.db.QueryContext(ctx, query, args...)
+	rows, err := r.db.QueryContext(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("list proxies failed: %w", err)
 	}
@@ -634,7 +709,63 @@ func (r *ProxyRepository) ListProxies(
 		return nil, fmt.Errorf("iterate proxies failed: %w", err)
 	}
 
-	return items, nil
+	return &models.ProxyListResult{
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+		Items:    items,
+	}, nil
+}
+
+func (r *ProxyRepository) proxyListWhereClause(filter models.ProxyListFilter) (string, []interface{}) {
+	conditions := []string{"deleted_at IS NULL"}
+	args := make([]interface{}, 0)
+	argIdx := 1
+
+	if filter.Search != nil && *filter.Search != "" {
+		conditions = append(conditions, fmt.Sprintf("(COALESCE(host, ip) ILIKE $%d OR COALESCE(region, '') ILIKE $%d OR COALESCE(platform_tags, '') ILIKE $%d OR COALESCE(remark, '') ILIKE $%d)", argIdx, argIdx, argIdx, argIdx))
+		args = append(args, "%"+*filter.Search+"%")
+		argIdx++
+	}
+	if filter.Protocol != nil && *filter.Protocol != "" {
+		conditions = append(conditions, fmt.Sprintf("protocol = $%d", argIdx))
+		args = append(args, *filter.Protocol)
+		argIdx++
+	}
+	if filter.Region != nil && *filter.Region != "" {
+		conditions = append(conditions, fmt.Sprintf("region = $%d", argIdx))
+		args = append(args, *filter.Region)
+		argIdx++
+	}
+	if filter.Status != nil {
+		conditions = append(conditions, fmt.Sprintf("status = $%d", argIdx))
+		args = append(args, *filter.Status)
+	}
+
+	return strings.Join(conditions, " AND "), args
+}
+
+func proxyListOrderBy(sortBy, sortOrder string) string {
+	sortColumns := map[string]string{
+		models.ProxyListSortRiskScore:   "p.risk_score",
+		models.ProxyListSortPriority:    "p.priority",
+		models.ProxyListSortFailCount:   "p.fail_count",
+		models.ProxyListSortActiveTasks: "p.active_task_count",
+		models.ProxyListSortUpdatedAt:   "p.updated_at",
+		models.ProxyListSortLastUsedAt:  "p.last_used_at",
+	}
+
+	column, ok := sortColumns[sortBy]
+	if !ok || column == "" {
+		return "p.status ASC, p.risk_score ASC, p.priority DESC, p.created_at DESC"
+	}
+
+	direction := "DESC"
+	if strings.EqualFold(sortOrder, models.ProxyListSortOrderAsc) {
+		direction = "ASC"
+	}
+
+	return fmt.Sprintf("%s %s NULLS LAST, p.id ASC", column, direction)
 }
 
 // CreateProxy 创建手动代理

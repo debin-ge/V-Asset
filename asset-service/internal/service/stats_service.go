@@ -11,12 +11,23 @@ import (
 // StatsService 统计服务
 type StatsService struct {
 	historyRepo *repository.HistoryRepository
+	proxyRepo   *repository.ProxyRepository
+	cookieRepo  *repository.CookieRepository
+	billingRepo *repository.BillingRepository
 }
 
 // NewStatsService 创建统计服务
-func NewStatsService(historyRepo *repository.HistoryRepository) *StatsService {
+func NewStatsService(
+	historyRepo *repository.HistoryRepository,
+	proxyRepo *repository.ProxyRepository,
+	cookieRepo *repository.CookieRepository,
+	billingRepo *repository.BillingRepository,
+) *StatsService {
 	return &StatsService{
 		historyRepo: historyRepo,
+		proxyRepo:   proxyRepo,
+		cookieRepo:  cookieRepo,
+		billingRepo: billingRepo,
 	}
 }
 
@@ -116,4 +127,50 @@ func (s *StatsService) GetPlatformStats(ctx context.Context) (*models.PlatformSt
 // GetRequestTrend 获取平台请求趋势
 func (s *StatsService) GetRequestTrend(ctx context.Context, granularity string, limit int) ([]models.TrendPoint, error) {
 	return s.historyRepo.GetRequestTrend(ctx, granularity, limit)
+}
+
+func (s *StatsService) GetDashboardHealth(ctx context.Context) (*models.DashboardHealth, error) {
+	downloads, err := s.historyRepo.GetDashboardDownloads(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	proxies, err := s.proxyRepo.GetDashboardStats(ctx, time.Now().Add(-24*time.Hour))
+	if err != nil {
+		return nil, err
+	}
+
+	cookies, err := s.cookieRepo.GetDashboardStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	shortfallCount, err := s.billingRepo.CountShortfallOrders(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	dailyActive, err := s.historyRepo.GetActiveUserCount(ctx, now.Add(-24*time.Hour))
+	if err != nil {
+		return nil, err
+	}
+	weeklyActive, err := s.historyRepo.GetActiveUserCount(ctx, now.Add(-7*24*time.Hour))
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.DashboardHealth{
+		GeneratedAt: time.Now(),
+		Downloads:   downloads,
+		Users: models.DashboardUsers{
+			DailyActive:  dailyActive,
+			WeeklyActive: weeklyActive,
+		},
+		Proxies: proxies,
+		Cookies: cookies,
+		Billing: models.DashboardBilling{
+			ShortfallCount: shortfallCount,
+		},
+	}, nil
 }

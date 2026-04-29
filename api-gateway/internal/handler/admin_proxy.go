@@ -19,12 +19,25 @@ type AdminProxyHandler struct {
 }
 
 const (
+	proxyListDefaultPage      = 1
+	proxyListDefaultPageSize  = 20
+	proxyListMaxPage          = 10000
+	proxyListMaxPageSize      = 100
 	proxyUsageDefaultPage     = 1
 	proxyUsageDefaultPageSize = 20
 	proxyUsageMaxPage         = 10000
 	proxyUsageMaxPageSize     = 100
 	proxyUsageMaxTimeRange    = 31 * 24 * time.Hour
 )
+
+var allowedProxyListSortFields = map[string]struct{}{
+	"risk_score":        {},
+	"priority":          {},
+	"fail_count":        {},
+	"active_task_count": {},
+	"updated_at":        {},
+	"last_used_at":      {},
+}
 
 var (
 	errInvalidProxyUsageTimeRange  = errors.New("start_time must be before end_time")
@@ -119,6 +132,22 @@ func (h *AdminProxyHandler) UpdateSourcePolicy(c *gin.Context) {
 }
 
 func (h *AdminProxyHandler) List(c *gin.Context) {
+	page, err := parsePositiveInt32Query(c, "page", proxyListDefaultPage, proxyListMaxPage)
+	if err != nil {
+		models.BadRequest(c, "invalid page")
+		return
+	}
+	pageSize, err := parsePositiveInt32Query(c, "page_size", proxyListDefaultPageSize, proxyListMaxPageSize)
+	if err != nil {
+		models.BadRequest(c, "invalid page_size")
+		return
+	}
+	sortBy, sortOrder, err := parseProxyListSortQuery(c.Query("sort_by"), c.Query("sort_order"))
+	if err != nil {
+		models.BadRequest(c, err.Error())
+		return
+	}
+
 	var statusValue int32
 	hasStatus := false
 	if value := c.Query("status"); value != "" {
@@ -140,6 +169,10 @@ func (h *AdminProxyHandler) List(c *gin.Context) {
 		Region:    c.Query("region"),
 		Status:    statusValue,
 		HasStatus: hasStatus,
+		Page:      page,
+		PageSize:  pageSize,
+		SortBy:    sortBy,
+		SortOrder: sortOrder,
 	})
 	if err != nil {
 		models.InternalError(c, grpcErrorMessage(err))
@@ -174,7 +207,14 @@ func (h *AdminProxyHandler) List(c *gin.Context) {
 		})
 	}
 
-	models.Success(c, models.AdminProxyListResponse{Items: items})
+	models.Success(c, models.AdminProxyListResponse{
+		Items: items,
+		Pagination: models.AdminProxyPagination{
+			Page:     resp.GetPage(),
+			PageSize: resp.GetPageSize(),
+			Total:    resp.GetTotal(),
+		},
+	})
 }
 
 func (h *AdminProxyHandler) ListUsageEvents(c *gin.Context) {
@@ -370,6 +410,29 @@ func parsePositiveInt32Query(c *gin.Context, key string, defaultValue int32, max
 		return maxValue, nil
 	}
 	return int32(parsed), nil
+}
+
+func parseProxyListSortQuery(sortByValue, sortOrderValue string) (string, string, error) {
+	sortBy := strings.ToLower(strings.TrimSpace(sortByValue))
+	sortOrder := strings.ToLower(strings.TrimSpace(sortOrderValue))
+
+	if sortBy == "" {
+		if sortOrder != "" && sortOrder != "asc" && sortOrder != "desc" {
+			return "", "", errors.New("invalid sort_order")
+		}
+		return "", "", nil
+	}
+
+	if _, ok := allowedProxyListSortFields[sortBy]; !ok {
+		return "", "", errors.New("invalid sort_by")
+	}
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	if sortOrder != "asc" && sortOrder != "desc" {
+		return "", "", errors.New("invalid sort_order")
+	}
+	return sortBy, sortOrder, nil
 }
 
 func parseProxyUsageTimeRange(startValue, endValue string) (time.Time, time.Time, error) {

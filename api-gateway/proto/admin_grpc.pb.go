@@ -24,6 +24,7 @@ const (
 	AdminService_GetCurrentUser_FullMethodName              = "/admin.AdminService/GetCurrentUser"
 	AdminService_GetOverview_FullMethodName                 = "/admin.AdminService/GetOverview"
 	AdminService_GetRequestTrend_FullMethodName             = "/admin.AdminService/GetRequestTrend"
+	AdminService_GetDashboardHealth_FullMethodName          = "/admin.AdminService/GetDashboardHealth"
 	AdminService_GetUserStats_FullMethodName                = "/admin.AdminService/GetUserStats"
 	AdminService_GetProxySourceStatus_FullMethodName        = "/admin.AdminService/GetProxySourceStatus"
 	AdminService_GetProxySourcePolicy_FullMethodName        = "/admin.AdminService/GetProxySourcePolicy"
@@ -62,6 +63,7 @@ type AdminServiceClient interface {
 	GetCurrentUser(ctx context.Context, in *AdminSessionRequest, opts ...grpc.CallOption) (*AdminCurrentUserResponse, error)
 	GetOverview(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminOverviewResponse, error)
 	GetRequestTrend(ctx context.Context, in *AdminRequestTrendRequest, opts ...grpc.CallOption) (*AdminRequestTrendResponse, error)
+	GetDashboardHealth(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminDashboardHealthResponse, error)
 	GetUserStats(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminUserStatsResponse, error)
 	GetProxySourceStatus(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminProxySourceStatusResponse, error)
 	GetProxySourcePolicy(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminProxySourcePolicyResponse, error)
@@ -143,6 +145,16 @@ func (c *adminServiceClient) GetRequestTrend(ctx context.Context, in *AdminReque
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AdminRequestTrendResponse)
 	err := c.cc.Invoke(ctx, AdminService_GetRequestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetDashboardHealth(ctx context.Context, in *AdminEmpty, opts ...grpc.CallOption) (*AdminDashboardHealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminDashboardHealthResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetDashboardHealth_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -428,6 +440,7 @@ type AdminServiceServer interface {
 	GetCurrentUser(context.Context, *AdminSessionRequest) (*AdminCurrentUserResponse, error)
 	GetOverview(context.Context, *AdminEmpty) (*AdminOverviewResponse, error)
 	GetRequestTrend(context.Context, *AdminRequestTrendRequest) (*AdminRequestTrendResponse, error)
+	GetDashboardHealth(context.Context, *AdminEmpty) (*AdminDashboardHealthResponse, error)
 	GetUserStats(context.Context, *AdminEmpty) (*AdminUserStatsResponse, error)
 	GetProxySourceStatus(context.Context, *AdminEmpty) (*AdminProxySourceStatusResponse, error)
 	GetProxySourcePolicy(context.Context, *AdminEmpty) (*AdminProxySourcePolicyResponse, error)
@@ -479,6 +492,9 @@ func (UnimplementedAdminServiceServer) GetOverview(context.Context, *AdminEmpty)
 }
 func (UnimplementedAdminServiceServer) GetRequestTrend(context.Context, *AdminRequestTrendRequest) (*AdminRequestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRequestTrend not implemented")
+}
+func (UnimplementedAdminServiceServer) GetDashboardHealth(context.Context, *AdminEmpty) (*AdminDashboardHealthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDashboardHealth not implemented")
 }
 func (UnimplementedAdminServiceServer) GetUserStats(context.Context, *AdminEmpty) (*AdminUserStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserStats not implemented")
@@ -668,6 +684,24 @@ func _AdminService_GetRequestTrend_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).GetRequestTrend(ctx, req.(*AdminRequestTrendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetDashboardHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminEmpty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetDashboardHealth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetDashboardHealth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetDashboardHealth(ctx, req.(*AdminEmpty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1184,6 +1218,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRequestTrend",
 			Handler:    _AdminService_GetRequestTrend_Handler,
+		},
+		{
+			MethodName: "GetDashboardHealth",
+			Handler:    _AdminService_GetDashboardHealth_Handler,
 		},
 		{
 			MethodName: "GetUserStats",
