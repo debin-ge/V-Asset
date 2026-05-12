@@ -34,4 +34,4 @@ proxy:
   binding_reconcile_interval_seconds: 60  # 代理绑定清理和占用计数重算间隔（秒）
 
 cookie:
-  default_freeze_seconds: 60  # 使用后默认冷冻时间（秒）
+  default_freeze_seconds: 300  # 使用后默认冷冻时间（秒）
