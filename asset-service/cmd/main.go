@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
@@ -31,6 +32,9 @@ func main() {
 	log.Printf("Starting Asset Service on port %d...", cfg.Server.Port)
 
 	log.Printf("Starting Asset Service on port %d...", cfg.Server.Port)
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	// 2. 运行数据库迁移
 	if err := database.RunMigrations(cfg.Database.GetURL()); err != nil {
@@ -65,6 +69,15 @@ func main() {
 	statsService := service.NewStatsService(historyRepo, proxyRepo, cookieRepo, billingRepo)
 	welcomeCreditService := service.NewWelcomeCreditService(welcomeCreditRepo)
 
+	if cfg.Proxy.BindingReconcileIntervalSeconds > 0 {
+		reconciler := service.NewProxyBindingReconciler(
+			proxyService,
+			time.Duration(cfg.Proxy.BindingReconcileIntervalSeconds)*time.Second,
+		)
+		reconciler.Start(ctx)
+		log.Printf("✓ Proxy binding reconciler started with interval %ds", cfg.Proxy.BindingReconcileIntervalSeconds)
+	}
+
 	// 5. 初始化 Handler
 	proxyHandler := handler.NewProxyHandler(proxyService)
 	cookieHandler := handler.NewCookieHandler(cookieService)
@@ -92,9 +105,7 @@ func main() {
 	}()
 
 	// 等待中断信号
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	<-ctx.Done()
 
 	log.Println("Shutting down server...")
 	s.GracefulStop()

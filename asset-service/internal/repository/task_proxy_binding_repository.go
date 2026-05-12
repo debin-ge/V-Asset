@@ -217,6 +217,44 @@ func (r *TaskProxyBindingRepository) UpdateReport(ctx context.Context, taskID, s
 	return nil
 }
 
+// ReleaseTerminalDownloadBindings 释放已进入下载终态但仍保持 bound 的手动代理绑定。
+func (r *TaskProxyBindingRepository) ReleaseTerminalDownloadBindings(ctx context.Context, reason string) (int64, error) {
+	query := `
+		UPDATE task_proxy_bindings b
+		SET bind_status = $1,
+		    released_at = $2,
+		    expired_reason = $3,
+		    updated_at = $2
+		FROM download_history h
+		WHERE b.task_id = h.task_id
+		  AND b.source_type = $4
+		  AND b.bind_status = $5
+		  AND h.status IN ($6, $7, $8, $9)`
+
+	now := time.Now()
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		models.TaskProxyBindStatusReleased,
+		now,
+		nullableString(reason),
+		models.ProxySourceTypeManualPool,
+		models.TaskProxyBindStatusBound,
+		models.StatusCompleted,
+		models.StatusFailed,
+		models.StatusPendingCleanup,
+		models.StatusExpired,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("release terminal download proxy bindings failed: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("get release terminal download proxy bindings rows affected failed: %w", err)
+	}
+	return rowsAffected, nil
+}
+
 // ReleaseBound 将 bound 状态绑定幂等迁移为指定终态，并返回被释放的绑定。
 func (r *TaskProxyBindingRepository) ReleaseBound(ctx context.Context, taskID string, status models.TaskProxyBindStatus, reason string) (*models.TaskProxyBinding, bool, error) {
 	query := `

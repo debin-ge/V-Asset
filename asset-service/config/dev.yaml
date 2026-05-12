@@ -31,6 +31,7 @@ proxy:
   api_key: ""                 # 动态代理 API 密钥
   timeout: 5                  # 获取代理超时（秒）
   retry_count: 3              # 获取代理重试次数
+  binding_reconcile_interval_seconds: 60  # 代理绑定清理和占用计数重算间隔（秒）
 
 cookie:
   default_freeze_seconds: 60  # 使用后默认冷冻时间（秒）

@@ -27,6 +27,7 @@ const (
 	proxyUsageStageParse    = "parse"
 	proxyUsageStageDownload = "download"
 	proxyUsageMaxRange      = 31 * 24 * time.Hour
+	proxyReconcileReason    = "terminal download state"
 )
 
 var proxyUsageMessageRedactors = []struct {
@@ -46,6 +47,11 @@ type ProxySourceStatus struct {
 	AvailableManualProxyCount int64
 	DynamicConfigured         bool
 	CheckedAt                 time.Time
+}
+
+type ProxyBindingReconcileResult struct {
+	TerminalBindingsReleased int64
+	ActiveTaskCountsUpdated  int64
 }
 
 // NewProxyService 创建代理服务
@@ -217,6 +223,24 @@ func (s *ProxyService) ReleaseProxyForTask(ctx context.Context, taskID, reason s
 		reason = "released"
 	}
 	return s.releaseBinding(ctx, taskID, models.TaskProxyBindStatusReleased, reason)
+}
+
+func (s *ProxyService) ReconcileProxyBindings(ctx context.Context) (*ProxyBindingReconcileResult, error) {
+	result := &ProxyBindingReconcileResult{}
+
+	released, err := s.bindingRepo.ReleaseTerminalDownloadBindings(ctx, proxyReconcileReason)
+	if err != nil {
+		return result, err
+	}
+	result.TerminalBindingsReleased = released
+
+	updated, err := s.repo.ReconcileActiveTaskCounts(ctx)
+	if err != nil {
+		return result, err
+	}
+	result.ActiveTaskCountsUpdated = updated
+
+	return result, nil
 }
 
 func (s *ProxyService) ListUsageEvents(ctx context.Context, filter models.ProxyUsageEventFilter) (*models.ProxyUsageEventResult, error) {

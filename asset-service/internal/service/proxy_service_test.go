@@ -258,6 +258,48 @@ func TestAcquireProxyForTaskRebindsFailedManualProxy(t *testing.T) {
 	}
 }
 
+func TestReconcileProxyBindingsReleasesTerminalBindingsAndRefreshesCounts(t *testing.T) {
+	t.Parallel()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("create sqlmock failed: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec(`(?s)UPDATE task_proxy_bindings b\s+SET bind_status`).
+		WithArgs(
+			models.TaskProxyBindStatusReleased,
+			sqlmock.AnyArg(),
+			"terminal download state",
+			models.ProxySourceTypeManualPool,
+			models.TaskProxyBindStatusBound,
+			models.StatusCompleted,
+			models.StatusFailed,
+			models.StatusPendingCleanup,
+			models.StatusExpired,
+		).
+		WillReturnResult(sqlmock.NewResult(0, 3))
+	mock.ExpectExec(`(?s)WITH bound_counts AS \(`).
+		WithArgs(sqlmock.AnyArg(), models.ProxySourceTypeManualPool, models.TaskProxyBindStatusBound, sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(0, 2))
+
+	svc := newProxyServiceForTest(db)
+	result, err := svc.ReconcileProxyBindings(context.Background())
+	if err != nil {
+		t.Fatalf("ReconcileProxyBindings returned error: %v", err)
+	}
+	if result.TerminalBindingsReleased != 3 {
+		t.Fatalf("expected 3 terminal bindings released, got %d", result.TerminalBindingsReleased)
+	}
+	if result.ActiveTaskCountsUpdated != 2 {
+		t.Fatalf("expected 2 proxy counts updated, got %d", result.ActiveTaskCountsUpdated)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
 func TestListProxiesCapsPaginationAtServiceBoundary(t *testing.T) {
 	t.Parallel()
 

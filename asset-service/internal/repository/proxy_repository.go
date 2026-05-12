@@ -16,6 +16,8 @@ import (
 // ErrProxyAlreadyExists 表示同一 IP 和端口的代理已存在
 var ErrProxyAlreadyExists = errors.New("proxy already exists")
 
+const proxyActiveTaskReconcileGrace = 30 * time.Second
+
 // ProxyRepository 代理数据访问层
 type ProxyRepository struct {
 	db *sql.DB
@@ -78,6 +80,51 @@ func (r *ProxyRepository) ReleaseActiveTask(ctx context.Context, id int64) error
 		return fmt.Errorf("release proxy active task failed: %w", err)
 	}
 	return nil
+}
+
+// ReconcileActiveTaskCounts 用当前 bound 任务绑定数回填手动代理占用计数。
+func (r *ProxyRepository) ReconcileActiveTaskCounts(ctx context.Context) (int64, error) {
+	query := `
+		WITH bound_counts AS (
+			SELECT proxy_id, COUNT(*)::int AS bound_count
+			FROM task_proxy_bindings
+			WHERE source_type = $2
+			  AND bind_status = $3
+			  AND proxy_id IS NOT NULL
+			GROUP BY proxy_id
+		),
+		targets AS (
+			SELECT p.id, COALESCE(b.bound_count, 0) AS bound_count
+			FROM proxies p
+			LEFT JOIN bound_counts b ON b.proxy_id = p.id
+			WHERE p.deleted_at IS NULL
+		)
+		UPDATE proxies p
+		SET active_task_count = targets.bound_count,
+		    updated_at = $1
+		FROM targets
+		WHERE p.id = targets.id
+		  AND p.active_task_count <> targets.bound_count
+		  AND p.updated_at < $4`
+
+	now := time.Now()
+
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		now,
+		models.ProxySourceTypeManualPool,
+		models.TaskProxyBindStatusBound,
+		now.Add(-proxyActiveTaskReconcileGrace),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("reconcile proxy active task counts failed: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("get reconcile proxy active task counts rows affected failed: %w", err)
+	}
+	return rowsAffected, nil
 }
 
 // IsUsableForBoundTask 检查已有绑定的手动代理是否仍满足风控条件。

@@ -58,12 +58,13 @@ type StorageConfig struct {
 
 // ProxyConfig 代理配置
 type ProxyConfig struct {
-	HealthCheckTimeout int    `yaml:"health_check_timeout"` // 健康检查超时（秒）
-	TestURL            string `yaml:"test_url"`             // 测试 URL
-	APIEndpoint        string `yaml:"api_endpoint"`         // 动态代理 API 地址
-	APIKey             string `yaml:"api_key"`              // 动态代理 API 密钥
-	Timeout            int    `yaml:"timeout"`              // 获取代理超时（秒）
-	RetryCount         int    `yaml:"retry_count"`          // 获取代理重试次数
+	HealthCheckTimeout              int    `yaml:"health_check_timeout"`               // 健康检查超时（秒）
+	TestURL                         string `yaml:"test_url"`                           // 测试 URL
+	APIEndpoint                     string `yaml:"api_endpoint"`                       // 动态代理 API 地址
+	APIKey                          string `yaml:"api_key"`                            // 动态代理 API 密钥
+	Timeout                         int    `yaml:"timeout"`                            // 获取代理超时（秒）
+	RetryCount                      int    `yaml:"retry_count"`                        // 获取代理重试次数
+	BindingReconcileIntervalSeconds int    `yaml:"binding_reconcile_interval_seconds"` // 代理绑定清理间隔（秒）
 }
 
 // CookieConfig Cookie 配置
@@ -135,6 +136,14 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	if cfg.Proxy.RetryCount == 0 {
 		cfg.Proxy.RetryCount = 3
+	}
+	if cfg.Proxy.BindingReconcileIntervalSeconds == 0 {
+		cfg.Proxy.BindingReconcileIntervalSeconds = 60
+	}
+	if proxyBindingReconcileInterval := os.Getenv("PROXY_BINDING_RECONCILE_INTERVAL_SECONDS"); proxyBindingReconcileInterval != "" {
+		if seconds, err := strconv.Atoi(proxyBindingReconcileInterval); err == nil {
+			cfg.Proxy.BindingReconcileIntervalSeconds = seconds
+		}
 	}
 
 	// Cookie 默认值

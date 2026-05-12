@@ -14,6 +14,7 @@ const (
 	StatusCompleted      HistoryStatus = 2 // 已完成
 	StatusFailed         HistoryStatus = 3 // 失败
 	StatusPendingCleanup HistoryStatus = 4 // 待清理(quick_download完成后)
+	StatusExpired        HistoryStatus = 5 // 已过期(已清理)
 )
 
 // DownloadHistory 下载历史记录
