@@ -57,7 +57,8 @@ func main() {
 	if err != nil {
 		log.Printf("Warning: Failed to connect to RabbitMQ: %v", err)
 		// 不退出，允许降级运行
-	} else {
+	}
+	if mqPublisher != nil {
 		defer mqPublisher.Close()
 	}
 

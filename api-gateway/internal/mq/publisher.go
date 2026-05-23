@@ -3,6 +3,7 @@ package mq
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -12,6 +13,8 @@ import (
 
 	"youdlp/api-gateway/internal/config"
 )
+
+var ErrUnavailable = errors.New("download queue unavailable")
 
 // DownloadTask 下载任务消息
 type DownloadTask struct {
@@ -50,38 +53,37 @@ type SelectedFormatMessage struct {
 
 // Publisher RabbitMQ 发布器
 type Publisher struct {
-	conn       *amqp.Connection
-	channel    *amqp.Channel
-	cfg        *config.RabbitMQConfig
-	mu         sync.Mutex
-	isClosing  bool
-	reconnectC chan struct{}
+	conn      *amqp.Connection
+	channel   *amqp.Channel
+	cfg       *config.RabbitMQConfig
+	mu        sync.Mutex
+	isClosing bool
 }
 
 // NewPublisher 创建发布器
 func NewPublisher(cfg *config.RabbitMQConfig) (*Publisher, error) {
-	p := &Publisher{
-		cfg:        cfg,
-		reconnectC: make(chan struct{}, 1),
-	}
+	p := &Publisher{cfg: cfg}
 
-	if err := p.connect(); err != nil {
-		return nil, err
-	}
+	err := p.connect()
 
 	// 启动重连监听
 	go p.watchConnection()
 
-	return p, nil
+	return p, err
 }
 
 // connect 连接到 RabbitMQ
 func (p *Publisher) connect() error {
 	p.mu.Lock()
-	defer p.mu.Unlock()
+	if p.isClosing {
+		p.mu.Unlock()
+		return ErrUnavailable
+	}
+	cfg := *p.cfg
+	p.mu.Unlock()
 
 	// 建立连接
-	conn, err := amqp.Dial(p.cfg.URL)
+	conn, err := amqp.Dial(cfg.URL)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
@@ -95,13 +97,13 @@ func (p *Publisher) connect() error {
 
 	// 声明交换机
 	err = channel.ExchangeDeclare(
-		p.cfg.Exchange, // 交换机名称
-		"direct",       // 类型
-		true,           // 持久化
-		false,          // 自动删除
-		false,          // 内部
-		false,          // 不等待
-		nil,            // 参数
+		cfg.Exchange, // 交换机名称
+		"direct",     // 类型
+		true,         // 持久化
+		false,        // 自动删除
+		false,        // 内部
+		false,        // 不等待
+		nil,          // 参数
 	)
 	if err != nil {
 		channel.Close()
@@ -111,12 +113,12 @@ func (p *Publisher) connect() error {
 
 	// 声明队列
 	_, err = channel.QueueDeclare(
-		p.cfg.Queue, // 队列名称
-		true,        // 持久化
-		false,       // 自动删除
-		false,       // 独占
-		false,       // 不等待
-		nil,         // 参数
+		cfg.Queue, // 队列名称
+		true,      // 持久化
+		false,     // 自动删除
+		false,     // 独占
+		false,     // 不等待
+		nil,       // 参数
 	)
 	if err != nil {
 		channel.Close()
@@ -126,11 +128,11 @@ func (p *Publisher) connect() error {
 
 	// 绑定队列到交换机
 	err = channel.QueueBind(
-		p.cfg.Queue,      // 队列名称
-		p.cfg.RoutingKey, // 路由键
-		p.cfg.Exchange,   // 交换机
-		false,            // 不等待
-		nil,              // 参数
+		cfg.Queue,      // 队列名称
+		cfg.RoutingKey, // 路由键
+		cfg.Exchange,   // 交换机
+		false,          // 不等待
+		nil,            // 参数
 	)
 	if err != nil {
 		channel.Close()
@@ -138,47 +140,55 @@ func (p *Publisher) connect() error {
 		return fmt.Errorf("failed to bind queue: %w", err)
 	}
 
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.isClosing {
+		channel.Close()
+		conn.Close()
+		return ErrUnavailable
+	}
+	p.clearConnectionLocked(nil)
 	p.conn = conn
 	p.channel = channel
 
-	log.Printf("✓ Connected to RabbitMQ: %s", p.cfg.URL)
+	log.Printf("✓ Connected to RabbitMQ: %s", cfg.URL)
 	return nil
 }
 
 // watchConnection 监听连接关闭
 func (p *Publisher) watchConnection() {
 	for {
-		if p.isClosing {
-			return
-		}
-
-		if p.conn == nil {
-			time.Sleep(time.Second)
+		conn := p.connection()
+		if conn == nil || conn.IsClosed() {
+			if p.closing() {
+				return
+			}
+			if err := p.connect(); err != nil {
+				log.Printf("[MQ] Reconnect failed: %v", err)
+				if !p.waitBeforeReconnect(5 * time.Second) {
+					return
+				}
+				continue
+			}
 			continue
 		}
 
 		// 监听连接关闭
-		closeC := make(chan *amqp.Error)
-		p.conn.NotifyClose(closeC)
+		closeC := make(chan *amqp.Error, 1)
+		conn.NotifyClose(closeC)
 
-		err := <-closeC
-		if err != nil {
-			log.Printf("[MQ] Connection closed: %v, reconnecting...", err)
-		}
-
-		if p.isClosing {
+		err, ok := <-closeC
+		if p.closing() {
 			return
 		}
-
-		// 重连
-		for i := 0; i < 5; i++ {
-			if err := p.connect(); err != nil {
-				log.Printf("[MQ] Reconnect attempt %d failed: %v", i+1, err)
-				time.Sleep(time.Duration(i+1) * time.Second)
-				continue
-			}
-			break
+		if ok && err != nil {
+			log.Printf("[MQ] Connection closed: %v, reconnecting...", err)
+		} else {
+			log.Printf("[MQ] Connection closed, reconnecting...")
 		}
+
+		p.clearConnection(conn)
 	}
 }
 
@@ -187,8 +197,8 @@ func (p *Publisher) Publish(ctx context.Context, task *DownloadTask) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.channel == nil {
-		return fmt.Errorf("channel is not available")
+	if p.channel == nil || p.channel.IsClosed() {
+		return fmt.Errorf("%w: channel is not available", ErrUnavailable)
 	}
 
 	// 序列化任务
@@ -211,25 +221,84 @@ func (p *Publisher) Publish(ctx context.Context, task *DownloadTask) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to publish message: %w", err)
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return fmt.Errorf("failed to publish message: %w", err)
+		}
+		p.clearConnectionLocked(p.conn)
+		return fmt.Errorf("%w: failed to publish message: %w", ErrUnavailable, err)
 	}
 
 	log.Printf("[MQ] Published task: %s", task.TaskID)
 	return nil
 }
 
-// Close 关闭连接
-func (p *Publisher) Close() error {
-	p.isClosing = true
-
+func (p *Publisher) IsReady() bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+
+	return !p.isClosing &&
+		p.conn != nil &&
+		!p.conn.IsClosed() &&
+		p.channel != nil &&
+		!p.channel.IsClosed()
+}
+
+// Close 关闭连接
+func (p *Publisher) Close() error {
+	p.mu.Lock()
+	p.isClosing = true
+	channel := p.channel
+	conn := p.conn
+	p.channel = nil
+	p.conn = nil
+	p.mu.Unlock()
+
+	if channel != nil {
+		channel.Close()
+	}
+	if conn != nil {
+		return conn.Close()
+	}
+	return nil
+}
+
+func (p *Publisher) connection() *amqp.Connection {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	return p.conn
+}
+
+func (p *Publisher) closing() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	return p.isClosing
+}
+
+func (p *Publisher) waitBeforeReconnect(delay time.Duration) bool {
+	time.Sleep(delay)
+	return !p.closing()
+}
+
+func (p *Publisher) clearConnection(conn *amqp.Connection) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.clearConnectionLocked(conn)
+}
+
+func (p *Publisher) clearConnectionLocked(conn *amqp.Connection) {
+	if conn != nil && p.conn != conn {
+		return
+	}
 
 	if p.channel != nil {
 		p.channel.Close()
 	}
 	if p.conn != nil {
-		return p.conn.Close()
+		p.conn.Close()
 	}
-	return nil
+	p.channel = nil
+	p.conn = nil
 }

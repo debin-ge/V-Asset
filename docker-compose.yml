@@ -201,9 +201,14 @@ services:
     volumes:
       - youdlp-data:/data/youdlp:ro # 只读挂载，用于提供文件下载
     depends_on:
-      - auth-service
-      - media-service
-      - asset-service
+      auth-service:
+        condition: service_started
+      media-service:
+        condition: service_started
+      asset-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     logging:
       driver: json-file

@@ -65,10 +65,7 @@ func (f *fakeAdminClientForWelcomeCreditRoutes) GetWelcomeCreditSettings(context
 }
 
 func (f *fakeAdminClientForWelcomeCreditRoutes) UpdateWelcomeCreditSettings(_ context.Context, in *pb.AdminUpdateWelcomeCreditSettingsRequest, _ ...grpc.CallOption) (*pb.AdminWelcomeCreditSettingsResponse, error) {
-	if in != nil {
-		reqCopy := *in
-		f.updateWelcomeCreditSettingsReq = &reqCopy
-	}
+	f.updateWelcomeCreditSettingsReq = in
 	return f.updateWelcomeCreditSettingsResp, f.updateWelcomeCreditSettingsErr
 }
 

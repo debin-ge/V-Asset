@@ -98,7 +98,7 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	}
 
 	// RabbitMQ 状态（通过 publisher 状态判断）
-	if h.mqPublisher == nil {
+	if h.mqPublisher == nil || !h.mqPublisher.IsReady() {
 		dependencies["rabbitmq"] = "unhealthy"
 		allHealthy = false
 	} else {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"reflect"
@@ -241,8 +242,8 @@ func (h *DownloadHandler) SubmitDownload(c *gin.Context) {
 	if err := h.publisher.Publish(ctx, task); err != nil {
 		log.Printf("[Download] ❌ Failed to publish task to RabbitMQ: %v", err)
 		h.cleanupFailedSubmission(ctx, userID, historyResp.HistoryId, taskID, !h.billingEnabled, h.billingEnabled)
-		if status.Code(err) == codes.Unavailable {
-			models.Error(c, http.StatusServiceUnavailable, grpcErrorMessage(err))
+		if status.Code(err) == codes.Unavailable || errors.Is(err, mq.ErrUnavailable) {
+			models.Error(c, http.StatusServiceUnavailable, "service temporarily unavailable")
 			return
 		}
 		writeGRPCError(c, err)

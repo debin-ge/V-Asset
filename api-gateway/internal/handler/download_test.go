@@ -151,6 +151,27 @@ func TestSubmitDownloadCompensatesWhenPublishFails(t *testing.T) {
 	}
 }
 
+func TestSubmitDownloadReturnsServiceUnavailableWhenQueueUnavailable(t *testing.T) {
+	t.Parallel()
+
+	handler, assetClient, publisher := newTestDownloadHandler()
+	publisher.publishErr = mq.ErrUnavailable
+
+	w := performSubmitDownload(t, handler)
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status 503, got %d", w.Code)
+	}
+
+	if len(assetClient.deleteCalls) != 1 || assetClient.deleteCalls[0] != 101 {
+		t.Fatalf("expected history deletion for 101, got %#v", assetClient.deleteCalls)
+	}
+
+	if len(assetClient.refundCalls) != 1 || assetClient.refundCalls[0] != "user-1" {
+		t.Fatalf("expected quota refund for user-1, got %#v", assetClient.refundCalls)
+	}
+}
+
 func TestSubmitDownloadReturnsServiceUnavailableWhenPublisherIsTypedNil(t *testing.T) {
 	t.Parallel()
 
